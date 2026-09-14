@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Golf App</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="gym.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ============================ PARTIE : HOME ============================ -->
+<div id="page-home" class="app-page active">
+<div class="page-wrapper">
+  <main class="home-screen_component">
+
+    <!-- HEADER -->
+    <header class="home-screen_header">
+      <div class="header_text-group">
+        <h1 class="header_title">Bonjour<br><span class="header_title-highlight">Thomas</span></h1>
+        <p class="header_subtitle">Quelle partie du jeu souhaitez-vous travailler aujourd'hui ?</p>
+      </div>
+    </header>
+
+    <!-- PROFIL -->
+    <button class="profile_button" type="button" aria-label="Ouvrir le profil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="3.4"/>
+        <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>
+      </svg>
+      <span class="profile_indicator"></span>
+    </button>
+
+    <!-- BOUTONS CIRCULAIRES -->
+    <div class="orbit-buttons_wrapper">
+
+      <div class="orbit-ring" aria-hidden="true"></div>
+
+      <button class="orbit-button is-putting" type="button" onclick="showPage('putting'); renderPuttingTab();">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 21V4"/>
+            <path d="M6 4l9 3.4-9 3.4"/>
+            <ellipse cx="6" cy="21" rx="4" ry="1.2"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Putting</span>
+        <span class="orbit-button_subtitle">Travaillez votre green</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-stats" type="button" onclick="showPage('stats')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 20V11"/>
+            <path d="M12 20V4"/>
+            <path d="M19 20v-7"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Stats</span>
+        <span class="orbit-button_subtitle">Analysez vos performances</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-gym" type="button" onclick="showPage('gym')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12h16"/>
+            <path d="M2.5 9.5v5"/>
+            <path d="M21.5 9.5v5"/>
+            <path d="M6 8v8"/>
+            <path d="M18 8v8"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Gym</span>
+        <span class="orbit-button_subtitle">Améliorez votre condition</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-parcours" type="button" onclick="showPage('parcours')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z"/>
+            <circle cx="12" cy="9.5" r="2.4"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Parcours</span>
+        <span class="orbit-button_subtitle">Progressez sur le parcours</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-vitesse" type="button" onclick="showPage('vitesse'); renderVitesseTab();">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15a8 8 0 0 1 16 0"/>
+            <line x1="12" y1="15" x2="16" y2="10"/>
+            <circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Vitesse</span>
+        <span class="orbit-button_subtitle">Gagnez en puissance</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-wedging" type="button" onclick="showPage('wedging')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="3" x2="9" y2="17"/>
+            <path d="M9 17l-4 4.2"/>
+            <path d="M5 21.2c1.6.5 3.4-.2 4-1.6"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Wedging</span>
+        <span class="orbit-button_subtitle">Améliorez votre approche</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+    </div>
+
+    <!-- PANNEAU STATISTIQUES -->
+    <div class="bottom-panel_wrapper">
+
+      <div class="bottom-panel_column is-goal">
+        <div class="column_header">
+          <span class="progress-ring_wrapper">
+            <svg class="progress-ring_svg" viewBox="0 0 22 22">
+              <circle class="progress-ring_track" cx="11" cy="11" r="9"/>
+              <circle class="progress-ring_progress" cx="11" cy="11" r="9" data-progress="0.8"/>
+            </svg>
+            <span class="progress-ring_text" data-stat="goal-ring">4/5</span>
+          </span>
+          <span class="column_label">Objectif semaine</span>
+        </div>
+        <span class="column_value" data-stat="goal-value">4 séances</span>
+        <span class="goal_progress-track">
+          <span class="goal_progress-fill" data-stat="goal-progress-fill" style="width: 80%;"></span>
+        </span>
+      </div>
+
+      <div class="bottom-panel_column is-distance">
+        <div class="column_header">
+          <span class="column_icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 21V4"/>
+              <path d="M6 4l10 3.6-10 3.6"/>
+            </svg>
+          </span>
+          <span class="column_label">Distance moyenne</span>
+        </div>
+        <span class="column_value" data-stat="distance-value">247 m</span>
+        <span class="column_variation" data-stat="distance-variation">&uarr; +8 m</span>
+      </div>
+
+      <div class="bottom-panel_column is-index">
+        <div class="column_header">
+          <span class="column_icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="7.5"/>
+              <circle cx="12" cy="12" r="2.3"/>
+            </svg>
+          </span>
+          <span class="column_label">Index</span>
+        </div>
+        <span class="column_value" data-stat="index-value">12.4</span>
+        <span class="column_variation" data-stat="index-variation">&uarr; +0,3</span>
+      </div>
+
+      <div class="bottom-panel_column is-last-session">
+        <div class="column_header">
+          <span class="column_icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="5.5" width="16" height="14" rx="2.5"/>
+              <path d="M4 10h16"/>
+              <path d="M8 3.5v3"/>
+              <path d="M16 3.5v3"/>
+            </svg>
+          </span>
+          <span class="column_label">Dernière séance</span>
+        </div>
+        <span class="column_value" data-stat="last-session-value">Hier</span>
+        <span class="column_secondary" data-stat="last-session-secondary">Parcours</span>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+</div>
+
+<!-- ========================== PARTIE : PARCOURS =========================== -->
+<div id="page-parcours" class="app-page">
+<div class="app">
+
+  <div class="screen-view" data-screen="home">
+<div class="top-bar">
+    <a class="back-link" href="javascript:void(0)" onclick="showPage('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Home
+    </a>
+    <button class="icon-btn" aria-label="Voir le dashboard" data-goto="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="19" cy="12" r="1.4"></circle></svg>
+    </button>
+  </div>
+
+  <header class="page-header page-header-row">
+    <h1 class="page-title">PARCOURS</h1>
+    <button class="icon-btn icon-btn-info" aria-label="À propos du suivi fairway et green" onclick="openTrackInfo()">i</button>
+  </header>
+
+  <main class="screen">
+
+    <!-- GREEN — affiché directement, toutes les marques visibles en même temps -->
+    <div class="track-block">
+      <div id="green-root"></div>
+    </div>
+
+    <!-- FAIRWAY — affiché directement, toutes les marques visibles en même temps -->
+    <div class="track-block">
+      <div id="fairway-root"></div>
+    </div>
+
+    <!-- VENT / DENIVELE / DISTANCE — boutons en bas -->
+    <div class="quick-actions">
+      <button type="button" class="quick-action-btn" onclick="openWindCalc()">
+        <span class="quick-action-info" aria-label="Charte de vent" onclick="event.stopPropagation(); openWindInfo();">i</span>
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9a3 3 0 1 0-3-3"></path><path d="M3 13h13a3 3 0 1 1-3 3"></path><path d="M3 18h7a2 2 0 1 1-2 2"></path></svg>
+        </span>
+        Vent
+      </button>
+      <button type="button" class="quick-action-btn" onclick="openElevationCalc()">
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 22L11 12L14 15L23 2"></path><path d="M15 2H23V10"></path></svg>
+        </span>
+        Dénivelé
+      </button>
+      <button type="button" class="quick-action-btn quick-action-disabled" disabled>
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.4"></circle><circle cx="18" cy="6" r="2.4"></circle><path d="M8 17C14 17 10 7 16 7"></path></svg>
+        </span>
+        Distance
+      </button>
+    </div>
+
+  </main>
+  </div>
+
+  <!-- Racine des modales Vent / Dénivelé (fonctionnalités réelles, voir parcours-ui.js) -->
+  <div id="course-modal-root"></div>
+
+  <div class="screen-view" data-screen="distances">
+<div class="top-bar">
+    <a class="back-link" href="#home" data-goto="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Parcours
+    </a>
+    <button class="icon-btn" aria-label="Plus d'options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="19" cy="12" r="1.4"></circle></svg>
+    </button>
+  </div>
+
+  <header class="page-header align-left">
+    <p class="eyebrow">PARCOURS</p>
+    <h1 class="page-title">Distances</h1>
+    <p class="page-subtitle">Vos statistiques de distance, coup par coup.</p>
+  </header>
+
+  <main class="screen">
+
+    <div class="empty-state">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"></path><path d="M4 12l4-4M4 12l4 4"></path><path d="M20 12l-4-4M20 12l-4 4"></path></svg>
+      </span>
+      <h4>Aucun coup enregistré</h4>
+      <p>Ajoutez votre premier coup pour voir apparaître ici vos statistiques de distance et votre historique.</p>
+    </div>
+
+  </main>
+
+  <div class="fab-cta">
+    <a class="btn btn-primary" href="#add-shot" data-goto="add-shot">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Ajouter un coup
+    </a>
+  </div>
+  </div>
+
+
+  <div class="screen-view" data-screen="add-shot">
+<div class="top-bar">
+    <a class="back-link" href="#distances" data-goto="distances">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Annuler
+    </a>
+  </div>
+
+  <header class="page-header align-left">
+    <p class="eyebrow">PARCOURS</p>
+    <h1 class="page-title">Ajouter un coup</h1>
+    <p class="page-subtitle">Renseignez les détails de votre coup.</p>
+  </header>
+
+  <main class="screen">
+
+    <!-- CLUB -->
+    <div class="form-section">
+      <p class="form-label">Club</p>
+      <div class="dropdown" id="club-dropdown">
+        <div class="dropdown-trigger">
+          <span class="trigger-label placeholder">Sélectionner un club</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="dropdown-menu" role="listbox">
+          <div class="dropdown-option"><span>Fer 7</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div class="dropdown-option"><span>Fer 8</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div class="dropdown-option"><span>Fer 9</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div class="dropdown-option"><span>Wedge 52°</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div class="dropdown-option"><span>Wedge 56°</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div class="dropdown-option"><span>Hybride</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTANCE -->
+    <div class="form-section">
+      <p class="form-label">Distance</p>
+      <div class="slider-field">
+        <div class="slider-value-row">
+          <span class="slider-value" id="distance-display" data-slider-value-for="distance-slider">100<span class="unit">m</span></span>
+        </div>
+        <input type="range" id="distance-slider" min="0" max="260" value="100" data-unit="m" />
+        <div class="slider-scale"><span>0 m</span><span>130 m</span><span>260 m</span></div>
+      </div>
+    </div>
+
+    <!-- VENT -->
+    <div class="form-section">
+      <p class="form-label">Vent</p>
+      <div class="segmented">
+        <button class="active">Aucun</button>
+        <button>Face</button>
+        <button>Arrière</button>
+        <button>Latéral</button>
+      </div>
+    </div>
+
+    <!-- DENIVELE -->
+    <div class="form-section">
+      <p class="form-label">Dénivelé</p>
+      <div class="segmented">
+        <button>Descente</button>
+        <button class="active">Plat</button>
+        <button>Montée</button>
+      </div>
+    </div>
+
+    <!-- RESULTAT -->
+    <div class="form-section">
+      <p class="form-label">Résultat</p>
+      <div class="select-grid cols-2">
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+          <span>Green</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle></svg>
+          <span>Bord de green</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c3-6 15-6 18 0"></path></svg>
+          <span>Bunker</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c4-10 6-14 8-16 2 2 4 6 8 16"></path></svg>
+          <span>Rough</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSITION FINALE -->
+    <div class="form-section">
+      <p class="form-label">Position finale</p>
+      <div class="select-grid">
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>
+          <span>Long</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"></circle></svg>
+          <span>Centre</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="6 13 12 19 18 13"></polyline></svg>
+          <span>Court</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="11 6 5 12 11 18"></polyline></svg>
+          <span>Gauche</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+          <span>Droite</span>
+        </div>
+        <div class="select-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c3-6 15-6 18 0"></path></svg>
+          <span>Bunker</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top: 6px;" data-goto="distances">Enregistrer</button>
+
+  </main>
+  </div>
+
+  <div class="screen-view" data-screen="dashboard">
+<div class="top-bar">
+    <a class="back-link" href="#home" data-goto="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Parcours
+    </a>
+    <button class="icon-btn" aria-label="Plus d'options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="19" cy="12" r="1.4"></circle></svg>
+    </button>
+  </div>
+
+  <header class="page-header align-left">
+    <p class="eyebrow">PARCOURS</p>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Vue d'ensemble de vos performances sur le parcours.</p>
+  </header>
+
+  <main class="screen">
+
+    <div class="empty-state">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="M8 19v-6"></path><path d="M13 19v-10"></path><path d="M18 19v-4"></path></svg>
+      </span>
+      <h4>Pas encore de données</h4>
+      <p>Ajoutez vos premiers coups pour voir apparaître ici vos statistiques, vos performances et des recommandations.</p>
+    </div>
+
+    <a class="btn btn-secondary" href="#add-shot" data-goto="add-shot">Ajouter un coup</a>
+
+  </main>
+  </div>
+
+</div>
+</div>
+
+<!-- ============================ PARTIE : STATS ============================= -->
+<div id="page-stats" class="app-page">
+<!-- ======================================================================
+     ÉCRAN 1 — DASHBOARD STATS
+     ====================================================================== -->
+<section id="screen-dashboard" class="screen is-active">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" type="button" onclick="showPage('home')">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Home
+      </button>
+      <button class="page-header__menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </button>
+    </header>
+
+    <div class="text-center">
+      <h1 class="page-header__title" style="font-size:var(--fs-2xl); letter-spacing:0.3em;">STATS</h1>
+      <p class="page-header__subtitle">Analysez votre jeu. Progressez à chaque partie.</p>
+    </div>
+
+    <section class="section">
+      <div id="dash-strokesGained" class="card sg-card fade-up" aria-label="Strokes gained"></div>
+    </section>
+
+    <section class="section">
+      <div id="dash-kpiGrid" class="grid-2" role="list" aria-label="Indicateurs clés de performance"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">Analyses détaillées</h2>
+        <!-- "Voir tout" : pas d'écran dédié dans les maquettes (les 3 cartes sont déjà toutes visibles) -->
+        <span class="section__link">Voir tout
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" width="12" height="12"><path d="M9 18l6-6-6-6"/></svg>
+        </span>
+      </div>
+      <div id="dash-analysesGrid" class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">Historique des tours</h2>
+        <button class="section__link" data-goto="historique" style="background:none;border:none;cursor:pointer;">Voir tout
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" width="12" height="12"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div id="dash-historyList"></div>
+    </section>
+  </main>
+
+  <div class="fab-row">
+    <button class="fab" type="button">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+      Saisie rapide
+    </button>
+    <button class="fab" type="button">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      Saisie détaillée
+    </button>
+  </div>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 2 — PAR DISTANCE
+     Un seul écran ; le segmented control (Multi / Traditionnel / SG) change
+     le contenu affiché en dessous, comme observé entre l'image 2 (Multi)
+     et l'image 4 (Traditionnel). SG n'a pas de maquette : contenu vide.
+     ====================================================================== -->
+<section id="screen-par-distance" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <!-- Pas de design fourni pour le contenu de ce menu : décoratif -->
+      <button class="page-header__menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </button>
+    </header>
+
+    <div class="text-center">
+      <h1 class="page-header__title" style="font-size:var(--fs-xl);">PAR DISTANCE</h1>
+      <p class="page-header__subtitle">Analysez vos performances selon la distance du trou.</p>
+    </div>
+
+    <section class="section" style="margin-top:var(--space-lg);">
+      <div id="pd-modeTabs" class="segmented" aria-label="Mode d'analyse"></div>
+    </section>
+
+    <!-- Pane "Multi" — image 2 -->
+    <div id="pd-pane-multi" class="pane is-active">
+      <section class="section" style="margin-top:var(--space-md);">
+        <div id="pd-multi-filters" class="filter-bar"></div>
+      </section>
+      <div id="pd-multi-blocks" style="display:flex; flex-direction:column; gap:var(--space-xl); margin-top:var(--space-xl);"></div>
+    </div>
+
+    <!-- Pane "Traditionnel" — image 4 -->
+    <div id="pd-pane-traditionnel" class="pane">
+      <section class="section" style="margin-top:var(--space-md);">
+        <div id="pd-trad-filters" class="filter-bar"></div>
+      </section>
+
+      <section class="section">
+        <article class="card chart-card fade-up">
+          <div class="chart-card__head">
+            <div>
+              <div class="chart-card__title" id="pd-trad-title">Fairways touchés</div>
+              <div class="chart-card__unit" id="pd-trad-unit">(%)</div>
+            </div>
+          </div>
+
+          <div id="pd-trad-periodTabs" class="period-tabs" role="tablist" aria-label="Période"></div>
+
+          <div class="chart-canvas-wrap">
+            <canvas id="pd-trad-chart" role="img" aria-label="Évolution de la statistique"></canvas>
+          </div>
+
+          <div class="chart-stats-row">
+            <div class="chart-stats-row__item">
+              <div class="chart-stats-row__label">Progression</div>
+              <div class="chart-progression" id="pd-trad-progression">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M4 16l6-6 4 4 6-8"/><path d="M14 6h6v6"/></svg>
+                <span></span>
+              </div>
+            </div>
+            <div class="chart-stats-row__item">
+              <div class="chart-stats-row__label">Moyenne</div>
+              <div class="chart-stats-row__value" id="pd-trad-average"></div>
+            </div>
+            <div class="chart-stats-row__item">
+              <div class="chart-stats-row__label">Meilleure période</div>
+              <div class="chart-stats-row__value chart-stats-row__value--accent" id="pd-trad-best"></div>
+              <div class="chart-stats-row__sub" id="pd-trad-bestDate"></div>
+            </div>
+            <div class="chart-stats-row__item">
+              <div class="chart-stats-row__label">Plus basse période</div>
+              <div class="chart-stats-row__value" id="pd-trad-worst"></div>
+              <div class="chart-stats-row__sub" id="pd-trad-worstDate"></div>
+            </div>
+          </div>
+
+          <div class="chart-footnote">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg>
+            <span id="pd-trad-footnote"></span>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <!-- Pane "SG" — aucune maquette fournie : volontairement vide -->
+    <div id="pd-pane-sg" class="pane"></div>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 5 — HISTORIQUE DES ROUNDS
+     ====================================================================== -->
+<section id="screen-historique" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <button class="page-header__menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </button>
+    </header>
+
+    <div class="text-center">
+      <h1 class="page-header__title" style="font-size:var(--fs-lg);">HISTORIQUE DES ROUNDS</h1>
+      <p class="page-header__subtitle">Retrouvez l'ensemble de vos parcours joués.</p>
+    </div>
+
+    <section class="section">
+      <div id="hist-summaryStrip" class="summary-strip"></div>
+    </section>
+
+    <section class="section">
+      <label class="visually-hidden" for="hist-search">Rechercher un parcours</label>
+      <div class="filter-chip" style="width:100%;">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="15" height="15"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="hist-search" type="search" placeholder="Rechercher un parcours..."
+          style="background:none;border:none;color:var(--color-text-primary);font-size:var(--fs-sm);flex:1;outline:none;">
+      </div>
+    </section>
+
+    <section class="section">
+      <div id="hist-sortBar" class="sort-bar"></div>
+    </section>
+
+    <section class="section">
+      <div id="hist-roundTable"></div>
+      <div class="text-center" style="margin-top:var(--space-lg);">
+        <button id="hist-loadMore" type="button" class="filter-chip" style="margin:0 auto;">Charger plus de rounds</button>
+      </div>
+    </section>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 6 — PERFORMANCE PUTTING
+     ====================================================================== -->
+<section id="screen-putting" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Putting
+      </button>
+      <div class="page-header__title-group">
+        <h1 class="page-header__title" style="font-size:var(--fs-lg);">STATS PERFORMANCE</h1>
+      </div>
+      <button class="page-header__menu" aria-label="Informations">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="17" height="17"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg>
+      </button>
+    </header>
+
+    <p class="page-header__subtitle text-center">Suivez l'évolution de votre performance au putting.</p>
+
+    <section class="section">
+      <div id="put-filters" class="filter-bar"></div>
+    </section>
+
+    <section class="section">
+      <article class="card chart-card fade-up">
+        <div class="chart-card__head">
+          <div>
+            <div style="font-size:var(--fs-md); font-weight:var(--fw-bold);">Putts moyens par round</div>
+            <div class="chart-card__unit">Évolution</div>
+          </div>
+          <div class="chart-card__legend">
+            <span class="chart-card__legend-dot"></span> Putts moyens
+          </div>
+        </div>
+
+        <div>
+          <div class="kpi-card__value" style="font-size:var(--fs-2xl);" data-count-to="1.69" id="put-value">0.00</div>
+          <div class="kpi-card__trend kpi-card__trend--good" id="put-delta"></div>
+        </div>
+
+        <div class="chart-canvas-wrap">
+          <canvas id="put-chart" role="img" aria-label="Évolution des putts moyens par round"></canvas>
+        </div>
+      </article>
+    </section>
+  </main>
+</section>
+</div>
+
+<!-- =========================== PARTIE : WEDGING ============================ -->
+<div id="page-wedging" class="app-page">
+  <div id="app"></div>
+</div>
+
+<!-- ============================ PARTIE : GYM ============================ -->
+<div id="page-gym" class="app-page gym-app">
+  <div class="gym-app">
+
+    <!-- ============================== VUE : ACCUEIL ============================== -->
+    <section class="gym-view" id="view-gym-home" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="showPage('home'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Home
+        </a>
+        <span class="gym-header__title">GYM</span>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+
+        <!-- Hero : titre + accroche. Image de fond à ajouter dans .home-hero__media -->
+        <div class="home-hero gym-anim-in">
+          <div class="home-hero__media"></div>
+          <div class="home-hero__content">
+            <h1 class="gym-title-xl">Développez votre <span class="home-hero__highlight">puissance</span> physique.</h1>
+            <p class="gym-subtitle">Planifiez, entraînez-vous et suivez vos progrès.</p>
+            <span class="home-hero__bar"></span>
+          </div>
+        </div>
+
+        <!-- Grille des 4 fonctionnalités principales. Image de fond à ajouter dans chaque .feature-card__media -->
+        <div class="feature-grid gym-stagger">
+          <a class="card card--interactive feature-card" href="#" onclick="gymNavigate('programmes'); return false;">
+            <div class="feature-card__media feature-card__media--programmes"></div>
+            <div class="feature-card__body">
+              <div class="feature-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="3.5" width="12" height="16" rx="2"/>
+                  <path d="M9 3.2v-.2a1.5 1.5 0 013 0v.2"/>
+                  <circle cx="8.3" cy="9" r="0.6" fill="currentColor" stroke="none"/>
+                  <path d="M10.2 9h4"/>
+                  <circle cx="8.3" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+                  <path d="M10.2 12.5h4"/>
+                  <path d="M7 16.7l1.8-1.8 1.3 1.3L13.5 13"/>
+                </svg>
+              </div>
+              <span class="feature-card__bar"></span>
+              <span class="feature-card__title">Programmes</span>
+              <p class="feature-card__desc">Créez et gérez vos programmes d'entraînement.</p>
+              <span class="feature-card__arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
+            </div>
+          </a>
+
+          <a class="card card--interactive feature-card" href="#" onclick="gymNavigate('exercices'); return false;">
+            <div class="feature-card__media feature-card__media--exercices"></div>
+            <div class="feature-card__body">
+              <div class="feature-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1.5" y="9" width="3" height="6" rx="1"/>
+                  <rect x="4.3" y="7.4" width="2.4" height="9.2" rx="1"/>
+                  <path d="M6.7 12h10.6"/>
+                  <rect x="17.3" y="7.4" width="2.4" height="9.2" rx="1"/>
+                  <rect x="19.5" y="9" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <span class="feature-card__bar"></span>
+              <span class="feature-card__title">Exercices</span>
+              <p class="feature-card__desc">Recherchez dans notre banque d'exercices et ajoutez-les à vos programmes.</p>
+              <span class="feature-card__arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
+            </div>
+          </a>
+
+          <a class="card card--interactive feature-card" href="#" onclick="gymNavigate('historique'); return false;">
+            <div class="feature-card__media feature-card__media--historique"></div>
+            <div class="feature-card__body">
+              <div class="feature-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 2.5h6M12 5v2.2"/>
+                  <circle cx="12" cy="13" r="8"/>
+                  <path d="M12 9v4l3 2"/>
+                </svg>
+              </div>
+              <span class="feature-card__bar"></span>
+              <span class="feature-card__title">Historique</span>
+              <p class="feature-card__desc">Consultez vos séances passées et vos entraînements.</p>
+              <span class="feature-card__arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
+            </div>
+          </a>
+
+          <a class="card card--interactive feature-card" href="#" onclick="gymNavigate('progression'); return false;">
+            <div class="feature-card__media feature-card__media--progression"></div>
+            <div class="feature-card__body">
+              <div class="feature-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 20v-7M8 20v-11M13 20v-6"/>
+                  <path d="M13 8.5l4-4 4 3"/>
+                  <path d="M21 4.5v4h-4"/>
+                </svg>
+              </div>
+              <span class="feature-card__bar"></span>
+              <span class="feature-card__title">Progression</span>
+              <p class="feature-card__desc">Analysez vos performances et suivez votre évolution dans le temps.</p>
+              <span class="feature-card__arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Démarrage rapide -->
+        <div class="card gym-anim-in home-quickstart">
+          <span class="gym-eyebrow">Démarrer rapidement</span>
+          <div class="quickstart__row">
+            <a class="quickstart__item" href="#" onclick="gymNavigate('seance-active'); return false;">
+              <span class="quickstart__icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l12-7z"/></svg>
+              </span>
+              <span class="quickstart__label">Lancer une<br/>séance</span>
+            </a>
+            <span class="quickstart__divider"></span>
+            <a class="quickstart__item" href="#" onclick="gymNavigate('creer-seance'); return false;">
+              <span class="quickstart__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+              <span class="quickstart__label">Nouvelle<br/>séance</span>
+            </a>
+            <span class="quickstart__divider"></span>
+            <a class="quickstart__item" href="#" onclick="gymNavigate('creer-programme'); return false;">
+              <span class="quickstart__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="13" r="7"/><circle cx="11" cy="13" r="3.2"/><circle cx="11" cy="13" r="0.8" fill="currentColor" stroke="none"/>
+                  <path d="M17 5.2l1.4 1.4M19.6 4.6l-1 1M18.6 7.2l1-1"/>
+                </svg>
+              </span>
+              <span class="quickstart__label">Créer un<br/>programme</span>
+            </a>
+          </div>
+        </div>
+
+      </main>
+    </section>
+
+    <!-- ============================== VUE : PROGRAMMES ============================== -->
+    <section class="gym-view" id="view-programmes" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <h1 class="gym-title-xl">Programmes</h1>
+          <p class="gym-subtitle">Créez et suivez vos programmes d'entraînement.</p>
+        </div>
+
+        <a class="btn btn-primary" href="#" onclick="gymNavigate('creer-programme'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Nouveau programme
+        </a>
+
+        <div class="tabs tabs--split" id="programmes-tabs">
+          <button class="tab is-active" data-value="mes-programmes">Mes programmes</button>
+          <button class="tab" data-value="bibliotheque">Bibliothèque</button>
+        </div>
+
+        <div class="gym-stagger" id="programmes-list" style="display:flex; flex-direction:column; gap:14px;"></div>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : DÉTAIL PROGRAMME ============================== -->
+    <section class="gym-view" id="view-programme-detail" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('programmes'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div id="program-hero" class="gym-anim-in"></div>
+
+        <div class="card" id="program-info-row"></div>
+
+        <div class="card gym-anim-in" id="program-progress-card" style="display:flex; flex-direction:column; gap:16px;"></div>
+
+        <section style="display:flex; flex-direction:column; gap:14px;">
+          <div class="gym-section-head">
+            <h2 class="gym-section-title">Séances</h2>
+            <a class="gym-link" href="#" onclick="gymNavigate('creer-seance', {programme: gymGetParam('id','prog-force')}); return false;">Ajouter <span id="icon-add-session"></span></a>
+          </div>
+          <div class="gym-stagger" id="program-sessions-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </section>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : CRÉER UN PROGRAMME ============================== -->
+    <section class="gym-view" id="view-creer-programme" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('programmes'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Réglages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <span class="gym-eyebrow">Créer un programme</span>
+            <h1 class="gym-title-xl">Ton programme sur mesure</h1>
+            <p class="gym-subtitle">Définis ton objectif, le nombre de séances par semaine et la durée de ton programme.</p>
+          </div>
+          <div class="hero-photo" style="width:110px; height:110px; flex-shrink:0; min-height:0;">
+            <div class="hero-photo__silhouette" style="width:90%;" id="cp-hero-icon"></div>
+          </div>
+        </div>
+
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <div>
+              <p class="step__heading">Titre du programme</p>
+              <p class="step__hint">Optionnel — laisse vide pour un nom généré automatiquement.</p>
+            </div>
+          </div>
+          <label class="field">
+            <span id="icon-field-titre"></span>
+            <input type="text" id="input-titre" placeholder="Ex. : Prépa été" maxlength="60" />
+          </label>
+        </div>
+
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">1</span>
+            <div>
+              <p class="step__heading">Quel est ton objectif ?</p>
+              <p class="step__hint">Choisis l'objectif principal de ton programme.</p>
+            </div>
+          </div>
+          <div class="choice-grid" id="objectif-grid"></div>
+        </div>
+
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">2</span>
+            <div>
+              <p class="step__heading">Combien de séances par semaine ?</p>
+              <p class="step__hint">Entre 1 et 7 séances. Tu peux ajuster plus tard.</p>
+            </div>
+          </div>
+          <label class="field">
+            <span id="icon-field-seances"></span>
+            <input type="number" id="input-seances" min="1" max="7" placeholder="Ex. : 3" inputmode="numeric" />
+            <span class="field__suffix">séances / semaine</span>
+          </label>
+        </div>
+
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">3</span>
+            <div>
+              <p class="step__heading">Quelle durée pour ton programme ?</p>
+              <p class="step__hint">En semaines. Tu peux l'ajuster plus tard.</p>
+            </div>
+          </div>
+          <label class="field">
+            <span id="icon-field-duree"></span>
+            <input type="number" id="input-duree" min="1" max="52" placeholder="Ex. : 8" inputmode="numeric" />
+            <span class="field__suffix">semaines</span>
+          </label>
+        </div>
+
+        <div class="card card--accent gym-anim-in" style="display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="icon-circle" id="icon-recap-target"></div>
+            <div>
+              <p class="step__heading">Récapitulatif</p>
+              <p class="step__hint">Voici ce que tu as sélectionné :</p>
+            </div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-item"><span id="icon-recap-1"></span><span class="summary-item__label">Objectif</span><span class="summary-item__value" id="recap-objectif">Force</span></div>
+            <div class="summary-item"><span id="icon-recap-2"></span><span class="summary-item__label">Séances / semaine</span><span class="summary-item__value" id="recap-seances">—</span></div>
+            <div class="summary-item"><span id="icon-recap-3"></span><span class="summary-item__label">Durée</span><span class="summary-item__value" id="recap-duree">—</span></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-generer">
+          Générer mon programme
+        </button>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : CRÉER UNE SÉANCE ============================== -->
+    <section class="gym-view" id="view-creer-seance" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('programme-detail', {id: gymGetParam('programme','prog-force')}); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Réglages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <span class="gym-eyebrow">Créer une séance</span>
+          <h1 class="gym-title-xl">Configure ta séance</h1>
+          <p class="gym-subtitle">Personnalise ta séance en quelques étapes. Tu pourras la modifier à tout moment.</p>
+        </div>
+
+        <div class="card" id="creer-seance-empty" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px; padding:32px 20px;">
+          <div class="icon-circle" id="creer-seance-empty-icon"></div>
+          <div>
+            <p class="list-row__title">Aucun programme disponible</p>
+            <p class="list-row__meta">Crée d'abord un programme pour pouvoir y ajouter une séance.</p>
+          </div>
+          <a class="btn btn-primary" href="#" onclick="gymNavigate('creer-programme'); return false;" style="width:auto; padding:12px 22px; font-size:13.5px;">Créer un programme</a>
+        </div>
+
+        <div id="creer-seance-form" style="display:flex; flex-direction:column; gap:24px;">
+
+        <!-- Étape 1 : programme -->
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">1</span>
+            <div>
+              <p class="step__heading">Programme</p>
+              <p class="step__hint">Choisis le programme dans lequel ajouter cette séance.</p>
+            </div>
+          </div>
+          <button type="button" class="card card--interactive list-row" id="program-picker-btn" style="border-color:var(--gym-border-strong);">
+            <div class="icon-circle icon-circle--sm" id="program-picker-icon"></div>
+            <div class="list-row__body">
+              <span class="list-row__title" id="program-picker-name">—</span>
+              <span class="list-row__meta" id="program-picker-meta">—</span>
+            </div>
+            <span class="list-row__chevron" id="program-picker-chevron"></span>
+          </button>
+        </div>
+
+        <!-- Étape 2 : catégorie -->
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">2</span>
+            <div>
+              <p class="step__heading">Catégorie</p>
+              <p class="step__hint">Sélectionne la catégorie principale de cette séance.</p>
+            </div>
+          </div>
+          <div class="choice-grid" id="category-grid"></div>
+        </div>
+
+        <!-- Étape 3 : objectif -->
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">3</span>
+            <div>
+              <p class="step__heading">Objectif</p>
+              <p class="step__hint">Quel est l'objectif de cette séance ?</p>
+            </div>
+          </div>
+          <div class="choice-grid" id="goal-grid"></div>
+        </div>
+
+        <!-- Étape 4 : exercices -->
+        <div class="card step gym-anim-in">
+          <div class="step__head" style="align-items:center;">
+            <span class="step__number">4</span>
+            <div style="flex:1;">
+              <p class="step__heading">Exercices</p>
+              <p class="step__hint">Ajoute les exercices de ta séance. Tu peux en ajouter plusieurs.</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-add-exercise" style="width:auto; align-self:flex-end; padding:12px 18px; font-size:13.5px;">
+            <span id="icon-plus-add"></span> Ajouter un exercice
+          </button>
+          <div id="exercise-list" style="display:flex; flex-direction:column;"></div>
+        </div>
+
+        <!-- Étape 5 : repos & tempo -->
+        <div class="card step gym-anim-in">
+          <div class="step__head">
+            <span class="step__number">5</span>
+            <div>
+              <p class="step__heading">Temps de repos et tempo</p>
+              <p class="step__hint">Définis le temps de repos entre les séries et le tempo d'exécution.</p>
+            </div>
+          </div>
+          <div class="field--select-row">
+            <label class="field" style="align-items:flex-start;">
+              <span id="icon-rest"></span>
+              <span style="display:flex; flex-direction:column; gap:2px; width:100%;">
+                <span style="font-size:11.5px; color:var(--gym-text-secondary);">Repos</span>
+                <select id="select-repos" style="font-weight:700;"></select>
+              </span>
+            </label>
+            <label class="field" style="align-items:flex-start;">
+              <span id="icon-tempo"></span>
+              <span style="display:flex; flex-direction:column; gap:2px; width:100%;">
+                <span style="font-size:11.5px; color:var(--gym-text-secondary);">Tempo</span>
+                <select id="select-tempo" style="font-weight:700;"></select>
+              </span>
+              <button type="button" class="icon-btn" id="tempo-info" aria-label="Qu'est-ce que le tempo ?" style="flex-shrink:0;"></button>
+            </label>
+          </div>
+          <div class="card" id="tempo-info-popover" style="display:none; margin-top:4px; padding:14px 16px; background:rgba(255,255,255,0.04);">
+            <p class="list-row__meta" style="color:var(--gym-text-secondary);">Le tempo se lit <strong style="color:var(--gym-text);">Excentrique-Pause-Concentrique-Pause</strong>, en secondes. Exemple : <strong style="color:var(--gym-text);">2-0-2-0</strong> = 2s pour descendre, 0s de pause, 2s pour remonter, 0s de pause.</p>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-create-session">
+          <span id="icon-check-create"></span> Créer la séance
+        </button>
+
+        </div>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : EXERCICES ============================== -->
+    <section class="gym-view" id="view-exercices" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <span class="gym-eyebrow">Exercices</span>
+            <h1 class="gym-title-xl">Tous les exercices</h1>
+            <p class="gym-subtitle">Découvrez et explorez tous les exercices pour progresser à votre rythme.</p>
+          </div>
+          <div class="hero-photo" style="width:110px; height:110px; flex-shrink:0; min-height:0;">
+            <div class="hero-photo__silhouette" id="ex-hero-icon" style="width:90%;"></div>
+          </div>
+        </div>
+
+        <div class="tabs gym-anim-in" id="region-tabs">
+          <button class="tab is-active" data-value="tous">Tous</button>
+          <button class="tab" data-value="haut-du-corps">Haut du corps</button>
+          <button class="tab" data-value="bas-du-corps">Bas du corps</button>
+          <button class="tab" data-value="gainage">Gainage</button>
+          <button class="tab" data-value="mobilite">Mobilité</button>
+        </div>
+
+        <label class="search-bar gym-anim-in">
+          <span id="icon-search"></span>
+          <input type="search" id="search-input" placeholder="Rechercher un exercice ou une catégorie" />
+        </label>
+
+        <div class="gym-stagger" id="category-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+
+        <button type="button" class="disclosure" id="advanced-filter-toggle">
+          <span id="icon-sliders"></span>
+          Filtrer les exercices
+          <span id="icon-chevron-filter"></span>
+        </button>
+
+        <div class="card" id="advanced-filter-panel" style="display:none; flex-direction:column; gap:16px;">
+          <div>
+            <p class="step__hint" style="margin-bottom:10px;">Équipement</p>
+            <div class="tabs" id="equipment-filter">
+              <button class="tab is-active" data-value="tous">Tous</button>
+              <button class="tab" data-value="avec-materiel">Avec matériel</button>
+              <button class="tab" data-value="poids-du-corps">Poids du corps</button>
+            </div>
+          </div>
+          <div>
+            <p class="step__hint" style="margin-bottom:10px;">Niveau</p>
+            <div class="tabs" id="level-filter">
+              <button class="tab is-active" data-value="tous">Tous</button>
+              <button class="tab" data-value="debutant">Débutant</button>
+              <button class="tab" data-value="intermediaire">Intermédiaire</button>
+              <button class="tab" data-value="avance">Avancé</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : SÉANCE ACTIVE ============================== -->
+    <section class="gym-view" id="view-seance-active" hidden>
+      <div class="session-shell">
+
+        <header class="session-header">
+          <a class="session-header__back" href="#" id="seance-active-back" aria-label="Retour">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </a>
+          <div class="session-header__title">
+            <span class="session-header__name">Séance en cours</span>
+            <span class="session-header__meta" id="session-eyebrow">—</span>
+          </div>
+          <div class="session-header__timer">
+            <span class="session-header__timer-icon" id="icon-session-timer"></span>
+            <span class="session-header__timer-value" id="session-timer">00:00:00</span>
+            <button type="button" class="session-header__pause" id="btn-toggle-timer" aria-label="Mettre en pause">
+              <span id="icon-session-pause"></span>
+            </button>
+          </div>
+        </header>
+
+        <div class="session-progress-track"><div class="session-progress-fill" id="session-progress-fill" style="width:0%"></div></div>
+
+        <main class="session-main">
+
+          <!-- État vide : aucune séance active -->
+          <div class="gym-anim-in" id="session-empty" style="display:none; flex-direction:column; gap:10px;">
+            <h1 class="gym-title-xl" id="session-empty-title">Aucune séance active</h1>
+            <p class="gym-subtitle" id="session-empty-subtitle">Crée un programme et ajoute-y une séance pour commencer à t'entraîner.</p>
+          </div>
+
+          <!-- Contenu de la séance en cours -->
+          <div class="gym-anim-in" id="session-content" style="display:none; flex-direction:column; gap:16px;">
+
+            <!-- Exercice courant : photo de fond à ajouter par exercice + navigation -->
+            <div class="session-exercise-hero">
+              <div class="session-exercise-hero__media" id="session-exercise-media"></div>
+              <div class="session-exercise-hero__content">
+                <div class="session-exercise-hero__nav">
+                  <button type="button" class="session-exercise-hero__arrow" id="btn-prev-exercise" aria-label="Exercice précédent">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <span class="gym-eyebrow" id="session-exo-position">EXERCICE — / —</span>
+                  <button type="button" class="session-exercise-hero__arrow" id="btn-next-exercise" aria-label="Exercice suivant">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                </div>
+                <h1 class="session-exercise-hero__title" id="session-exercise-title">—</h1>
+              </div>
+            </div>
+
+            <div class="card session-summary" id="session-info-row"></div>
+
+            <div class="session-sets-list" id="session-sets-list"></div>
+
+          </div>
+
+        </main>
+
+        <div class="session-actions" id="session-actions" style="display:none;">
+          <button type="button" class="btn btn-secondary session-actions__finish" id="btn-finish-session">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Terminer la séance
+          </button>
+          <button type="button" class="btn btn-primary session-actions__next" id="btn-next-series">
+            <span id="session-next-label">Série suivante</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================== VUE : PROGRESSION ============================== -->
+    <section class="gym-view" id="view-progression" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <span class="gym-eyebrow">Progression</span>
+          <h1 class="gym-title-xl">Progression</h1>
+          <p class="gym-subtitle">Suivez l'évolution de vos performances et de votre condition physique.</p>
+        </div>
+
+        <div class="card gym-anim-in" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding:40px 24px;">
+          <div class="icon-circle" id="progression-empty-icon"></div>
+          <div>
+            <p class="list-row__title">Pas encore de données</p>
+            <p class="list-row__meta">Termine tes premières séances pour voir apparaître ta progression ici.</p>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : HISTORIQUE ============================== -->
+    <section class="gym-view" id="view-historique" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <span class="gym-eyebrow">Historique</span>
+          <h1 class="gym-title-xl">Historique</h1>
+          <p class="gym-subtitle">Consultez vos séances et suivez vos entraînements.</p>
+        </div>
+
+        <div class="tabs gym-anim-in" id="history-tabs">
+          <button class="tab is-active" data-value="tous">Tous</button>
+          <button class="tab" data-value="programme">Programmes</button>
+          <button class="tab" data-value="libre">Séances libres</button>
+          <button class="tab" data-value="exercice">Exercices</button>
+        </div>
+
+        <div id="history-groups" style="display:flex; flex-direction:column; gap:24px;"></div>
+
+        <div id="history-skeleton" style="display:none; flex-direction:column; gap:12px;">
+          <div class="skeleton-row"><div class="skeleton-block" style="width:64px; height:64px; border-radius:14px;"></div><div style="flex:1; display:flex; flex-direction:column; gap:8px;"><div class="skeleton-block" style="width:60%; height:14px;"></div><div class="skeleton-block" style="width:40%; height:12px;"></div></div></div>
+          <div class="skeleton-row"><div class="skeleton-block" style="width:64px; height:64px; border-radius:14px;"></div><div style="flex:1; display:flex; flex-direction:column; gap:8px;"><div class="skeleton-block" style="width:50%; height:14px;"></div><div class="skeleton-block" style="width:35%; height:12px;"></div></div></div>
+        </div>
+
+        <button type="button" class="disclosure" id="load-more-btn">
+          <span id="icon-doc-more"></span>
+          Plus de séances
+          <span id="icon-chevron-more"></span>
+        </button>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : OBJECTIFS ============================== -->
+    <section class="gym-view" id="view-objectifs" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Réglages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+        <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <span class="gym-eyebrow">Objectifs</span>
+          <h1 class="gym-title-xl">Vos objectifs</h1>
+          <p class="gym-subtitle">Fixez-vous des objectifs et suivez vos progrès pour atteindre vos rêves.</p>
+        </div>
+
+        <div class="card gym-anim-in" style="display:flex; align-items:center; gap:16px;">
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="icon-circle icon-circle--sm" id="hero-target-icon"></div>
+              <span class="list-row__title" style="font-size:15px;">Un objectif clair = des résultats concrets</span>
+            </div>
+            <p class="list-row__meta">Que ce soit pour t'affiner, gagner en force ou améliorer ton endurance, chaque objectif compte !</p>
+          </div>
+          <div class="hero-photo" style="width:90px; height:90px; min-height:0; flex-shrink:0;">
+            <div class="hero-photo__silhouette" style="width:85%;" id="hero-photo-icon"></div>
+          </div>
+        </div>
+
+        <section style="display:flex; flex-direction:column; gap:14px;">
+          <div class="gym-section-head">
+            <h2 class="gym-section-title">Mes objectifs</h2>
+            <a class="gym-link" href="#objectifs-grid">Voir tous <span id="icon-voir-tous"></span></a>
+          </div>
+          <div class="choice-grid choice-grid--2 gym-stagger" id="objectifs-grid" style="align-items:stretch;"></div>
+        </section>
+
+        <div class="card gym-anim-in" style="display:flex; flex-direction:column; gap:18px;">
+          <span class="list-row__title">Comment ça marche ?</span>
+          <div class="howto" id="howto-steps"></div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-new-goal">
+          <span id="icon-plus-goal"></span> Créer un nouvel objectif
+        </button>
+      </main>
+    </section>
+
+  </div>
+
+  <!-- Bottom sheet : choix du programme (vue Créer une séance) -->
+  <div class="sheet-overlay" id="program-sheet-overlay"></div>
+  <div class="sheet" id="program-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Choisir un programme</span>
+      <button type="button" class="icon-btn" id="program-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div class="sheet__body" id="program-sheet-body"></div>
+  </div>
+
+  <!-- Bottom sheet : ajout d'un exercice (vue Créer une séance) -->
+  <div class="sheet-overlay" id="sheet-overlay"></div>
+  <div class="sheet" id="exercise-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Ajouter un exercice</span>
+      <button type="button" class="icon-btn" id="sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div style="padding:4px 20px 12px;">
+      <label class="search-bar">
+        <span id="icon-sheet-search"></span>
+        <input type="search" id="sheet-search-input" placeholder="Rechercher un exercice (nom, muscle...)" />
+      </label>
+    </div>
+    <div class="sheet__body" id="sheet-body"></div>
+  </div>
+
+  <!-- Bottom sheet : création d'un objectif (vue Objectifs) -->
+  <div class="sheet-overlay" id="goal-sheet-overlay"></div>
+  <div class="sheet" id="goal-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Nouvel objectif</span>
+      <button type="button" class="icon-btn" id="goal-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div class="sheet__body" style="gap:20px;">
+      <div>
+        <p class="step__hint" style="margin-bottom:10px;">Type d'objectif</p>
+        <div class="choice-grid" id="goal-type-grid"></div>
+      </div>
+      <label class="field">
+        <span id="icon-goal-title"></span>
+        <input type="text" id="goal-title-input" placeholder="Nom de l'objectif" />
+      </label>
+      <label class="field">
+        <span id="icon-goal-target"></span>
+        <input type="text" id="goal-progress-input" placeholder="Ex. : 3 km / 5 km" />
+      </label>
+      <button class="btn btn-primary" id="btn-create-goal">Créer l'objectif</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ PARTIE : VITESSE ============================ -->
+<div id="page-vitesse" class="app-page">
+  <div id="app-root-vitesse"></div>
+</div>
+
+<!-- ============================ PARTIE : PUTTING ============================ -->
+<div id="page-putting" class="app-page">
+  <div id="app-root"></div>
+</div>
+
+<script src="HomePage.js"></script>
+<script src="parcours-ui.js"></script>
+<script src="wedging.js"></script>
+<script src="gym.js"></script>
+<script src="putting.js"></script>
+<script src="vitesse.js"></script>
+<script src="stats.js"></script>
+</body>
+</html>
