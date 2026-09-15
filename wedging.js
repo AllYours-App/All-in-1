@@ -1017,7 +1017,7 @@ const Router = (function () {
   function parseHash() {
     const hash = location.hash.replace(/^#/, "");
     const [path, query] = hash.split("?");
-    return { path: path || "parcours", params: new URLSearchParams(query || "") };
+    return { path: (path && path !== "home") ? path : "parcours", params: new URLSearchParams(query || "") };
   }
   function render() {
     const { path, params } = parseHash();

@@ -824,13 +824,11 @@ button {
 body.no-scroll {
   overflow: hidden;
   height: 100vh;
-  height: 100dvh;
   padding-bottom: 0;
 }
 
 body.no-scroll .app {
   height: 100vh;
-  height: 100dvh;
   min-height: 0;
 }
 
@@ -992,12 +990,6 @@ body.no-scroll .screen-view.active .screen {
   border-color: var(--accent);
   color: #050505;
   background: var(--accent);
-}
-
-.mode-btn-minus.active {
-  border-color: var(--danger);
-  background: var(--danger);
-  color: #050505;
 }
 
 /* Hero card (used on Vent / Dénivelé / Détail) */
