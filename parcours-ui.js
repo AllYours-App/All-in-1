@@ -821,7 +821,7 @@ function renderFairway() {
 
       <div class="track-rail track-rail-right">
         <button type="button" class="mode-btn ${fwMode === "plus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('plus');" aria-label="Ajouter un coup">+</button>
-        <button type="button" class="mode-btn ${fwMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('minus');" aria-label="Retirer un coup">−</button>
+        <button type="button" class="mode-btn mode-btn-minus ${fwMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('minus');" aria-label="Retirer un coup">−</button>
         <button type="button" class="mode-btn ${fwMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('edit');" aria-label="Renuméroter un coup">${TRACK_PENCIL_ICON}</button>
       </div>
 
@@ -983,7 +983,7 @@ function renderGreen() {
 
       <div class="track-rail track-rail-right">
         <button type="button" class="mode-btn ${grMode === "plus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('plus');" aria-label="Ajouter une marque">+</button>
-        <button type="button" class="mode-btn ${grMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('minus');" aria-label="Retirer une marque">−</button>
+        <button type="button" class="mode-btn mode-btn-minus ${grMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('minus');" aria-label="Retirer une marque">−</button>
         <button type="button" class="mode-btn ${grMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('edit');" aria-label="Renuméroter une marque">${TRACK_PENCIL_ICON}</button>
       </div>
 

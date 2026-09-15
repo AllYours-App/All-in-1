@@ -202,7 +202,7 @@ const UI = (function () {
 
   function header({ title, backLabel, backHash, rightIcon }) {
     return `<header class="wg-header">
-      <div class="wg-header-side"><button class="wg-back-btn" onclick="Router.go('${backHash}')">${ICONS.back} ${backLabel}</button></div>
+      <div class="wg-header-side"><button class="wg-back-btn" onclick="${backHash === 'app-home' ? "showPage('home')" : "Router.go('" + backHash + "')"}">${ICONS.back} ${backLabel}</button></div>
       <h1 class="wg-title" style="${title === "WEDGING" ? "" : "font-size:16px;letter-spacing:2px;"}">${title}</h1>
       <div class="wg-header-side wg-header-right">${rightIcon ? `<button class="wg-icon-btn" id="headerRightBtn">${rightIcon}</button>` : ""}</div>
     </header>`;
@@ -690,7 +690,7 @@ function setWedgeExCircleZone(direction, ring) {
   setWedgeExAttemptResult({ zone, direction, ring, made });
 }
 function wedgeExResultInputHtml(ex, currentResult) {
-  if (ex.resultMode === 'zone') return `<div class="wg-text-muted wg-text-center mb-6">Vise le trou au centre — anneau intérieur = réussite, anneau extérieur = raté</div>${UI.twoRingWheelSvg(currentResult)}`;
+  if (ex.resultMode === 'zone') return `<div class="wg-text-muted wg-text-center mb-6">Vise le trou au centre — anneau intérieur = réussite, anneau extérieur = raté</div><div class="wg-wheel-wrap">${UI.twoRingWheelSvg(currentResult)}</div>`;
   if (ex.resultMode === 'distance') return `<div class="wg-field"><label>Distance obtenue (m)</label><input type="number" class="wg-input" id="wedge-ex-session-distance-input" placeholder="Distance (m)" min="0" value="${currentResult !== null && currentResult !== undefined ? currentResult : ''}"></div><button class="wg-btn-primary" onclick="submitWedgeExDistanceResult()">Valider le tir</button>`;
   return `<div class="wg-field-row"><button class="wg-result-btn ${currentResult === true ? 'success active' : 'success'}" onclick="setWedgeExInOut(true)">In</button><button class="wg-result-btn ${currentResult === false ? 'fail active' : 'fail'}" onclick="setWedgeExInOut(false)">Aller</button></div>`;
 }
@@ -858,14 +858,14 @@ function wedgeExerciseLogDetailHtml(ex) {
 const Views = {};
 
 Views.home = function () {
-  return `${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "home" })}<p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>${UI.navCards(null)}`;
+  return `${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "app-home" })}<p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>${UI.navCards(null)}`;
 };
 
 /* --- PARCOURS = Journal (ajout de coup + historique filtrable) --- */
 Views.parcours = function () {
   const filtered = wedgeHistoryFilteredRounds();
   return `
-    ${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "home", rightIcon: UI.ICONS.more })}
+    ${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "app-home", rightIcon: UI.ICONS.more })}
     <p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>
     ${UI.navCards("parcours")}
 
@@ -985,7 +985,7 @@ Views.sgAnalysis = function () {
 /* --- EXERCICES = Créatif : liste, modale, session, revue (état en cascade, comme l'ancienne version) --- */
 function wedgeExercisesListHtml() {
   return `
-    ${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "home", rightIcon: UI.ICONS.more })}
+    ${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "app-home", rightIcon: UI.ICONS.more })}
     <p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>
     ${UI.navCards("exercices")}
     <div class="wg-toolbar"><span class="wg-toolbar-title">MES EXERCICES</span><button class="wg-chip active" onclick="openWedgeExerciseModal()">${UI.ICONS.plus} Créer</button></div>
@@ -1017,11 +1017,11 @@ const Router = (function () {
   function parseHash() {
     const hash = location.hash.replace(/^#/, "");
     const [path, query] = hash.split("?");
-    return { path: path || "home", params: new URLSearchParams(query || "") };
+    return { path: path || "parcours", params: new URLSearchParams(query || "") };
   }
   function render() {
     const { path, params } = parseHash();
-    const route = ROUTES[path] || ROUTES["home"];
+    const route = ROUTES[path] || ROUTES["parcours"];
     try {
       document.getElementById("app").innerHTML = route.view(params);
     } catch (e) {
@@ -1034,7 +1034,7 @@ const Router = (function () {
         '<p style="color:#B6B6B6;font-size:13px;margin-bottom:14px;">Copie ce message pour le signaler :</p>' +
         '<pre style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;color:#B6B6B6;background:#0B0F14;border:1px solid #1A2330;border-radius:12px;padding:14px;">' +
         detail.replace(/</g, '&lt;') + '</pre>' +
-        '<button class="wg-btn-secondary" style="margin-top:14px;" onclick="Router.go(\'home\')">Retour à l\'accueil</button>' +
+        '<button class="wg-btn-secondary" style="margin-top:14px;" onclick="Router.go(\'parcours\')">Retour à l\'accueil</button>' +
         '</div>';
     }
     window.scrollTo(0, 0);

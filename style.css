@@ -824,11 +824,13 @@ button {
 body.no-scroll {
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   padding-bottom: 0;
 }
 
 body.no-scroll .app {
   height: 100vh;
+  height: 100dvh;
   min-height: 0;
 }
 
@@ -990,6 +992,12 @@ body.no-scroll .screen-view.active .screen {
   border-color: var(--accent);
   color: #050505;
   background: var(--accent);
+}
+
+.mode-btn-minus.active {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #050505;
 }
 
 /* Hero card (used on Vent / Dénivelé / Détail) */
@@ -2599,9 +2607,13 @@ button{font-family:inherit;}
 /* ---------- Bottom nav ---------- */
 .wg-bottom-nav{
   position:fixed;
-  left:0;right:0;bottom:0;
+  left:16px;right:16px;bottom:0;
+  max-width:calc(var(--wg-max-width) - 32px);
+  margin:0 auto;
   background:var(--wg-card);
-  border-top:1px solid var(--wg-border);
+  border:1px solid var(--wg-border);
+  border-bottom:none;
+  border-radius:18px 18px 0 0;
   display:flex;
   justify-content:space-around;
   padding:8px 6px calc(8px + env(safe-area-inset-bottom));
@@ -3005,7 +3017,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 
 /* ---------- Roue de zones (9 zones) ---------- */
 .wg-wheel-wrap{display:flex;justify-content:center;}
-.wg-wheel{width:100%;max-width:300px;height:auto;}
+.wg-wheel{width:100%;max-width:340px;height:auto;display:block;}
 .wg-wheel-sector{fill:rgba(255,255,255,0.09);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;transition:fill .2s;}
 .wg-wheel-sector:hover{fill:rgba(215,255,47,.22);}
 .wg-wheel-sector--in{fill:rgba(215,255,47,0.16);}
