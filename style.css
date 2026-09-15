@@ -1612,6 +1612,7 @@ body.no-scroll .screen-view.active .screen {
 
 input[type="range"] {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 6px;
   border-radius: var(--radius-pill);
@@ -2613,7 +2614,7 @@ button{font-family:inherit;}
   border-radius:18px 18px 0 0;
   display:flex;
   justify-content:space-around;
-  padding:4px 6px calc(4px + env(safe-area-inset-bottom));
+  padding:4px 6px calc(2px + env(safe-area-inset-bottom));
   z-index:50;
 }
 .wg-bottom-nav-item{
@@ -3014,8 +3015,8 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 
 /* ---------- Roue de zones (9 zones) ---------- */
 .wg-wheel-wrap{display:flex;justify-content:center;}
-.wg-wheel{width:100%;max-width:260px;height:auto;display:block;}
-#page-wedging svg.wg-wheel{width:100%;max-width:260px;height:auto;display:block;}
+.wg-wheel{width:95%;max-width:240px;height:auto;display:block;}
+#page-wedging svg.wg-wheel{width:95%;max-width:240px;height:auto;display:block;}
 .wg-wheel-sector{fill:rgba(255,255,255,0.09);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;transition:fill .2s;}
 .wg-wheel-sector:hover{fill:rgba(215,255,47,.22);}
 .wg-wheel-sector--in{fill:rgba(215,255,47,0.16);}
@@ -5181,6 +5182,7 @@ select:focus-visible,
   min-height: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
