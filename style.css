@@ -3010,6 +3010,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 /* ---------- Roue de zones (9 zones) ---------- */
 .wg-wheel-wrap{display:flex;justify-content:center;}
 .wg-wheel{width:100%;max-width:340px;height:auto;display:block;}
+#page-wedging svg.wg-wheel{width:100%;max-width:340px;height:auto;display:block;}
 .wg-wheel-sector{fill:rgba(255,255,255,0.09);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;transition:fill .2s;}
 .wg-wheel-sector:hover{fill:rgba(215,255,47,.22);}
 .wg-wheel-sector--in{fill:rgba(215,255,47,0.16);}
