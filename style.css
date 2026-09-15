@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* ===========================================================================
    STYLE COMMUN — Home + Parcours + Wedging
@@ -2600,28 +2600,33 @@ button{font-family:inherit;}
 .wg-bottom-nav{
   position:fixed;
   left:0;right:0;bottom:0;
-  background:rgba(11,15,20,0.92);
-  backdrop-filter:blur(10px);
+  background:var(--wg-card);
   border-top:1px solid var(--wg-border);
   display:flex;
   justify-content:space-around;
-  padding:10px 6px calc(10px + env(safe-area-inset-bottom));
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
   z-index:50;
 }
 .wg-bottom-nav-item{
   display:flex;
   flex-direction:column;
   align-items:center;
+  justify-content:center;
   gap:4px;
+  flex:1;
   background:none;
   border:none;
+  border-radius:var(--wg-radius-sm);
   color:var(--wg-text-secondary);
   font-size:10.5px;
+  font-weight:600;
+  letter-spacing:.3px;
   cursor:pointer;
-  padding:2px 6px;
+  padding:6px 4px;
+  transition:color var(--wg-transition), background var(--wg-transition);
 }
 .wg-bottom-nav-item svg{width:20px;height:20px;}
-.wg-bottom-nav-item.active{color:var(--wg-accent);}
+.wg-bottom-nav-item.active{color:var(--wg-accent);background:rgba(215,255,47,.08);}
 
 /* ---------- Boutons ---------- */
 .wg-btn-primary{
@@ -3000,7 +3005,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 
 /* ---------- Roue de zones (9 zones) ---------- */
 .wg-wheel-wrap{display:flex;justify-content:center;}
-.wg-wheel{width:100%;max-width:230px;height:auto;}
+.wg-wheel{width:100%;max-width:300px;height:auto;}
 .wg-wheel-sector{fill:rgba(255,255,255,0.09);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;transition:fill .2s;}
 .wg-wheel-sector:hover{fill:rgba(215,255,47,.22);}
 .wg-wheel-sector--in{fill:rgba(215,255,47,0.16);}
@@ -3266,6 +3271,56 @@ select:focus-visible,
   padding: 20px 20px 0;
 }
 
+@media (max-width: 400px) {
+  .gym-header {
+    padding: 16px 16px 0;
+  }
+  
+  .gym-header__back {
+    font-size: 14px;
+    gap: 8px;
+  }
+  
+  .gym-header__back svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .gym-header__title {
+    font-size: 16px;
+  }
+  
+  .gym-header__action {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-header {
+    padding: 14px 14px 0;
+  }
+  
+  .gym-header__back {
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  .gym-header__back svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .gym-header__title {
+    font-size: 15px;
+  }
+  
+  .gym-header__action {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .gym-header__back {
   display: flex;
   align-items: center;
@@ -3303,6 +3358,20 @@ select:focus-visible,
   gap: 24px;
 }
 
+@media (max-width: 400px) {
+  .gym-main {
+    padding: 16px 16px 80px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-main {
+    padding: 14px 14px 70px;
+    gap: 16px;
+  }
+}
+
 .gym-eyebrow {
   font-size: 12px;
   font-weight: 700;
@@ -3329,6 +3398,42 @@ select:focus-visible,
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+@media (max-width: 400px) {
+  .gym-eyebrow {
+    font-size: 11px;
+  }
+  
+  .gym-title-xl {
+    font-size: 28px;
+  }
+  
+  .gym-subtitle {
+    font-size: 14px;
+  }
+  
+  .gym-section-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-eyebrow {
+    font-size: 10px;
+  }
+  
+  .gym-title-xl {
+    font-size: 24px;
+  }
+  
+  .gym-subtitle {
+    font-size: 13px;
+  }
+  
+  .gym-section-title {
+    font-size: 16px;
+  }
 }
 
 .gym-section-head {
@@ -3367,6 +3472,18 @@ select:focus-visible,
   border: 1px solid var(--gym-border);
   border-radius: var(--gym-radius-lg);
   padding: var(--gym-gap-lg);
+}
+
+@media (max-width: 400px) {
+  .card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: 14px;
+  }
 }
 
 .card--flush {
@@ -3411,6 +3528,22 @@ select:focus-visible,
     filter var(--gym-speed-fast) var(--gym-ease),
     background var(--gym-speed-fast) var(--gym-ease);
   width: 100%;
+}
+
+@media (max-width: 400px) {
+  .gym-app .btn {
+    padding: 15px 20px;
+    font-size: 14px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-app .btn {
+    padding: 13px 16px;
+    font-size: 13px;
+    gap: 6px;
+  }
 }
 
 .gym-app .btn svg {
@@ -3513,6 +3646,46 @@ select:focus-visible,
   border-radius: var(--gym-radius-lg);
 }
 
+@media (max-width: 400px) {
+  .thumb--sm {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .thumb--md {
+    width: 84px;
+    height: 84px;
+  }
+  
+  .thumb--row {
+    height: 120px;
+  }
+  
+  .thumb--hero {
+    height: 180px;
+  }
+}
+
+@media (max-width: 360px) {
+  .thumb--sm {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .thumb--md {
+    width: 72px;
+    height: 72px;
+  }
+  
+  .thumb--row {
+    height: 100px;
+  }
+  
+  .thumb--hero {
+    height: 160px;
+  }
+}
+
 /* ---- Hero avec image de fond ---------------------------------------------- */
 
 .hero-photo {
@@ -3585,6 +3758,50 @@ select:focus-visible,
   height: 18px;
 }
 
+@media (max-width: 400px) {
+  .icon-circle {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .icon-circle svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .icon-circle--sm {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .icon-circle--sm svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .icon-circle {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .icon-circle svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .icon-circle--sm {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .icon-circle--sm svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 /* ---- Ligne de liste (thumb + texte + chevron) ------------------------------ */
 
 .list-row {
@@ -3618,6 +3835,44 @@ select:focus-visible,
   height: 20px;
   color: var(--gym-text-muted);
   flex-shrink: 0;
+}
+
+@media (max-width: 400px) {
+  .list-row {
+    gap: 10px;
+  }
+  
+  .list-row__title {
+    font-size: 15px;
+  }
+  
+  .list-row__meta {
+    font-size: 12px;
+  }
+  
+  .list-row__chevron {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .list-row {
+    gap: 8px;
+  }
+  
+  .list-row__title {
+    font-size: 14px;
+  }
+  
+  .list-row__meta {
+    font-size: 11px;
+  }
+  
+  .list-row__chevron {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* ---- Barre de progression -------------------------------------------------- */
@@ -3723,6 +3978,32 @@ select:focus-visible,
   height: 13px;
 }
 
+@media (max-width: 400px) {
+  .gym-app .badge {
+    font-size: 11px;
+    padding: 5px 10px;
+    gap: 5px;
+  }
+  
+  .gym-app .badge svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-app .badge {
+    font-size: 10px;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  
+  .gym-app .badge svg {
+    width: 11px;
+    height: 11px;
+  }
+}
+
 .badge--done {
   color: var(--gym-accent);
   border: 1px solid var(--gym-accent-border);
@@ -3779,6 +4060,7 @@ select:focus-visible,
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-bottom: 4px;
 }
 
 .tabs::-webkit-scrollbar {
@@ -3789,11 +4071,19 @@ select:focus-visible,
   flex-shrink: 0;
   font-size: 14px;
   font-weight: 600;
-  padding: 12px 20px;
+  padding: 12px 16px;
   border-radius: var(--gym-radius-pill);
   border: 1px solid var(--gym-border-strong);
   color: var(--gym-text-secondary);
   transition: all var(--gym-speed-fast) var(--gym-ease);
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
 }
 
 .tab.is-active {
@@ -3819,6 +4109,18 @@ select:focus-visible,
   gap: var(--gym-gap-sm);
 }
 
+@media (max-width: 400px) {
+  .choice-grid {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .choice-grid {
+    gap: 4px;
+  }
+}
+
 .choice-grid--2 {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -3835,6 +4137,38 @@ select:focus-visible,
   background: transparent;
   transition: all var(--gym-speed-fast) var(--gym-ease);
   text-align: center;
+}
+
+@media (max-width: 400px) {
+  .choice {
+    padding: 12px 4px;
+    gap: 6px;
+  }
+  
+  .choice svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .choice__label {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .choice {
+    padding: 10px 3px;
+    gap: 4px;
+  }
+  
+  .choice svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .choice__label {
+    font-size: 10.5px;
+  }
 }
 
 .choice svg {
@@ -3939,6 +4273,54 @@ select:focus-visible,
   margin-top: 2px;
 }
 
+@media (max-width: 400px) {
+  .step {
+    gap: 12px;
+  }
+  
+  .step__head {
+    gap: 10px;
+  }
+  
+  .step__number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  
+  .step__heading {
+    font-size: 16px;
+  }
+  
+  .step__hint {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .step {
+    gap: 10px;
+  }
+  
+  .step__head {
+    gap: 8px;
+  }
+  
+  .step__number {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+  
+  .step__heading {
+    font-size: 15px;
+  }
+  
+  .step__hint {
+    font-size: 11.5px;
+  }
+}
+
 /* ---- Champs de formulaire --------------------------------------------------- */
 
 .field {
@@ -3950,6 +4332,33 @@ select:focus-visible,
   padding: 16px 18px;
   background: transparent;
   transition: border-color var(--gym-speed-fast) var(--gym-ease);
+}
+
+@media (max-width: 400px) {
+  .field {
+    padding: 14px 14px;
+  }
+  
+  .field input,
+  .field select {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .field {
+    padding: 12px 12px;
+  }
+  
+  .field input,
+  .field select {
+    font-size: 13px;
+  }
+  
+  .field svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .field:focus-within {
@@ -3988,6 +4397,31 @@ select:focus-visible,
   gap: var(--gym-gap-sm);
 }
 
+@media (max-width: 400px) {
+  .field--select-row {
+    gap: 6px;
+  }
+  
+  .field--select-row .field {
+    padding: 14px 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .field--select-row {
+    gap: 4px;
+  }
+  
+  .field--select-row .field {
+    padding: 12px 10px;
+  }
+  
+  .field--select-row .field input,
+  .field--select-row .field select {
+    font-size: 14px;
+  }
+}
+
 .field--select-row .field {
   flex: 1;
 }
@@ -4001,6 +4435,36 @@ select:focus-visible,
   align-items: center;
   padding: var(--gym-gap-md) 0;
   border-bottom: 1px solid var(--gym-border);
+}
+
+@media (max-width: 400px) {
+  .exercise-row {
+    gap: 8px;
+  }
+  
+  .exercise-row__name {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .exercise-row {
+    gap: 6px;
+    padding: 10px 0;
+  }
+  
+  .exercise-row__name {
+    font-size: 13px;
+  }
+  
+  .exercise-row__stat label {
+    font-size: 10.5px;
+  }
+  
+  .select-chip {
+    padding: 8px 8px;
+    font-size: 12px;
+  }
 }
 
 .exercise-row:last-child {
@@ -4103,6 +4567,34 @@ select:focus-visible,
   gap: var(--gym-gap-sm);
 }
 
+@media (max-width: 400px) {
+  .gym-app .kpi-grid {
+    gap: 6px;
+  }
+  
+  .kpi-card__label {
+    font-size: 13px;
+  }
+  
+  .kpi-card__value {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-app .kpi-grid {
+    gap: 4px;
+  }
+  
+  .kpi-card__label {
+    font-size: 12px;
+  }
+  
+  .kpi-card__value {
+    font-size: 18px;
+  }
+}
+
 .gym-app .kpi-card {
   display: flex;
   flex-direction: column;
@@ -4138,6 +4630,44 @@ select:focus-visible,
   grid-template-columns: repeat(3, 1fr);
   gap: var(--gym-gap-sm);
   text-align: center;
+}
+
+@media (max-width: 400px) {
+  .summary-grid {
+    gap: 6px;
+  }
+  
+  .summary-item svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .summary-item__label {
+    font-size: 11px;
+  }
+  
+  .summary-item__value {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-grid {
+    gap: 4px;
+  }
+  
+  .summary-item svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .summary-item__label {
+    font-size: 10px;
+  }
+  
+  .summary-item__value {
+    font-size: 13px;
+  }
 }
 
 .summary-item {
@@ -4512,6 +5042,62 @@ select:focus-visible,
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 8px;
+}
+
+@media (max-width: 400px) {
+  .feature-grid {
+    gap: 6px;
+  }
+  
+  .feature-card {
+    padding: 10px;
+  }
+  
+  .feature-card__title {
+    font-size: 11px;
+  }
+  
+  .feature-card__desc {
+    font-size: 10px;
+  }
+  
+  .feature-card__icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .feature-grid {
+    gap: 4px;
+  }
+  
+  .feature-card {
+    padding: 8px;
+  }
+  
+  .feature-card__title {
+    font-size: 10px;
+  }
+  
+  .feature-card__desc {
+    font-size: 9px;
+  }
+  
+  .feature-card__icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .feature-card__arrow {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .feature-card__arrow svg {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .feature-card {
@@ -4897,6 +5483,44 @@ select:focus-visible,
   gap: 8px;
 }
 
+@media (max-width: 400px) {
+  .session-summary {
+    gap: 6px;
+  }
+  
+  .session-summary__icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .session-summary__label {
+    font-size: 10px;
+  }
+  
+  .session-summary__value {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .session-summary {
+    gap: 4px;
+  }
+  
+  .session-summary__icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .session-summary__label {
+    font-size: 9px;
+  }
+  
+  .session-summary__value {
+    font-size: 14px;
+  }
+}
+
 .session-summary__item {
   flex: 1;
   min-width: 0;
@@ -5022,6 +5646,73 @@ select:focus-visible,
   display: flex;
   align-items: stretch;
   gap: 10px;
+}
+
+@media (max-width: 400px) {
+  .set-card__body {
+    gap: 8px;
+  }
+  
+  .set-card__weight-row {
+    padding: 6px 8px;
+  }
+  
+  .set-card__weight-input {
+    font-size: 16px;
+  }
+  
+  .set-card__unit {
+    font-size: 11px;
+  }
+  
+  .set-card__reps-input {
+    font-size: 16px;
+  }
+  
+  .set-card__reps-target {
+    font-size: 12px;
+  }
+  
+  .set-card__validate {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .set-card__body {
+    gap: 6px;
+  }
+  
+  .set-card__weight-row {
+    padding: 5px 6px;
+  }
+  
+  .set-card__weight-input {
+    font-size: 15px;
+  }
+  
+  .set-card__unit {
+    font-size: 10px;
+  }
+  
+  .set-card__reps-input {
+    font-size: 15px;
+  }
+  
+  .set-card__reps-target {
+    font-size: 11px;
+  }
+  
+  .set-card__validate {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+  
+  .set-card__validate svg {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 .set-card__field {
@@ -5155,6 +5846,35 @@ select:focus-visible,
   gap: 10px;
   padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--gym-border);
+}
+
+@media (max-width: 400px) {
+  .session-actions {
+    gap: 8px;
+    padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  .gym-app .session-actions .btn {
+    padding: 14px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .session-actions {
+    gap: 6px;
+    padding: 8px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  .gym-app .session-actions .btn {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+  
+  .gym-app .session-actions .btn svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .gym-app .session-actions .btn {

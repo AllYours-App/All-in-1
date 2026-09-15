@@ -21,7 +21,7 @@ const WEDGE_RADAR_ORDER = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Cou
 // 9 zones sélectionnables au total : les 8 directions + le centre ("Green" = coup rentré)
 const WEDGE_ZONES = [...WEDGE_RADAR_ORDER, 'Green'];
 // Distances proposées pour construire un exercice Créatif (paliers de 5m, 10 à 100m)
-const WEDGE_EXERCISE_DISTANCES = (() => { const arr = []; for (let d = 10; d <= 100; d += 5) arr.push(d); return arr; })();
+const WEDGE_EXERCISE_DISTANCES = (() => { const arr = []; for (let d = 50; d <= 100; d += 5) arr.push(d); return arr; })();
 const WEDGE_SHOTS_LIMIT_OPTIONS = [[20, '20'], [50, '50'], [100, '100'], ['all', 'Tous']];
 const WEDGE_EX_REVIEW_LIMIT_OPTIONS = [10, 20, 50, 'all'];
 
@@ -202,7 +202,7 @@ const UI = (function () {
 
   function header({ title, backLabel, backHash, rightIcon }) {
     return `<header class="wg-header">
-      <div class="wg-header-side"><button class="wg-back-btn" onclick="${backHash === 'app-home' ? "showPage('home')" : "Router.go('" + backHash + "')"}">${ICONS.back} ${backLabel}</button></div>
+      <div class="wg-header-side"><button class="wg-back-btn" onclick="Router.go('${backHash}')">${ICONS.back} ${backLabel}</button></div>
       <h1 class="wg-title" style="${title === "WEDGING" ? "" : "font-size:16px;letter-spacing:2px;"}">${title}</h1>
       <div class="wg-header-side wg-header-right">${rightIcon ? `<button class="wg-icon-btn" id="headerRightBtn">${rightIcon}</button>` : ""}</div>
     </header>`;
@@ -318,7 +318,7 @@ function rerender() { Router.render(); }
 
 // --- Journal (Parcours) ---
 let wedgeRounds = normalizeWedgeRounds(Storage.getShots());
-let wedgeNewShotBucket = null;
+let wedgeNewShotBucket = WEDGE_BUCKETS[0];
 let wedgeNewShotFinal = '';
 let wedgeNewShotZone = null;
 let wedgeFinalPopupOpen = false;
@@ -858,7 +858,7 @@ function wedgeExerciseLogDetailHtml(ex) {
 const Views = {};
 
 Views.home = function () {
-  return `${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "app-home" })}<p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>${UI.navCards(null)}`;
+  return `${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "home" })}<p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>${UI.navCards(null)}`;
 };
 
 /* --- PARCOURS = Journal (ajout de coup + historique filtrable) --- */
