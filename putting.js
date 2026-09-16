@@ -61,11 +61,12 @@ function renderPuttingTab() {
     <!-- Sous-panneau : accueil Parcours -->
     <div class="analyse-subpanel" data-sub="home">
 
-      <!-- Carte reprendre : toujours présente, contenu injecté par JS quand une reprise existe -->
-      <div class="resume-card">
+      <!-- Carte reprendre : masquée par défaut, affichée par JS uniquement quand une reprise existe -->
+      <div class="resume-card is-hidden">
         <div class="resume-card_image"></div>
         <div class="resume-card_content">
           <div class="resume-card_label">À reprendre</div>
+          <div class="resume-card_name"></div>
           <button class="resume-card_button" disabled title="Aucune séance en cours">
             <svg class="resume-card_button-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             Reprendre
@@ -138,9 +139,7 @@ function renderPuttingTab() {
         <div class="chart-card_header">
           <div class="chart-card_title">
             SG vs Tour par distance
-            <svg class="chart-card_title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
-          <div class="chart-card_period">20 dernières sessions</div>
         </div>
 
         <div class="bar-chart bar-chart-centered">
@@ -176,9 +175,7 @@ function renderPuttingTab() {
         <div class="chart-card_header">
           <div class="chart-card_title">
             Taux de réussite par distance
-            <svg class="chart-card_title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
-          <div class="chart-card_period">20 dernières sessions</div>
         </div>
 
         <div class="bar-chart">
@@ -217,9 +214,7 @@ function renderPuttingTab() {
         <div class="chart-card_header">
           <div class="chart-card_title">
             Erreurs de vitesse et de pente
-            <svg class="chart-card_title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
-          <div class="chart-card_period">20 dernières sessions</div>
         </div>
 
         <div class="bar-chart_legend">
@@ -319,79 +314,98 @@ function renderPuttingTab() {
         <div class="chart-card_header">
           <div class="chart-card_title">
             SG vs Tour
-            <svg class="chart-card_title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
-          <div class="chart-card_period">20 dernières sessions</div>
         </div>
 
-        <svg class="radar-chart" viewBox="-60 -20 720 640" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="300,245 338.9,261.1 355,300 338.9,338.9 300,355 261.1,338.9 245,300 261.1,261.1" class="radar-grid-ring"/>
-          <polygon points="300,190 377.8,222.2 410,300 377.8,377.8 300,410 222.2,377.8 190,300 222.2,222.2" class="radar-grid-ring"/>
-          <polygon points="300,135 416.7,183.3 465,300 416.7,416.7 300,465 183.3,416.7 135,300 183.3,183.3" class="radar-grid-ring"/>
-          <polygon points="300,80 455.6,144.4 520,300 455.6,455.6 300,520 144.4,455.6 80,300 144.4,144.4" class="radar-grid-ring"/>
-
-          <line x1="300" y1="300" x2="300" y2="80" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="455.6" y2="144.4" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="520" y2="300" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="455.6" y2="455.6" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="300" y2="520" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="144.4" y2="455.6" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="80" y2="300" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="144.4" y2="144.4" class="radar-axis-line"/>
-
-          <text x="300" y="35" text-anchor="middle" class="radar-cat-label">Montée</text>
-          <text x="485" y="118" text-anchor="start" class="radar-cat-label">D→G</text>
-          <text x="548" y="305" text-anchor="start" class="radar-cat-label">D → G</text>
-          <text x="485" y="495" text-anchor="start" class="radar-cat-label">D→G</text>
-          <text x="300" y="558" text-anchor="middle" class="radar-cat-label">Descente</text>
-          <text x="115" y="495" text-anchor="end" class="radar-cat-label">G→D</text>
-          <text x="52" y="305" text-anchor="end" class="radar-cat-label">G → D</text>
-          <text x="115" y="118" text-anchor="end" class="radar-cat-label">G→D</text>
-        </svg>
+        <div class="bar-chart bar-chart-centered">
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Montée</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Montée D→G</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">D→G</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Descente D→G</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Descente</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Descente G→D</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">G→D</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Montée G→D</div>
+            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_axis-title">SG Putting</div>
+        </div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card_header">
           <div class="chart-card_title">
             Taux de réussite
-            <svg class="chart-card_title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
-          <div class="chart-card_period">20 dernières sessions</div>
         </div>
 
-        <svg class="radar-chart" viewBox="-60 -20 720 640" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="300,245 338.9,261.1 355,300 338.9,338.9 300,355 261.1,338.9 245,300 261.1,261.1" class="radar-grid-ring"/>
-          <polygon points="300,190 377.8,222.2 410,300 377.8,377.8 300,410 222.2,377.8 190,300 222.2,222.2" class="radar-grid-ring"/>
-          <polygon points="300,135 416.7,183.3 465,300 416.7,416.7 300,465 183.3,416.7 135,300 183.3,183.3" class="radar-grid-ring"/>
-          <polygon points="300,80 455.6,144.4 520,300 455.6,455.6 300,520 144.4,455.6 80,300 144.4,144.4" class="radar-grid-ring"/>
-
-          <line x1="300" y1="300" x2="300" y2="80" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="455.6" y2="144.4" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="520" y2="300" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="455.6" y2="455.6" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="300" y2="520" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="144.4" y2="455.6" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="80" y2="300" class="radar-axis-line"/>
-          <line x1="300" y1="300" x2="144.4" y2="144.4" class="radar-axis-line"/>
-
-          <text x="300" y="35" text-anchor="middle" class="radar-cat-label">Montée</text>
-          <text x="485" y="118" text-anchor="start" class="radar-cat-label">D→G</text>
-          <text x="548" y="305" text-anchor="start" class="radar-cat-label">D → G</text>
-          <text x="485" y="495" text-anchor="start" class="radar-cat-label">D→G</text>
-          <text x="300" y="558" text-anchor="middle" class="radar-cat-label">Descente</text>
-          <text x="115" y="495" text-anchor="end" class="radar-cat-label">G→D</text>
-          <text x="52" y="305" text-anchor="end" class="radar-cat-label">G → D</text>
-          <text x="115" y="118" text-anchor="end" class="radar-cat-label">G→D</text>
-        </svg>
+        <div class="bar-chart">
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Montée</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Montée D→G</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">D→G</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Descente D→G</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Descente</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Descente G→D</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">G→D</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_row">
+            <div class="bar-chart_label">Montée G→D</div>
+            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
+          </div>
+          <div class="bar-chart_axis">
+            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+          </div>
+          <div class="bar-chart_axis-title">Taux de réussite</div>
+        </div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card_header">
           <div class="chart-card_title">
             Erreurs de vitesse et de pente
-            <svg class="chart-card_title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
-          <div class="chart-card_period">20 dernières sessions</div>
         </div>
 
         <div class="bar-chart_legend">
@@ -458,11 +472,12 @@ function renderPuttingTab() {
 
     <div class="page-subtitle">S'entraîner avec méthode, progresser chaque jour.</div>
 
-    <!-- Carte reprendre : toujours présente, contenu injecté par JS quand une reprise existe -->
-    <div class="resume-card">
+    <!-- Carte reprendre : masquée par défaut, affichée par JS uniquement quand une reprise existe -->
+    <div class="resume-card is-hidden">
       <div class="resume-card_image"></div>
       <div class="resume-card_content">
         <div class="resume-card_label">À reprendre</div>
+        <div class="resume-card_name"></div>
         <button class="resume-card_button" disabled title="Aucune séance en cours">
           <svg class="resume-card_button-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           Reprendre
@@ -735,6 +750,7 @@ function renderPuttingTab() {
   `;
   renderExerciseList();
   renderParcoursHistory();
+  renderResumeCards();
 }
 
 function selectPuttingTab(event, tab) {
@@ -999,16 +1015,70 @@ function loadStateFromLocalStorage() {
     const combines = localStorage.getItem('putting_combines');
     const sessions = localStorage.getItem('putting_sessions');
     const rounds = localStorage.getItem('putting_rounds');
+    const resume = localStorage.getItem('putting_resume');
     puttingCombines = combines ? JSON.parse(combines) : [];
     puttingSessions = sessions ? JSON.parse(sessions) : [];
     puttingRounds = rounds ? JSON.parse(rounds) : [];
+    resumableSession = resume ? JSON.parse(resume) : null;
   } catch (e) {
     puttingCombines = [];
     puttingSessions = [];
     puttingRounds = [];
+    resumableSession = null;
   }
 }
 loadStateFromLocalStorage();
+
+/* ---------- Carte "À reprendre" ---------- */
+function saveResumableSession() {
+  const c = getCombineById(activeCombineId);
+  if (!c) return;
+  resumableSession = {
+    combineId: activeCombineId,
+    name: c.name,
+    activeHoleIndex: activeHoleIndex,
+    session: activeSession,
+    dateISO: new Date().toISOString(),
+  };
+  try { localStorage.setItem('putting_resume', JSON.stringify(resumableSession)); } catch (e) {}
+}
+
+function clearResumableSession() {
+  resumableSession = null;
+  try { localStorage.removeItem('putting_resume'); } catch (e) {}
+}
+
+function resumeSession() {
+  if (!resumableSession) return;
+  const c = getCombineById(resumableSession.combineId);
+  if (!c) { clearResumableSession(); renderResumeCards(); return; }
+  activeCombineId = resumableSession.combineId;
+  activeSession = resumableSession.session;
+  activeHoleIndex = resumableSession.activeHoleIndex;
+  clearResumableSession();
+  exerciseFlowOriginTab = 'exercices';
+  exerciseFlowScreen = 'session';
+  enterExerciseFlow(c.name);
+  renderExerciseFlowScreen();
+  renderResumeCards();
+}
+
+function renderResumeCards() {
+  document.querySelectorAll('.resume-card').forEach(function (card) {
+    if (!resumableSession) {
+      card.classList.add('is-hidden');
+      return;
+    }
+    card.classList.remove('is-hidden');
+    const doneHoles = resumableSession.session.holes.filter(function (h) { return h.results.length > 0; }).length;
+    const nameEl = card.querySelector('.resume-card_name');
+    if (nameEl) nameEl.textContent = resumableSession.name + ' — ' + doneHoles + '/' + resumableSession.session.holes.length + ' trous';
+    const btn = card.querySelector('.resume-card_button');
+    btn.disabled = false;
+    btn.removeAttribute('title');
+    btn.onclick = resumeSession;
+  });
+}
 
 // --- Historique / stats d'un exercice ---
 function combineSessionsHistory(combineId) {
@@ -1099,7 +1169,7 @@ function updateExerciseSelectBar() {
   const combine = selectedCombineId ? getCombineById(selectedCombineId) : null;
   if (combine) {
     document.getElementById('exercise-select-bar-name').textContent = combine.name;
-    document.getElementById('exercise-select-bar-launch').onclick = function () { startCombine(combine.id); };
+    document.getElementById('exercise-select-bar-launch').onclick = function () { exerciseFlowOriginTab = 'exercices'; startCombine(combine.id); };
     bar.classList.remove('is-hidden');
     if (fab) fab.classList.add('is-hidden');
   } else {
@@ -1123,6 +1193,7 @@ function deleteCombine(id) {
 
 // --- État du flux ---
 let exerciseFlowScreen = null; // 'session' | 'recap' | 'review'
+let exerciseFlowOriginTab = 'exercices'; // onglet à retrouver au retour ('parcours' | 'exercices')
 let activeCombineId = null;
 let activeSession = null;      // session en cours (non sauvegardée)
 let activeHoleIndex = 0;
@@ -1151,6 +1222,11 @@ function enterExerciseFlow(title) {
 function exitExerciseFlow(event) {
   if (event) event.preventDefault();
   if (exerciseFlowScreen === 'session' && !confirm('Quitter sans enregistrer cette séance ?')) return;
+  if (exerciseFlowScreen === 'session' && activeSession && activeSession.holes.some(function (h) { return h.results.length > 0; }) && String(activeCombineId).indexOf('quick-') !== 0) {
+    saveResumableSession();
+  } else {
+    clearResumableSession();
+  }
   cleanupQuickCombine();
   document.querySelector('[data-header="exercise-flow"]').classList.add('is-hidden');
   document.querySelector('[data-header="main"]').classList.remove('is-hidden');
@@ -1161,9 +1237,11 @@ function exitExerciseFlow(event) {
   activeSession = null;
   viewingSessionId = null;
   selectedCombineId = null;
-  selectPuttingTab({ preventDefault: function () {} }, 'exercices');
+  selectPuttingTab({ preventDefault: function () {} }, exerciseFlowOriginTab);
+  exerciseFlowOriginTab = 'exercices';
   renderExerciseList();
   updateExerciseSelectBar();
+  renderResumeCards();
   window.scrollTo(0, 0);
 }
 
@@ -1254,7 +1332,8 @@ function renderCombineSessionScreen() {
 
     <div class="session-holes-nav">
       ${activeSession.holes.map(function (h, i) {
-        const state = h.results.length >= totalAttempts ? 'is-done' : (i === activeHoleIndex ? 'is-active' : '');
+        const isDone = h.results.length >= totalAttempts;
+        const state = isDone ? (h.results.indexOf('made') === -1 ? 'is-missed' : 'is-done') : (i === activeHoleIndex ? 'is-active' : '');
         return `<button class="session-holes-nav_item ${state}" onclick="goToCombineHole(${i})">${h.hole}</button>`;
       }).join('')}
     </div>
@@ -1542,6 +1621,7 @@ function startQuickExercise() {
     }),
   };
   puttingCombines.push(quickCombine);
+  exerciseFlowOriginTab = 'parcours';
   startCombine(quickCombine.id);
 }
 
@@ -1644,6 +1724,7 @@ function promptCreativeNumber(field, label) {
     f[field] = n2;
   }
   if (field === 'puttMax' && f.puttMax < f.puttMin) f.puttMax = f.puttMin;
+  if (field === 'puttMin' && f.puttMin > f.puttMax) f.puttMax = f.puttMin;
   if (['holesCount', 'puttMin', 'puttMax'].indexOf(field) !== -1) regenerateCreativePreview(f);
   renderExerciseModal();
 }
@@ -1710,14 +1791,18 @@ function renderExerciseModal() {
 
         <input type="text" class="exercise-modal_input" id="creative-name-input" placeholder="Nom de l'exercice" value="${f.name}" oninput="updateCreativeName(this.value)">
 
-        <div class="exercise-modal_grid">
+        <div class="exercise-modal_grid exercise-modal_grid-3">
           <button type="button" class="exercise-modal_field" onclick="setCreativeField('slopedGreen', '${!f.slopedGreen}')">
             <span class="exercise-modal_field-label">Green en pente</span>
             <span class="exercise-modal_field-value">${f.slopedGreen ? 'Oui' : 'Non'}</span>
           </button>
           <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('puttMin','Distance min (m)')">
-            <span class="exercise-modal_field-label">Longueur des putts</span>
-            <span class="exercise-modal_field-value">${f.puttMin} &rarr; ${f.puttMax} m</span>
+            <span class="exercise-modal_field-label">Distance min</span>
+            <span class="exercise-modal_field-value">${f.puttMin} m</span>
+          </button>
+          <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('puttMax','Distance max (m)')">
+            <span class="exercise-modal_field-label">Distance max</span>
+            <span class="exercise-modal_field-value">${f.puttMax} m</span>
           </button>
         </div>
 
@@ -1824,8 +1909,12 @@ function closeNewParcoursModal() {
 function setParcoursHoles(n) {
   const f = newParcoursForm;
   if (f.holesCount === n) return;
+  const oldRows = f.rows;
   f.holesCount = n;
-  f.rows = generateParcoursRows(n);
+  // Conserve les données déjà saisies pour les trous existants, n'en génère de nouveaux que si besoin
+  f.rows = Array.from({ length: n }, function (_, i) {
+    return oldRows[i] || { hole: i + 1, m: Math.round((1 + Math.random() * 6) * 10) / 10, putts: null };
+  });
   renderNewParcoursModal();
 }
 
