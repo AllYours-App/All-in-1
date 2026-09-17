@@ -1,0 +1,1217 @@
+/* ===========================================================================
+   PARTIE : STATS (regles scopees sous #page-stats)
+   =========================================================================== */
+
+/* ==========================================================================
+   DESIGN SYSTEM — GOLF STATS
+   Univers premium / performance / data analytics (Trackman, Arccos, Tesla UI)
+   ========================================================================== */
+
+#page-stats {
+
+  /* ---------- Couleurs — fonds ---------- */
+  --color-bg-base: #05070A;
+  --color-bg-elevated: #071018;
+  --color-bg-card: #0B1520;
+  --color-bg-card-hover: #0D1826;
+
+  /* ---------- Couleurs — accent (vert lime) ---------- */
+  --color-accent: #C7F11F;
+  --color-accent-bright: #D5FF32;
+  --color-accent-dim: #B8E91A;
+  --color-accent-10: rgba(199, 241, 31, 0.1);
+  --color-accent-15: rgba(199, 241, 31, 0.15);
+  --color-accent-25: rgba(199, 241, 31, 0.25);
+
+  /* ---------- Couleurs — texte ---------- */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.65);
+  --color-text-tertiary: rgba(255, 255, 255, 0.4);
+  --color-text-disabled: rgba(255, 255, 255, 0.25);
+
+  /* ---------- Couleurs — bordures ---------- */
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-border-accent: rgba(199, 241, 31, 0.35);
+
+  /* ---------- Couleurs — état ---------- */
+  --color-negative: #FF6B6B;
+  --color-negative-10: rgba(255, 107, 107, 0.1);
+  --color-positive: var(--color-accent);
+  --color-positive-10: var(--color-accent-10);
+
+  /* ---------- Typographie ---------- */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-mono: 'Inter', monospace;
+
+  --fs-2xs: 0.6875rem;   /* 11px */
+  --fs-xs: 0.75rem;      /* 12px */
+  --fs-sm: 0.8125rem;    /* 13px */
+  --fs-base: 0.9375rem;  /* 15px */
+  --fs-md: 1rem;         /* 16px */
+  --fs-lg: 1.25rem;      /* 20px */
+  --fs-xl: 1.5rem;       /* 24px */
+  --fs-2xl: 2rem;        /* 32px */
+  --fs-3xl: 2.5rem;      /* 40px */
+  --fs-4xl: 3rem;        /* 48px */
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.1;
+  --lh-normal: 1.4;
+  --lh-relaxed: 1.6;
+
+  --ls-tight: -0.02em;
+  --ls-normal: 0;
+  --ls-wide: 0.04em;
+  --ls-wider: 0.12em;
+
+  /* ---------- Espacements ---------- */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 40px;
+  --space-4xl: 56px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* ---------- Ombres ---------- */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-accent-glow: 0 0 24px rgba(199, 241, 31, 0.18);
+  --shadow-fab: 0 8px 20px rgba(199, 241, 31, 0.25);
+
+  /* ---------- Effet verre léger ---------- */
+  --glass-bg: rgba(11, 21, 32, 0.6);
+  --glass-blur: blur(20px);
+
+  /* ---------- Transitions / animations ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --duration-chart: 900ms;
+
+  /* ---------- Z-index ---------- */
+  --z-base: 1;
+  --z-sticky: 10;
+  --z-header: 20;
+  --z-fab: 30;
+  --z-dropdown: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  /* ---------- Layout ---------- */
+  --container-max: var(--app-max-width);
+  --header-height: 88px;
+  --bottom-safe: 100px;
+}
+
+/* ---------- Breakpoints (référence — utilisés en media queries dans layout.css) ----------
+   --bp-mobile:  0 - 599px  (défaut)
+   --bp-tablet:  600px - 959px
+   --bp-desktop: 960px+
+--------------------------------------------------------------------------- */
+/* ==========================================================================
+   LAYOUT — reset, structure globale, header, grilles, responsive
+   ========================================================================== */
+
+/* box-sizing:border-box déjà couvert par le reset universel * {} de base.css */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+#page-stats {
+  margin: 0 auto;
+  font-family: var(--font-family);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  line-height: var(--lh-normal);
+}
+
+/* Fond global avec un dégradé radial très subtil pour la profondeur */
+#page-stats {
+  background:
+    radial-gradient(ellipse 800px 500px at 50% -10%, rgba(199,241,31,0.06), transparent 60%),
+    var(--color-bg-base);
+  min-height: 100vh;
+}
+
+#page-stats img { max-width: 100%; display: block; }
+#page-stats button { font-family: inherit; }
+#page-stats a { color: inherit; text-decoration: none; }
+
+/* Focus visible — accessibilité clavier */
+#page-stats :focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Conteneur principal ---------- */
+#page-stats .app {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-lg) 0 var(--bottom-safe);
+  position: relative;
+}
+
+/* ---------- Header ---------- */
+#page-stats .page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) 0 var(--space-xs);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: linear-gradient(var(--color-bg-base) 70%, transparent);
+}
+
+#page-stats .page-header__back, #page-stats .page-header__menu {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  padding: var(--space-xs);
+  margin: calc(var(--space-xs) * -1);
+  border-radius: var(--radius-full);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+#page-stats .page-header__back:hover, #page-stats .page-header__menu:hover { opacity: 0.7; }
+
+#page-stats .page-header__menu {
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+#page-stats .page-header__title-group {
+  flex: 1;
+  text-align: center;
+}
+
+#page-stats .page-header__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+}
+
+#page-stats .page-header__subtitle {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Sections ---------- */
+#page-stats .section {
+  margin-top: var(--space-xl);
+}
+
+#page-stats .section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+#page-stats .section__title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+#page-stats .section__link {
+  font-size: var(--fs-sm);
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--fw-medium);
+}
+
+/* ---------- Grilles ---------- */
+#page-stats .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+#page-stats .grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+/* ---------- FAB (boutons flottants) ---------- */
+#page-stats .fab-row {
+  position: fixed;
+  left: 0; right: 0; bottom: var(--space-lg);
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: var(--z-fab);
+}
+
+#page-stats .fab {
+  pointer-events: auto;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  box-shadow: var(--shadow-fab);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+#page-stats .fab:hover { transform: translateY(-2px); }
+#page-stats .fab svg { width: 17px; height: 17px; }
+
+/* ---------- Utilitaires ---------- */
+#page-stats .text-center { text-align: center; }
+#page-stats .visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   RESPONSIVE — app mobile uniquement (pas de variante tablette/desktop :
+   la grille KPI reste fixée à 2 colonnes quelle que soit la largeur)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  #page-stats *, #page-stats *::before, #page-stats *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* ==========================================================================
+   CARDS — composants carte réutilisables
+   ========================================================================== */
+
+#page-stats .card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-base) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out),
+              border-color var(--duration-base) var(--ease-out);
+}
+
+#page-stats .card--interactive { cursor: pointer; }
+#page-stats .card--interactive:hover, #page-stats .card--interactive:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-border-strong);
+}
+
+/* ---------- Icône ronde (outline accent) ---------- */
+#page-stats .icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+#page-stats .icon-badge svg { width: 18px; height: 18px; }
+
+/* ==========================================================================
+   STROKES GAINED — carte hero du dashboard
+   ========================================================================== */
+
+#page-stats .sg-card {
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--color-accent);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#page-stats .sg-card::-webkit-scrollbar { display: none; }
+
+#page-stats .sg-card__main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  padding-right: var(--space-md);
+  border-right: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+#page-stats .sg-card__main .icon-badge { width: 30px; height: 30px; }
+#page-stats .sg-card__main .icon-badge svg { width: 14px; height: 14px; }
+
+#page-stats .sg-card__label {
+  font-size: 0.6875rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+#page-stats .sg-card__sublabel {
+  font-size: 0.575rem;
+  color: var(--color-text-tertiary);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .sg-card__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+  margin-top: 1px;
+}
+#page-stats .sg-card__caption {
+  font-size: 0.575rem;
+  color: var(--color-text-tertiary);
+  white-space: normal;
+  max-width: 76px;
+  line-height: 1.25;
+}
+
+#page-stats .sg-card__breakdown {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+#page-stats .sg-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--space-xs);
+  flex-shrink: 0;
+  width: 36px;
+}
+#page-stats .sg-item:first-child { border-left: none; padding-left: 0; }
+
+#page-stats .sg-item__label {
+  font-size: 0.55rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+#page-stats .sg-item__icon { color: var(--color-accent); width: 18px; height: 18px; }
+#page-stats .sg-item__value {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+}
+
+/* ==========================================================================
+   KPI CARD — grille 2 colonnes avec sparkline
+   ========================================================================== */
+
+#page-stats .kpi-card {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+#page-stats .kpi-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+#page-stats .kpi-card__titles {
+  min-width: 0;
+  overflow: hidden;
+}
+#page-stats .kpi-card__title {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+#page-stats .kpi-card__subtitle {
+  font-size: 0.6875rem;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+#page-stats .kpi-card__value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  line-height: 1;
+}
+#page-stats .kpi-card__value sup {
+  font-size: 0.55em;
+  font-weight: var(--fw-semibold);
+  margin-left: 2px;
+}
+
+#page-stats .kpi-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .kpi-card__trend--good { color: var(--color-positive); }
+#page-stats .kpi-card__trend--bad { color: var(--color-negative); }
+#page-stats .kpi-card__trend svg { width: 12px; height: 12px; }
+
+#page-stats .kpi-card__compare {
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+  font-weight: var(--fw-regular);
+}
+
+#page-stats .kpi-card__sparkline {
+  height: 44px;
+  margin-top: auto;
+}
+#page-stats .kpi-card__sparkline canvas { width: 100% !important; height: 100% !important; }
+
+/* ==========================================================================
+   ANALYSES DÉTAILLÉES — cartes lien
+   ========================================================================== */
+
+#page-stats .analysis-card {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-height: 172px;
+}
+
+#page-stats .analysis-card__icon {
+  width: 34px;
+  height: 34px;
+  color: var(--color-accent);
+}
+#page-stats .analysis-card__icon svg { width: 100%; height: 100%; }
+
+#page-stats .analysis-card__title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+
+#page-stats .analysis-card__desc {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-relaxed);
+  flex: 1;
+}
+
+#page-stats .analysis-card__arrow {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+}
+#page-stats .analysis-card__arrow svg { width: 14px; height: 14px; }
+
+/* ==========================================================================
+   HISTORICAL LIST — historique des rounds (liste compacte)
+   ========================================================================== */
+
+#page-stats .round-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-bg-card);
+}
+
+#page-stats .round-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+#page-stats .round-row:last-child { border-bottom: none; }
+#page-stats .round-row:hover { background: var(--color-bg-card-hover); }
+
+#page-stats .round-row__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-bg-elevated);
+}
+
+#page-stats .round-row__info {
+  flex: 1;
+  min-width: 0;
+}
+#page-stats .round-row__course {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#page-stats .round-row__location {
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-stats .round-row__stat {
+  text-align: center;
+  min-width: 40px;
+}
+#page-stats .round-row__stat-value {
+  font-size: var(--fs-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--fw-medium);
+}
+#page-stats .round-row__stat-label {
+  font-size: 0.625rem;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+}
+
+#page-stats .round-row__score {
+  text-align: right;
+  min-width: 56px;
+}
+#page-stats .round-row__score-value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .round-row__score-diff {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .round-row__score-diff--pos { color: var(--color-negative); } /* +N = au-dessus du par = rouge */
+#page-stats .round-row__score-diff--neg { color: var(--color-positive); }
+
+#page-stats .round-row__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   STAT MINI-CARD — utilisé dans bandeaux de résumé (historique, par distance)
+   ========================================================================== */
+
+#page-stats .mini-stat {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+#page-stats .mini-stat__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#page-stats .mini-stat__icon svg { width: 14px; height: 14px; }
+
+#page-stats .mini-stat__label {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-stats .mini-stat__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+}
+
+#page-stats .mini-stat__delta {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .mini-stat__delta--pos { color: var(--color-positive); }
+#page-stats .mini-stat__delta--neg { color: var(--color-negative); }
+
+/* ==========================================================================
+   ANIMATIONS D'ENTRÉE
+   ========================================================================== */
+
+#page-stats .fade-up {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: fadeUp var(--duration-slow) var(--ease-out) forwards;
+  animation-delay: calc(var(--fade-index, 0) * 60ms);
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+/* ==========================================================================
+   CHARTS — conteneurs et habillage des graphiques Chart.js
+   ========================================================================== */
+
+#page-stats .chart-card {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+#page-stats .chart-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+#page-stats .chart-card__title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .chart-card__unit {
+  font-size: var(--fs-sm);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+#page-stats .chart-card__info-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#page-stats .chart-card__info-btn svg { width: 16px; height: 16px; }
+
+#page-stats .chart-card__legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+}
+#page-stats .chart-card__legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  position: relative;
+}
+#page-stats .chart-card__legend-dot::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--color-accent);
+  opacity: 0.4;
+}
+
+/* ---------- Tabs période (1M / 3M / 6M / 1A / TOUT) ---------- */
+#page-stats .period-tabs {
+  display: flex;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#page-stats .period-tabs::-webkit-scrollbar { display: none; }
+
+#page-stats .period-tab {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  padding: var(--space-2xs) 0;
+  position: relative;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+#page-stats .period-tab[aria-selected="true"] { color: var(--color-accent); }
+#page-stats .period-tab[aria-selected="true"]::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -13px;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 8px rgba(199,241,31,0.6);
+}
+
+/* ---------- Zone de tracé ---------- */
+#page-stats .chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+#page-stats .chart-canvas-wrap--sm { height: 200px; }
+
+/* ---------- Stat row sous le graphique (progression / moyenne / etc.) ---------- */
+#page-stats .chart-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-lg);
+}
+
+#page-stats .chart-stats-row__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+#page-stats .chart-stats-row__label {
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+}
+#page-stats .chart-stats-row__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .chart-stats-row__value--accent { color: var(--color-accent); }
+#page-stats .chart-stats-row__sub {
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+}
+
+#page-stats .chart-progression {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .chart-progression svg { width: 16px; height: 16px; }
+
+#page-stats .chart-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+#page-stats .chart-footnote svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+/* ==========================================================================
+   STATS — segmented control, filtres, maps, tableaux de distance
+   ========================================================================== */
+
+/* ---------- Segmented Control (MULTI / TRADITIONNEL / SG) ---------- */
+#page-stats .segmented {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--seg-count, 3), 1fr);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+}
+
+#page-stats .segmented__thumb {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--seg-count, 3));
+  background: var(--color-accent);
+  border-radius: calc(var(--radius-md) - 4px);
+  transition: transform var(--duration-base) var(--ease-in-out);
+  z-index: 0;
+  transform: translateX(calc(var(--seg-index, 0) * 100%));
+}
+
+#page-stats .segmented__btn {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: none;
+  padding: var(--space-sm) var(--space-xs);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--ls-wide);
+  cursor: pointer;
+  border-radius: calc(var(--radius-md) - 4px);
+  transition: color var(--duration-base) var(--ease-out);
+}
+#page-stats .segmented__btn[aria-selected="true"] {
+  color: var(--color-bg-base);
+}
+
+/* ---------- FilterBar ---------- */
+#page-stats .filter-bar {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+#page-stats .filter-bar::-webkit-scrollbar { display: none; }
+
+#page-stats .filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--fs-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+#page-stats .filter-chip:hover { border-color: var(--color-border-strong); }
+#page-stats .filter-chip svg:first-child { width: 15px; height: 15px; color: var(--color-accent); flex-shrink: 0; }
+#page-stats .filter-chip__chevron { width: 13px; height: 13px; color: var(--color-text-tertiary); margin-left: 2px; }
+
+/* ---------- Sous-section avec accent gauche (variante compacte) ---------- */
+#page-stats .stat-block {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+#page-stats .stat-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+#page-stats .stat-block__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .stat-block__title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: 0 0 8px rgba(199,241,31,0.5);
+}
+#page-stats .stat-block__title svg { width: 16px; height: 16px; color: var(--color-text-tertiary); }
+
+#page-stats .stat-block__dropdown {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+#page-stats .stat-block__dropdown svg { width: 12px; height: 12px; }
+
+/* ---------- Grille de mini-stats à l'intérieur d'un bloc ---------- */
+#page-stats .stat-block__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+#page-stats .stat-block__metrics--5 { grid-template-columns: repeat(3, 1fr); }
+
+#page-stats .metric {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-stats .metric__label {
+  font-size: 0.6875rem;
+  color: var(--color-text-tertiary);
+  line-height: var(--lh-tight);
+}
+#page-stats .metric__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .metric__delta {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .metric__delta--pos { color: var(--color-positive); }
+#page-stats .metric__delta--neg { color: var(--color-negative); }
+
+/* ---------- Tableau de données (distance / score / putts) ---------- */
+#page-stats .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+#page-stats .data-table th {
+  text-align: left;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-tertiary);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  padding: var(--space-xs) var(--space-2xs);
+  border-bottom: 1px solid var(--color-border);
+}
+#page-stats .data-table td {
+  padding: var(--space-sm) var(--space-2xs);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+#page-stats .data-table tr:last-child td { border-bottom: none; }
+#page-stats .data-table td:not(:first-child), #page-stats .data-table th:not(:first-child) { text-align: right; }
+
+#page-stats .data-table .val-pos { color: var(--color-positive); font-weight: var(--fw-semibold); }
+#page-stats .data-table .val-neg { color: var(--color-negative); font-weight: var(--fw-semibold); }
+
+/* ==========================================================================
+   FAIRWAY MAP — schéma dispersion fairway (SVG)
+   ========================================================================== */
+
+#page-stats .field-map {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 16 / 11;
+  background: linear-gradient(180deg, #1b3a1f 0%, #234a29 55%, #2c5a33 100%);
+}
+#page-stats .field-map svg { width: 100%; height: 100%; display: block; }
+
+#page-stats .field-map__label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+#page-stats .field-map__label-value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+#page-stats .field-map__label-caption {
+  font-size: var(--fs-2xs);
+  opacity: 0.85;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+#page-stats .field-map__side-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+#page-stats .field-map__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+}
+#page-stats .field-map__row:last-child { border-bottom: none; }
+#page-stats .field-map__row-label { color: var(--color-text-secondary); }
+#page-stats .field-map__row-value { font-weight: var(--fw-semibold); }
+
+#page-stats .field-map-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+@media (min-width: 640px) {
+  #page-stats .field-map-layout { grid-template-columns: 1.1fr 1fr; align-items: center; }
+}
+
+/* ---------- Légende à points colorés (dispersion approches) ---------- */
+#page-stats .dot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+  font-size: var(--fs-2xs);
+  color: var(--color-text-secondary);
+}
+#page-stats .dot-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+#page-stats .dot-legend__dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ==========================================================================
+   HISTORIQUE — barre de résumé + filtres tri
+   ========================================================================== */
+
+#page-stats .summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+@media (min-width: 640px) {
+  #page-stats .summary-strip { grid-template-columns: repeat(6, 1fr); }
+}
+
+#page-stats .sort-bar {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#page-stats .sort-bar::-webkit-scrollbar { display: none; }
+
+#page-stats .sort-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+#page-stats .sort-chip[aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg-base);
+}
+#page-stats .sort-chip svg { width: 13px; height: 13px; }
+
+#page-stats .round-table-head {
+  display: grid;
+  grid-template-columns: 96px 1fr 64px 20px;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+#page-stats .round-row--table {
+  display: grid;
+  grid-template-columns: 96px 1fr 64px 20px;
+  gap: var(--space-sm);
+  align-items: center;
+}
+#page-stats .round-row--table .round-row__date { font-size: var(--fs-sm); color: var(--color-text-secondary); }
+
+/* ==========================================================================
+   SPA — navigation entre écrans + panes internes
+   (aucune barre de nav ajoutée : la bascule se fait via les éléments déjà
+   présents dans les maquettes — back buttons, cartes, segmented control)
+   ========================================================================== */
+
+#page-stats .screen { display: none; }
+#page-stats .screen.is-active { display: block; }
+
+/* Panes internes à l'écran "Par distance" (Multi / Traditionnel / SG) */
+#page-stats .pane { display: none; }
+#page-stats .pane.is-active { display: block; }
+
+/* Chevron décoratif à côté des titres de section (pas de lien : aucune
+   maquette ne montre où il mène) */
+#page-stats .stat-block__title__chevron { width: 14px; height: 14px; color: var(--color-text-tertiary); margin-left: 2px; }
+
+/* Carte "Par club" : aucun écran dédié dans le périmètre livré → non interactive */
+#page-stats .analysis-card--disabled { cursor: default; }
+#page-stats .analysis-card--disabled:hover { transform: none; box-shadow: var(--shadow-card); }
+#page-stats .analysis-card--disabled .analysis-card__arrow { opacity: 0.3; }
