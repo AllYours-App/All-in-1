@@ -7,20 +7,35 @@
    base.css (bloc "CONTENEURS PARTAGÉS"). Rien à dupliquer ici. */
 
 /* ---------------------------------------------------------------------------
-   HEADER FIXE — Putting / Vitesse
-   Tronc identique dans les deux modules : structure grid + position fixe.
-   Fond, bordure, couleurs et left/right restent dans chaque fichier de module
-   car leurs valeurs diffèrent (thèmes différents, --bg-page vs --bg).
+   HEADER FIXE — commun à tous les modules (putting, vitesse, stats, wedging,
+   gym, parcours). Structure et style identiques partout : barre fixe 56px,
+   back | titre | menu. Seuls le texte du titre et les couleurs changent.
+
+   Les couleurs passent par 4 variables que chaque module renseigne avec ses
+   propres tokens (voir le bloc --app-header-* à ajouter dans chaque fichier
+   de module, scopé sous son #page-X) :
+     --app-header-bg             fond de la barre
+     --app-header-border         bordure basse de la barre
+     --app-header-text           couleur du titre / bouton menu
+     --app-header-text-secondary couleur du lien retour
    --------------------------------------------------------------------------- */
 #page-putting .page-header,
-#page-vitesse .page-header {
+#page-vitesse .page-header,
+#page-stats .page-header,
+#page-wedging .wg-header,
+#page-gym .gym-header,
+#page-parcours .top-bar {
   position: fixed;
   top: 0;
+  left: var(--app-padding);
+  right: var(--app-padding);
   max-width: var(--app-max-width);
   margin: 0 auto;
   height: 56px;
   padding: 0 var(--app-padding);
   padding-top: env(safe-area-inset-top);
+  background-color: var(--app-header-bg);
+  border-bottom: 1px solid var(--app-header-border);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -29,27 +44,53 @@
 
 @media (max-width: 360px) {
   #page-putting .page-header,
-  #page-vitesse .page-header {
+  #page-vitesse .page-header,
+  #page-stats .page-header,
+  #page-wedging .wg-header,
+  #page-gym .gym-header,
+  #page-parcours .top-bar {
+    left: var(--app-padding-small);
+    right: var(--app-padding-small);
     padding: 0 var(--app-padding-small);
   }
 }
 
+/* Lien retour */
 #page-putting .page-header_back,
-#page-vitesse .page-header_back {
+#page-vitesse .page-header_back,
+#page-stats .page-header__back,
+#page-wedging .wg-back-btn,
+#page-gym .gym-header__back,
+#page-parcours .back-link {
   display: flex;
   align-items: center;
-  text-decoration: none;
+  gap: 8px;
   justify-self: start;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--app-header-text-secondary);
+  cursor: pointer;
 }
 
 #page-putting .page-header_back-icon,
-#page-vitesse .page-header_back-icon {
+#page-vitesse .page-header_back-icon,
+#page-stats .page-header__back svg,
+#page-wedging .wg-back-btn svg,
+#page-gym .gym-header__back svg,
+#page-parcours .back-link svg {
   width: 20px;
   height: 20px;
+  flex-shrink: 0;
 }
 
+/* Titre, centré dans la colonne du milieu */
 #page-putting .page-header_title,
-#page-vitesse .page-header_title {
+#page-vitesse .page-header_title,
+#page-stats .page-header__title,
+#page-wedging .wg-title,
+#page-gym .gym-header__title,
+#page-parcours .top-bar_title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
@@ -60,28 +101,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 46vw;
+  justify-self: center;
+  color: var(--app-header-text);
 }
 
-/* .page-header_menu n'est pas mutualisé : vitesse n'a qu'un espaceur,
-   putting a un vrai bouton cliquable (fond, bordure, cursor). Trop différent
-   pour fusionner sans changer le comportement de l'un des deux. */
+/* Bouton menu — rond 36px. wedging (.wg-icon-btn) et parcours (.icon-btn)
+   ont déjà ce style ailleurs dans leur propre fichier : pas besoin de les
+   dupliquer ici, ne pas y toucher pour ne rien casser en dehors du header. */
+#page-putting .page-header_menu,
+#page-vitesse .page-header_menu,
+#page-stats .page-header__menu,
+#page-gym .gym-header__action {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--app-header-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  color: var(--app-header-text);
+  cursor: pointer;
+}
+
+#page-putting .page-header_menu-icon,
+#page-vitesse .page-header_menu-icon,
+#page-stats .page-header__menu svg,
+#page-gym .gym-header__action svg {
+  width: 18px;
+  height: 18px;
+}
 
 /* ---------------------------------------------------------------------------
-   Volontairement NON mutualisés (vérifié, pas assez identiques) :
-   - header statique wedging (.wg-header) / gym (.gym-header) : padding et
-     breakpoints différents, le tronc commun ferait 3 propriétés pour un
-     risque de confusion trop élevé.
-   - header stats (#page-stats .page-header) : position sticky (pas fixed),
-     tokens (--space-*, --color-*) propres à stats, pas comparable.
-   - FAB : wg-fab (barre pleine largeur) / putting .fab-button (rond 64px) /
-     stats .fab (rond 64px mais left:0/right:0 + --space-lg, pas --app-padding).
-     Les valeurs left/right sont en dur (16px/20px) et diffèrent selon les
-     fichiers : les fusionner changerait visuellement wedging.
-   - bottom-nav : wg-bottom-nav (16px fixes, pas de breakpoint, z-index 50) vs
-     putting .bottom-nav (var(--app-padding), z-index 5) : même idée visuelle,
-     valeurs réellement différentes.
-   - parcours.css : classes non scopées (pas de #page-parcours en préfixe) et
-     .fab-cta en position sticky, pas fixed. À part si tu me dis d'y toucher.
-   Si tu veux que j'harmonise ces valeurs (par ex. tout passer sur
-   var(--app-padding)), dis-le clairement : ça changera des pixels visibles.
+   Volontairement NON mutualisés :
+   - FAB (wg-fab / fab-button / fab-row / fab-cta) et bottom-nav : valeurs
+     réellement différentes d'un module à l'autre (16px/20px en dur,
+     z-index différents). On les fera avec la même méthode (variables)
+     quand tu voudras standardiser ceux-là aussi.
    --------------------------------------------------------------------------- */

@@ -89,96 +89,17 @@ select:focus-visible,
   }
 }
 
-.gym-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 20px 0;
-}
-
-@media (max-width: 400px) {
-  .gym-header {
-    padding: 16px 16px 0;
-  }
-  
-  .gym-header__back {
-    font-size: 14px;
-    gap: 8px;
-  }
-  
-  .gym-header__back svg {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .gym-header__title {
-    font-size: 16px;
-  }
-  
-  .gym-header__action {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-@media (max-width: 360px) {
-  .gym-header {
-    padding: 14px 14px 0;
-  }
-  
-  .gym-header__back {
-    font-size: 13px;
-    gap: 6px;
-  }
-  
-  .gym-header__back svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .gym-header__title {
-    font-size: 15px;
-  }
-  
-  .gym-header__action {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.gym-header__back {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--gym-text);
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.gym-header__back svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.gym-header__title {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.gym-header__action {
-  width: 22px;
-  height: 22px;
-  color: var(--gym-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Structure + position fixe du header : voir commun.css (#page-gym .gym-header).
+   Couleurs pilotées par les variables --app-header-* définies ci-dessus. */
+#page-gym {
+  --app-header-bg: var(--gym-bg);
+  --app-header-border: var(--gym-border);
+  --app-header-text: var(--gym-text);
+  --app-header-text-secondary: var(--gym-text);
 }
 
 .gym-main {
-  padding: 20px 20px 100px;
+  padding: calc(56px + env(safe-area-inset-top) + 20px) 20px 100px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -1786,15 +1707,12 @@ select:focus-visible,
   overflow: hidden;
 }
 
-#view-gym-home .gym-header {
-  flex: 0 0 auto;
-  padding: 14px 20px 0;
-}
+/* Le header est fixed (commun.css) : plus besoin de flex:0 0 auto ici. */
 
 #view-gym-home .gym-main {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 10px 16px 14px;
+  padding: calc(56px + env(safe-area-inset-top) + 10px) 16px 14px;
   gap: 10px;
   display: flex;
   flex-direction: column;

@@ -80,49 +80,17 @@
   }
 }
 
-#page-putting .page-header {
-  left: 16px;
-  right: 16px;
-  background-color: var(--bg-page);
-  border-bottom: 1px solid var(--border-subtle);
+#page-putting {
+  --app-header-bg: var(--bg-page);
+  --app-header-border: var(--border-subtle);
+  --app-header-text: var(--text-primary);
+  --app-header-text-secondary: var(--text-primary);
 }
 
-@media (max-width: 360px) {
-  #page-putting .page-header {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-  }
-}
-
-#page-putting .page-header_back {
-  gap: 8px;
-  color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-#page-putting .page-header_back-label {
-  font-size: 15px;
-}
-
-#page-putting .page-header_title {
-  color: var(--text-primary);
-}
-
-#page-putting .page-header_menu {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  justify-self: end;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
-#page-putting .page-header_menu-icon {
-  width: 20px;
-  height: 20px;
+/* Le header "exercise-flow" de putting.js a un menu vide (<span></span>) :
+   même traitement que vitesse, on masque sans casser le centrage du titre. */
+#page-putting .page-header_menu:empty {
+  visibility: hidden;
 }
 
 #page-putting .putting_wrapper {

@@ -2,36 +2,22 @@
    PARTIE : VITESSE (regles scopees sous #page-vitesse)
    ========================================================================== */
 
-#page-vitesse .page-header {
-  left: var(--app-padding);
-  right: var(--app-padding);
-  background-color: var(--bg);
-  border-bottom: 1px solid var(--border);
+#page-vitesse {
+  --app-header-bg: var(--bg);
+  --app-header-border: var(--border);
+  --app-header-text: var(--text);
+  --app-header-text-secondary: var(--text);
 }
 
-@media (max-width: 360px) {
-  #page-vitesse .page-header {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-  }
+/* Le menu de vitesse.js est un <span> vide (fonctionnalité pas encore prête) :
+   on garde la case pour que le titre reste centré, mais sans rond vide visible. */
+#page-vitesse .page-header_menu:empty {
+  visibility: hidden;
 }
 
+/* Vitesse garde un gap plus serré entre l'icône et le libellé retour */
 #page-vitesse .page-header_back {
   gap: 2px;
-  color: var(--text);
-}
-
-#page-vitesse .page-header_back-label {
-  font-size: 15px;
-}
-
-#page-vitesse .page-header_title {
-  color: var(--text);
-}
-
-#page-vitesse .page-header_menu {
-  justify-self: end;
-  min-width: 20px;
 }
 
 #page-vitesse main.screen {

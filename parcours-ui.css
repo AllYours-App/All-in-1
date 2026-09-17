@@ -35,35 +35,25 @@
    Header
    -------------------------------------------------------------------------- */
 
-.top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 22px 20px 6px;
+/* Structure + position fixe du header : voir commun.css (#page-parcours .top-bar).
+   .icon-btn est déjà au format canonique (36px, rond, bordé) : pas d'ajout ici. */
+#page-parcours {
+  --app-header-bg: var(--bg);
+  --app-header-border: var(--border);
+  --app-header-text: var(--text);
+  --app-header-text-secondary: var(--text-secondary);
 }
 
 .back-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 600;
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px 4px;
   transition: color var(--dur-fast) var(--ease);
-  text-decoration: none;
 }
 
 .back-link:hover {
   color: var(--text);
-}
-
-.back-link svg {
-  width: 20px;
-  height: 20px;
 }
 
 .icon-btn {
@@ -102,7 +92,7 @@
 }
 
 .page-header {
-  padding: 4px 20px 18px;
+  padding: calc(56px + env(safe-area-inset-top) + 4px) 20px 18px;
   text-align: center;
 }
 

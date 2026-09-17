@@ -10,6 +10,18 @@
 
 #page-wedging{
   padding-bottom:96px;
+  --app-header-bg: var(--wg-bg);
+  --app-header-border: var(--wg-border);
+  --app-header-text: var(--wg-text);
+  --app-header-text-secondary: var(--wg-text-secondary);
+}
+
+/* Les écrans qui utilisent .wg-header (fixe) ont besoin d'un décalage ;
+   ceux qui utilisent .wg-topbar (statique, pages d'analyse / sessions
+   d'exercice) n'en ont pas besoin, d'où un décalage ciblé sur le frère
+   qui suit .wg-header plutôt qu'un padding-top global sur #page-wedging. */
+#page-wedging .wg-header + * {
+  margin-top: calc(56px + env(safe-area-inset-top));
 }
 
 /* a{} et button{} : déjà couverts par le reset global de base.css */
@@ -26,19 +38,8 @@
 }
 
 /* ---------- Header ---------- */
-.wg-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 20px 2px;
-  margin:0 auto;
-}
-
-@media (min-width: 480px) {
-  .wg-header{
-    max-width:var(--wg-max-width);
-  }
-}
+/* Structure + position fixe : voir commun.css (#page-wedging .wg-header).
+   Ne reste ici que ce qui n'est pas commun. */
 .wg-header-side{
   display:flex;
   align-items:center;
@@ -48,19 +49,10 @@
 }
 .wg-header-side.wg-header-right{justify-content:flex-end;}
 .wg-back-btn{
-  display:flex;
-  align-items:center;
-  gap:8px;
   background:none;
   border:none;
-  color:var(--wg-text-secondary);
-  font-size:15px;
-  font-weight:600;
-  cursor:pointer;
   padding:8px 0;
-  text-decoration:none;
 }
-.wg-back-btn svg{width:20px;height:20px;}
 .wg-icon-btn{
   width:36px;height:36px;
   border-radius:50%;
@@ -71,14 +63,6 @@
   cursor:pointer;
 }
 .wg-icon-btn svg{width:18px;height:18px;}
-.wg-title{
-  flex:1;
-  text-align:center;
-  font-size:22px;
-  font-weight:700;
-  letter-spacing:6px;
-  margin:0;
-}
 .wg-subtitle{
   text-align:center;
   color:var(--wg-text-secondary);
