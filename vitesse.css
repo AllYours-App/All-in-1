@@ -3,43 +3,22 @@
    ========================================================================== */
 
 #page-vitesse .page-header {
-  position: fixed;
-  top: 0;
   left: var(--app-padding);
   right: var(--app-padding);
-  max-width: var(--app-max-width);
-  margin: 0 auto;
-  height: 56px;
-  padding: 0 var(--app-padding);
-  padding-top: env(safe-area-inset-top);
   background-color: var(--bg);
   border-bottom: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  z-index: 20;
 }
 
 @media (max-width: 360px) {
   #page-vitesse .page-header {
     left: var(--app-padding-small);
     right: var(--app-padding-small);
-    padding: 0 var(--app-padding-small);
   }
 }
 
 #page-vitesse .page-header_back {
-  display: flex;
-  align-items: center;
   gap: 2px;
   color: var(--text);
-  text-decoration: none;
-  justify-self: start;
-}
-
-#page-vitesse .page-header_back-icon {
-  width: 20px;
-  height: 20px;
 }
 
 #page-vitesse .page-header_back-label {
@@ -47,17 +26,7 @@
 }
 
 #page-vitesse .page-header_title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--text);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 46vw;
 }
 
 #page-vitesse .page-header_menu {

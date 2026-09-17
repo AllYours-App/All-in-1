@@ -1,0 +1,87 @@
+/* ===========================================================================
+   COMMUN — éléments UI partagés entre plusieurs modules
+   Chargé sur toutes les pages, après base.css et avant le CSS de chaque module.
+   =========================================================================== */
+
+/* La largeur d'affichage (max-width, padding) est déjà centralisée dans
+   base.css (bloc "CONTENEURS PARTAGÉS"). Rien à dupliquer ici. */
+
+/* ---------------------------------------------------------------------------
+   HEADER FIXE — Putting / Vitesse
+   Tronc identique dans les deux modules : structure grid + position fixe.
+   Fond, bordure, couleurs et left/right restent dans chaque fichier de module
+   car leurs valeurs diffèrent (thèmes différents, --bg-page vs --bg).
+   --------------------------------------------------------------------------- */
+#page-putting .page-header,
+#page-vitesse .page-header {
+  position: fixed;
+  top: 0;
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  height: 56px;
+  padding: 0 var(--app-padding);
+  padding-top: env(safe-area-inset-top);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  z-index: 20;
+}
+
+@media (max-width: 360px) {
+  #page-putting .page-header,
+  #page-vitesse .page-header {
+    padding: 0 var(--app-padding-small);
+  }
+}
+
+#page-putting .page-header_back,
+#page-vitesse .page-header_back {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  justify-self: start;
+}
+
+#page-putting .page-header_back-icon,
+#page-vitesse .page-header_back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+#page-putting .page-header_title,
+#page-vitesse .page-header_title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
+}
+
+/* .page-header_menu n'est pas mutualisé : vitesse n'a qu'un espaceur,
+   putting a un vrai bouton cliquable (fond, bordure, cursor). Trop différent
+   pour fusionner sans changer le comportement de l'un des deux. */
+
+/* ---------------------------------------------------------------------------
+   Volontairement NON mutualisés (vérifié, pas assez identiques) :
+   - header statique wedging (.wg-header) / gym (.gym-header) : padding et
+     breakpoints différents, le tronc commun ferait 3 propriétés pour un
+     risque de confusion trop élevé.
+   - header stats (#page-stats .page-header) : position sticky (pas fixed),
+     tokens (--space-*, --color-*) propres à stats, pas comparable.
+   - FAB : wg-fab (barre pleine largeur) / putting .fab-button (rond 64px) /
+     stats .fab (rond 64px mais left:0/right:0 + --space-lg, pas --app-padding).
+     Les valeurs left/right sont en dur (16px/20px) et diffèrent selon les
+     fichiers : les fusionner changerait visuellement wedging.
+   - bottom-nav : wg-bottom-nav (16px fixes, pas de breakpoint, z-index 50) vs
+     putting .bottom-nav (var(--app-padding), z-index 5) : même idée visuelle,
+     valeurs réellement différentes.
+   - parcours.css : classes non scopées (pas de #page-parcours en préfixe) et
+     .fab-cta en position sticky, pas fixed. À part si tu me dis d'y toucher.
+   Si tu veux que j'harmonise ces valeurs (par ex. tout passer sur
+   var(--app-padding)), dis-le clairement : ça changera des pixels visibles.
+   --------------------------------------------------------------------------- */

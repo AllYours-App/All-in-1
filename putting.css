@@ -81,45 +81,24 @@
 }
 
 #page-putting .page-header {
-  position: fixed;
-  top: 0;
   left: 16px;
   right: 16px;
-  max-width: var(--app-max-width);
-  margin: 0 auto;
-  height: 56px;
-  padding: 0 var(--app-padding);
-  padding-top: env(safe-area-inset-top);
   background-color: var(--bg-page);
   border-bottom: 1px solid var(--border-subtle);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  z-index: 20;
 }
 
 @media (max-width: 360px) {
   #page-putting .page-header {
     left: var(--app-padding-small);
     right: var(--app-padding-small);
-    padding: 0 var(--app-padding-small);
   }
 }
 
 #page-putting .page-header_back {
-  display: flex;
-  align-items: center;
   gap: 8px;
   color: var(--text-primary);
-  text-decoration: none;
-  justify-self: start;
   font-size: 15px;
   font-weight: 600;
-}
-
-#page-putting .page-header_back-icon {
-  width: 20px;
-  height: 20px;
 }
 
 #page-putting .page-header_back-label {
@@ -127,17 +106,7 @@
 }
 
 #page-putting .page-header_title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--text-primary);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 46vw;
 }
 
 #page-putting .page-header_menu {

@@ -1,0 +1,413 @@
+/* ===========================================================================
+   HOME — écran d'accueil (hub circulaire, header, panneau du bas)
+   =========================================================================== */
+
+/* Media queries extraites du bloc mixte d'origine (ne contenait que des
+   sélecteurs Home ; les sélecteurs .wg-nav-cards/.wg-range-grid sont
+   passés dans wedging.css) */
+@media (max-width: 360px) {
+  .header_title {
+    font-size: 32px;
+  }
+
+  .orbit-button {
+    width: 70px;
+    height: 70px;
+  }
+
+  .bottom-panel_wrapper {
+    height: 60px;
+    padding: 10px;
+  }
+
+  .column_value {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .header_title {
+    font-size: 36px;
+  }
+
+  .orbit-button {
+    width: 75px;
+    height: 75px;
+  }
+}
+
+.page-wrapper {
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.home-screen_component {
+  position: relative;
+  container-type: inline-size;
+  width: var(--app-max-width);
+  height: 852px;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 44px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+/* Sur un vrai téléphone : plein écran, sans cadre */
+@media (max-width: 430px) {
+  .home-screen_component {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ============ HEADER ============ */
+
+.home-screen_header {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 3;
+}
+
+.header_title {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.header_title-highlight {
+  color: var(--color-green);
+}
+
+.header_subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.8;
+  max-width: 220px;
+}
+
+/* ============ PROFIL ============ */
+
+.profile_button {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-bg-profile);
+  border: 1px solid var(--color-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: scale 0.15s ease;
+  z-index: 4;
+}
+
+.profile_button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.profile_indicator {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-green);
+  border: 2px solid rgba(7, 15, 22, 0.9);
+}
+
+/* ============ BOUTONS CIRCULAIRES ============ */
+
+.orbit-buttons_wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* Rayon de l'orbite, calculé en % de la largeur réelle de l'écran (container query) */
+  --orbit-r: 30cqw;
+}
+
+.orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--orbit-r) * 2);
+  height: calc(var(--orbit-r) * 2);
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-panel);
+  pointer-events: none;
+}
+
+.orbit-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 85px;
+  height: 85px;
+  /* Décale chaque bouton depuis le centre de l'écran selon sa position sur le pentagone */
+  translate: calc(-50% + var(--x) * var(--orbit-r)) calc(-50% + var(--y) * var(--orbit-r));  border-radius: 50%;
+  background: rgba(7, 15, 22, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px;
+  text-align: center;
+  transition: scale 0.15s ease;
+}
+
+/* Position radiale : Parcours au centre, les 5 autres en pentagone à 72° d'écart */
+.orbit-button.is-parcours { --x: 0; --y: 0; }
+.orbit-button.is-putting  { --x: 0; --y: -1; }
+.orbit-button.is-gym      { --x: 0.951; --y: -0.309; }
+.orbit-button.is-wedging  { --x: 0.588; --y: 0.809; }
+.orbit-button.is-vitesse  { --x: -0.588; --y: 0.809; }
+.orbit-button.is-stats    { --x: -0.951; --y: -0.309; }
+
+.orbit-button_icon {
+  width: 20px;
+  height: 20px;
+}
+
+.orbit-button_icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.orbit-button_title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+.orbit-button_subtitle {
+  font-size: 8.5px;
+  line-height: 1.25;
+  max-width: 72px;
+  opacity: 0.75;
+  color: var(--color-text-secondary);
+}
+
+.orbit-button_chevron {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.orbit-button.is-putting,
+.orbit-button.is-stats {
+  border: 2px solid var(--color-green);
+  background: rgba(7, 15, 22, 0.9);
+  box-shadow: 0 0 4px rgba(184, 255, 61, 0.8);
+}
+
+.orbit-button.is-gym,
+.orbit-button.is-wedging {
+  border: 2px solid var(--color-orange);
+  background: rgba(7, 15, 22, 0.9);
+  box-shadow: 0 0 4px rgba(255, 179, 71, 0.8);
+}
+
+.orbit-button.is-parcours,
+.orbit-button.is-vitesse {
+  border: 2px solid var(--color-blue);
+  background: rgba(7, 15, 22, 0.9);
+  box-shadow: 0 0 4px rgba(76, 201, 255, 0.8);
+}
+
+.orbit-button.is-putting .orbit-button_icon,
+.orbit-button.is-putting .orbit-button_chevron,
+.orbit-button.is-stats .orbit-button_icon,
+.orbit-button.is-stats .orbit-button_chevron {
+  color: var(--color-green);
+}
+
+.orbit-button.is-gym .orbit-button_icon,
+.orbit-button.is-gym .orbit-button_chevron,
+.orbit-button.is-wedging .orbit-button_icon,
+.orbit-button.is-wedging .orbit-button_chevron {
+  color: var(--color-orange);
+}
+
+.orbit-button.is-parcours .orbit-button_icon,
+.orbit-button.is-parcours .orbit-button_chevron,
+.orbit-button.is-vitesse .orbit-button_icon,
+.orbit-button.is-vitesse .orbit-button_chevron {
+  color: var(--color-blue);
+}
+
+/* ============ PANNEAU INFERIEUR ============ */
+
+.bottom-panel_wrapper {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 24px;
+  height: 70px;
+  background: var(--color-bg-card);
+  border-radius: 26px;
+  border: 1px solid var(--color-border-panel);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 0.7fr 1fr;
+  column-gap: 8px;
+  padding: 12px;
+  z-index: 3;
+}
+
+.bottom-panel_column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+/* Icône + titre alignés sur une seule ligne, même hauteur réservée pour toutes les colonnes */
+.column_header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  width: 100%;
+}
+
+.column_icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.column_icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.column_secondary {
+  font-size: 9px;
+  margin-top: 1px;
+  opacity: 0.65;
+  color: var(--color-text-secondary);
+}
+
+/* Colonne objectif : icône (anneau) + titre, puis valeur, puis barre de progression */
+.goal_progress-track {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.goal_progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-green);
+}
+
+/* Filets verticaux entre les 4 colonnes */
+.bottom-panel_column:not(:last-child) {
+  border-right: 1px solid var(--color-border-panel);
+  padding-right: 8px;
+}
+
+.column_label {
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column_value {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+  margin-top: 2px;
+  color: var(--color-text-primary);
+}
+
+.column_variation {
+  font-size: 9px;
+  font-weight: 600;
+  margin-top: 1px;
+  color: var(--color-green);
+}
+
+/* Anneau de progression de l'objectif semaine */
+
+.progress-ring_wrapper {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.progress-ring_text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.progress-ring_svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-ring_track {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 3;
+}
+
+.progress-ring_progress {
+  fill: none;
+  stroke: var(--color-green);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* ============ ETATS INTERACTIFS ============ */
+
+.is-pressed {
+  scale: 0.97;
+}
+
+.profile_button:focus-visible,
+.orbit-button:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 3px;
+}
