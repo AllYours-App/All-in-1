@@ -456,13 +456,6 @@ function renderPuttingTab() {
         </div>
       </div>
 
-      <div class="insight-card">
-        <div class="insight-card_icon-wrap">
-          <svg class="insight-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>
-        </div>
-        <div class="insight-card_text">Vous êtes plus performant sur les pentes descendantes. Entraînez-vous sur les pentes montantes pour équilibrer.</div>
-      </div>
-
     </div>
 
   </div>

@@ -83,13 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
   updateProgressRing();
   applyBackground();
 
-  // Données d'exemple — à remplacer par l'appel réel depuis la source de données
-  renderGolfStats({
-    goal: { current: 4, target: 5 },
-    distance: { value: "247 m", variation: "↑ +8 m" },
-    index: { value: "12.4", variation: "↑ +0,3" },
-    lastSession: { value: "Hier", type: "Parcours" }
-  });
+  // Appel réel à brancher sur la source de données
+  renderGolfStats({});
 
   // Retour visuel au toucher/clic sur les éléments interactifs
   const pressables = document.querySelectorAll(
