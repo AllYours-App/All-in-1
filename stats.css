@@ -179,18 +179,6 @@ html {
   --app-header-text-secondary: var(--color-text-primary);
 }
 
-/* ---------- Header ---------- */
-#page-stats .page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-md) 0 var(--space-xs);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-header);
-  background: linear-gradient(var(--color-bg-base) 70%, transparent);
-}
-
 /* Structure + position fixe : voir commun.css (#page-stats .page-header).
    Ne reste ici que les extras propres à stats. */
 #page-stats .page-header__back {
