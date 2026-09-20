@@ -27,8 +27,8 @@
 #page-parcours .top-bar {
   position: fixed;
   top: 0;
-  left: var(--app-padding);
-  right: var(--app-padding);
+  left: 0;
+  right: 0;
   max-width: var(--app-max-width);
   margin: 0 auto;
   height: 56px;
@@ -49,8 +49,8 @@
   #page-wedging .wg-header,
   #page-gym .gym-header,
   #page-parcours .top-bar {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
+    left: 0;
+    right: 0;
     padding: 0 var(--app-padding-small);
   }
 }

@@ -194,3 +194,16 @@ a {
     padding: 0 var(--app-padding-small);
   }
 }
+
+/* Pas de double padding : un conteneur imbriqué n'a pas de padding propre.
+   Le padding reste sur le conteneur le plus externe uniquement. */
+:is(.app-page, [id^="page-"]) .gym-app,
+:is(.app-page, [id^="page-"]) .wg-container,
+:is(.app-page, [id^="page-"]) #app-root,
+:is(.app-page, [id^="page-"]) #app-root-vitesse,
+#page-stats .app,
+#page-putting .app,
+#page-vitesse .app {
+  padding-left: 0;
+  padding-right: 0;
+}
