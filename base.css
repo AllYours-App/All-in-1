@@ -151,7 +151,9 @@ a {
 }
 
 /* --------------------- CONTENEURS PARTAGÉS (plusieurs modules) --------------------- */
-/* Règle utilisée par Home, Gym, Wedging, Stats, Putting, Vitesse */
+/* Largeur max + centrage uniquement. Pas de padding horizontal ici : chaque bloc
+   de contenu (main, .screen, .gym-main, .wg-*, etc.) porte son propre padding,
+   sinon il s'additionne avec celui des conteneurs parents (espace noir sur les côtés). */
 .app-page,
 .gym-app,
 .wg-container,
@@ -165,7 +167,6 @@ a {
 #app-root-vitesse {
   max-width: var(--app-max-width);
   margin: 0 auto;
-  padding: 0 var(--app-padding);
 }
 
 /* Putting / Stats / Vitesse sont des modules autonomes (pas montés dans
@@ -177,33 +178,4 @@ a {
 #page-stats,
 #page-vitesse {
   contain: layout;
-}
-
-@media (max-width: 360px) {
-  .app-page,
-  .gym-app,
-  .wg-container,
-  #page-stats,
-  #page-putting,
-  #page-vitesse,
-  #page-stats .app,
-  #page-putting .app,
-  #page-vitesse .app,
-  #app-root,
-  #app-root-vitesse {
-    padding: 0 var(--app-padding-small);
-  }
-}
-
-/* Pas de double padding : un conteneur imbriqué n'a pas de padding propre.
-   Le padding reste sur le conteneur le plus externe uniquement. */
-:is(.app-page, [id^="page-"]) .gym-app,
-:is(.app-page, [id^="page-"]) .wg-container,
-:is(.app-page, [id^="page-"]) #app-root,
-:is(.app-page, [id^="page-"]) #app-root-vitesse,
-#page-stats .app,
-#page-putting .app,
-#page-vitesse .app {
-  padding-left: 0;
-  padding-right: 0;
 }

@@ -168,8 +168,15 @@ html {
 #page-stats .app {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: calc(56px + env(safe-area-inset-top) + var(--space-lg)) 0 var(--bottom-safe);
+  padding: calc(56px + env(safe-area-inset-top) + var(--space-lg)) var(--app-padding) var(--bottom-safe);
   position: relative;
+}
+
+@media (max-width: 360px) {
+  #page-stats .app {
+    padding-left: var(--app-padding-small);
+    padding-right: var(--app-padding-small);
+  }
 }
 
 #page-stats {

@@ -16,13 +16,7 @@
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
-  padding: 0 var(--app-padding);
-}
-
-@media (max-width: 360px) {
-  .app {
-    padding: 0 var(--app-padding-small);
-  }
+  padding: 0; /* .page-header et .screen portent déjà leur padding de 20px */
 }
 
 /* a{} et button{} : déjà couverts par le reset global de base.css */
