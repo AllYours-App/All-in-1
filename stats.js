@@ -12,26 +12,26 @@
 
   // API: GET /api/stats/strokes-gained?period=30d
   const strokesGained = {
-    total: 1.8,
-    comparisonLabel: 'vs joueur 12 HCP',
+    total: null,
+    comparisonLabel: '',
     categories: [
-      { key: 'driving', label: 'Driving', value: 0.5, icon: 'club' },
-      { key: 'approach', label: 'Approche', value: 0.6, icon: 'flag' },
-      { key: 'shortgame', label: 'Petit jeu', value: 0.2, icon: 'bowl' },
-      { key: 'putting', label: 'Putting', value: 0.5, icon: 'putter' },
+      { key: 'driving', label: 'Driving', value: null, icon: 'club' },
+      { key: 'approach', label: 'Approche', value: null, icon: 'flag' },
+      { key: 'shortgame', label: 'Petit jeu', value: null, icon: 'bowl' },
+      { key: 'putting', label: 'Putting', value: null, icon: 'putter' },
     ],
   };
 
   // API: GET /api/stats/kpis?period=30d
   const kpiCards = [
-    { key: 'fairways', title: 'Fairways', subtitle: 'Touchés', value: 64, unit: '%', delta: 4, goodWhen: 'up',
-      compareLabel: 'vs période précédente', sparkline: [52, 55, 58, 54, 60, 63, 61, 64, 66, 64], icon: 'flag' },
-    { key: 'gir', title: 'Greens en', subtitle: 'Régulation', value: 53, unit: '%', delta: 3, goodWhen: 'up',
-      compareLabel: 'vs période précédente', sparkline: [44, 46, 45, 48, 50, 49, 51, 52, 51, 53], icon: 'target' },
-    { key: 'putts', title: 'Putts', subtitle: 'Par tour', value: 32.1, unit: '', delta: -0.8, goodWhen: 'down',
-      compareLabel: 'vs période précédente', sparkline: [34.2, 33.8, 34.5, 33.9, 33.1, 33.4, 32.8, 32.5, 32.9, 32.1], icon: 'putter' },
-    { key: 'birdies', title: 'Birdies', subtitle: 'Par tour', value: 1.1, unit: '', delta: 0.2, goodWhen: 'up',
-      compareLabel: 'vs période précédente', sparkline: [0.7, 0.8, 0.9, 0.8, 1.0, 0.9, 1.0, 1.1, 1.0, 1.1], icon: 'bird' },
+    { key: 'fairways', title: 'Fairways', subtitle: 'Touchés', value: null, unit: '%', delta: null, goodWhen: 'up',
+      compareLabel: 'vs période précédente', sparkline: [], icon: 'flag' },
+    { key: 'gir', title: 'Greens en', subtitle: 'Régulation', value: null, unit: '%', delta: null, goodWhen: 'up',
+      compareLabel: 'vs période précédente', sparkline: [], icon: 'target' },
+    { key: 'putts', title: 'Putts', subtitle: 'Par tour', value: null, unit: '', delta: null, goodWhen: 'down',
+      compareLabel: 'vs période précédente', sparkline: [], icon: 'putter' },
+    { key: 'birdies', title: 'Birdies', subtitle: 'Par tour', value: null, unit: '', delta: null, goodWhen: 'up',
+      compareLabel: 'vs période précédente', sparkline: [], icon: 'bird' },
   ];
 
   // API: GET /api/stats/analyses
@@ -43,59 +43,32 @@
   ];
 
   // API: GET /api/rounds?limit=6&sort=date_desc
-  const roundsHistory = [
-    { id: 'r1', course: 'Golf de Chantilly', city: 'Chantilly, France', date: '2025-05-16', score: 76, vsPar: -2, fir: 11, gir: 12 },
-    { id: 'r2', course: 'Golf de Saint-Nom-la-Bretèche', city: 'Saint-Nom-la-Bretèche, France', date: '2025-05-13', score: 81, vsPar: 9, fir: 9, gir: 10 },
-    { id: 'r3', course: 'Golf de Fontainebleau', city: 'Fontainebleau, France', date: '2025-05-09', score: 79, vsPar: 5, fir: 10, gir: 11 },
-    { id: 'r4', course: 'Golf National', city: 'Guyancourt, France', date: '2025-05-06', score: 74, vsPar: -1, fir: 12, gir: 13 },
-    { id: 'r5', course: 'Golf de Joyenval', city: 'Chambourcy, France', date: '2025-05-02', score: 83, vsPar: 11, fir: 8, gir: 9 },
-    { id: 'r6', course: 'Golf de Saint-Germain', city: 'Saint-Germain-en-Laye, France', date: '2025-04-29', score: 80, vsPar: 8, fir: 10, gir: 10 },
-  ];
+  const roundsHistory = [];
 
   // API: GET /api/rounds/summary
   const roundsSummary = {
-    avgScore: 79.8, avgScoreDelta: -1.4, bestScore: 74, bestScoreDelta: -2, played: 24,
-    avgGrossScore: 82.6, avgGrossDelta: -1.9, birdiesTotal: 31, doubleBogeyPlus: 9,
+    avgScore: null, avgScoreDelta: null, bestScore: null, bestScoreDelta: null, played: null,
+    avgGrossScore: null, avgGrossDelta: null, birdiesTotal: null, doubleBogeyPlus: null,
   };
 
   // API: GET /api/stats/par-distance?mode=multi&period=30d&course=all&lie=all
   const distanceAnalysis = {
     score: {
-      avgGross: 82.6, avgGrossDelta: -1.9, avgNet: 77.4, avgNetDelta: -2.1,
-      best: 74, worst: 91, played: 24,
-      byDistance: [
-        { label: 'Moins de 150 m', avg: 3.0, vsPar: 0.0, holes: 48 },
-        { label: '150 – 350 m', avg: 4.1, vsPar: 0.1, holes: 132 },
-        { label: 'Plus de 350 m', avg: 5.2, vsPar: 0.2, holes: 84 },
-      ],
+      avgGross: null, avgGrossDelta: null, avgNet: null, avgNetDelta: null,
+      best: null, worst: null, played: null,
+      byDistance: [],
     },
-    fairway: { hitPct: 64, leftPct: 22, rightPct: 14, avgDistanceHit: 238, avgDistanceMiss: 205, penaltyPct: 2 },
-    approach: { girPct: 53, proximity: 13.1, under10: 55, under20: 74, over50: 11,
-      zones: { center: 32, top: 14, left: 24, right: 12, bottom: 18 } },
+    fairway: { hitPct: null, leftPct: null, rightPct: null, avgDistanceHit: null, avgDistanceMiss: null, penaltyPct: null },
+    approach: { girPct: null, proximity: null, under10: null, under20: null, over50: null,
+      zones: { center: null, top: null, left: null, right: null, bottom: null } },
     approches: {
-      avgDistance: 79, proximity: 13.1, upDownPct: 46,
-      byDistance: [
-        { label: '< 50 m', proximity: 2.6, success: 71 },
-        { label: '50 – 100 m', proximity: 6.1, success: 55 },
-        { label: '100 – 150 m', proximity: 10.8, success: 41 },
-        { label: '150 – 200 m', proximity: 17.9, success: 26 },
-        { label: '> 200 m', proximity: 26.4, success: 14 },
-      ],
-      proximityBands: [
-        { key: 'under10', label: '< 10 m', pct: 55 },
-        { key: 'under20', label: '10 – 20 m', pct: 22 },
-        { key: 'under50', label: '20 – 50 m', pct: 14 },
-        { key: 'over50', label: '> 50 m', pct: 9 },
-      ],
+      avgDistance: null, proximity: null, upDownPct: null,
+      byDistance: [],
+      proximityBands: [],
     },
     putts: {
-      perHole: 1.69, onePutt: 40, twoPutt: 52, threePlusPutt: 8, avgFirstPuttDistance: 7.2,
-      byDistance: [
-        { label: '< 3 m', avgPutts: 1.10, one: 90, two: 9, threePlus: 1 },
-        { label: '3 – 5 m', avgPutts: 1.42, one: 55, two: 42, threePlus: 3 },
-        { label: '5 – 10 m', avgPutts: 1.85, one: 27, two: 65, threePlus: 8 },
-        { label: '> 10 m', avgPutts: 2.28, one: 9, two: 55, threePlus: 36 },
-      ],
+      perHole: null, onePutt: null, twoPutt: null, threePlusPutt: null, avgFirstPuttDistance: null,
+      byDistance: [],
     },
   };
 
@@ -103,25 +76,21 @@
   const trendSeries = {
     label: 'Fairways touchés', unit: '%',
     ranges: ['1M', '3M', '6M', '1A', 'TOUT'], activeRange: '3M',
-    points: [
-      { x: '15/04', y: 50 }, { x: '29/04', y: 55 }, { x: '13/05', y: 59 },
-      { x: '27/05', y: 53 }, { x: '10/06', y: 57 }, { x: '24/06', y: 62 },
-      { x: '08/07', y: 68 }, { x: '22/07', y: 65 }, { x: '05/08', y: 69 },
-      { x: '19/08', y: 73 }, { x: '02/09', y: 71 }, { x: '16/09', y: 76 },
-    ],
-    progressionPts: 26, average: 63, best: { value: 76, date: '16/09' }, worst: { value: 50, date: '15/04' },
+    points: [],
+    progressionPts: null, average: null, best: { value: null, date: null }, worst: { value: null, date: null },
     footnote: 'Pourcentage de fairways touchés depuis le tee de départ.',
   };
 
   // API: GET /api/stats/putting?range=20-rounds
   const puttingPerformance = {
-    value: 1.69, delta: -0.15, compareLabel: 'vs période précédente',
-    points: [1.92, 1.84, 1.98, 1.87, 1.74, 1.81, 1.69, 1.72, 1.66, 1.78, 1.64, 1.75, 1.61, 1.56, 1.60, 1.53, 1.66, 1.58, 1.62, 1.69],
+    value: null, delta: null, compareLabel: 'vs période précédente',
+    points: [],
   };
 
+  // Note : la liste de parcours doit être alimentée dynamiquement (parcours réellement joués par l'utilisateur).
   const DEFAULT_FILTERS = {
     period: { key: 'period', icon: 'calendar', label: '30 derniers jours', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
-    course: { key: 'course', icon: 'flag', label: 'Tous parcours', options: ['Tous parcours', 'Golf National', 'Golf de Chantilly', 'Fontainebleau'] },
+    course: { key: 'course', icon: 'flag', label: 'Tous parcours', options: ['Tous parcours'] },
     lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
 
@@ -159,6 +128,12 @@
      ======================================================================== */
 
   function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // Affiche "--" tant qu'une donnée n'est pas encore disponible (null/undefined), sinon valeur + suffixe.
+  function fmt(value, suffix) {
+    if (value === null || value === undefined || Number.isNaN(value)) return '--';
+    return `${value}${suffix || ''}`;
+  }
 
   function hexToRgba(hex, alpha) {
     const h = hex.replace('#', '');
@@ -250,11 +225,12 @@
      ======================================================================== */
 
   function renderKpiCard(kpi, index) {
-    const isUp = kpi.delta > 0;
+    const hasDelta = kpi.delta !== null && kpi.delta !== undefined;
+    const isUp = hasDelta && kpi.delta > 0;
     const trendIcon = isUp ? icon('trendUp') : icon('trendDown');
     const isGood = kpi.goodWhen === 'down' ? !isUp : isUp;
-    const trendClass = isGood ? 'kpi-card__trend--good' : 'kpi-card__trend--bad';
-    const sign = kpi.delta > 0 ? '+' : '';
+    const trendClass = hasDelta ? (isGood ? 'kpi-card__trend--good' : 'kpi-card__trend--bad') : '';
+    const sign = hasDelta && kpi.delta > 0 ? '+' : '';
     // Carte non interactive : les maquettes ne montrent aucune navigation
     // déclenchée par les cartes KPI de l'écran Dashboard.
     return `
@@ -266,9 +242,9 @@
             <div class="kpi-card__subtitle">${kpi.subtitle}</div>
           </div>
         </div>
-        <div class="kpi-card__value">${kpi.value}<sup>${kpi.unit}</sup></div>
+        <div class="kpi-card__value">${fmt(kpi.value)}<sup>${kpi.unit}</sup></div>
         <div class="kpi-card__trend ${trendClass}">
-          ${trendIcon} ${sign}${kpi.delta}${kpi.unit}
+          ${hasDelta ? `${trendIcon} ${sign}${kpi.delta}${kpi.unit}` : ''}
           <span class="kpi-card__compare">${kpi.compareLabel}</span>
         </div>
         <div class="kpi-card__sparkline"><canvas aria-hidden="true" data-sparkline="${kpi.key}"></canvas></div>
@@ -278,6 +254,7 @@
 
   function mountKpiCharts(container, kpis) {
     kpis.forEach((kpi) => {
+      if (!kpi.sparkline || !kpi.sparkline.length) return;
       const canvas = container.querySelector(`canvas[data-sparkline="${kpi.key}"]`);
       const isGood = kpi.goodWhen === 'down' ? kpi.delta < 0 : kpi.delta > 0;
       if (canvas) createSparkline(canvas, kpi.sparkline, isGood);
@@ -376,7 +353,7 @@
   }
 
   function renderRoundList(container, rounds, onSelect) {
-    container.innerHTML = `
+    container.innerHTML = rounds.length ? `
       <div class="round-list">
         ${rounds.map((r) => `
           <div class="round-row" role="button" tabindex="0" data-id="${r.id}">
@@ -392,7 +369,7 @@
           </div>
         `).join('')}
       </div>
-    `;
+    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun round trouvé.</p>';
     if (onSelect) {
       container.querySelectorAll('[data-id]').forEach((row) => {
         const round = rounds.find((r) => r.id === row.dataset.id);
@@ -525,17 +502,17 @@
             <line x1="150" y1="0" x2="150" y2="200" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3 5"/>
             <circle cx="150" cy="14" r="5" fill="#fff" stroke="rgba(0,0,0,0.3)"/>
           </svg>
-          <div class="field-map__label" style="top:44%; left:18%;"><span class="field-map__label-value">${data.leftPct}%</span><span class="field-map__label-caption">Gauche</span></div>
-          <div class="field-map__label" style="top:20%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${data.hitPct}%</span><span class="field-map__label-caption">Touchés</span></div>
-          <div class="field-map__label" style="top:44%; right:16%;"><span class="field-map__label-value">${data.rightPct}%</span><span class="field-map__label-caption">Droite</span></div>
+          <div class="field-map__label" style="top:44%; left:18%;"><span class="field-map__label-value">${fmt(data.leftPct, '%')}</span><span class="field-map__label-caption">Gauche</span></div>
+          <div class="field-map__label" style="top:20%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(data.hitPct, '%')}</span><span class="field-map__label-caption">Touchés</span></div>
+          <div class="field-map__label" style="top:44%; right:16%;"><span class="field-map__label-value">${fmt(data.rightPct, '%')}</span><span class="field-map__label-caption">Droite</span></div>
         </div>
         <div class="field-map__side-table">
-          <div class="field-map__row"><span class="field-map__row-label">Fairways touchés</span><span class="field-map__row-value">${data.hitPct}%</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Ratés gauche</span><span class="field-map__row-value">${data.leftPct}%</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Ratés droite</span><span class="field-map__row-value">${data.rightPct}%</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Distance moy. (touché)</span><span class="field-map__row-value">${data.avgDistanceHit} m</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Distance moy. (raté)</span><span class="field-map__row-value">${data.avgDistanceMiss} m</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Penalty</span><span class="field-map__row-value">${data.penaltyPct}%</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Fairways touchés</span><span class="field-map__row-value">${fmt(data.hitPct, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Ratés gauche</span><span class="field-map__row-value">${fmt(data.leftPct, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Ratés droite</span><span class="field-map__row-value">${fmt(data.rightPct, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Distance moy. (touché)</span><span class="field-map__row-value">${fmt(data.avgDistanceHit, ' m')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Distance moy. (raté)</span><span class="field-map__row-value">${fmt(data.avgDistanceMiss, ' m')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Penalty</span><span class="field-map__row-value">${fmt(data.penaltyPct, '%')}</span></div>
         </div>
       </div>
     `;
@@ -552,18 +529,18 @@
             <ellipse cx="150" cy="100" rx="55" ry="36" fill="rgba(199,241,31,0.22)" stroke="var(--color-accent)" stroke-width="1.5"/>
             <path d="M150 64 L150 84 M150 64 L162 70 L150 76" stroke="#fff" stroke-width="2" fill="none"/>
           </svg>
-          <div class="field-map__label" style="top:10%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${z.top}%</span><span class="field-map__label-caption">Long</span></div>
-          <div class="field-map__label" style="top:46%; left:12%;"><span class="field-map__label-value">${z.left}%</span><span class="field-map__label-caption">Gauche</span></div>
-          <div class="field-map__label" style="top:44%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${z.center}%</span><span class="field-map__label-caption">GIR</span></div>
-          <div class="field-map__label" style="top:46%; right:10%;"><span class="field-map__label-value">${z.right}%</span><span class="field-map__label-caption">Droite</span></div>
-          <div class="field-map__label" style="bottom:6%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${z.bottom}%</span><span class="field-map__label-caption">Court</span></div>
+          <div class="field-map__label" style="top:10%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(z.top, '%')}</span><span class="field-map__label-caption">Long</span></div>
+          <div class="field-map__label" style="top:46%; left:12%;"><span class="field-map__label-value">${fmt(z.left, '%')}</span><span class="field-map__label-caption">Gauche</span></div>
+          <div class="field-map__label" style="top:44%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(z.center, '%')}</span><span class="field-map__label-caption">GIR</span></div>
+          <div class="field-map__label" style="top:46%; right:10%;"><span class="field-map__label-value">${fmt(z.right, '%')}</span><span class="field-map__label-caption">Droite</span></div>
+          <div class="field-map__label" style="bottom:6%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(z.bottom, '%')}</span><span class="field-map__label-caption">Court</span></div>
         </div>
         <div class="field-map__side-table">
-          <div class="field-map__row"><span class="field-map__row-label">Greens en régulation</span><span class="field-map__row-value">${data.girPct}%</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Proximité du trou</span><span class="field-map__row-value">${data.proximity} m</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Approches &lt; 10 m</span><span class="field-map__row-value">${data.under10}%</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Approches &lt; 20 m</span><span class="field-map__row-value">${data.under20}%</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Approches &gt; 50 m</span><span class="field-map__row-value">${data.over50}%</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Greens en régulation</span><span class="field-map__row-value">${fmt(data.girPct, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Proximité du trou</span><span class="field-map__row-value">${fmt(data.proximity, ' m')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Approches &lt; 10 m</span><span class="field-map__row-value">${fmt(data.under10, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Approches &lt; 20 m</span><span class="field-map__row-value">${fmt(data.under20, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Approches &gt; 50 m</span><span class="field-map__row-value">${fmt(data.over50, '%')}</span></div>
         </div>
       </div>
     `;
@@ -610,13 +587,15 @@
      ======================================================================== */
 
   // `inverted = true` : une baisse est une bonne nouvelle (ex : score) → couleur inversée.
-  function metric(label, value, delta, inverted) {
-    const isGood = delta === undefined ? null : (inverted ? delta <= 0 : delta >= 0);
+  // `suffix` : unité optionnelle (' m', '%'...) ajoutée uniquement si la valeur est présente.
+  function metric(label, value, delta, inverted, suffix) {
+    const hasDelta = delta !== undefined && delta !== null;
+    const isGood = !hasDelta ? null : (inverted ? delta <= 0 : delta >= 0);
     return `
       <div class="metric">
         <div class="metric__label">${label}</div>
-        <div class="metric__value">${value}</div>
-        ${delta !== undefined ? `<div class="metric__delta ${isGood ? 'metric__delta--pos' : 'metric__delta--neg'}">${delta > 0 ? '+' : ''}${delta}</div>` : ''}
+        <div class="metric__value">${fmt(value, suffix)}</div>
+        ${hasDelta ? `<div class="metric__delta ${isGood ? 'metric__delta--pos' : 'metric__delta--neg'}">${delta > 0 ? '+' : ''}${delta}</div>` : ''}
       </div>
     `;
   }
@@ -675,9 +654,9 @@
       <section class="stat-block fade-up">
         ${statBlockHeader('putter', 'Approches')}
         <div class="stat-block__metrics">
-          ${metric('Distance moyenne', data.avgDistance + ' m')}
-          ${metric('Proximité moyenne', data.proximity + ' m')}
-          ${metric('Up & Down', data.upDownPct + '%')}
+          ${metric('Distance moyenne', data.avgDistance, undefined, undefined, ' m')}
+          ${metric('Proximité moyenne', data.proximity, undefined, undefined, ' m')}
+          ${metric('Up & Down', data.upDownPct, undefined, undefined, '%')}
         </div>
         <table class="data-table">
           <thead><tr><th>Distance</th><th>Proximité</th><th>Réussite</th></tr></thead>
@@ -697,8 +676,8 @@
         ${statBlockHeader('putter', 'Putts')}
         <div class="stat-block__metrics">
           ${metric('Putts par trou', data.perHole)}
-          ${metric('1 putt', data.onePutt + '%')}
-          ${metric('2 putts', data.twoPutt + '%')}
+          ${metric('1 putt', data.onePutt, undefined, undefined, '%')}
+          ${metric('2 putts', data.twoPutt, undefined, undefined, '%')}
         </div>
         <table class="data-table">
           <thead><tr><th>Distance 1er putt</th><th>Putts moy.</th><th>1 putt</th><th>2 putts</th><th>3 putts+</th></tr></thead>
@@ -713,13 +692,18 @@
      ======================================================================== */
 
   function initDashboard() {
+    const hasTotal = strokesGained.total !== null && strokesGained.total !== undefined;
+    const sgValueHtml = hasTotal
+      ? `<div class="sg-card__value" data-count-to="${strokesGained.total}" data-count-prefix="+">+0.0</div>`
+      : `<div class="sg-card__value">--</div>`;
+
     document.getElementById('dash-strokesGained').innerHTML = `
       <div class="sg-card__main">
         <div class="icon-badge">${icon('trendUp')}</div>
         <div>
           <div class="sg-card__label">Strokes Gained</div>
           <div class="sg-card__sublabel">Total</div>
-          <div class="sg-card__value" data-count-to="${strokesGained.total}" data-count-prefix="+">+0.0</div>
+          ${sgValueHtml}
           <div class="sg-card__caption">${strokesGained.comparisonLabel}</div>
         </div>
       </div>
@@ -728,7 +712,7 @@
           <div class="sg-item">
             <div class="sg-item__label">${c.label}</div>
             <div class="sg-item__icon">${icon(c.icon)}</div>
-            <div class="sg-item__value">+${c.value}</div>
+            <div class="sg-item__value">${c.value !== null && c.value !== undefined ? '+' + c.value : '--'}</div>
           </div>
         `).join('')}
       </div>
@@ -795,12 +779,12 @@
 
     document.getElementById('pd-trad-title').textContent = trendSeries.label;
     document.getElementById('pd-trad-unit').textContent = `(${trendSeries.unit})`;
-    document.getElementById('pd-trad-average').textContent = trendSeries.average + trendSeries.unit;
-    document.getElementById('pd-trad-best').textContent = trendSeries.best.value + trendSeries.unit;
-    document.getElementById('pd-trad-bestDate').textContent = trendSeries.best.date;
-    document.getElementById('pd-trad-worst').textContent = trendSeries.worst.value + trendSeries.unit;
-    document.getElementById('pd-trad-worstDate').textContent = trendSeries.worst.date;
-    document.getElementById('pd-trad-progression').querySelector('span').textContent = `+${trendSeries.progressionPts} pts`;
+    document.getElementById('pd-trad-average').textContent = fmt(trendSeries.average, trendSeries.unit);
+    document.getElementById('pd-trad-best').textContent = fmt(trendSeries.best.value, trendSeries.unit);
+    document.getElementById('pd-trad-bestDate').textContent = trendSeries.best.date || '--';
+    document.getElementById('pd-trad-worst').textContent = fmt(trendSeries.worst.value, trendSeries.unit);
+    document.getElementById('pd-trad-worstDate').textContent = trendSeries.worst.date || '--';
+    document.getElementById('pd-trad-progression').querySelector('span').textContent = fmt(trendSeries.progressionPts !== null && trendSeries.progressionPts !== undefined ? `+${trendSeries.progressionPts}` : null, ' pts');
     document.getElementById('pd-trad-footnote').textContent = trendSeries.footnote;
 
     const tabsEl = document.getElementById('pd-trad-periodTabs');
@@ -829,7 +813,7 @@
       <div class="mini-stat fade-up">
         <div class="mini-stat__icon">${icon(ic)}</div>
         <div class="mini-stat__label">${label}</div>
-        <div class="mini-stat__value">${value}</div>
+        <div class="mini-stat__value">${fmt(value)}</div>
         ${delta !== null ? `<div class="mini-stat__delta ${delta <= 0 ? 'mini-stat__delta--pos' : 'mini-stat__delta--neg'}">${delta > 0 ? '+' : ''}${delta}</div>` : ''}
       </div>
     `).join('');
@@ -881,11 +865,24 @@
       { key: 'range', icon: 'calendar', label: '20 derniers rounds', options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
     ]);
 
-    document.getElementById('put-value').dataset.countTo = puttingPerformance.value;
+    const hasValue = puttingPerformance.value !== null && puttingPerformance.value !== undefined;
+    const valueEl = document.getElementById('put-value');
+    if (hasValue) {
+      valueEl.dataset.countTo = puttingPerformance.value;
+    } else {
+      valueEl.textContent = '--';
+    }
+
     const deltaEl = document.getElementById('put-delta');
-    const isGood = puttingPerformance.delta <= 0; // baisse des putts = amélioration
-    deltaEl.className = `kpi-card__trend ${isGood ? 'kpi-card__trend--good' : 'kpi-card__trend--bad'}`;
-    deltaEl.textContent = `${puttingPerformance.delta > 0 ? '+' : ''}${puttingPerformance.delta} ${puttingPerformance.compareLabel}`;
+    const hasDelta = puttingPerformance.delta !== null && puttingPerformance.delta !== undefined;
+    if (hasDelta) {
+      const isGood = puttingPerformance.delta <= 0; // baisse des putts = amélioration
+      deltaEl.className = `kpi-card__trend ${isGood ? 'kpi-card__trend--good' : 'kpi-card__trend--bad'}`;
+      deltaEl.textContent = `${puttingPerformance.delta > 0 ? '+' : ''}${puttingPerformance.delta} ${puttingPerformance.compareLabel}`;
+    } else {
+      deltaEl.className = 'kpi-card__trend';
+      deltaEl.textContent = puttingPerformance.compareLabel;
+    }
 
     const points = puttingPerformance.points.map((y, i) => ({ x: String(i + 1), y }));
     createPerformanceChart(document.getElementById('put-chart'), points, 'line');
