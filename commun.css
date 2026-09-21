@@ -147,6 +147,12 @@
      --app-nav-active-bg   fond de l'onglet actif
      --app-nav-z           z-index (optionnel, 5 par défaut)
    --------------------------------------------------------------------------- */
+#page-putting,
+#page-wedging {
+  /* Hauteur totale de la barre : bordure + padding haut + onglet + padding bas */
+  --app-nav-h: calc(1px + 3px + 44px + max(6px, calc(env(safe-area-inset-bottom) - 20px)));
+}
+
 #page-putting .bottom-nav,
 #page-wedging .wg-bottom-nav {
   position: fixed;
@@ -156,8 +162,8 @@
   max-width: calc(var(--app-max-width) - 2 * var(--app-padding));
   margin: 0 auto;
   display: flex;
-  gap: 6px;
-  padding: 4px 6px calc(10px + env(safe-area-inset-bottom));
+  gap: 4px;
+  padding: 3px 4px max(6px, calc(env(safe-area-inset-bottom) - 20px));
   background-color: var(--app-nav-bg);
   border: 1px solid var(--app-nav-border);
   border-bottom: none;
@@ -182,16 +188,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 8px 4px;
+  gap: 1px;
+  height: 44px;
+  padding: 0 4px;
   background: none;
   border: none;
   border-right: 2px solid rgba(255, 255, 255, 0.1);
   color: var(--app-nav-text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.15;
   letter-spacing: 0;
   text-align: center;
   text-transform: none;
@@ -214,8 +221,8 @@
 #page-putting .bottom-nav_icon,
 #page-wedging .wg-bottom-nav-item svg {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 

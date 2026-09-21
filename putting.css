@@ -1071,7 +1071,7 @@
 }
 
 #page-putting .fab-group[data-fab="parcours"] {
-  bottom: calc(96px + env(safe-area-inset-bottom));
+  bottom: calc(var(--app-nav-h) + 14px);
 }
 
 #page-putting .fab-button {
@@ -1167,7 +1167,7 @@
 }
 
 #page-putting .bottom-nav_sublabel {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-tertiary);
 }
 
