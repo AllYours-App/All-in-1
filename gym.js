@@ -2582,6 +2582,9 @@ function gymActivateView(view, params) {
   const section = document.getElementById(`view-${view}`);
   if (section) section.hidden = false;
 
+  // Bloque le scroll du body tant que l'accueil (écran fixe, sans défilement) est affiché.
+  document.body.classList.toggle("gym-home-locked", view === "gym-home");
+
   // Filet de sécurité : referme toute bottom-sheet restée ouverte en quittant sa vue.
   document.querySelectorAll(".sheet.is-open, .sheet-overlay.is-open").forEach((el) => {
     el.classList.remove("is-open");

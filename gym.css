@@ -1707,10 +1707,12 @@ select:focus-visible,
   overflow: hidden;
 }
 
-/* Empêche le padding-bottom global de .gym-app de dépasser les 100dvh
-   de la vue accueil (source du scroll résiduel). */
-.gym-app:has(#view-gym-home:not([hidden])) {
-  padding-bottom: 0;
+/* Empêche le body de défiler tant que l'accueil (écran fixe) est affiché.
+   La classe est posée/retirée par gymActivateView() en JS (gym.js). */
+body.gym-home-locked {
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
 }
 
 /* Le header est fixed (commun.css) : plus besoin de flex:0 0 auto ici. */
