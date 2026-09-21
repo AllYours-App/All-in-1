@@ -164,18 +164,18 @@
 const M_TO_FT = 3.28084;
 const PARCOURS_SETTINGS_KEY = "parcours-settings";
 
-let settings = { distanceUnit: "m" };
+let parcoursSettings = { distanceUnit: "m" };
 (function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(PARCOURS_SETTINGS_KEY) || "{}");
     if (saved && (saved.distanceUnit === "m" || saved.distanceUnit === "ft")) {
-      settings.distanceUnit = saved.distanceUnit;
+      parcoursSettings.distanceUnit = saved.distanceUnit;
     }
   } catch (e) { /* localStorage indisponible : on garde la valeur par défaut */ }
 })();
 
 function saveSettings() {
-  try { localStorage.setItem(PARCOURS_SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* pas grave */ }
+  try { localStorage.setItem(PARCOURS_SETTINGS_KEY, JSON.stringify(parcoursSettings)); } catch (e) { /* pas grave */ }
 }
 
 function convertDistance(meters, unit) {
@@ -186,18 +186,18 @@ function distanceToMeters(value, unit) {
   return unit === "ft" ? Number(value) / M_TO_FT : Number(value);
 }
 function distanceUnitLabel() {
-  return settings.distanceUnit === "ft" ? "ft" : "m";
+  return parcoursSettings.distanceUnit === "ft" ? "ft" : "m";
 }
 function setDistanceUnit(u) {
-  settings.distanceUnit = u;
+  parcoursSettings.distanceUnit = u;
   saveSettings();
   renderCourseModals();
 }
 function unitToggleHtml() {
   return `
     <div class="segmented unit-toggle">
-      <button type="button" class="${settings.distanceUnit === "m" ? "active" : ""}" onclick="setDistanceUnit('m')">m</button>
-      <button type="button" class="${settings.distanceUnit === "ft" ? "active" : ""}" onclick="setDistanceUnit('ft')">ft</button>
+      <button type="button" class="${parcoursSettings.distanceUnit === "m" ? "active" : ""}" onclick="setDistanceUnit('m')">m</button>
+      <button type="button" class="${parcoursSettings.distanceUnit === "ft" ? "active" : ""}" onclick="setDistanceUnit('ft')">ft</button>
     </div>
   `;
 }
@@ -272,18 +272,18 @@ function windDirectionLabel(angle) {
 }
 
 function windCalcResult() {
-  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), settings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursSettings.distanceUnit);
   return computeWindResult(distanceM, windCalc.speedKmh, windCalc.angle);
 }
 function windResultDistanceLabel() {
   const r = windCalcResult();
   if (r.distance === null || isNaN(r.distance)) return "--";
-  return Math.round(convertDistance(r.distance, settings.distanceUnit)) + " " + distanceUnitLabel();
+  return Math.round(convertDistance(r.distance, parcoursSettings.distanceUnit)) + " " + distanceUnitLabel();
 }
 function windResultDeviationLabel() {
   const r = windCalcResult();
   if (r.deviation === null || isNaN(r.deviation)) return "--";
-  const v = Math.round(convertDistance(r.deviation, settings.distanceUnit));
+  const v = Math.round(convertDistance(r.deviation, parcoursSettings.distanceUnit));
   const side = v > 0 ? "droite" : v < 0 ? "gauche" : "";
   return Math.abs(v) + " " + distanceUnitLabel() + (side ? "<br>" + side : "");
 }
@@ -413,11 +413,11 @@ function closeWindInfo() { windInfoOpen = false; renderCourseModals(); }
 function windChartTableHtml(title, angleDeg, valueKey) {
   const unit = distanceUnitLabel();
   const rows = WIND_CHART_DISTANCES_M.map((dM) => {
-    const dDisplay = Math.round(convertDistance(dM, settings.distanceUnit));
+    const dDisplay = Math.round(convertDistance(dM, parcoursSettings.distanceUnit));
     const cells = WIND_CHART_SPEEDS.map((speed) => {
       const r = computeWindResult(dM, speed, angleDeg);
       const raw = valueKey === "distance" ? r.distance : Math.abs(r.deviation);
-      return Math.round(convertDistance(raw, settings.distanceUnit));
+      return Math.round(convertDistance(raw, parcoursSettings.distanceUnit));
     });
     return { dDisplay, cells };
   });
@@ -469,14 +469,14 @@ function openWindDetail() { windDetailOpen = true; renderCourseModals(); }
 function closeWindDetail() { windDetailOpen = false; renderCourseModals(); }
 
 function windDetailRows() {
-  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), settings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursSettings.distanceUnit);
   const unit = distanceUnitLabel();
   return WIND_DETAIL_DIRECTIONS.map((d) => {
     const r = computeWindResult(distanceM, windCalc.speedKmh, d.angle);
-    const dist = (r.distance === null || isNaN(r.distance)) ? "--" : Math.round(convertDistance(r.distance, settings.distanceUnit)) + " " + unit;
+    const dist = (r.distance === null || isNaN(r.distance)) ? "--" : Math.round(convertDistance(r.distance, parcoursSettings.distanceUnit)) + " " + unit;
     let dev = "--";
     if (r.deviation !== null && !isNaN(r.deviation)) {
-      const v = Math.round(Math.abs(convertDistance(r.deviation, settings.distanceUnit)));
+      const v = Math.round(Math.abs(convertDistance(r.deviation, parcoursSettings.distanceUnit)));
       dev = v === 0 ? "—" : v + " " + unit;
     }
     return { label: d.label, dist, dev };
@@ -571,7 +571,7 @@ function updateElevationInputDistance(v) {
 function computeElevationResult() {
   if (elevCalc.angleHorizon === null || elevCalc.angleCible === null) return { deniv: null, angle: null };
   const angle = elevCalc.angleCible - elevCalc.angleHorizon;
-  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), settings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), parcoursSettings.distanceUnit);
   if (distanceM === null || isNaN(distanceM)) return { deniv: null, angle };
   const deniv = distanceM * Math.tan(angle * Math.PI / 180);
   return { deniv, angle };
@@ -579,10 +579,10 @@ function computeElevationResult() {
 function elevationResultLabel() {
   const r = computeElevationResult();
   if (r.deniv === null || isNaN(r.deniv)) return "--";
-  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), settings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), parcoursSettings.distanceUnit);
   if (distanceM === null || isNaN(distanceM)) return "--";
   const distanceAJouer = distanceM + r.deniv;
-  return Math.round(convertDistance(distanceAJouer, settings.distanceUnit)) + " " + distanceUnitLabel();
+  return Math.round(convertDistance(distanceAJouer, parcoursSettings.distanceUnit)) + " " + distanceUnitLabel();
 }
 function updateElevationOutputs() {
   const cibleEl = document.getElementById("elev-cible-value");

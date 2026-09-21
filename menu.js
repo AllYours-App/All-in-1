@@ -1,7 +1,7 @@
 /* ==========================================================================
    Références DOM globales (utilisées par toutes les fonctions render*)
    ========================================================================== */
-const root = document.getElementById("root");
+const menuRoot = document.getElementById("root");
 const backBtn = document.getElementById("backBtn");
 const headerTitle = document.getElementById("headerTitle");
 
@@ -95,7 +95,7 @@ function renderMenuTab() {
   backTarget = () => showPage('home');
   backBtn.classList.remove("is-hidden");
   headerTitle.textContent = "Menu";
-  root.innerHTML = `
+  menuRoot.innerHTML = `
     ${topRowHtml()}
     <div class="field-list">
       <h3>Profil</h3>
@@ -300,6 +300,9 @@ function goToGolfBag(){
   showPage('stats');
   if (typeof showStatsScreen === 'function') showStatsScreen('saisie-detaillee');
 }
+
+// Expose renderMenuTab globalement pour être appelée depuis index.html
+window.renderMenuTab = renderMenuTab;
 
 /* ==========================================================================
    Initialisation
