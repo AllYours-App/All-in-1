@@ -1707,6 +1707,12 @@ select:focus-visible,
   overflow: hidden;
 }
 
+/* Empêche le padding-bottom global de .gym-app de dépasser les 100dvh
+   de la vue accueil (source du scroll résiduel). */
+.gym-app:has(#view-gym-home:not([hidden])) {
+  padding-bottom: 0;
+}
+
 /* Le header est fixed (commun.css) : plus besoin de flex:0 0 auto ici. */
 
 #view-gym-home .gym-main {
