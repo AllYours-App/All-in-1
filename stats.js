@@ -890,11 +890,25 @@
     animateCounters(document.getElementById('screen-putting'), 800);
   }
 
+  // Écran "Saisie détaillée" : affiche le sac de golf géré dans le module Menu
+  // (même clé localStorage "golfAppState"). Relu à chaque affichage (voir showScreen)
+  // car sa valeur peut avoir changé côté Menu depuis le dernier passage ici.
+  function initSaisieDetaillee() {
+    let size = 0;
+    try {
+      const raw = localStorage.getItem('golfAppState');
+      if (raw) size = JSON.parse(raw).golfBag?.size ?? 0;
+    } catch (e) { /* localStorage indisponible ou invalide */ }
+    const el = document.getElementById('sd-bagCount');
+    if (el) el.textContent = `${size}/14`;
+  }
+
   const SCREEN_INIT = {
     dashboard: initDashboard,
     'par-distance': initParDistance,
     historique: initHistorique,
     putting: initPutting,
+    'saisie-detaillee': initSaisieDetaillee,
   };
 
   /* ========================================================================
@@ -916,7 +930,7 @@
     if (!root) return;
     root.querySelectorAll('.screen').forEach((el) => el.classList.remove('is-active'));
     root.querySelector(`#screen-${name}`).classList.add('is-active');
-    if (!initialized.has(name)) {
+    if (name === 'saisie-detaillee' || !initialized.has(name)) {
       SCREEN_INIT[name]();
       initialized.add(name);
     }
@@ -937,4 +951,8 @@
     initNav();
     showScreen('dashboard');
   });
+
+  // Exposé pour permettre au module Menu de naviguer directement vers un écran
+  // Stats (ex. "Mon sac de golf" → Saisie détaillée) depuis un autre module.
+  window.showStatsScreen = showScreen;
 })();

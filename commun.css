@@ -318,6 +318,109 @@
    --------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
+   BLOCS "field-list" — cartes de champs/réglages, partagées entre le module
+   Menu (réglages, radars, driver...) et le module Stats (écran "Saisie
+   détaillée", ex. sac de golf). Couleurs sur les tokens --mn-* (base.css).
+   --------------------------------------------------------------------------- */
+#page-menu .field-list,
+#page-stats .field-list {
+  background: var(--mn-surface);
+  border: 1px solid var(--mn-surface-border);
+  border-radius: var(--mn-radius-m);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+#page-menu .field-list h3,
+#page-stats .field-list h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .field-row,
+#page-stats .field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--mn-surface-border);
+}
+
+#page-menu .field-row:first-of-type,
+#page-stats .field-row:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+#page-menu .field-row .label,
+#page-stats .field-row .label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mn-text-primary);
+}
+
+#page-menu .field-row .val,
+#page-stats .field-row .val {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .field-list input[type="number"],
+#page-menu .field-list input[type="text"],
+#page-menu .field-list select,
+#page-stats .field-list input[type="number"],
+#page-stats .field-list input[type="text"],
+#page-stats .field-list select {
+  background: var(--mn-bg);
+  border: 1px solid var(--mn-surface-border);
+  color: var(--mn-text-primary);
+  border-radius: var(--mn-radius-s);
+  padding: 9px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+#page-menu .field-list input[type="number"]:focus,
+#page-menu .field-list input[type="text"]:focus,
+#page-menu .field-list select:focus,
+#page-stats .field-list input[type="number"]:focus,
+#page-stats .field-list input[type="text"]:focus,
+#page-stats .field-list select:focus {
+  outline: none;
+  border-color: var(--mn-accent);
+}
+
+#page-menu .field-list .val button,
+#page-stats .field-list .val button {
+  color: var(--mn-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#page-menu .w-full,
+#page-stats .w-full {
+  width: 100%;
+}
+
+#page-menu .w-70,
+#page-stats .w-70 {
+  width: 70px;
+}
+
+/* ---------------------------------------------------------------------------
    Headers fixes : l'animation globale `.screen { fadeUp both }` (parcours-ui.css)
    laisse un transform: translateY(0) sur .screen une fois terminée. Un ancêtre
    transformé devient le bloc conteneur des position:fixed, donc le header

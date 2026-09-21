@@ -1,0 +1,301 @@
+/* ==========================================================================
+   Module Menu — tokens couleur/rayon dans base.css (préfixe --mn-*),
+   reset global dans base.css. Tout ce qui suit est scopé sous #page-menu
+   pour ne jamais affecter les autres modules de l'app.
+   ========================================================================== */
+
+#page-menu svg {
+  display: block;
+}
+
+#page-menu .is-hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Page wrapper — conteneur mobile centré
+   ========================================================================== */
+#page-menu .page_wrapper {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 var(--mn-space-page) 0;
+}
+
+#page-menu .app_root {
+  padding-bottom: 24px;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+#page-menu .nav_component {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0 20px;
+}
+
+#page-menu .nav_back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mn-text-primary);
+  font-size: 17px;
+  font-weight: 500;
+  padding: 4px 0;
+}
+
+#page-menu .nav_back-icon {
+  width: 22px;
+  height: 22px;
+}
+
+#page-menu .nav_title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mn-text-primary);
+}
+
+/* ==========================================================================
+   Carte profil
+   ========================================================================== */
+#page-menu .profile_card {
+  background: var(--mn-surface);
+  border: 1px solid var(--mn-surface-border);
+  border-radius: var(--mn-radius-l);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+#page-menu .profile_cover {
+  height: 92px;
+  width: 100%;
+  background: linear-gradient(180deg, #1c2418 0%, #10140d 100%);
+}
+
+#page-menu .profile_card-content {
+  padding: 0 20px 20px;
+}
+
+#page-menu .profile_avatar-wrapper {
+  width: 84px;
+  margin-top: -42px;
+}
+
+#page-menu .profile_avatar-image {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #1a1f17;
+  border: 2.5px solid var(--mn-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mn-text-tertiary);
+}
+
+#page-menu .profile_avatar-image svg {
+  width: 46px;
+  height: 46px;
+}
+
+#page-menu .profile_info {
+  margin-top: 14px;
+}
+
+#page-menu .profile_name {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+#page-menu .profile_index {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mn-accent);
+  cursor: pointer;
+  display: inline-block;
+}
+
+#page-menu .profile_index:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+#page-menu .profile_index input[type="number"] {
+  background: var(--mn-bg);
+  border: 1px solid var(--mn-accent);
+  color: var(--mn-text-primary);
+  border-radius: var(--mn-radius-s);
+  padding: 3px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  width: 72px;
+  font-family: inherit;
+}
+
+#page-menu .profile_index input[type="number"]:focus {
+  outline: none;
+}
+
+/* ==========================================================================
+   Encadré Aide & support
+   ========================================================================== */
+#page-menu .menu_list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#page-menu .menu_item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--mn-surface);
+  border: 1px solid var(--mn-surface-border);
+  border-radius: var(--mn-radius-m);
+  padding: 16px;
+  transition: border-color 0.15s ease;
+}
+
+#page-menu .menu_item:hover {
+  border-color: rgba(198, 241, 53, 0.3);
+}
+
+#page-menu .menu_icon-wrapper {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--mn-accent-dim);
+  color: var(--mn-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#page-menu .menu_icon-wrapper svg {
+  width: 20px;
+  height: 20px;
+}
+
+#page-menu .menu_content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#page-menu .menu_title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+#page-menu .menu_description {
+  font-size: 13px;
+  color: var(--mn-text-secondary);
+  line-height: 1.35;
+}
+
+#page-menu .menu_chevron {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--mn-text-tertiary);
+}
+
+/* ==========================================================================
+   Écran Menu (paramètres) — classes générées par renderMenuTab()
+   Le système de cartes "field-list" / "field-row" est mutualisé avec le
+   module Stats (écran Saisie détaillée) : ses règles vivent dans commun.css.
+   ========================================================================== */
+
+/* Sélecteur radio "Radar actif" */
+#page-menu .radio-select {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+#page-menu .radio-select input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+#page-menu .radio-select-dot {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--mn-text-tertiary);
+  display: block;
+}
+
+#page-menu .radio-select-dot::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--mn-accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+#page-menu .radio-select input:checked ~ .radio-select-dot {
+  border-color: var(--mn-accent);
+}
+
+#page-menu .radio-select input:checked ~ .radio-select-dot::after {
+  opacity: 1;
+}
+
+/* Bouton "Ajouter un radar" */
+#page-menu .add-radar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mn-accent);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 0 2px;
+}
+
+#page-menu .add-radar-plus {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--mn-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+#page-menu .resume-row {
+  padding-top: 4px;
+}
+
+/* ==========================================================================
+   Accessibilité — focus clavier visible
+   ========================================================================== */
+#page-menu button:focus-visible,
+#page-menu input:focus-visible,
+#page-menu select:focus-visible {
+  outline: 2px solid var(--mn-accent);
+  outline-offset: 2px;
+}

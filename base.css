@@ -9,6 +9,8 @@
 /* Toutes les variables CSS de l'app sont ici (règle : :root uniquement dans base.css).
    Fusion des 4 blocs :root d'origine : commun / parcours / wedging / gym. */
 :root {
+  color-scheme: dark; /* fait passer les inputs/selects natifs en thème sombre, partout dans l'app */
+
   /* ---- Commun (dimensions, breakpoints, couleurs home) ---- */
   --app-max-width: 430px; /* Largeur max commune pour iPhone 14 Pro Max */
   --app-min-width: 320px; /* Largeur min pour petits mobiles */
@@ -102,6 +104,20 @@
   --gym-speed-fast: 160ms;
   --gym-speed-base: 260ms;
   --gym-speed-slow: 420ms;
+
+  /* ---- Menu ---- */
+  --mn-bg: #0a0d0a;
+  --mn-surface: #12160f;
+  --mn-surface-border: rgba(255, 255, 255, 0.07);
+  --mn-accent: #c6f135;
+  --mn-text-primary: #f5f7f2;
+  --mn-text-secondary: #9aa196;
+  --mn-text-tertiary: #6b7166;
+  --mn-accent-dim: rgba(198, 241, 53, 0.14);
+  --mn-radius-l: 24px;
+  --mn-radius-m: 18px;
+  --mn-radius-s: 12px;
+  --mn-space-page: 20px;
 }
 
 /* --------------------------- RESET GLOBAL ------------------------------- */
