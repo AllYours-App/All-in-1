@@ -41,11 +41,9 @@ document.getElementById("app-root-gym").innerHTML = `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="5" y="3.5" width="12" height="16" rx="2"/>
                   <path d="M9 3.2v-.2a1.5 1.5 0 013 0v.2"/>
-                  <circle cx="8.3" cy="9" r="0.6" fill="currentColor" stroke="none"/>
-                  <path d="M10.2 9h4"/>
-                  <circle cx="8.3" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
-                  <path d="M10.2 12.5h4"/>
-                  <path d="M7 16.7l1.8-1.8 1.3 1.3L13.5 13"/>
+                  <line x1="8.5" y1="9" x2="14.5" y2="9"/>
+                  <line x1="8.5" y1="12.5" x2="14.5" y2="12.5"/>
+                  <line x1="8.5" y1="16" x2="12.5" y2="16"/>
                 </svg>
               </div>
               <span class="feature-card__bar"></span>
@@ -103,7 +101,7 @@ document.getElementById("app-root-gym").innerHTML = `
               <div class="feature-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 20v-7M8 20v-11M13 20v-6"/>
-                  <path d="M13 8.5l4-4 4 3"/>
+                  <path d="M13 8.5l4-4 4 4"/>
                   <path d="M21 4.5v4h-4"/>
                 </svg>
               </div>
