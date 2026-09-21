@@ -107,14 +107,14 @@ select:focus-visible,
 
 @media (max-width: 400px) {
   .gym-main {
-    padding: 16px 16px 80px;
+    padding: calc(56px + env(safe-area-inset-top) + 16px) 16px 80px;
     gap: 20px;
   }
 }
 
 @media (max-width: 360px) {
   .gym-main {
-    padding: 14px 14px 70px;
+    padding: calc(56px + env(safe-area-inset-top) + 14px) 14px 70px;
     gap: 16px;
   }
 }

@@ -252,7 +252,6 @@ document.getElementById("app-root-gym").innerHTML = `
           <div class="step__head">
             <div>
               <p class="step__heading">Titre du programme</p>
-              <p class="step__hint">Optionnel — laisse vide pour un nom généré automatiquement.</p>
             </div>
           </div>
           <label class="field">
@@ -266,7 +265,6 @@ document.getElementById("app-root-gym").innerHTML = `
             <span class="step__number">1</span>
             <div>
               <p class="step__heading">Quel est ton objectif ?</p>
-              <p class="step__hint">Choisis l'objectif principal de ton programme.</p>
             </div>
           </div>
           <div class="choice-grid" id="objectif-grid"></div>
@@ -277,7 +275,6 @@ document.getElementById("app-root-gym").innerHTML = `
             <span class="step__number">2</span>
             <div>
               <p class="step__heading">Combien de séances par semaine ?</p>
-              <p class="step__hint">Entre 1 et 7 séances. Tu peux ajuster plus tard.</p>
             </div>
           </div>
           <label class="field">
@@ -292,7 +289,6 @@ document.getElementById("app-root-gym").innerHTML = `
             <span class="step__number">3</span>
             <div>
               <p class="step__heading">Quelle durée pour ton programme ?</p>
-              <p class="step__hint">En semaines. Tu peux l'ajuster plus tard.</p>
             </div>
           </div>
           <label class="field">
@@ -307,7 +303,6 @@ document.getElementById("app-root-gym").innerHTML = `
             <div class="icon-circle" id="icon-recap-target"></div>
             <div>
               <p class="step__heading">Récapitulatif</p>
-              <p class="step__hint">Voici ce que tu as sélectionné :</p>
             </div>
           </div>
           <div class="summary-grid">
@@ -2240,15 +2235,28 @@ function gymGetExercise(id) {
 
 /* ---- Catégories (page Exercices) ------------------------------------------- */
 
+// Mobilité et Fonctionnel n'ont pas de champ dédié dans EXERCISES : détection par le nom.
+const GYM_MOBILITY_RE = /\bstretch\b|circles|yoga|\bpose\b|inchworm|rocking frog|\bhug\b/i;
+// "clean grip" exclu : c'est une prise de barre, pas un mouvement de clean
+const GYM_FUNCTIONAL_RE = /burpee|thruster|\bclean\b(?![- ]grip)|snatch|jerk|farmer|carry|get up|jump|mountain climber|bear crawl|swing|medicine ball|slam|tire flip|sledge/i;
+
+// Exercices d'une catégorie : sert à la fois à la liste et au compteur.
+function gymGetCategoryPool(categoryId) {
+  if (categoryId === "mobilite") return EXERCISES.filter((e) => GYM_MOBILITY_RE.test(e.name));
+  if (categoryId === "fonctionnel") return EXERCISES.filter((e) => GYM_FUNCTIONAL_RE.test(e.name));
+  if (categoryId === "avec-materiel" || categoryId === "poids-du-corps") return EXERCISES.filter((e) => e.equipment === categoryId);
+  return EXERCISES.filter((e) => e.bodyRegion === categoryId);
+}
+
 const EXERCISE_CATEGORIES = [
-  { id: "haut-du-corps", name: "Haut du corps", count: 78, description: "Pectoraux, dos, épaules, bras.", icon: "torso", regions: ["haut-du-corps"] },
-  { id: "bas-du-corps", name: "Bas du corps", count: 64, description: "Cuisses, fessiers, mollets.", icon: "legs", regions: ["bas-du-corps"] },
-  { id: "gainage", name: "Gainage", count: 28, description: "Abdominaux, dos, stabilité.", icon: "abs", regions: ["gainage"] },
-  { id: "mobilite", name: "Mobilité", count: 32, description: "Souplesse, posture, prévention.", icon: "mobility", regions: ["mobilite"] },
-  { id: "fonctionnel", name: "Fonctionnel", count: 46, description: "Mouvements complets, coordination.", icon: "functional", regions: ["haut-du-corps", "bas-du-corps"] },
-  { id: "avec-materiel", name: "Avec matériel", count: 89, description: "Haltères, machines, kettlebells, etc.", icon: "equipment", regions: ["haut-du-corps", "bas-du-corps"] },
-  { id: "poids-du-corps", name: "Poids du corps", count: 57, description: "Sans matériel, partout.", icon: "bodyweight", regions: ["haut-du-corps", "bas-du-corps", "gainage"] },
-];
+  { id: "haut-du-corps", name: "Haut du corps", description: "Pectoraux, dos, épaules, bras.", icon: "torso", regions: ["haut-du-corps"] },
+  { id: "bas-du-corps", name: "Bas du corps", description: "Cuisses, fessiers, mollets.", icon: "legs", regions: ["bas-du-corps"] },
+  { id: "gainage", name: "Gainage", description: "Abdominaux, dos, stabilité.", icon: "abs", regions: ["gainage"] },
+  { id: "mobilite", name: "Mobilité", description: "Souplesse, posture, prévention.", icon: "mobility", regions: ["mobilite"] },
+  { id: "fonctionnel", name: "Fonctionnel", description: "Mouvements complets, coordination.", icon: "functional", regions: ["haut-du-corps", "bas-du-corps"] },
+  { id: "avec-materiel", name: "Avec matériel", description: "Haltères, machines, kettlebells, etc.", icon: "equipment", regions: ["haut-du-corps", "bas-du-corps"] },
+  { id: "poids-du-corps", name: "Poids du corps", description: "Sans matériel, partout.", icon: "bodyweight", regions: ["haut-du-corps", "bas-du-corps", "gainage"] },
+].map((c) => ({ ...c, count: gymGetCategoryPool(c.id).length })); // compteur calculé, plus en dur
 
 /* ---- Objectifs de séance / programme --------------------------------------- */
 
@@ -3411,12 +3419,6 @@ function gymRenderHistoryRow(entry) {
    ========================================================================== */
 
 (function () {
-  // Certaines catégories (Mobilité, Fonctionnel) ne correspondent à aucun champ
-  // unique des exercices : on définit ici une sélection éditoriale cohérente.
-  const CATEGORY_EXERCISE_OVERRIDE = {
-    mobilite: ["1511", "1271", "1377", "1512"],
-    fonctionnel: ["0043", "0032", "0054", "0027", "1456", "3360"],
-  };
 
   const state = {
     region: "tous",
@@ -3458,14 +3460,7 @@ function gymRenderHistoryRow(entry) {
 
     document.getElementById("region-tabs").style.display = "none";
 
-    let pool;
-    if (CATEGORY_EXERCISE_OVERRIDE[categoryId]) {
-      pool = CATEGORY_EXERCISE_OVERRIDE[categoryId].map((id) => gymGetExercise(id));
-    } else if (categoryId === "avec-materiel" || categoryId === "poids-du-corps") {
-      pool = EXERCISES.filter((e) => e.equipment === categoryId);
-    } else {
-      pool = EXERCISES.filter((e) => e.bodyRegion === categoryId);
-    }
+    let pool = gymGetCategoryPool(categoryId);
 
     if (state.equipment !== "tous") {
       pool = pool.filter((e) => e.equipment === state.equipment);
@@ -3580,7 +3575,7 @@ function gymRenderHistoryRow(entry) {
     elapsedMs: 0,
     timerStart: null,
     timerInterval: null,
-    isPaused: false,
+    isPaused: true,
   };
 
   /**
@@ -3637,11 +3632,16 @@ function gymRenderHistoryRow(entry) {
     }
   }
 
+  // L'icône reflète toujours l'état réel : play = chrono arrêté, pause = chrono en marche
+  function syncPauseIcon() {
+    document.getElementById("icon-session-pause").innerHTML = gymIcon(state.isPaused ? "play" : "pause");
+  }
+
   function startTimer() {
     stopTimerInterval();
     state.timerStart = Date.now();
     state.isPaused = false;
-    document.getElementById("icon-session-pause").innerHTML = gymIcon("pause");
+    syncPauseIcon();
     state.timerInterval = setInterval(tickTimer, 1000);
     tickTimer();
   }
@@ -3655,11 +3655,23 @@ function gymRenderHistoryRow(entry) {
     state.timerStart = null;
     state.isPaused = true;
     stopTimerInterval();
-    document.getElementById("icon-session-pause").innerHTML = gymIcon("play");
+    syncPauseIcon();
+    tickTimer(); // affiche la valeur exacte au moment de la pause
+  }
+
+  // Chrono remis à 00:00:00 et arrêté (aucune séance active)
+  function resetTimer() {
+    stopTimerInterval();
+    state.elapsedMs = 0;
+    state.timerStart = null;
+    state.isPaused = true;
+    syncPauseIcon();
+    tickTimer();
   }
 
   document.getElementById("icon-session-timer").innerHTML = gymIcon("clock");
   document.getElementById("btn-toggle-timer").addEventListener("click", togglePause);
+  syncPauseIcon(); // icône présente dès le chargement
 
   /* ---- En-tête ---------------------------------------------------------------- */
 
@@ -3906,7 +3918,7 @@ function gymRenderHistoryRow(entry) {
   /* ---- États vide / actif -------------------------------------------------------- */
 
   function renderEmptyState() {
-    stopTimerInterval();
+    resetTimer();
     state.program = null;
     state.session = null;
     state.exercises = [];
