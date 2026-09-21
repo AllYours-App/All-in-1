@@ -9,7 +9,7 @@
 #page-wedging svg{width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0;}
 
 #page-wedging{
-  padding-bottom:calc(var(--app-nav-h) + 16px);
+  padding-bottom:calc(var(--app-nav-h) + 20px);
   --app-header-bg: var(--wg-bg);
   --app-header-border: var(--wg-border);
   --app-header-text: var(--wg-text);
@@ -27,7 +27,7 @@
    d'exercice) n'en ont pas besoin, d'où un décalage ciblé sur le frère
    qui suit .wg-header plutôt qu'un padding-top global sur #page-wedging. */
 #page-wedging .wg-header + * {
-  margin-top: calc(56px + env(safe-area-inset-top));
+  margin-top: calc(56px + env(safe-area-inset-top) + 10px);
 }
 
 /* a{} et button{} : déjà couverts par le reset global de base.css */
