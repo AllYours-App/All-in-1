@@ -1785,7 +1785,7 @@ select:focus-visible,
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 @media (max-width: 400px) {
@@ -1848,7 +1848,7 @@ select:focus-visible,
   position: relative;
   overflow: hidden;
   min-height: 0;
-  padding: 12px;
+  padding: 10px;
 }
 
 /* Emplacement de l'image de fond : ajouter background-image ici */
@@ -1880,8 +1880,8 @@ select:focus-visible,
 }
 
 .feature-card__icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   color: var(--gym-accent);
   flex-shrink: 0;
 }
@@ -1900,7 +1900,7 @@ select:focus-visible,
 }
 
 .feature-card__title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -1908,7 +1908,7 @@ select:focus-visible,
 }
 
 .feature-card__desc {
-  font-size: 10.5px;
+  font-size: 10px;
   line-height: 1.35;
   color: var(--gym-text-secondary);
   flex: 1;
@@ -1923,8 +1923,8 @@ select:focus-visible,
 .feature-card__arrow {
   align-self: flex-end;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--gym-radius-pill);
   border: 1.5px solid var(--gym-accent-border);
   color: var(--gym-accent);
@@ -1935,14 +1935,85 @@ select:focus-visible,
 }
 
 .feature-card__arrow svg {
-  width: 13px;
-  height: 13px;
+  width: 11px;
+  height: 11px;
 }
 
 @media (hover: hover) {
   .feature-card:hover .feature-card__arrow {
     background: var(--gym-accent-dim);
   }
+}
+
+/* ---- Prochaine séance ---------------------------------------------------- */
+
+.home-next-session {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.next-session__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.next-session__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.next-session__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.next-session__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.next-session__title {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.next-session__meta {
+  font-size: 11px;
+  color: var(--gym-text-secondary);
+}
+
+.next-session__arrow {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--gym-radius-pill);
+  border: 1.5px solid var(--gym-accent-border);
+  color: var(--gym-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.next-session__arrow svg {
+  width: 11px;
+  height: 11px;
 }
 
 /* ---- Démarrer rapidement ------------------------------------------------ */

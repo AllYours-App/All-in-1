@@ -117,6 +117,23 @@ document.getElementById("app-root-gym").innerHTML = `
           </a>
         </div>
 
+        <!-- Prochaine séance (visible seulement si un programme est lancé) -->
+        <a class="card gym-anim-in home-next-session" id="home-next-session" href="#" onclick="gymHomeNextSessionClick(); return false;" hidden>
+          <span class="gym-eyebrow">Prochaine séance</span>
+          <div class="next-session__row">
+            <span class="next-session__icon">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l12-7z"/></svg>
+            </span>
+            <div class="next-session__body">
+              <span class="next-session__title" id="home-next-session-title"></span>
+              <span class="next-session__meta" id="home-next-session-meta"></span>
+            </div>
+            <span class="next-session__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
+
         <!-- Démarrage rapide -->
         <div class="card gym-anim-in home-quickstart">
           <span class="gym-eyebrow">Démarrer rapidement</span>
@@ -2597,6 +2614,43 @@ window.addEventListener("popstate", (e) => {
     gymActivateView(view, {});
   }
 });
+
+/**
+ * Cherche la première séance "en-cours" parmi les programmes et met à jour
+ * l'encadré "Prochaine séance" de l'accueil. Masqué tant qu'aucun programme
+ * n'a été lancé (ou plus aucune séance en-cours).
+ */
+function gymRenderHomeNextSession() {
+  const box = document.getElementById("home-next-session");
+  if (!box) return;
+
+  let found = null;
+  for (const program of GYM_DATA.programs) {
+    const session = (program.sessions || []).find((s) => s.status === "en-cours");
+    if (session) {
+      found = { program, session };
+      break;
+    }
+  }
+
+  if (!found) {
+    box.hidden = true;
+    return;
+  }
+
+  box.hidden = false;
+  box.dataset.sessionId = found.session.id;
+  document.getElementById("home-next-session-title").textContent = `${found.program.name} — Séance ${found.session.index}`;
+  document.getElementById("home-next-session-meta").textContent = `${gymFormatDuration(found.session.duration)} · ${found.session.exerciseIds.length} exercices`;
+}
+
+function gymHomeNextSessionClick() {
+  const box = document.getElementById("home-next-session");
+  if (!box || !box.dataset.sessionId) return;
+  gymNavigate("seance-active", { session: box.dataset.sessionId });
+}
+
+GymViews["gym-home"] = { render: gymRenderHomeNextSession };
 
 /* ==========================================================================
    GYM — Générateurs de composants HTML
