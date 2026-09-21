@@ -91,7 +91,6 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
   --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.45);
   --shadow-accent-glow: 0 0 24px rgba(199, 241, 31, 0.18);
-  --shadow-fab: 0 8px 20px rgba(199, 241, 31, 0.25);
 
   /* ---------- Effet verre léger ---------- */
   --glass-bg: rgba(11, 21, 32, 0.6);
@@ -184,6 +183,9 @@ html {
   --app-header-border: var(--color-border);
   --app-header-text: var(--color-text-primary);
   --app-header-text-secondary: var(--color-text-primary);
+  --app-fab-bg: var(--color-accent);
+  --app-fab-text: var(--color-bg-base);
+  --app-fab-z: var(--z-fab);
 }
 
 /* Structure + position fixe : voir commun.css (#page-stats .page-header).
@@ -251,44 +253,6 @@ html {
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-sm);
 }
-
-/* ---------- FAB (boutons flottants) ---------- */
-#page-stats .fab-row {
-  position: fixed;
-  left: 0; right: 0; bottom: var(--space-lg);
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--space-lg);
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-  z-index: var(--z-fab);
-}
-
-#page-stats .fab {
-  pointer-events: auto;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  color: var(--color-bg-base);
-  border: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  font-size: var(--fs-2xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-  box-shadow: var(--shadow-fab);
-  cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-
-#page-stats .fab:hover { transform: translateY(-2px); }
-#page-stats .fab svg { width: 17px; height: 17px; }
 
 /* ---------- Utilitaires ---------- */
 #page-stats .text-center { text-align: center; }

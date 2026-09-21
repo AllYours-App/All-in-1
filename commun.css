@@ -148,9 +148,15 @@
      --app-nav-z           z-index (optionnel, 5 par défaut)
    --------------------------------------------------------------------------- */
 #page-putting,
+#page-stats,
 #page-wedging {
-  /* Hauteur totale de la barre : bordure + padding haut + onglet + padding bas */
-  --app-nav-h: calc(1px + 3px + 44px + max(6px, calc(env(safe-area-inset-bottom) - 20px)));
+  /* Espace réservé sous le contenu bas (barre nav, FAB) : juste de quoi passer
+     au-dessus de l'indicateur iOS, min. 6px sur les appareils sans zone de sécurité */
+  --app-safe-bottom: max(6px, calc(env(safe-area-inset-bottom) - 20px));
+  /* Marge FAB : par rapport aux bords de l'écran (bas) et par rapport à la barre nav */
+  --app-fab-gap: 16px;
+  /* Hauteur totale de la barre nav : bordure + padding haut + onglet + padding bas */
+  --app-nav-h: calc(1px + 3px + 44px + var(--app-safe-bottom));
 }
 
 #page-putting .bottom-nav,
@@ -163,7 +169,7 @@
   margin: 0 auto;
   display: flex;
   gap: 4px;
-  padding: 3px 4px max(6px, calc(env(safe-area-inset-bottom) - 20px));
+  padding: 3px 4px var(--app-safe-bottom);
   background-color: var(--app-nav-bg);
   border: 1px solid var(--app-nav-border);
   border-bottom: none;
@@ -234,8 +240,78 @@
 }
 
 /* ---------------------------------------------------------------------------
+   BOUTONS FLOTTANTS RONDS (FAB) — putting, stats
+   Même design partout : rond 64px, icône + libellé en majuscules.
+   Position : marge --app-fab-gap par rapport aux bords gauche/droite (comme la
+   barre nav et le header) et au bord bas. Quand une barre nav est affichée
+   (putting, onglet parcours), le groupe se cale au-dessus d'elle : voir la
+   règle .fab-group[data-fab="parcours"] dans putting.css.
+   Variables à renseigner dans chaque #page-X :
+     --app-fab-bg     fond du bouton
+     --app-fab-text   couleur de l'icône et du libellé
+     --app-fab-z      z-index (optionnel, 10 par défaut)
+   --------------------------------------------------------------------------- */
+#page-putting .fab-group,
+#page-stats .fab-row {
+  position: fixed;
+  left: var(--app-padding);
+  right: var(--app-padding);
+  bottom: calc(var(--app-safe-bottom) + var(--app-fab-gap));
+  max-width: calc(var(--app-max-width) - 2 * var(--app-padding));
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: var(--app-fab-z, 10);
+}
+
+@media (max-width: 360px) {
+  #page-putting .fab-group,
+  #page-stats .fab-row {
+    left: var(--app-padding-small);
+    right: var(--app-padding-small);
+  }
+}
+
+/* Bouton : la couleur et la typo sont portées par le bouton, icône et libellé en héritent */
+#page-putting .fab-button,
+#page-stats .fab {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--app-fab-bg);
+  color: var(--app-fab-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+#page-putting .fab-button_icon,
+#page-stats .fab svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------------
    Volontairement NON mutualisés :
-   - FAB (wg-fab / fab-button / fab-row / fab-cta) : valeurs
+   - wg-fab et fab-cta (boutons d'action pleine largeur, pas les FAB ronds) : valeurs
      réellement différentes d'un module à l'autre (16px/20px en dur,
      z-index différents). On les fera avec la même méthode (variables)
      quand tu voudras standardiser ceux-là aussi.

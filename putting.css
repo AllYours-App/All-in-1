@@ -90,6 +90,8 @@
   --app-nav-text: var(--text-secondary);
   --app-nav-active: var(--accent);
   --app-nav-active-bg: var(--accent-dim);
+  --app-fab-bg: var(--accent);
+  --app-fab-text: #0b0f0c;
 }
 
 /* Le header "exercise-flow" de putting.js a un menu vide (<span></span>) :
@@ -1050,59 +1052,8 @@
   font-weight: 700;
 }
 
-#page-putting .fab-group {
-  position: fixed;
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  left: var(--app-padding);
-  right: var(--app-padding);
-  max-width: var(--app-max-width);
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-  z-index: 10;
-}
-
-@media (max-width: 360px) {
-  #page-putting .fab-group {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-  }
-}
-
 #page-putting .fab-group[data-fab="parcours"] {
-  bottom: calc(var(--app-nav-h) + 14px);
-}
-
-#page-putting .fab-button {
-  pointer-events: auto;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: var(--accent);
-  border: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-}
-
-#page-putting .fab-button_icon {
-  width: 17px;
-  height: 17px;
-  color: #0b0f0c;
-}
-
-#page-putting .fab-button_text {
-  font-size: 8.5px;
-  font-weight: 700;
-  line-height: 1.15;
-  text-align: center;
-  text-transform: uppercase;
-  color: #0b0f0c;
+  bottom: calc(var(--app-nav-h) + var(--app-fab-gap));
 }
 
 #page-putting .exercise-select-bar {
