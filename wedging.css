@@ -14,6 +14,12 @@
   --app-header-border: var(--wg-border);
   --app-header-text: var(--wg-text);
   --app-header-text-secondary: var(--wg-text-secondary);
+  --app-nav-bg: var(--wg-card);
+  --app-nav-border: var(--wg-border);
+  --app-nav-text: var(--wg-text-secondary);
+  --app-nav-active: var(--wg-accent);
+  --app-nav-active-bg: rgba(215, 255, 47, 0.08);
+  --app-nav-z: 50;
 }
 
 /* Les écrans qui utilisent .wg-header (fixe) ont besoin d'un décalage ;
@@ -228,45 +234,6 @@
   font-size:12px;
   margin-top:12px;
 }
-
-/* ---------- Bottom nav ---------- */
-.wg-bottom-nav{
-  position:fixed;
-  left:16px;right:16px;bottom:0;
-  max-width:calc(var(--wg-max-width) - 32px);
-  margin:0 auto;
-  background:var(--wg-card);
-  border:1px solid var(--wg-border);
-  border-bottom:none;
-  border-radius:18px 18px 0 0;
-  display:flex;
-  justify-content:space-around;
-  padding:4px 6px calc(env(safe-area-inset-bottom));
-  z-index:50;
-}
-.wg-bottom-nav-item{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  flex:1;
-  background:none;
-  border:none;
-  border-right:2px solid rgba(255,255,255,0.1);
-  color:var(--wg-text-secondary);
-  font-size:10.5px;
-  font-weight:600;
-  letter-spacing:.3px;
-  cursor:pointer;
-  padding:4px 4px 2px;
-  transition:color var(--wg-transition), background var(--wg-transition);
-}
-.wg-bottom-nav-item:last-child{
-  border-right:none;
-}
-.wg-bottom-nav-item svg{width:18px;height:18px;}
-.wg-bottom-nav-item.active{color:var(--wg-accent);background:rgba(215,255,47,.08);}
 
 /* ---------- Boutons ---------- */
 .wg-btn-primary{

@@ -85,6 +85,11 @@
   --app-header-border: var(--border-subtle);
   --app-header-text: var(--text-primary);
   --app-header-text-secondary: var(--text-primary);
+  --app-nav-bg: var(--bg-card);
+  --app-nav-border: var(--border-subtle);
+  --app-nav-text: var(--text-secondary);
+  --app-nav-active: var(--accent);
+  --app-nav-active-bg: var(--accent-dim);
 }
 
 /* Le header "exercise-flow" de putting.js a un menu vide (<span></span>) :
@@ -1100,31 +1105,6 @@
   color: #0b0f0c;
 }
 
-#page-putting .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: var(--app-padding);
-  right: var(--app-padding);
-  max-width: var(--app-max-width);
-  margin: 0 auto;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-bottom: none;
-  border-radius: 18px 18px 0 0;
-  display: flex;
-  gap: 6px;
-  padding: 4px 6px calc(10px + env(safe-area-inset-bottom));
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 5;
-}
-
-@media (max-width: 360px) {
-  #page-putting .bottom-nav {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-  }
-}
-
 #page-putting .exercise-select-bar {
   position: fixed;
   bottom: 0;
@@ -1184,49 +1164,6 @@
 #page-putting .exercise-select-bar_launch svg {
   width: 16px;
   height: 16px;
-}
-
-#page-putting .bottom-nav_item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  text-decoration: none;
-  padding: 8px 4px;
-  border-right: 2px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-#page-putting .bottom-nav_item:last-child {
-  border-right: none;
-}
-
-#page-putting .bottom-nav_item.is-active {
-  background-color: var(--accent-dim);
-}
-
-#page-putting .bottom-nav_icon {
-  width: 20px;
-  height: 20px;
-  color: var(--text-secondary);
-  transition: color 0.15s ease;
-}
-
-#page-putting .bottom-nav_item.is-active .bottom-nav_icon {
-  color: var(--accent);
-}
-
-#page-putting .bottom-nav_label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: color 0.15s ease;
-}
-
-#page-putting .bottom-nav_item.is-active .bottom-nav_label {
-  color: var(--accent);
 }
 
 #page-putting .bottom-nav_sublabel {

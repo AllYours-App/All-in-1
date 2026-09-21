@@ -136,8 +136,86 @@
 }
 
 /* ---------------------------------------------------------------------------
+   BARRE DE NAVIGATION INFÉRIEURE — putting, wedging
+   Fixe en bas, décalée des bords gauche/droite, coins hauts arrondis.
+   Nombre d'onglets et libellés : définis dans le HTML de chaque module.
+   Variables à renseigner dans chaque #page-X :
+     --app-nav-bg          fond de la barre
+     --app-nav-border      bordure de la barre
+     --app-nav-text        couleur des onglets inactifs
+     --app-nav-active      couleur de l'onglet actif
+     --app-nav-active-bg   fond de l'onglet actif
+     --app-nav-z           z-index (optionnel, 5 par défaut)
+   --------------------------------------------------------------------------- */
+#page-putting .bottom-nav,
+#page-wedging .wg-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: var(--app-padding);
+  right: var(--app-padding);
+  max-width: calc(var(--app-max-width) - 2 * var(--app-padding));
+  margin: 0 auto;
+  display: flex;
+  gap: 6px;
+  padding: 4px 6px calc(10px + env(safe-area-inset-bottom));
+  background-color: var(--app-nav-bg);
+  border: 1px solid var(--app-nav-border);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  z-index: var(--app-nav-z, 5);
+}
+
+@media (max-width: 360px) {
+  #page-putting .bottom-nav,
+  #page-wedging .wg-bottom-nav {
+    left: var(--app-padding-small);
+    right: var(--app-padding-small);
+  }
+}
+
+/* Onglet : la couleur est portée par l'onglet, icône et libellé en héritent */
+#page-putting .bottom-nav_item,
+#page-wedging .wg-bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  border-right: 2px solid rgba(255, 255, 255, 0.1);
+  color: var(--app-nav-text);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#page-putting .bottom-nav_item:last-child,
+#page-wedging .wg-bottom-nav-item:last-child {
+  border-right: none;
+}
+
+#page-putting .bottom-nav_item.is-active,
+#page-wedging .wg-bottom-nav-item.active {
+  color: var(--app-nav-active);
+  background-color: var(--app-nav-active-bg);
+}
+
+#page-putting .bottom-nav_icon,
+#page-wedging .wg-bottom-nav-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------------
    Volontairement NON mutualisés :
-   - FAB (wg-fab / fab-button / fab-row / fab-cta) et bottom-nav : valeurs
+   - FAB (wg-fab / fab-button / fab-row / fab-cta) : valeurs
      réellement différentes d'un module à l'autre (16px/20px en dur,
      z-index différents). On les fera avec la même méthode (variables)
      quand tu voudras standardiser ceux-là aussi.
