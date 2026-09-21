@@ -2720,17 +2720,52 @@ body.gym-home-locked {
   display: none;
 }
 
-
-
 /* ==========================================================================
    GYM — Créer un programme : écran compact (tout visible sans défilement)
    Scopé sur #view-creer-programme pour ne pas toucher aux autres vues.
+   Le contenu se resserre par paliers :
+     - selon la LARGEUR de l'écran : 380px / 360px
+     - selon la HAUTEUR de l'écran : 660px / 610px / 560px
    ========================================================================== */
+
+/* .gym-app a min-height:100vh (qui inclut les barres du navigateur sur mobile) et
+   40px de padding-bas : d'où du vide scrollable sous le contenu. Ici on colle à la
+   hauteur réellement visible (dvh). Classe posée par gymActivateView() (gym.js). */
+body.gym-view-fit .gym-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 0; /* le bas est déjà géré par le padding de .gym-main */
+}
 
 #view-creer-programme .gym-main {
   padding: calc(56px + env(safe-area-inset-top) + 10px) 16px calc(14px + env(safe-area-inset-bottom));
   gap: 10px;
 }
+
+/* ---- En-tête de page ------------------------------------------------------ */
+
+.cp-intro {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.cp-intro__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#view-creer-programme .cp-hero {
+  width: 110px;
+  height: 110px;
+  min-height: 0;
+  flex-shrink: 0;
+}
+
+/* ---- Cartes / étapes ------------------------------------------------------- */
 
 #view-creer-programme .card {
   padding: 12px 14px;
@@ -2757,12 +2792,6 @@ body.gym-home-locked {
   line-height: 1.3;
 }
 
-/* Vignette d'en-tête */
-#view-creer-programme .cp-hero {
-  width: 110px;
-  height: 110px;
-}
-
 /* Titre : intitulé et champ sur une seule ligne */
 #view-creer-programme .step--inline {
   flex-direction: row;
@@ -2783,7 +2812,8 @@ body.gym-home-locked {
   min-width: 0;
 }
 
-/* Champs */
+/* ---- Champs ---------------------------------------------------------------- */
+
 #view-creer-programme .field {
   padding: 7px 12px;
   gap: 8px;
@@ -2808,7 +2838,8 @@ body.gym-home-locked {
   font-size: 12.5px;
 }
 
-/* Objectif : l'indicateur radio passe dans le coin pour gagner en hauteur */
+/* ---- Objectif : l'indicateur radio passe dans le coin pour gagner en hauteur --- */
+
 #view-creer-programme .choice-grid {
   gap: 6px;
 }
@@ -2841,30 +2872,32 @@ body.gym-home-locked {
   height: 6px;
 }
 
-/* Séances par semaine + Durée : côte à côte */
-.cp-row {
+/* ---- Séances par semaine + Durée : côte à côte ------------------------------ */
+
+#view-creer-programme .cp-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-.cp-row .card {
+#view-creer-programme .cp-row .card {
   min-width: 0;
 }
 
 /* Pas de flèches +/- (desktop) : elles mangent la place du chiffre */
-.cp-row input[type="number"] {
+#view-creer-programme .cp-row input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
 
-.cp-row input[type="number"]::-webkit-inner-spin-button,
-.cp-row input[type="number"]::-webkit-outer-spin-button {
+#view-creer-programme .cp-row input[type="number"]::-webkit-inner-spin-button,
+#view-creer-programme .cp-row input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Récapitulatif */
+/* ---- Récapitulatif ---------------------------------------------------------- */
+
 #view-creer-programme .icon-circle {
   width: 24px;
   height: 24px;
@@ -2908,29 +2941,157 @@ body.gym-home-locked {
   line-height: 1.2;
 }
 
-/* Petites largeurs : pas de place pour l'icône dans les champs Séances / Durée */
+/* ==========================================================================
+   Adaptation à la LARGEUR
+   ========================================================================== */
+
 @media (max-width: 380px) {
-  .cp-row .field > span:first-child {
+  /* Séances / Durée : pas de place pour l'icône, texte et marges resserrés */
+  #view-creer-programme .cp-row .field {
+    padding-left: 10px;
+    padding-right: 10px;
+    gap: 6px;
+  }
+
+  #view-creer-programme .cp-row .field > span:first-child {
     display: none;
+  }
+
+  #view-creer-programme .cp-row .field__suffix {
+    font-size: 11px;
   }
 }
 
-/* Écrans peu hauts : on resserre encore pour tenir sans défilement */
+@media (max-width: 360px) {
+  /* Titre : champ sans icône, intitulé un peu plus petit */
+  #view-creer-programme .step--inline {
+    gap: 10px;
+  }
+
+  #view-creer-programme .step--inline .step__heading {
+    font-size: 13px;
+  }
+
+  #view-creer-programme .step--inline .field > span:first-child {
+    display: none;
+  }
+
+  /* "Hypertrophie" doit tenir dans un quart de la largeur */
+  #view-creer-programme .choice__label {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 340px) {
+  #view-creer-programme .gym-main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #view-creer-programme .card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #view-creer-programme .choice-grid {
+    gap: 4px;
+  }
+
+  #view-creer-programme .choice--radio {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  #view-creer-programme .choice__label {
+    font-size: 9.5px;
+  }
+}
+
+/* ==========================================================================
+   Adaptation à la HAUTEUR (du moins haut au plus haut : chaque palier
+   s'ajoute au précédent)
+   ========================================================================== */
+
+/* ≤ 660px (ex. iPhone en Safari avec barres affichées) */
 @media (max-height: 660px) {
   #view-creer-programme .gym-main {
     gap: 8px;
   }
 
   #view-creer-programme .cp-hero {
-    width: 84px;
-    height: 84px;
+    width: 76px;
+    height: 76px;
   }
 
   #view-creer-programme .gym-title-xl {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   #view-creer-programme .btn {
     padding: 13px 20px;
+  }
+}
+
+/* ≤ 610px : plus de vignette, titre sur une seule ligne */
+@media (max-height: 610px) {
+  #view-creer-programme .cp-hero {
+    display: none;
+  }
+
+  #view-creer-programme .cp-intro__text {
+    gap: 4px;
+  }
+
+  #view-creer-programme .gym-title-xl {
+    font-size: 20px;
+  }
+}
+
+/* ≤ 560px (ex. iPhone SE, petits Android) : tout est resserré */
+@media (max-height: 560px) {
+  #view-creer-programme .gym-main {
+    gap: 6px;
+    padding-top: calc(56px + env(safe-area-inset-top) + 6px);
+  }
+
+  #view-creer-programme .gym-eyebrow {
+    display: none;
+  }
+
+  #view-creer-programme .card {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #view-creer-programme .step {
+    gap: 6px;
+  }
+
+  #view-creer-programme .choice--radio {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 3px;
+  }
+
+  #view-creer-programme .field {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  #view-creer-programme .btn {
+    padding: 11px 20px;
+  }
+}
+
+/* ≤ 480px (très petits écrans, ex. iPhone SE 1re génération en Safari) */
+@media (max-height: 480px) {
+  #view-creer-programme .gym-main {
+    gap: 4px;
+    padding-top: calc(56px + env(safe-area-inset-top) + 4px);
+  }
+
+  #view-creer-programme .card {
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }

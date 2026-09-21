@@ -237,12 +237,12 @@ document.getElementById("app-root-gym").innerHTML = `
       </header>
 
       <main class="gym-main">
-        <div class="gym-anim-in" style="display:flex; gap:16px; align-items:flex-start;">
-          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+        <div class="cp-intro gym-anim-in">
+          <div class="cp-intro__text">
             <span class="gym-eyebrow">Créer un programme</span>
             <h1 class="gym-title-xl">Ton programme sur mesure</h1>
           </div>
-          <div class="hero-photo cp-hero" style="flex-shrink:0; min-height:0;">
+          <div class="hero-photo cp-hero">
             <div class="hero-photo__silhouette" style="width:90%;" id="cp-hero-icon"></div>
           </div>
         </div>
@@ -2589,6 +2589,8 @@ function gymActivateView(view, params) {
 
   // Bloque le scroll du body tant que l'accueil (écran fixe, sans défilement) est affiché.
   document.body.classList.toggle("gym-home-locked", view === "gym-home");
+  // Créer un programme : le document ne doit pas dépasser la hauteur visible (voir gym.css).
+  document.body.classList.toggle("gym-view-fit", view === "creer-programme");
 
   // Filet de sécurité : referme toute bottom-sheet restée ouverte en quittant sa vue.
   document.querySelectorAll(".sheet.is-open, .sheet-overlay.is-open").forEach((el) => {
