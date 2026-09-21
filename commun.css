@@ -105,13 +105,13 @@
   color: var(--app-header-text);
 }
 
-/* Bouton menu — rond 36px. wedging (.wg-icon-btn) et parcours (.icon-btn)
-   ont déjà ce style ailleurs dans leur propre fichier : pas besoin de les
-   dupliquer ici, ne pas y toucher pour ne rien casser en dehors du header. */
+/* Bouton menu — rond 36px, identique dans tous les modules (parcours et wedging inclus). */
 #page-putting .page-header_menu,
 #page-vitesse .page-header_menu,
 #page-stats .page-header__menu,
-#page-gym .gym-header__action {
+#page-wedging .wg-header .wg-icon-btn,
+#page-gym .gym-header__action,
+#page-parcours .top-bar .icon-btn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -128,7 +128,9 @@
 #page-putting .page-header_menu-icon,
 #page-vitesse .page-header_menu-icon,
 #page-stats .page-header__menu svg,
-#page-gym .gym-header__action svg {
+#page-wedging .wg-header .wg-icon-btn svg,
+#page-gym .gym-header__action svg,
+#page-parcours .top-bar .icon-btn svg {
   width: 18px;
   height: 18px;
 }

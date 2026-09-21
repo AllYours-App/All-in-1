@@ -114,6 +114,8 @@
 
 html, body {
   height: 100%;
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
 }
 
 body {
@@ -169,13 +171,3 @@ a {
   margin: 0 auto;
 }
 
-/* Putting / Stats / Vitesse sont des modules autonomes (pas montés dans
-   .home-screen_component, qui confine les éléments position:fixed via
-   container-type: inline-size). On leur donne le même confinement pour
-   qu'un header, une bottom-nav ou un FAB en position:fixed ne puisse
-   jamais s'étendre au-delà de la largeur mobile, même sur grand écran. */
-#page-putting,
-#page-stats,
-#page-vitesse {
-  contain: layout;
-}

@@ -9,10 +9,14 @@
   --app-header-text-secondary: var(--text);
 }
 
-/* Le menu de vitesse.js est un <span> vide (fonctionnalité pas encore prête) :
-   on garde la case pour que le titre reste centré, mais sans rond vide visible. */
-#page-vitesse .page-header_menu:empty {
-  visibility: hidden;
+/* Le menu de vitesse.js est un <span> vide : on y dessine les 3 points via mask (suit currentColor). */
+#page-vitesse .page-header_menu:empty::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='5' cy='12' r='2.4'/%3E%3Ccircle cx='12' cy='12' r='2.4'/%3E%3Ccircle cx='19' cy='12' r='2.4'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='5' cy='12' r='2.4'/%3E%3Ccircle cx='12' cy='12' r='2.4'/%3E%3Ccircle cx='19' cy='12' r='2.4'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 /* Vitesse garde un gap plus serré entre l'icône et le libellé retour */
