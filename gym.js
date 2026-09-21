@@ -241,14 +241,13 @@ document.getElementById("app-root-gym").innerHTML = `
           <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
             <span class="gym-eyebrow">Créer un programme</span>
             <h1 class="gym-title-xl">Ton programme sur mesure</h1>
-            <p class="gym-subtitle">Définis ton objectif, le nombre de séances par semaine et la durée de ton programme.</p>
           </div>
-          <div class="hero-photo" style="width:110px; height:110px; flex-shrink:0; min-height:0;">
+          <div class="hero-photo cp-hero" style="flex-shrink:0; min-height:0;">
             <div class="hero-photo__silhouette" style="width:90%;" id="cp-hero-icon"></div>
           </div>
         </div>
 
-        <div class="card step gym-anim-in">
+        <div class="card step step--inline gym-anim-in">
           <div class="step__head">
             <div>
               <p class="step__heading">Titre du programme</p>
@@ -270,36 +269,38 @@ document.getElementById("app-root-gym").innerHTML = `
           <div class="choice-grid" id="objectif-grid"></div>
         </div>
 
-        <div class="card step gym-anim-in">
-          <div class="step__head">
-            <span class="step__number">2</span>
-            <div>
-              <p class="step__heading">Combien de séances par semaine ?</p>
+        <div class="cp-row">
+          <div class="card step gym-anim-in">
+            <div class="step__head">
+              <span class="step__number">2</span>
+              <div>
+                <p class="step__heading">Séances</p>
+              </div>
             </div>
+            <label class="field">
+              <span id="icon-field-seances"></span>
+              <input type="number" id="input-seances" min="1" max="7" placeholder="3" inputmode="numeric" />
+              <span class="field__suffix">/ semaine</span>
+            </label>
           </div>
-          <label class="field">
-            <span id="icon-field-seances"></span>
-            <input type="number" id="input-seances" min="1" max="7" placeholder="Ex. : 3" inputmode="numeric" />
-            <span class="field__suffix">séances / semaine</span>
-          </label>
+
+          <div class="card step gym-anim-in">
+            <div class="step__head">
+              <span class="step__number">3</span>
+              <div>
+                <p class="step__heading">Durée</p>
+              </div>
+            </div>
+            <label class="field">
+              <span id="icon-field-duree"></span>
+              <input type="number" id="input-duree" min="1" max="52" placeholder="8" inputmode="numeric" />
+              <span class="field__suffix">semaines</span>
+            </label>
+          </div>
         </div>
 
-        <div class="card step gym-anim-in">
-          <div class="step__head">
-            <span class="step__number">3</span>
-            <div>
-              <p class="step__heading">Quelle durée pour ton programme ?</p>
-            </div>
-          </div>
-          <label class="field">
-            <span id="icon-field-duree"></span>
-            <input type="number" id="input-duree" min="1" max="52" placeholder="Ex. : 8" inputmode="numeric" />
-            <span class="field__suffix">semaines</span>
-          </label>
-        </div>
-
-        <div class="card card--accent gym-anim-in" style="display:flex; flex-direction:column; gap:16px;">
-          <div style="display:flex; align-items:center; gap:12px;">
+        <div class="card card--accent gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; gap:10px;">
             <div class="icon-circle" id="icon-recap-target"></div>
             <div>
               <p class="step__heading">Récapitulatif</p>
@@ -307,7 +308,7 @@ document.getElementById("app-root-gym").innerHTML = `
           </div>
           <div class="summary-grid">
             <div class="summary-item"><span id="icon-recap-1"></span><span class="summary-item__label">Objectif</span><span class="summary-item__value" id="recap-objectif">Force</span></div>
-            <div class="summary-item"><span id="icon-recap-2"></span><span class="summary-item__label">Séances / semaine</span><span class="summary-item__value" id="recap-seances">—</span></div>
+            <div class="summary-item"><span id="icon-recap-2"></span><span class="summary-item__label">Séances</span><span class="summary-item__value" id="recap-seances">—</span></div>
             <div class="summary-item"><span id="icon-recap-3"></span><span class="summary-item__label">Durée</span><span class="summary-item__value" id="recap-duree">—</span></div>
           </div>
         </div>
