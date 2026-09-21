@@ -109,7 +109,7 @@
 #page-putting .page-header_menu,
 #page-vitesse .page-header_menu,
 #page-stats .page-header__menu,
-#page-wedging .wg-header .wg-icon-btn,
+#page-wedging .wg-icon-btn,
 #page-gym .gym-header__action,
 #page-parcours .top-bar .icon-btn {
   width: 36px;
@@ -128,7 +128,7 @@
 #page-putting .page-header_menu-icon,
 #page-vitesse .page-header_menu-icon,
 #page-stats .page-header__menu svg,
-#page-wedging .wg-header .wg-icon-btn svg,
+#page-wedging .wg-icon-btn svg,
 #page-gym .gym-header__action svg,
 #page-parcours .top-bar .icon-btn svg {
   width: 18px;
@@ -142,3 +142,15 @@
      z-index différents). On les fera avec la même méthode (variables)
      quand tu voudras standardiser ceux-là aussi.
    --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   Headers fixes : l'animation globale `.screen { fadeUp both }` (parcours-ui.css)
+   laisse un transform: translateY(0) sur .screen une fois terminée. Un ancêtre
+   transformé devient le bloc conteneur des position:fixed, donc le header
+   défile avec la page. `backwards` = même animation, sans transform résiduel.
+   --------------------------------------------------------------------------- */
+#page-stats .screen,
+#page-putting .screen,
+#page-vitesse .screen {
+  animation-fill-mode: backwards;
+}
