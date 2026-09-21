@@ -101,8 +101,6 @@ document.getElementById("app-root-gym").innerHTML = `
               <div class="feature-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 20v-7M8 20v-11M13 20v-6"/>
-                  <path d="M13 8.5l4-4 4 4"/>
-                  <path d="M21 4.5v4h-4"/>
                 </svg>
               </div>
               <span class="feature-card__bar"></span>
