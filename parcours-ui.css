@@ -519,20 +519,22 @@ body.no-scroll .screen-view.active .screen {
   height: 15px;
 }
 
-.mode-btn-minus {
-  background: var(--danger);
-  color: #fff;
-}
-
-.mode-btn-edit {
-  background: var(--color-blue);
-  color: #fff;
-}
-
 .mode-btn.active {
   border-color: var(--accent);
   color: #050505;
   background: var(--accent);
+}
+
+.mode-btn-minus.active {
+  border-color: var(--danger);
+  color: #fff;
+  background: var(--danger);
+}
+
+.mode-btn-edit.active {
+  border-color: var(--color-blue);
+  color: #fff;
+  background: var(--color-blue);
 }
 
 /* Hero card (used on Vent / Dénivelé / Détail) */
