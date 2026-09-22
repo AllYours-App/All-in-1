@@ -360,8 +360,8 @@ body.no-scroll .screen-view.active {
   flex-direction: column;
 }
 
-body.no-scroll .screen-view.active .top-bar {
-  position: static;
+body.no-scroll #page-parcours .screen-view.active .top-bar {
+  position: static !important;
   flex: 0 0 auto;
   padding: 14px 20px 4px;
 }
