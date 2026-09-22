@@ -344,11 +344,13 @@
 body.no-scroll {
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   padding-bottom: 0;
 }
 
 body.no-scroll .app {
   height: 100vh;
+  height: 100dvh;
   min-height: 0;
 }
 
