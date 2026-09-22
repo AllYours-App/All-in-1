@@ -17,6 +17,7 @@ function showPage(id) {
     document.body.classList.toggle("no-scroll", !!(parcoursHome && parcoursHome.classList.contains("active")));
   } else {
     document.body.classList.remove("no-scroll");
+    document.body.classList.remove("gym-home-locked", "gym-view-fit");
   }
 
   window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
