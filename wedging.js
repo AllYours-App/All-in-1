@@ -1005,6 +1005,7 @@ Views.exercices = function () {
 /* =============================== 7. ROUTEUR =================================== */
 
 const Router = (function () {
+  let lastPath = null;
   const ROUTES = {
     "home": { view: Views.home },
     "parcours": { view: Views.parcours },
@@ -1021,6 +1022,8 @@ const Router = (function () {
   function render() {
     const { path, params } = parseHash();
     const route = ROUTES[path] || ROUTES["parcours"];
+    const changed = path !== lastPath;
+    lastPath = path;
     try {
       document.getElementById("app").innerHTML = route.view(params);
     } catch (e) {
@@ -1036,7 +1039,7 @@ const Router = (function () {
         '<button class="wg-btn-secondary" style="margin-top:14px;" onclick="Router.go(\'parcours\')">Retour à l\'accueil</button>' +
         '</div>';
     }
-    window.scrollTo(0, 0);
+    if (changed) window.scrollTo(0, 0);
   }
   function go(hash) { location.hash = "#" + hash; }
   window.addEventListener("hashchange", render);
