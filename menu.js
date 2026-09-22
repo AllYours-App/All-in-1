@@ -33,13 +33,11 @@ let radars = [
   },
 ];
 
-let golfBag = { size: 0 };
+let golfBag = { clubs: [] };
 
 let driverSettings = { length: null, weight: null };
 
-// Cible appelée par le bouton retour. Le Menu n'a plus d'écran de détail
-// interne ("Mon sac de golf" redirige désormais vers Stats > Saisie détaillée),
-// donc ce bouton ramène toujours à l'accueil.
+// Cible appelée par le bouton retour, réassignée par chaque écran qui en a besoin.
 let backTarget = () => showPage('home');
 
 function saveStateToLocalStorage() {
@@ -100,7 +98,7 @@ function renderMenuTab() {
     <div class="field-list">
       <h3>Profil</h3>
       <div class="field-row"><span class="label">Mon sac de golf</span><span class="val">
-        <button onclick="goToGolfBag()">${golfBag.size}/14 clubs &#8250;</button>
+        <button onclick="goToGolfBag()">${golfBag.clubs.length}/14 clubs &#8250;</button>
       </span></div>
     </div>
     <div class="field-list">
@@ -190,7 +188,7 @@ function renderMenuTab() {
       </span></div>
     </div>
     <nav class="menu_list">
-      <button class="menu_item" type="button" onclick="console.log('Navigation → Aide & support')">
+      <button class="menu_item" type="button" onclick="goToHelp()">
         <span class="menu_icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.7-2.4 3.4"/><circle cx="12" cy="16.8" r="0.2" fill="currentColor"/></svg></span>
         <span class="menu_content">
           <span class="menu_title">Aide &amp; support</span>
@@ -293,12 +291,81 @@ function removeRadar(id){
 }
 
 /* ==========================================================================
-   Sac de golf — la gestion des clubs se fait désormais dans le module Stats
-   (écran "Saisie détaillée"), voir showStatsScreen() exposé par stats.js.
+   Écran Sac de golf — liste des clubs (max 14)
    ========================================================================== */
 function goToGolfBag(){
-  showPage('stats');
-  if (typeof showStatsScreen === 'function') showStatsScreen('saisie-detaillee');
+  renderGolfBagScreen();
+}
+
+function renderGolfBagScreen(){
+  backTarget = () => { showPage('menu'); renderMenuTab(); };
+  backBtn.classList.remove("is-hidden");
+  headerTitle.textContent = "Mon sac";
+  menuRoot.innerHTML = `
+    ${topRowHtml()}
+    <div class="field-list">
+      <h3>Clubs (${golfBag.clubs.length}/14)</h3>
+      ${golfBag.clubs.map(c => `
+        <div class="field-row"><span class="label">
+          <input type="text" value="${c.name}" onchange="updateClubField('${c.id}','name',this.value)" class="w-full">
+        </span><span class="val">
+          <button onclick="removeClub('${c.id}')">Suppr.</button>
+        </span></div>
+      `).join('')}
+      <div class="resume-row">
+        <button class="add-radar-btn" type="button" onclick="addClub()" ${golfBag.clubs.length >= 14 ? 'disabled' : ''}>
+          <span class="add-radar-plus">+</span>Ajouter un club
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function addClub(){
+  if(golfBag.clubs.length >= 14) return;
+  const id = 'club_' + Date.now();
+  golfBag.clubs.push({ id, name: 'Nouveau club' });
+  saveStateToLocalStorage();
+  renderGolfBagScreen();
+}
+
+function removeClub(id){
+  golfBag.clubs = golfBag.clubs.filter(c => c.id !== id);
+  saveStateToLocalStorage();
+  renderGolfBagScreen();
+}
+
+function updateClubField(id, field, value){
+  const club = golfBag.clubs.find(c => c.id === id);
+  if(!club) return;
+  club[field] = value;
+  saveStateToLocalStorage();
+  renderGolfBagScreen();
+}
+
+/* ==========================================================================
+   Écran Aide & support
+   ========================================================================== */
+function goToHelp(){
+  renderHelpScreen();
+}
+
+function renderHelpScreen(){
+  backTarget = () => { showPage('menu'); renderMenuTab(); };
+  backBtn.classList.remove("is-hidden");
+  headerTitle.textContent = "Aide & support";
+  menuRoot.innerHTML = `
+    ${topRowHtml()}
+    <div class="field-list">
+      <h3>FAQ</h3>
+    </div>
+    <div class="field-list">
+      <h3>Contact</h3>
+    </div>
+    <div class="field-list">
+      <h3>Conditions d'utilisation</h3>
+    </div>
+  `;
 }
 
 // Expose renderMenuTab globalement pour être appelée depuis index.html
