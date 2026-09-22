@@ -519,6 +519,16 @@ body.no-scroll .screen-view.active .screen {
   height: 15px;
 }
 
+.mode-btn-minus {
+  background: var(--danger);
+  color: #fff;
+}
+
+.mode-btn-edit {
+  background: var(--color-blue);
+  color: #fff;
+}
+
 .mode-btn.active {
   border-color: var(--accent);
   color: #050505;
