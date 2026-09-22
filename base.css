@@ -130,12 +130,11 @@
 
 html, body {
   height: 100%;
-  /* Les deux axes : supprime le rebond élastique iOS (haut/bas ET bords),
-     y compris quand le contenu tient exactement dans l'écran. Ne bloque
-     jamais le scroll réel : contrairement à overflow:hidden, ça ne fait
-     disparaître que le rebond, pas le défilement quand il y a du contenu
-     à parcourir (ex. écrans Analyses / Historique). */
-  overscroll-behavior: none;
+  /* overscroll-behavior-y: none tout seul (sans -x) évite un bug connu de
+     Safari iOS : le raccourci overscroll-behavior:none combiné à height:100%
+     sur html+body peut supprimer le scroll réel, pas juste le rebond
+     (constaté sur Putting). On ne coupe donc que l'axe horizontal pour l'instant. */
+  overscroll-behavior-x: none;
   touch-action: manipulation;
 }
 
