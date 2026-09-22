@@ -291,8 +291,30 @@ function removeRadar(id){
 }
 
 /* ==========================================================================
-   Écran Sac de golf — liste des clubs (max 14)
+   Écran Sac de golf — sélection par case à cocher parmi un catalogue fixe
+   (max 14 clubs dans un sac réglementaire)
    ========================================================================== */
+const golfClubCatalog = [
+  { id: 'driver', name: 'Driver' },
+  { id: 'bois3', name: 'Bois 3' },
+  { id: 'bois5', name: 'Bois 5' },
+  { id: 'bois7', name: 'Bois 7' },
+  { id: 'hybride3', name: 'Hybride 3' },
+  { id: 'hybride4', name: 'Hybride 4' },
+  { id: 'fer3', name: 'Fer 3' },
+  { id: 'fer4', name: 'Fer 4' },
+  { id: 'fer5', name: 'Fer 5' },
+  { id: 'fer6', name: 'Fer 6' },
+  { id: 'fer7', name: 'Fer 7' },
+  { id: 'fer8', name: 'Fer 8' },
+  { id: 'fer9', name: 'Fer 9' },
+  { id: 'pw', name: 'Pitching Wedge (PW)' },
+  { id: 'gw', name: 'Gap Wedge (GW)' },
+  { id: 'sw', name: 'Sand Wedge (SW)' },
+  { id: 'lw', name: 'Lob Wedge (LW)' },
+  { id: 'putter', name: 'Putter' },
+];
+
 function goToGolfBag(){
   renderGolfBagScreen();
 }
@@ -301,44 +323,33 @@ function renderGolfBagScreen(){
   backTarget = () => { showPage('menu'); renderMenuTab(); };
   backBtn.classList.remove("is-hidden");
   headerTitle.textContent = "Mon sac";
+  const maxReached = golfBag.clubs.length >= 14;
   menuRoot.innerHTML = `
     ${topRowHtml()}
     <div class="field-list">
       <h3>Clubs (${golfBag.clubs.length}/14)</h3>
-      ${golfBag.clubs.map(c => `
-        <div class="field-row"><span class="label">
-          <input type="text" value="${c.name}" onchange="updateClubField('${c.id}','name',this.value)" class="w-full">
-        </span><span class="val">
-          <button onclick="removeClub('${c.id}')">Suppr.</button>
-        </span></div>
-      `).join('')}
-      <div class="resume-row">
-        <button class="add-radar-btn" type="button" onclick="addClub()" ${golfBag.clubs.length >= 14 ? 'disabled' : ''}>
-          <span class="add-radar-plus">+</span>Ajouter un club
-        </button>
-      </div>
+      ${golfClubCatalog.map(c => {
+        const checked = golfBag.clubs.includes(c.id);
+        const disabled = !checked && maxReached;
+        return `
+        <div class="field-row"><span class="label">${c.name}</span><span class="val">
+          <label class="radio-select">
+            <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleClub('${c.id}',this.checked)">
+            <span class="radio-select-dot"></span>
+          </label>
+        </span></div>`;
+      }).join('')}
     </div>
   `;
 }
 
-function addClub(){
-  if(golfBag.clubs.length >= 14) return;
-  const id = 'club_' + Date.now();
-  golfBag.clubs.push({ id, name: 'Nouveau club' });
-  saveStateToLocalStorage();
-  renderGolfBagScreen();
-}
-
-function removeClub(id){
-  golfBag.clubs = golfBag.clubs.filter(c => c.id !== id);
-  saveStateToLocalStorage();
-  renderGolfBagScreen();
-}
-
-function updateClubField(id, field, value){
-  const club = golfBag.clubs.find(c => c.id === id);
-  if(!club) return;
-  club[field] = value;
+function toggleClub(id, isChecked){
+  if(isChecked){
+    if(golfBag.clubs.length >= 14 || golfBag.clubs.includes(id)) return;
+    golfBag.clubs.push(id);
+  } else {
+    golfBag.clubs = golfBag.clubs.filter(cid => cid !== id);
+  }
   saveStateToLocalStorage();
   renderGolfBagScreen();
 }
