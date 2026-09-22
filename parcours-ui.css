@@ -361,7 +361,6 @@ body.no-scroll .screen-view.active {
 }
 
 body.no-scroll .screen-view.active .top-bar {
-  position: static;
   flex: 0 0 auto;
   padding: 14px 20px 4px;
 }

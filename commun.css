@@ -66,7 +66,6 @@
   align-items: center;
   gap: 8px;
   justify-self: start;
-  grid-column: 1;
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
@@ -103,7 +102,6 @@
   text-overflow: ellipsis;
   max-width: 46vw;
   justify-self: center;
-  grid-column: 2;
   color: var(--app-header-text);
 }
 
@@ -123,7 +121,6 @@
   align-items: center;
   justify-content: center;
   justify-self: end;
-  grid-column: 3;
   color: var(--app-header-text);
   cursor: pointer;
 }
