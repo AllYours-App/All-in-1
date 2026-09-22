@@ -352,6 +352,19 @@ select:focus-visible,
   padding: 15px 16px;
 }
 
+.gym-app .btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gym-gap-sm);
+}
+
+.gym-app .btn-grid .btn {
+  width: auto;
+  font-size: 13px;
+  padding: 15px 10px;
+  text-align: center;
+}
+
 /* ---- Vignette image (thumb) ---------------------------------------------- */
 
 .thumb {
@@ -467,6 +480,14 @@ select:focus-visible,
   width: 58%;
   opacity: 0.9;
   color: rgba(255, 255, 255, 0.14);
+}
+
+.hero-photo__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .hero-photo__content {
@@ -2721,11 +2742,17 @@ body.gym-home-locked {
 }
 
 /* ==========================================================================
-   GYM — Créer un programme : écran compact (tout visible sans défilement)
+   GYM — Créer un programme : écran adaptatif (remplit la hauteur, sans défilement)
    Scopé sur #view-creer-programme pour ne pas toucher aux autres vues.
-   Le contenu se resserre par paliers :
-     - selon la LARGEUR de l'écran : 380px / 360px
-     - selon la HAUTEUR de l'écran : 660px / 610px / 560px
+
+   Principe, dans l'ordre du fichier :
+     1. Base compacte (tient sur les écrans les plus petits).
+     2. Écrans hauts (> 660px) : marges, tailles et vignette grandissent en continu
+        avec la hauteur (dvh), entre 660px et 930px.
+     3. Largeur : correctifs sous 380 / 360 / 340px.
+     4. Écrans bas (<= 660px) : resserrement par paliers 660 / 610 / 560 / 480px.
+   Dans tous les cas, l'espace restant est réparti entre les cartes (flex-grow) :
+   la vue occupe exactement la hauteur visible, sans la dépasser.
    ========================================================================== */
 
 /* .gym-app a min-height:100vh (qui inclut les barres du navigateur sur mobile) et
@@ -2737,9 +2764,48 @@ body.gym-view-fit .gym-app {
   padding-bottom: 0; /* le bas est déjà géré par le padding de .gym-main */
 }
 
+/* La vue prend toute la hauteur visible ; .gym-main absorbe l'espace libre. */
+#view-creer-programme:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 #view-creer-programme .gym-main {
+  flex: 1 0 auto;
   padding: calc(56px + env(safe-area-inset-top) + 10px) 16px calc(14px + env(safe-area-inset-bottom));
   gap: 10px;
+}
+
+#view-creer-programme .gym-main > * {
+  flex-shrink: 0;
+}
+
+/* Répartition de l'espace libre : le contenu reste centré dans chaque carte */
+#view-creer-programme .gym-main > .card {
+  flex-grow: 0.8;
+}
+
+#view-creer-programme .gym-main > .step--inline {
+  flex-grow: 0.3;
+}
+
+#view-creer-programme .gym-main > .cp-goal {
+  flex-grow: 2;
+}
+
+#view-creer-programme .gym-main > .cp-row {
+  flex-grow: 0.8;
+}
+
+#view-creer-programme .step {
+  justify-content: center;
+}
+
+/* Les tuiles d'objectif absorbent la hauteur gagnée par leur carte */
+#view-creer-programme #objectif-grid {
+  flex: 1 1 auto;
 }
 
 /* ---- En-tête de page ------------------------------------------------------ */
@@ -2898,6 +2964,19 @@ body.gym-view-fit .gym-app {
 
 /* ---- Récapitulatif ---------------------------------------------------------- */
 
+#view-creer-programme .cp-recap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+#view-creer-programme .cp-recap__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 #view-creer-programme .icon-circle {
   width: 24px;
   height: 24px;
@@ -2942,7 +3021,140 @@ body.gym-view-fit .gym-app {
 }
 
 /* ==========================================================================
-   Adaptation à la LARGEUR
+   2. Écrans hauts (> 660px) : tout grandit en continu avec la hauteur.
+   Chaque valeur part de la base compacte à 660px et atteint son maximum à
+   930px (interpolation linéaire sur 100dvh, bornée par clamp). Les pentes sont
+   calibrées pour que la croissance totale reste sous la hauteur gagnée : le
+   contenu ne dépasse jamais, et le flex répartit le petit reste.
+   ========================================================================== */
+
+@supports (height: 100dvh) {
+  @media (min-height: 661px) {
+    #view-creer-programme {
+      --cp-x: calc(100dvh - 660px); /* hauteur gagnée au-dessus de 660px */
+      --cp-gap: clamp(8px, calc(8px + var(--cp-x) * 0.0444), 20px);
+      --cp-pad-y: clamp(12px, calc(12px + var(--cp-x) * 0.0296), 20px);
+      --cp-step-gap: clamp(8px, calc(8px + var(--cp-x) * 0.0185), 13px);
+      --cp-field-y: clamp(7px, calc(7px + var(--cp-x) * 0.0185), 12px);
+      --cp-choice-y: clamp(8px, calc(8px + var(--cp-x) * 0.0222), 14px);
+      --cp-btn-y: clamp(13px, calc(13px + var(--cp-x) * 0.0148), 17px);
+      --cp-hero: clamp(76px, calc(76px + var(--cp-x) * 0.1778), 124px);
+      --cp-text: clamp(14px, calc(14px + var(--cp-x) * 0.0111), 17px);
+      --cp-badge: clamp(20px, calc(20px + var(--cp-x) * 0.0148), 24px);
+      --cp-icon: clamp(20px, calc(20px + var(--cp-x) * 0.0222), 26px);
+      --cp-circle: clamp(24px, calc(24px + var(--cp-x) * 0.0222), 30px);
+    }
+
+    #view-creer-programme .gym-main {
+      gap: var(--cp-gap);
+      padding-top: calc(56px + env(safe-area-inset-top) + var(--cp-gap));
+      padding-bottom: calc(var(--cp-gap) + env(safe-area-inset-bottom));
+    }
+
+    #view-creer-programme .cp-row {
+      gap: var(--cp-gap);
+    }
+
+    #view-creer-programme .cp-intro__text {
+      gap: var(--cp-step-gap);
+    }
+
+    #view-creer-programme .cp-hero {
+      width: var(--cp-hero);
+      height: var(--cp-hero);
+    }
+
+    #view-creer-programme .gym-title-xl {
+      font-size: clamp(24px, calc(24px + var(--cp-x) * 0.0148), 28px);
+    }
+
+    #view-creer-programme .card {
+      padding-top: var(--cp-pad-y);
+      padding-bottom: var(--cp-pad-y);
+    }
+
+    #view-creer-programme .step,
+    #view-creer-programme .cp-recap {
+      gap: var(--cp-step-gap);
+    }
+
+    #view-creer-programme .step__head {
+      gap: calc(var(--cp-step-gap) + 2px);
+    }
+
+    #view-creer-programme .step__number {
+      width: var(--cp-badge);
+      height: var(--cp-badge);
+      font-size: clamp(11px, calc(11px + var(--cp-x) * 0.0074), 13px);
+    }
+
+    #view-creer-programme .step__heading {
+      font-size: var(--cp-text);
+    }
+
+    #view-creer-programme .field {
+      padding-top: var(--cp-field-y);
+      padding-bottom: var(--cp-field-y);
+    }
+
+    #view-creer-programme .field input {
+      font-size: clamp(14px, calc(14px + var(--cp-x) * 0.0074), 16px);
+    }
+
+    /* Ligne Titre : intitulé et champ partagent la largeur, ils grandissent moins */
+    #view-creer-programme .step--inline .step__heading,
+    #view-creer-programme .step--inline .field input {
+      font-size: clamp(14px, calc(14px + var(--cp-x) * 0.0037), 15px);
+    }
+
+    #view-creer-programme .choice--radio {
+      padding-top: var(--cp-choice-y);
+      padding-bottom: var(--cp-choice-y);
+    }
+
+    #view-creer-programme .choice svg {
+      width: var(--cp-icon);
+      height: var(--cp-icon);
+    }
+
+    #view-creer-programme .icon-circle {
+      width: var(--cp-circle);
+      height: var(--cp-circle);
+    }
+
+    #view-creer-programme .icon-circle svg {
+      width: calc(var(--cp-circle) * 0.58);
+      height: calc(var(--cp-circle) * 0.58);
+    }
+
+    #view-creer-programme .summary-item svg {
+      width: clamp(12px, calc(12px + var(--cp-x) * 0.0074), 14px);
+      height: clamp(12px, calc(12px + var(--cp-x) * 0.0074), 14px);
+    }
+
+    #view-creer-programme .summary-item__label {
+      font-size: clamp(11px, calc(11px + var(--cp-x) * 0.0056), 12.5px);
+    }
+
+    #view-creer-programme .summary-item__value {
+      font-size: var(--cp-text);
+    }
+
+    #view-creer-programme .btn {
+      padding-top: var(--cp-btn-y);
+      padding-bottom: var(--cp-btn-y);
+    }
+  }
+
+  @media (min-height: 661px) and (min-width: 401px) {
+    #view-creer-programme .gym-title-xl {
+      font-size: clamp(24px, calc(24px + var(--cp-x) * 0.0296), 32px);
+    }
+  }
+}
+
+/* ==========================================================================
+   3. Adaptation à la LARGEUR
    ========================================================================== */
 
 @media (max-width: 380px) {
@@ -2963,6 +3175,10 @@ body.gym-view-fit .gym-app {
 }
 
 @media (max-width: 360px) {
+  #view-creer-programme .gym-title-xl {
+    font-size: 24px;
+  }
+
   /* Titre : champ sans icône, intitulé un peu plus petit */
   #view-creer-programme .step--inline {
     gap: 10px;
@@ -2970,6 +3186,10 @@ body.gym-view-fit .gym-app {
 
   #view-creer-programme .step--inline .step__heading {
     font-size: 13px;
+  }
+
+  #view-creer-programme .step--inline .field input {
+    font-size: 14px;
   }
 
   #view-creer-programme .step--inline .field > span:first-child {
@@ -3008,11 +3228,11 @@ body.gym-view-fit .gym-app {
 }
 
 /* ==========================================================================
-   Adaptation à la HAUTEUR (du moins haut au plus haut : chaque palier
+   4. Écrans BAS (<= 660px) : resserrement par paliers (chaque palier
    s'ajoute au précédent)
    ========================================================================== */
 
-/* ≤ 660px (ex. iPhone en Safari avec barres affichées) */
+/* <= 660px (ex. iPhone en Safari avec barres affichées) */
 @media (max-height: 660px) {
   #view-creer-programme .gym-main {
     gap: 8px;
@@ -3032,7 +3252,7 @@ body.gym-view-fit .gym-app {
   }
 }
 
-/* ≤ 610px : plus de vignette, titre sur une seule ligne */
+/* <= 610px : plus de vignette, titre sur une seule ligne */
 @media (max-height: 610px) {
   #view-creer-programme .cp-hero {
     display: none;
@@ -3047,7 +3267,7 @@ body.gym-view-fit .gym-app {
   }
 }
 
-/* ≤ 560px (ex. iPhone SE, petits Android) : tout est resserré */
+/* <= 560px (ex. iPhone SE, petits Android) : tout est resserré */
 @media (max-height: 560px) {
   #view-creer-programme .gym-main {
     gap: 6px;
@@ -3083,7 +3303,7 @@ body.gym-view-fit .gym-app {
   }
 }
 
-/* ≤ 480px (très petits écrans, ex. iPhone SE 1re génération en Safari) */
+/* <= 480px (très petits écrans, ex. iPhone SE 1re génération en Safari) */
 @media (max-height: 480px) {
   #view-creer-programme .gym-main {
     gap: 4px;

@@ -259,7 +259,7 @@ document.getElementById("app-root-gym").innerHTML = `
           </label>
         </div>
 
-        <div class="card step gym-anim-in">
+        <div class="card step cp-goal gym-anim-in">
           <div class="step__head">
             <span class="step__number">1</span>
             <div>
@@ -299,8 +299,8 @@ document.getElementById("app-root-gym").innerHTML = `
           </div>
         </div>
 
-        <div class="card card--accent gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; align-items:center; gap:10px;">
+        <div class="card card--accent cp-recap gym-anim-in">
+          <div class="cp-recap__head">
             <div class="icon-circle" id="icon-recap-target"></div>
             <div>
               <p class="step__heading">Récapitulatif</p>
@@ -2296,7 +2296,36 @@ const TEMPO_OPTIONS = ["2-0-2-0", "3-1-1-0", "4-0-1-0"];
    le module (via "Créer un programme" / "Créer une séance" / "Créer un
    objectif"), à partir de zéro, comme une application jamais utilisée. */
 
-const PROGRAMS = [];
+/* Enregistrement des programmes dans le localStorage du navigateur.
+   Seuls les programmes enregistrés via le bouton sont rechargés au démarrage. */
+const GYM_STORAGE_KEY = "gym-programs-saved";
+
+function gymReadSavedPrograms() {
+  try {
+    return JSON.parse(localStorage.getItem(GYM_STORAGE_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function gymWriteSavedPrograms(programs) {
+  try {
+    localStorage.setItem(GYM_STORAGE_KEY, JSON.stringify(programs));
+  } catch (e) {
+    // Stockage indisponible : on ignore.
+  }
+}
+
+const PROGRAMS = gymReadSavedPrograms();
+
+function gymSaveProgram(programId, button) {
+  const program = gymGetProgram(programId);
+  if (!program) return;
+  const saved = gymReadSavedPrograms().filter((p) => p.id !== programId);
+  saved.push(program);
+  gymWriteSavedPrograms(saved);
+  if (button) button.innerHTML = `${gymIcon("check")} Programme enregistré`;
+}
 
 function gymGetProgram(id) {
   return PROGRAMS.find((p) => p.id === id);
@@ -2310,6 +2339,7 @@ function gymDeleteProgram(programId) {
   const index = GYM_DATA.programs.findIndex((p) => p.id === programId);
   if (index === -1) return;
   GYM_DATA.programs.splice(index, 1);
+  gymWriteSavedPrograms(gymReadSavedPrograms().filter((p) => p.id !== programId));
   gymNavigate("programmes");
 }
 
@@ -2931,9 +2961,13 @@ function gymRenderHistoryRow(entry) {
 
 (function () {
   function renderHero(program) {
+    // Image selon l'objectif : images/ProgrammeForce.png, ProgrammeEndurance.png,
+    // ProgrammeHypertrophie.png, ProgrammeVitesse.png
+    const goalId = program.goal || "";
+    const imageName = `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
     document.getElementById("program-hero").innerHTML = `
       <div class="hero-photo">
-        <div class="hero-photo__silhouette">${gymIcon(program.icon)}</div>
+        <img class="hero-photo__image" src="images/${imageName}.png" alt="">
         <div class="hero-photo__content">
           <span class="gym-eyebrow">Programme</span>
           <h1 class="gym-title-xl" style="margin:6px 0 8px;">${program.name}</h1>
@@ -2973,12 +3007,7 @@ function gymRenderHistoryRow(entry) {
   function renderProgressCard(program) {
     const total = program.sessions.length;
     const done = program.sessions.filter((s) => s.status === "terminee").length;
-    const currentSession = program.sessions.find((s) => s.status === "en-cours");
     const percent = total ? Math.round((done / total) * 100) : 0;
-
-    const primaryCta = currentSession
-      ? `<button class="btn btn-primary" onclick="gymNavigate('seance-active', {session:'${currentSession.id}'});">${gymIcon("play")} Continuer la séance</button>`
-      : `<button class="btn btn-primary" onclick="gymNavigate('creer-seance', {programme:'${program.id}'});">${gymIcon("plus")} Créer ta première séance</button>`;
 
     document.getElementById("program-progress-card").innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:baseline;">
@@ -2989,12 +3018,12 @@ function gymRenderHistoryRow(entry) {
         <div class="progress-track"><div class="progress-fill" data-progress="${percent}" style="width:0%"></div></div>
         <span class="progress-row__value">${percent}%</span>
       </div>
-      ${primaryCta}
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="gymNavigate('programme-detail', {id:'${program.id}'});">${gymIcon("doc")} Voir le programme complet</button>
+      <div class="btn-grid">
+        <button class="btn btn-primary" onclick="gymNavigate('creer-seance', {programme:'${program.id}'});">${gymIcon("plus")} Créer une séance</button>
+        <button class="btn btn-secondary" onclick="gymSaveProgram('${program.id}', this);">${gymIcon("doc")} Enregistrer le programme</button>
         <button class="btn btn-secondary" onclick="gymNavigate('creer-programme', {id:'${program.id}'});">${gymIcon("edit")} Modifier le programme</button>
+        <button class="btn btn-danger" onclick="gymDeleteProgram('${program.id}');">${gymIcon("trash")} Supprimer le programme</button>
       </div>
-      <button class="btn btn-danger" onclick="gymDeleteProgram('${program.id}');">${gymIcon("trash")} Supprimer le programme</button>
     `;
   }
 
