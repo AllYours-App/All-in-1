@@ -391,6 +391,14 @@ body.no-scroll .screen-view.active .screen {
   gap: 6px;
 }
 
+.track-block-green {
+  position: relative;
+}
+
+.track-block-green .quick-action-info {
+  z-index: 4;
+}
+
 .track-block #green-root,
 .track-block #fairway-root {
   flex: 1;
