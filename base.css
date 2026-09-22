@@ -1,4 +1,4 @@
- @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* ===========================================================================
    BASE — reset, variables globales, layout partagé (shell, header, conteneurs)
@@ -130,7 +130,12 @@
 
 html, body {
   height: 100%;
-  overscroll-behavior-x: none;
+  /* Les deux axes : supprime le rebond élastique iOS (haut/bas ET bords),
+     y compris quand le contenu tient exactement dans l'écran. Ne bloque
+     jamais le scroll réel : contrairement à overflow:hidden, ça ne fait
+     disparaître que le rebond, pas le défilement quand il y a du contenu
+     à parcourir (ex. écrans Analyses / Historique). */
+  overscroll-behavior: none;
   touch-action: manipulation;
 }
 
@@ -186,4 +191,3 @@ a {
   max-width: var(--app-max-width);
   margin: 0 auto;
 }
-
