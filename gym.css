@@ -2236,38 +2236,9 @@ body.gym-home-locked {
 /* ---- Exercice courant : photo de fond + navigation ------------------------ */
 
 .session-exercise-hero {
-  position: relative;
-  margin: 0 -20px;
-  min-height: 220px;
-  padding: 0 20px 20px;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
-}
-
-/* Emplacement de la photo de l'exercice (varie selon l'exercice affiché) : à
-   renseigner via le champ `image` d'un exercice dans EXERCISES, ou laissée
-   vide pour l'instant. */
-.session-exercise-hero__media {
-  position: absolute;
-  inset: 0;
-  background-color: var(--gym-card);
-}
-
-.session-exercise-hero__media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(2, 8, 23, 0.2) 0%, rgba(2, 8, 23, 0.55) 60%, var(--gym-bg) 100%);
-}
-
-.session-exercise-hero__content {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 100%;
 }
 
 .session-exercise-hero__nav {

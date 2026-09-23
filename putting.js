@@ -8,9 +8,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label">Home</span>
   </a>
   <h1 class="page-header_title">Putting</h1>
-  <button class="page-header_menu" aria-label="Menu" onclick="showToast('Menu à venir')">
-    <svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
-  </button>
+  <span class="page-header_menu"></span>
 </header>
 
 <header class="page-header is-hidden" data-header="stats">
@@ -19,9 +17,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label">Putting</span>
   </a>
   <h1 class="page-header_title">Stats Performance</h1>
-  <button class="page-header_menu" aria-label="Informations" onclick="showToast('Informations à venir')">
-    <svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
-  </button>
+  <span class="page-header_menu"></span>
 </header>
 
 <header class="page-header is-hidden" data-header="exercise-flow">
@@ -81,14 +77,14 @@ function renderPuttingTab() {
             <svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
           </div>
           <div class="stat-card_label">SG Putting</div>
-          <div class="stat-card_value">--</div>
+          <div class="stat-card_value" id="home-sg-value">--</div>
         </div>
         <div class="stat-card">
           <div class="stat-card_icon-wrap">
             <svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>
           </div>
           <div class="stat-card_label">1 Putt %</div>
-          <div class="stat-card_value">--</div>
+          <div class="stat-card_value" id="home-oneputt-value">--</div>
         </div>
       </div>
 
@@ -112,10 +108,6 @@ function renderPuttingTab() {
             <div class="analyse-header_eyebrow">Analyse</div>
             <h2 class="analyse-header_title">Distance</h2>
           </div>
-          <button class="analyse-about_button" onclick="showToast('Informations à venir')">
-            À propos
-            <svg class="analyse-about_button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
-          </button>
         </div>
         <div class="analyse-header_desc">Vos performances selon la distance des putts.</div>
       </div>
@@ -142,7 +134,7 @@ function renderPuttingTab() {
           </div>
         </div>
 
-        <div class="bar-chart bar-chart-centered">
+        <div class="bar-chart bar-chart-centered" id="distance-sg-chart">
           <div class="bar-chart_row">
             <div class="bar-chart_label">All</div>
             <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
@@ -178,7 +170,7 @@ function renderPuttingTab() {
           </div>
         </div>
 
-        <div class="bar-chart">
+        <div class="bar-chart" id="distance-rate-chart">
           <div class="bar-chart_row">
             <div class="bar-chart_label">All</div>
             <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
@@ -222,7 +214,7 @@ function renderPuttingTab() {
           <span class="bar-chart_legend-item"><span class="bar-chart_legend-dot bar-chart_legend-dot-slope"></span>Erreur de pente</span>
         </div>
 
-        <div class="bar-chart">
+        <div class="bar-chart" id="distance-error-chart">
           <div class="bar-chart_row">
             <div class="bar-chart_label">All</div>
             <div class="bar-chart_bar-wrap-dual">
@@ -283,10 +275,6 @@ function renderPuttingTab() {
             <div class="analyse-header_eyebrow">Analyse</div>
             <h2 class="analyse-header_title">Pente</h2>
           </div>
-          <button class="analyse-about_button" onclick="showToast('Informations à venir')">
-            À propos
-            <svg class="analyse-about_button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><circle cx="12" cy="8.2" r="0.6" fill="currentColor" stroke="none"/></svg>
-          </button>
         </div>
         <div class="analyse-header_desc">Vos performances selon la pente des putts.</div>
       </div>
@@ -316,42 +304,7 @@ function renderPuttingTab() {
             SG vs Tour
           </div>
         </div>
-
-        <div class="bar-chart bar-chart-centered">
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée D→G</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">D→G</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente D→G</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente G→D</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">G→D</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée G→D</div>
-            <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_axis-title">SG Putting</div>
-        </div>
+        <div class="radar-chart_wrap" id="pente-sg-radar"></div>
       </div>
 
       <div class="chart-card">
@@ -360,100 +313,7 @@ function renderPuttingTab() {
             Taux de réussite
           </div>
         </div>
-
-        <div class="bar-chart">
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée D→G</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">D→G</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente D→G</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente G→D</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">G→D</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée G→D</div>
-            <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-          </div>
-          <div class="bar-chart_axis">
-            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
-          </div>
-          <div class="bar-chart_axis-title">Taux de réussite</div>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-card_header">
-          <div class="chart-card_title">
-            Erreurs de vitesse et de pente
-          </div>
-        </div>
-
-        <div class="bar-chart_legend">
-          <span class="bar-chart_legend-item"><span class="bar-chart_legend-dot bar-chart_legend-dot-speed"></span>Erreur de vitesse</span>
-          <span class="bar-chart_legend-item"><span class="bar-chart_legend-dot bar-chart_legend-dot-slope"></span>Erreur de pente</span>
-        </div>
-
-        <div class="bar-chart">
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">All</div>
-            <div class="bar-chart_bar-wrap-dual">
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-speed" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-slope" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-            </div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Montée</div>
-            <div class="bar-chart_bar-wrap-dual">
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-speed" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-slope" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-            </div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">Descente</div>
-            <div class="bar-chart_bar-wrap-dual">
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-speed" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-slope" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-            </div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">D→G</div>
-            <div class="bar-chart_bar-wrap-dual">
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-speed" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-slope" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-            </div>
-          </div>
-          <div class="bar-chart_row">
-            <div class="bar-chart_label">G→D</div>
-            <div class="bar-chart_bar-wrap-dual">
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-speed" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-              <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-slope" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
-            </div>
-          </div>
-          <div class="bar-chart_axis">
-            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
-          </div>
-          <div class="bar-chart_axis-title">Taux d'erreur</div>
-        </div>
+        <div class="radar-chart_wrap" id="pente-rate-radar"></div>
       </div>
 
     </div>
@@ -485,14 +345,14 @@ function renderPuttingTab() {
           <svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>
         </div>
         <div class="stat-card_label">Séances cette semaine</div>
-        <div class="stat-card_value">--</div>
+        <div class="stat-card_value" id="exo-sessions-value">--</div>
       </div>
       <div class="stat-card">
         <div class="stat-card_icon-wrap">
           <svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
         </div>
         <div class="stat-card_label">Taux de réussite</div>
-        <div class="stat-card_value">--</div>
+        <div class="stat-card_value" id="exo-rate-value">--</div>
       </div>
     </div>
 
@@ -504,9 +364,6 @@ function renderPuttingTab() {
         <button class="exercises-sort_select" onclick="toggleExerciseSort()">
           <span id="exercise-sort-label">Récent</span>
           <svg class="exercises-sort_select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-        <button class="exercises-filter_button" aria-label="Filtrer" onclick="showToast('Filtres à venir')">
-          <svg class="exercises-filter_button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M8 12h8"/><path d="M11 18h2"/></svg>
         </button>
       </div>
     </div>
@@ -586,15 +443,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg">
-      <line x1="40" y1="20" x2="890" y2="20" class="line-chart-grid"/>
-      <line x1="40" y1="100" x2="890" y2="100" class="line-chart-grid"/>
-      <line x1="40" y1="180" x2="890" y2="180" class="line-chart-grid"/>
-      <line x1="40" y1="260" x2="890" y2="260" class="line-chart-grid"/>
-      <line x1="40" y1="340" x2="890" y2="340" class="line-chart-grid"/>
-      <line x1="40" y1="420" x2="890" y2="420" class="line-chart-grid-solid"/>
-      <text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">Rounds</text>
-    </svg>
+    <svg class="line-chart" id="stats-sg-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
@@ -609,15 +458,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg">
-      <line x1="40" y1="20" x2="890" y2="20" class="line-chart-grid"/>
-      <line x1="40" y1="100" x2="890" y2="100" class="line-chart-grid"/>
-      <line x1="40" y1="180" x2="890" y2="180" class="line-chart-grid"/>
-      <line x1="40" y1="260" x2="890" y2="260" class="line-chart-grid"/>
-      <line x1="40" y1="340" x2="890" y2="340" class="line-chart-grid"/>
-      <line x1="40" y1="420" x2="890" y2="420" class="line-chart-grid-solid"/>
-      <text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">Rounds</text>
-    </svg>
+    <svg class="line-chart" id="stats-rate-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
@@ -632,15 +473,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg">
-      <line x1="40" y1="20" x2="890" y2="20" class="line-chart-grid"/>
-      <line x1="40" y1="100" x2="890" y2="100" class="line-chart-grid"/>
-      <line x1="40" y1="180" x2="890" y2="180" class="line-chart-grid"/>
-      <line x1="40" y1="260" x2="890" y2="260" class="line-chart-grid"/>
-      <line x1="40" y1="340" x2="890" y2="340" class="line-chart-grid"/>
-      <line x1="40" y1="420" x2="890" y2="420" class="line-chart-grid-solid"/>
-      <text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">Rounds</text>
-    </svg>
+    <svg class="line-chart" id="stats-oneputt-bar" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
@@ -655,15 +488,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg">
-      <line x1="40" y1="20" x2="890" y2="20" class="line-chart-grid"/>
-      <line x1="40" y1="100" x2="890" y2="100" class="line-chart-grid"/>
-      <line x1="40" y1="180" x2="890" y2="180" class="line-chart-grid"/>
-      <line x1="40" y1="260" x2="890" y2="260" class="line-chart-grid"/>
-      <line x1="40" y1="340" x2="890" y2="340" class="line-chart-grid"/>
-      <line x1="40" y1="420" x2="890" y2="420" class="line-chart-grid-solid"/>
-      <text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">Rounds</text>
-    </svg>
+    <svg class="line-chart" id="stats-threeputt-bar" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
@@ -678,15 +503,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg">
-      <line x1="40" y1="20" x2="890" y2="20" class="line-chart-grid"/>
-      <line x1="40" y1="100" x2="890" y2="100" class="line-chart-grid"/>
-      <line x1="40" y1="180" x2="890" y2="180" class="line-chart-grid"/>
-      <line x1="40" y1="260" x2="890" y2="260" class="line-chart-grid"/>
-      <line x1="40" y1="340" x2="890" y2="340" class="line-chart-grid"/>
-      <line x1="40" y1="420" x2="890" y2="420" class="line-chart-grid-solid"/>
-      <text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">Rounds</text>
-    </svg>
+    <svg class="line-chart" id="stats-meters-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
 </main>
@@ -744,6 +561,7 @@ function renderPuttingTab() {
   renderExerciseList();
   renderParcoursHistory();
   renderResumeCards();
+  refreshAllAnalytics();
 }
 
 function selectPuttingTab(event, tab) {
@@ -798,6 +616,8 @@ function selectPuttingTab(event, tab) {
     document.querySelectorAll('.bottom-nav_item').forEach(function (el) {
       el.classList.toggle('is-active', el.dataset.section === section);
     });
+    if (section === 'analyse-distance') renderAnalyseDistance();
+    if (section === 'analyse-pente') renderAnalysePente();
   }
 
   function goToStatsPerformance(event) {
@@ -816,6 +636,7 @@ function selectPuttingTab(event, tab) {
       el.classList.toggle('is-active', el.dataset.section === 'stats-performance');
     });
     document.body.classList.add('is-stats-screen');
+    renderStatsPerformance();
     window.scrollTo(0, 0);
   }
 
@@ -873,11 +694,446 @@ const filterState = {
   stats: { sessions: '20', distance: 'all', parcours: 'all', compareA: null, compareB: null },
 };
 
+/* ============================================================
+   SG (Strokes Gained) — moteur de calcul
+   Table de référence : nombre moyen de putts sur le PGA Tour selon
+   la distance (benchmark Broadie), convertie en mètres.
+   Interpolation linéaire entre les points connus, extrapolation au-delà.
+   ============================================================ */
+const SG_BENCHMARK_TABLE = [
+  { d: 0.3, ep: 1.00 }, { d: 0.6, ep: 1.01 }, { d: 0.9, ep: 1.04 }, { d: 1.2, ep: 1.14 },
+  { d: 1.5, ep: 1.24 }, { d: 1.8, ep: 1.32 }, { d: 2.1, ep: 1.40 }, { d: 2.4, ep: 1.47 },
+  { d: 2.7, ep: 1.53 }, { d: 3.0, ep: 1.59 }, { d: 4.6, ep: 1.80 }, { d: 6.1, ep: 1.92 },
+  { d: 7.6, ep: 2.01 }, { d: 9.1, ep: 2.09 }, { d: 12.2, ep: 2.19 }, { d: 15.2, ep: 2.28 },
+  { d: 18.3, ep: 2.36 }, { d: 27.4, ep: 2.56 },
+];
+
+// Nombre de putts attendu (référence Tour) pour une distance donnée en mètres, par interpolation
+function expectedPutts(distanceM) {
+  const t = SG_BENCHMARK_TABLE;
+  if (distanceM <= t[0].d) return t[0].ep;
+  const last = t[t.length - 1];
+  if (distanceM >= last.d) {
+    const prev = t[t.length - 2];
+    const slope = (last.ep - prev.ep) / (last.d - prev.d);
+    return last.ep + slope * (distanceM - last.d);
+  }
+  for (let i = 0; i < t.length - 1; i++) {
+    const a = t[i], b = t[i + 1];
+    if (distanceM >= a.d && distanceM <= b.d) {
+      const ratio = (distanceM - a.d) / (b.d - a.d);
+      return a.ep + ratio * (b.ep - a.ep);
+    }
+  }
+  return last.ep;
+}
+
+// SG d'un trou = putts attendus (référence Tour) - putts réellement pris (positif = mieux que le Tour)
+function puttSG(distanceM, puttsTaken) {
+  if (distanceM == null || puttsTaken == null || isNaN(distanceM) || isNaN(puttsTaken)) return null;
+  return expectedPutts(distanceM) - puttsTaken;
+}
+
+function fmtSG(v) {
+  if (v == null || isNaN(v)) return '--';
+  return (v >= 0 ? '+' : '') + v.toFixed(2);
+}
+
+function fmtPct(v) {
+  if (v == null || isNaN(v)) return '--';
+  return Math.round(v) + '%';
+}
+
+/* Regroupement des distances en 5 tranches (mêmes libellés que l'UI) */
+const DISTANCE_BUCKET_LABELS = ['0 à 2m', '>2 à 3m', '>3 à 5m', '>5 à 9m', '>9m'];
+function distanceBucketIndex(m) {
+  if (m == null || isNaN(m)) return null;
+  if (m <= 2) return 0;
+  if (m <= 3) return 1;
+  if (m <= 5) return 2;
+  if (m <= 9) return 3;
+  return 4;
+}
+
+/* Regroupement des 12 positions d'horloge (pente) en 8 catégories */
+const PENTE_LABELS = ['Montée', 'Montée D→G', 'D→G', 'Descente D→G', 'Descente', 'Descente G→D', 'G→D', 'Montée G→D'];
+const PENTE_CLOCK_MAP = { 12: 0, 1: 1, 2: 1, 3: 2, 4: 3, 5: 3, 6: 4, 7: 5, 8: 5, 9: 6, 10: 7, 11: 7 };
+function penteCategoryIndex(clock) {
+  if (clock == null || isNaN(clock)) return null;
+  const c = ((Math.round(clock) - 1) % 12 + 12) % 12 + 1;
+  return PENTE_CLOCK_MAP[c];
+}
+
+/* ---------- Collecte des trous (données Parcours) selon les filtres actifs ---------- */
+function refreshParcoursFilterOptions() {
+  const names = [];
+  puttingRounds.forEach(function (r) { if (names.indexOf(r.name) === -1) names.push(r.name); });
+  FILTER_PARCOURS_OPTIONS.length = 1; // conserve "Tous les parcours"
+  names.forEach(function (n) { FILTER_PARCOURS_OPTIONS.push({ value: n, label: n }); });
+}
+
+function getFilteredRounds(group) {
+  const s = filterState[group];
+  let rounds = puttingRounds.slice();
+  if (s.parcours && s.parcours !== 'all') {
+    rounds = rounds.filter(function (r) { return r.name === s.parcours; });
+  }
+  if (s.sessions !== 'all') {
+    const n = parseInt(s.sessions, 10);
+    rounds = rounds.slice(-n);
+  }
+  return rounds;
+}
+
+function getFilteredHoles(group) {
+  const s = filterState[group];
+  const rounds = getFilteredRounds(group);
+  let holes = [];
+  rounds.forEach(function (r) {
+    (r.holes || []).forEach(function (h) { if (h.putts != null) holes.push(h); });
+  });
+  if (s.distance && s.distance !== 'all') {
+    const map = { '0-2': 0, '2-3': 1, '3-5': 2, '5-9': 3, '9+': 4 };
+    const idx = map[s.distance];
+    holes = holes.filter(function (h) { return distanceBucketIndex(h.m) === idx; });
+  }
+  return holes;
+}
+
+/* ---------- Générateurs de graphiques réutilisables ---------- */
+
+// Remplit un bar-chart "simple" existant (valeurs déjà en %, 0-100) sans regénérer son HTML
+function fillBarChart(container, values, fmt) {
+  if (!container) return;
+  const rows = container.querySelectorAll('.bar-chart_row');
+  rows.forEach(function (row, i) {
+    const v = values[i];
+    const fill = row.querySelector('.bar-chart_fill');
+    const val = row.querySelector('.bar-chart_value');
+    if (v == null) { if (fill) fill.style.width = '0%'; if (val) val.textContent = '--'; return; }
+    if (fill) fill.style.width = Math.max(2, Math.min(100, v)) + '%';
+    if (val) val.textContent = fmt(v);
+  });
+}
+
+// Remplit un bar-chart "double" (vitesse + pente) existant
+function fillDualBarChart(container, speedValues, slopeValues) {
+  if (!container) return;
+  const rows = container.querySelectorAll('.bar-chart_row');
+  rows.forEach(function (row, i) {
+    const wraps = row.querySelectorAll('.bar-chart_bar-wrap');
+    [[wraps[0], speedValues[i]], [wraps[1], slopeValues[i]]].forEach(function (pair) {
+      const wrap = pair[0], v = pair[1];
+      if (!wrap) return;
+      const fill = wrap.querySelector('.bar-chart_fill');
+      const val = wrap.querySelector('.bar-chart_value');
+      if (v == null) { if (fill) fill.style.width = '0%'; if (val) val.textContent = '--'; return; }
+      if (fill) fill.style.width = Math.max(2, Math.min(100, v)) + '%';
+      if (val) val.textContent = Math.round(v) + '%';
+    });
+  });
+}
+
+// Remplit un bar-chart "centré" existant (ex : SG, positif/négatif)
+function fillCenteredBarChart(container, values, fmt, scaleMax) {
+  if (!container) return;
+  const rows = container.querySelectorAll('.bar-chart_row');
+  const nums = values.filter(function (v) { return v != null; }).map(Math.abs);
+  const max = Math.max(scaleMax || 0.2, nums.length ? Math.max.apply(null, nums) : 0.2);
+  rows.forEach(function (row, i) {
+    const v = values[i];
+    const fill = row.querySelector('.bar-chart_fill-centered');
+    const val = row.querySelector('.bar-chart_value');
+    if (v == null) {
+      if (fill) { fill.style.width = '0%'; fill.style.left = '50%'; fill.classList.remove('is-negative'); }
+      if (val) val.textContent = '--';
+      return;
+    }
+    const halfPct = Math.min(50, (Math.abs(v) / max) * 50);
+    if (fill) {
+      fill.style.width = halfPct + '%';
+      fill.style.left = (v >= 0 ? 50 : (50 - halfPct)) + '%';
+      fill.classList.toggle('is-negative', v < 0);
+    }
+    if (val) val.textContent = fmt(v);
+  });
+}
+
+// Toile d'araignée SVG à N sommets (utilisée pour l'analyse Pente, 8 sommets)
+function svgRadarChart(values, labels, opts) {
+  opts = opts || {};
+  const cx = 150, cy = 150, R = 95;
+  const n = labels.length;
+  const angleFor = function (i) { return -Math.PI / 2 + i * (2 * Math.PI / n); };
+  const centered = !!opts.centered;
+  let min, max;
+  if (centered) {
+    const nums = values.filter(function (v) { return v != null; }).map(Math.abs);
+    const m = Math.max(opts.scaleMax || 0.2, nums.length ? Math.max.apply(null, nums) : 0.2);
+    min = -m; max = m;
+  } else { min = 0; max = 100; }
+  function radiusFor(v) {
+    if (v == null) return R * (centered ? 0.5 : 0);
+    const t = (v - min) / (max - min);
+    return Math.max(0, Math.min(1, t)) * R;
+  }
+  let rings = '';
+  [0.25, 0.5, 0.75, 1].forEach(function (f) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = angleFor(i), r = R * f;
+      pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1));
+    }
+    rings += '<polygon points="' + pts.join(' ') + '" class="radar-grid"/>';
+  });
+  let axes = '';
+  for (let i = 0; i < n; i++) {
+    const a = angleFor(i);
+    axes += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + R * Math.cos(a)).toFixed(1) + '" y2="' + (cy + R * Math.sin(a)).toFixed(1) + '" class="radar-axis"/>';
+  }
+  let zeroRing = '';
+  if (centered) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = angleFor(i), r = R * 0.5;
+      pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1));
+    }
+    zeroRing = '<polygon points="' + pts.join(' ') + '" class="radar-zero"/>';
+  }
+  const dataPts = [];
+  let dots = '';
+  for (let i = 0; i < n; i++) {
+    const a = angleFor(i), r = radiusFor(values[i]);
+    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    dataPts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    dots += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" class="radar-dot"/>';
+  }
+  const dataPoly = '<polygon points="' + dataPts.join(' ') + '" class="radar-data"/>';
+  let labelsHtml = '';
+  const LR = R + 32;
+  for (let i = 0; i < n; i++) {
+    const a = angleFor(i);
+    const x = cx + LR * Math.cos(a), y = cy + LR * Math.sin(a);
+    let anchor = 'middle';
+    if (Math.cos(a) > 0.3) anchor = 'start';
+    else if (Math.cos(a) < -0.3) anchor = 'end';
+    const v = values[i];
+    const valTxt = opts.fmt ? opts.fmt(v) : (v == null ? '--' : v);
+    labelsHtml += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" class="radar-label">' + labels[i] + '</text>';
+    labelsHtml += '<text x="' + x.toFixed(1) + '" y="' + (y + 13).toFixed(1) + '" text-anchor="' + anchor + '" class="radar-label-value">' + valTxt + '</text>';
+  }
+  return '<svg class="radar-chart" viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg">' + rings + axes + zeroRing + dataPoly + dots + labelsHtml + '</svg>';
+}
+
+// Ligne (tendance dans le temps, ex : SG par round, taux de réussite par round)
+function svgLineChart(values, opts) {
+  opts = opts || {};
+  const left = 40, right = 890, top = 20, bottom = 420;
+  const vals = values.filter(function (v) { return v != null && !isNaN(v); });
+  let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
+    const y = top + f * (bottom - top);
+    return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
+  }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
+  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  if (!vals.length) {
+    return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
+  }
+  let min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (opts.forceZeroMin) min = Math.min(0, min);
+  if (opts.centered) { const m = Math.max(Math.abs(min), Math.abs(max), 0.1); min = -m; max = m; }
+  if (min === max) { min -= 1; max += 1; }
+  const pad = (max - min) * 0.12;
+  min -= pad; max += pad;
+  const n = values.length;
+  const stepX = n > 1 ? (right - left) / (n - 1) : 0;
+  function xAt(i) { return n > 1 ? left + i * stepX : (left + right) / 2; }
+  function yAt(v) { return bottom - ((v - min) / (max - min)) * (bottom - top); }
+  let zeroLine = '';
+  if (opts.centered) {
+    const zy = yAt(0);
+    zeroLine = '<line x1="' + left + '" y1="' + zy.toFixed(1) + '" x2="' + right + '" y2="' + zy.toFixed(1) + '" class="line-chart-grid-solid"/>';
+  }
+  let path = '', points = [];
+  values.forEach(function (v, i) {
+    if (v == null || isNaN(v)) return;
+    const x = xAt(i), y = yAt(v);
+    path += (points.length ? ' L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+    points.push({ x: x, y: y, v: v });
+  });
+  let areaPath = '';
+  if (points.length > 1) {
+    areaPath = 'M ' + points[0].x.toFixed(1) + ' ' + bottom +
+      points.map(function (p) { return ' L ' + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join('') +
+      ' L ' + points[points.length - 1].x.toFixed(1) + ' ' + bottom + ' Z';
+  }
+  const dots = points.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" class="line-chart-point"/>'; }).join('');
+  const lastPt = points[points.length - 1];
+  const lastLabel = lastPt ? '<text x="' + lastPt.x.toFixed(1) + '" y="' + (lastPt.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + (opts.fmt ? opts.fmt(lastPt.v) : lastPt.v) + '</text>' : '';
+  return grid + zeroLine + (areaPath ? '<path d="' + areaPath + '" class="line-chart-glow"/>' : '') + (path ? '<path d="' + path + '" class="line-chart-line"/>' : '') + dots + lastLabel + axisTitle;
+}
+
+// Colonnes (dénombrements par round, ex : 1 putt / 3 putts par round) — mélange volontairement le type de graphe avec les lignes ci-dessus
+function svgColumnChart(values, opts) {
+  opts = opts || {};
+  const left = 40, right = 890, top = 20, bottom = 420;
+  const vals = values.filter(function (v) { return v != null && !isNaN(v); });
+  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
+    const y = top + f * (bottom - top);
+    return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
+  }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
+  if (!vals.length) {
+    return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
+  }
+  const max = Math.max.apply(null, vals.concat([1]));
+  const n = values.length;
+  const slot = (right - left) / n;
+  const barW = Math.min(28, slot * 0.55);
+  let bars = '';
+  values.forEach(function (v, i) {
+    if (v == null || isNaN(v)) return;
+    const cx = left + slot * (i + 0.5);
+    const h = Math.max(2, (v / max) * (bottom - top));
+    const y = bottom - h;
+    bars += '<rect x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar"/>';
+    if (i === n - 1) bars += '<text x="' + cx.toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + v + '</text>';
+  });
+  return grid + bars + axisTitle;
+}
+
+/* ---------- Fonctions de rendu : branchent les vraies données sur l'UI existante ---------- */
+
+function renderHomeStats() {
+  const sgEl = document.getElementById('home-sg-value');
+  if (!sgEl) return;
+  let sum = 0, n = 0, made1 = 0, total = 0;
+  puttingRounds.forEach(function (r) {
+    (r.holes || []).forEach(function (h) {
+      if (h.putts == null) return;
+      total++;
+      if (h.putts === 1) made1++;
+      if (h.m != null) { const sg = puttSG(h.m, h.putts); if (sg != null) { sum += sg; n++; } }
+    });
+  });
+  sgEl.textContent = n ? fmtSG(sum / n) : '--';
+  const oneEl = document.getElementById('home-oneputt-value');
+  if (oneEl) oneEl.textContent = total ? fmtPct((made1 / total) * 100) : '--';
+}
+
+function renderExercicesStats() {
+  const sessEl = document.getElementById('exo-sessions-value');
+  if (!sessEl) return;
+  const now = Date.now();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const thisWeek = puttingSessions.filter(function (s) { return s.dateISO && (now - new Date(s.dateISO).getTime()) <= weekMs; }).length;
+  sessEl.textContent = thisWeek;
+  let made = 0, total = 0;
+  puttingSessions.forEach(function (s) {
+    (s.holes || []).forEach(function (h) {
+      (h.results || []).forEach(function (r) { total++; if (r === 'made') made++; });
+    });
+  });
+  const rateEl = document.getElementById('exo-rate-value');
+  if (rateEl) rateEl.textContent = total ? fmtPct((made / total) * 100) : '--';
+}
+
+function computeBucketStats(holes, bucketIndexFn, bucketCount) {
+  const rows = Array.from({ length: bucketCount }, function () { return { sgSum: 0, sgCount: 0, made1: 0, total: 0, speedErr: 0, slopeErr: 0, errTotal: 0 }; });
+  const all = { sgSum: 0, sgCount: 0, made1: 0, total: 0, speedErr: 0, slopeErr: 0, errTotal: 0 };
+  holes.forEach(function (h) {
+    const idx = bucketIndexFn(h);
+    if (idx == null) return;
+    const sg = puttSG(h.m, h.putts);
+    [rows[idx], all].forEach(function (acc) {
+      acc.total++;
+      if (h.putts === 1) acc.made1++;
+      if (sg != null) { acc.sgSum += sg; acc.sgCount++; }
+      if (h.resultat) {
+        acc.errTotal++;
+        if (h.resultat === 'court' || h.resultat === 'long') acc.speedErr++;
+        if (h.resultat === 'gauche' || h.resultat === 'droite') acc.slopeErr++;
+      }
+    });
+  });
+  return { all: all, rows: rows };
+}
+
+function renderAnalyseDistance() {
+  const sgChart = document.getElementById('distance-sg-chart');
+  if (!sgChart) return;
+  refreshParcoursFilterOptions();
+  const holes = getFilteredHoles('distance');
+  const stats = computeBucketStats(holes, function (h) { return distanceBucketIndex(h.m); }, 5);
+  const order = [stats.all].concat(stats.rows);
+  fillCenteredBarChart(sgChart, order.map(function (r) { return r.sgCount ? r.sgSum / r.sgCount : null; }), fmtSG, 0.3);
+  fillBarChart(document.getElementById('distance-rate-chart'), order.map(function (r) { return r.total ? (r.made1 / r.total) * 100 : null; }), fmtPct);
+  fillDualBarChart(
+    document.getElementById('distance-error-chart'),
+    order.map(function (r) { return r.errTotal ? (r.speedErr / r.errTotal) * 100 : null; }),
+    order.map(function (r) { return r.errTotal ? (r.slopeErr / r.errTotal) * 100 : null; })
+  );
+}
+
+function renderAnalysePente() {
+  const sgRadar = document.getElementById('pente-sg-radar');
+  if (!sgRadar) return;
+  refreshParcoursFilterOptions();
+  const holes = getFilteredHoles('pente');
+  const stats = computeBucketStats(holes, function (h) { return penteCategoryIndex(h.clock); }, 8);
+  const sgValues = stats.rows.map(function (r) { return r.sgCount ? r.sgSum / r.sgCount : null; });
+  const rateValues = stats.rows.map(function (r) { return r.total ? (r.made1 / r.total) * 100 : null; });
+  sgRadar.innerHTML = svgRadarChart(sgValues, PENTE_LABELS, { centered: true, scaleMax: 0.3, fmt: fmtSG });
+  const rateRadar = document.getElementById('pente-rate-radar');
+  if (rateRadar) rateRadar.innerHTML = svgRadarChart(rateValues, PENTE_LABELS, { fmt: fmtPct });
+}
+
+function renderStatsPerformance() {
+  const svgSG = document.getElementById('stats-sg-line');
+  if (!svgSG) return;
+  refreshParcoursFilterOptions();
+  const rounds = getFilteredRounds('stats');
+  const sgVals = rounds.map(function (r) {
+    const holes = (r.holes || []).filter(function (h) { return h.putts != null && h.m != null; });
+    if (!holes.length) return null;
+    let sum = 0, n = 0;
+    holes.forEach(function (h) { const sg = puttSG(h.m, h.putts); if (sg != null) { sum += sg; n++; } });
+    return n ? sum / n : null;
+  });
+  const rateVals = rounds.map(function (r) {
+    const holes = (r.holes || []).filter(function (h) { return h.putts != null; });
+    if (!holes.length) return null;
+    const made = holes.filter(function (h) { return h.putts === 1; }).length;
+    return (made / holes.length) * 100;
+  });
+  const oneVals = rounds.map(function (r) { return r.onePutts != null ? r.onePutts : null; });
+  const threeVals = rounds.map(function (r) { return r.threePutts != null ? r.threePutts : null; });
+  const meterVals = rounds.map(function (r) { return r.totalMeters || null; });
+
+  svgSG.innerHTML = svgLineChart(sgVals, { centered: true, fmt: fmtSG, axisTitle: 'Rounds' });
+  const rateEl = document.getElementById('stats-rate-line');
+  if (rateEl) rateEl.innerHTML = svgLineChart(rateVals, { forceZeroMin: true, fmt: fmtPct, axisTitle: 'Rounds' });
+  const oneEl = document.getElementById('stats-oneputt-bar');
+  if (oneEl) oneEl.innerHTML = svgColumnChart(oneVals, { axisTitle: 'Rounds' });
+  const threeEl = document.getElementById('stats-threeputt-bar');
+  if (threeEl) threeEl.innerHTML = svgColumnChart(threeVals, { axisTitle: 'Rounds' });
+  const meterEl = document.getElementById('stats-meters-line');
+  if (meterEl) meterEl.innerHTML = svgLineChart(meterVals, { forceZeroMin: true, fmt: function (v) { return Math.round(v) + 'm'; }, axisTitle: 'Rounds' });
+}
+
+function refreshAllAnalytics() {
+  renderHomeStats();
+  renderExercicesStats();
+  renderAnalyseDistance();
+  renderAnalysePente();
+  renderStatsPerformance();
+}
+
 let filterSheetOpenFor = null; // { group, type }
 
 function openFilterSheet(event, group, type) {
   event.preventDefault();
   event.stopPropagation();
+  if (type === 'parcours') refreshParcoursFilterOptions();
   filterSheetOpenFor = { group: group, type: type };
   renderFilterSheet();
   document.getElementById('filter-sheet-overlay').classList.remove('is-hidden');
@@ -922,6 +1178,9 @@ function selectFilterOption(group, type, value) {
   if (type === 'parcours') s.parcours = value;
   updateFilterButtonUI(group, type);
   closeFilterSheet();
+  if (group === 'distance') renderAnalyseDistance();
+  if (group === 'pente') renderAnalysePente();
+  if (group === 'stats') renderStatsPerformance();
 }
 
 function toggleCompareSession(group, sessionId) {
@@ -1001,6 +1260,7 @@ function saveStateToLocalStorage() {
   } catch (e) {
     console.warn('Sauvegarde locale impossible :', e);
   }
+  refreshAllAnalytics();
 }
 
 function loadStateFromLocalStorage() {
@@ -1285,9 +1545,18 @@ function combineAttemptsHtml(hole, attemptsCount) {
   for (let i = 0; i < attemptsCount; i++) {
     const r = hole.results[i];
     const cls = r === 'made' ? 'is-made' : (r === 'missed' ? 'is-missed' : '');
-    out += `<div class="session-attempt ${cls}">${i + 1}</div>`;
+    const clickable = r ? ` onclick="toggleAttemptResult(${i})"` : '';
+    out += `<div class="session-attempt ${cls} ${r ? 'is-editable' : ''}"${clickable}>${i + 1}</div>`;
   }
   return out;
+}
+
+// Permet de corriger une tentative déjà enregistrée (trou déjà terminé ou non) en tapant sur son pastille
+function toggleAttemptResult(i) {
+  const hole = activeSession.holes[activeHoleIndex];
+  if (!hole.results[i]) return;
+  hole.results[i] = hole.results[i] === 'made' ? 'missed' : 'made';
+  renderCombineSessionScreen();
 }
 
 function renderExerciseFlowScreen() {
@@ -1317,10 +1586,14 @@ function renderCombineSessionScreen() {
       </div>
       ${slopeArrowSvg(hole.clock)}
       <div class="session-attempts">${combineAttemptsHtml(hole, totalAttempts)}</div>
+      ${hole.results.length >= totalAttempts ? `
+      <div class="session-edit-hint">Trou terminé — touche une tentative pour la modifier</div>
+      ` : `
       <div class="session-result-buttons">
         <button class="session-result-btn is-missed" onclick="setCombineResult('missed')">Manqué</button>
         <button class="session-result-btn is-made" onclick="setCombineResult('made')">Réussi</button>
       </div>
+      `}
     </div>
 
     <div class="session-holes-nav">
@@ -1865,28 +2138,33 @@ function toggleExerciseSort() {
 
 /* ============================================================
    PARCOURS — Popup "Nouveau parcours" (saisie de données)
-   Inspiré de la modale "Démarrer une nouvelle session" de putting-old.js :
-   choix du nombre de trous, du type de session (Express / Complète),
-   puis saisie des putts (et distances en mode complet) trou par trou.
+   Express : distance, pente, putts. Détaillée : distance, pente, putts, résultat.
    ============================================================ */
 let newParcoursModalOpen = false;
 let newParcoursForm = null;
 
+const PARCOURS_RESULTAT_OPTIONS = [
+  { value: '', label: '--' },
+  { value: 'made', label: 'Rentré' },
+  { value: 'court', label: 'Court' },
+  { value: 'long', label: 'Long' },
+  { value: 'gauche', label: 'Gauche' },
+  { value: 'droite', label: 'Droite' },
+];
+
+function blankParcoursRow(i) {
+  return { hole: i + 1, m: 0, clock: null, putts: null, resultat: null };
+}
+
 function generateParcoursRows(n) {
-  return Array.from({ length: n }, function (_, i) {
-    return {
-      hole: i + 1,
-      m: Math.round((1 + Math.random() * 6) * 10) / 10,
-      putts: null,
-    };
-  });
+  return Array.from({ length: n }, function (_, i) { return blankParcoursRow(i); });
 }
 
 function openNewParcoursModal() {
   newParcoursForm = {
     name: '',
     holesCount: 18,
-    mode: 'express', // 'express' | 'complete'
+    mode: 'express', // 'express' | 'complete' (affiché "Détaillée")
     rows: generateParcoursRows(18),
   };
   newParcoursModalOpen = true;
@@ -1905,9 +2183,7 @@ function setParcoursHoles(n) {
   const oldRows = f.rows;
   f.holesCount = n;
   // Conserve les données déjà saisies pour les trous existants, n'en génère de nouveaux que si besoin
-  f.rows = Array.from({ length: n }, function (_, i) {
-    return oldRows[i] || { hole: i + 1, m: Math.round((1 + Math.random() * 6) * 10) / 10, putts: null };
-  });
+  f.rows = Array.from({ length: n }, function (_, i) { return oldRows[i] || blankParcoursRow(i); });
   renderNewParcoursModal();
 }
 
@@ -1929,8 +2205,19 @@ function setParcoursRowPutts(idx, v) {
 }
 
 function setParcoursRowM(idx, v) {
+  if ((v || '').trim() === '') { newParcoursForm.rows[idx].m = 0; return; }
   const n = parseFloat((v || '').replace(',', '.'));
   if (!isNaN(n)) newParcoursForm.rows[idx].m = Math.round(Math.max(0, Math.min(30, n)) * 10) / 10;
+}
+
+function setParcoursRowClock(idx, v) {
+  if ((v || '').trim() === '') { newParcoursForm.rows[idx].clock = null; return; }
+  const n = parseInt(v, 10);
+  newParcoursForm.rows[idx].clock = isNaN(n) ? null : Math.max(1, Math.min(12, n));
+}
+
+function setParcoursRowResultat(idx, v) {
+  newParcoursForm.rows[idx].resultat = v || null;
 }
 
 function saveNewParcours() {
@@ -1943,7 +2230,7 @@ function saveNewParcours() {
   const onePutts = rows.filter(function (r) { return r.putts === 1; }).length;
   const threePutts = rows.filter(function (r) { return r.putts !== null && r.putts >= 3; }).length;
   const totalPutts = rows.reduce(function (sum, r) { return sum + (r.putts || 0); }, 0);
-  const totalMeters = rows.reduce(function (sum, r) { return sum + (f.mode === 'complete' ? (r.m || 0) : 0); }, 0);
+  const totalMeters = rows.reduce(function (sum, r) { return sum + (r.m || 0); }, 0);
 
   puttingRounds.push({
     id: Date.now(),
@@ -1954,7 +2241,7 @@ function saveNewParcours() {
     onePutts: onePutts,
     threePutts: threePutts,
     totalPutts: totalPutts,
-    totalMeters: totalMeters,
+    totalMeters: Math.round(totalMeters * 10) / 10,
     holes: JSON.parse(JSON.stringify(f.rows)),
   });
   saveStateToLocalStorage();
@@ -1970,6 +2257,8 @@ function renderNewParcoursModal() {
     return;
   }
   const f = newParcoursForm;
+  const isDetail = f.mode === 'complete';
+  const colClass = isDetail ? 'exercise-modal_preview-row-5col' : 'exercise-modal_preview-row-4col';
   modalRoot.innerHTML = `
     <div class="exercise-modal_overlay" onclick="closeNewParcoursModal()">
       <div class="exercise-modal" onclick="event.stopPropagation()">
@@ -1996,24 +2285,26 @@ function renderNewParcoursModal() {
         <div class="exercise-modal_grid">
           <button type="button" class="exercise-modal_field ${f.mode === 'express' ? 'is-active' : ''}" onclick="setParcoursMode('express')">
             <span class="exercise-modal_field-label">Session express</span>
-            <span class="exercise-modal_field-value">Putts par trou</span>
+            <span class="exercise-modal_field-value">Distance, pente, putts</span>
           </button>
-          <button type="button" class="exercise-modal_field ${f.mode === 'complete' ? 'is-active' : ''}" onclick="setParcoursMode('complete')">
-            <span class="exercise-modal_field-label">Session complète</span>
-            <span class="exercise-modal_field-value">Distance + putts</span>
+          <button type="button" class="exercise-modal_field ${isDetail ? 'is-active' : ''}" onclick="setParcoursMode('complete')">
+            <span class="exercise-modal_field-label">Session détaillée</span>
+            <span class="exercise-modal_field-value">+ résultat du putt</span>
           </button>
         </div>
 
         <div class="exercise-modal_preview">
-          <div class="exercise-modal_preview-row exercise-modal_preview-head ${f.mode === 'express' ? 'exercise-modal_preview-row-2col' : ''}">
-            <span>Trou</span>${f.mode === 'complete' ? '<span>Distance (m)</span>' : ''}<span>Putts</span>
+          <div class="exercise-modal_preview-row exercise-modal_preview-head ${colClass}">
+            <span>Trou</span><span>Dist.</span><span>Pente</span><span>Putts</span>${isDetail ? '<span>Résultat</span>' : ''}
           </div>
           ${f.rows.map(function (r, i) {
             return `
-            <div class="exercise-modal_preview-row ${f.mode === 'express' ? 'exercise-modal_preview-row-2col' : ''}">
+            <div class="exercise-modal_preview-row ${colClass}">
               <span>${r.hole}</span>
-              ${f.mode === 'complete' ? `<input type="number" step="0.1" min="0" max="30" value="${r.m}" onchange="setParcoursRowM(${i}, this.value)">` : ''}
+              <input type="number" step="0.1" min="0" max="30" value="${r.m}" onchange="setParcoursRowM(${i}, this.value)">
+              <input type="number" min="1" max="12" title="Pente (h)" placeholder="--" value="${r.clock !== null && r.clock !== undefined ? r.clock : ''}" onchange="setParcoursRowClock(${i}, this.value)">
               <input type="number" min="0" max="10" placeholder="--" value="${r.putts !== null ? r.putts : ''}" onchange="setParcoursRowPutts(${i}, this.value)">
+              ${isDetail ? `<select onchange="setParcoursRowResultat(${i}, this.value)">${PARCOURS_RESULTAT_OPTIONS.map(function (o) { return `<option value="${o.value}" ${r.resultat === o.value || (!r.resultat && !o.value) ? 'selected' : ''}>${o.label}</option>`; }).join('')}</select>` : ''}
             </div>`;
           }).join('')}
         </div>
@@ -2036,7 +2327,7 @@ function renderParcoursHistory() {
   listRoot.innerHTML = sorted.map(function (r) {
     const date = new Date(r.dateISO);
     const dateLabel = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-    const modeLabel = r.mode === 'complete' ? 'Complète' : 'Express';
+    const modeLabel = r.mode === 'complete' ? 'Détaillée' : 'Express';
     return `
       <div class="history-item">
         <div class="history-item_content">
@@ -2050,4 +2341,7 @@ function renderParcoursHistory() {
     `;
   }).join('');
 }
+
+// Expose renderPuttingTab globalement pour être appelée depuis index.html
+window.renderPuttingTab = renderPuttingTab;
 

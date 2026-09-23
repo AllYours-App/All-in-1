@@ -545,21 +545,18 @@ document.getElementById("app-root-gym").innerHTML = `
           <!-- Contenu de la séance en cours -->
           <div class="gym-anim-in" id="session-content" style="display:none; flex-direction:column; gap:16px;">
 
-            <!-- Exercice courant : photo de fond à ajouter par exercice + navigation -->
+            <!-- Exercice courant : navigation + titre -->
             <div class="session-exercise-hero">
-              <div class="session-exercise-hero__media" id="session-exercise-media"></div>
-              <div class="session-exercise-hero__content">
-                <div class="session-exercise-hero__nav">
-                  <button type="button" class="session-exercise-hero__arrow" id="btn-prev-exercise" aria-label="Exercice précédent">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                  </button>
-                  <span class="gym-eyebrow" id="session-exo-position">EXERCICE — / —</span>
-                  <button type="button" class="session-exercise-hero__arrow" id="btn-next-exercise" aria-label="Exercice suivant">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                  </button>
-                </div>
-                <h1 class="session-exercise-hero__title" id="session-exercise-title">—</h1>
+              <div class="session-exercise-hero__nav">
+                <button type="button" class="session-exercise-hero__arrow" id="btn-prev-exercise" aria-label="Exercice précédent">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <span class="gym-eyebrow" id="session-exo-position">EXERCICE — / —</span>
+                <button type="button" class="session-exercise-hero__arrow" id="btn-next-exercise" aria-label="Exercice suivant">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
               </div>
+              <h1 class="session-exercise-hero__title" id="session-exercise-title">—</h1>
             </div>
 
             <div class="card session-summary" id="session-info-row"></div>
@@ -2792,7 +2789,7 @@ function gymDelta(value) {
  * Carte "programme" utilisée sur la page Programmes.
  */
 function gymRenderProgramCard(program) {
-  const total = program.sessions.length;
+  const total = program.sessionsCount;
   const done = program.sessions.filter((s) => s.status === "terminee").length;
   const percent = total ? Math.round((done / total) * 100) : 0;
   const progressBlock = total
@@ -3332,15 +3329,30 @@ function gymRenderHistoryRow(entry) {
   /* ---- Bottom sheet : ajout d'exercice — recherche manuelle, jamais restreinte --- */
 
   function renderExerciseSheetList(query) {
-    const q = query.trim().toLowerCase();
+    const raw = query.trim();
+    const q = raw.toLowerCase();
     const list = q
       ? EXERCISES.filter((e) => e.name.toLowerCase().includes(q) || e.muscle.toLowerCase().includes(q))
       : EXERCISES;
 
-    document.getElementById("sheet-body").innerHTML = list.length
-      ? list
-          .map(
-            (exo) => `
+    const customRow = raw
+      ? `
+        <button type="button" class="sheet__row" id="sheet-add-custom" style="border:1.5px dashed var(--gym-accent-border);">
+          <span class="icon-circle icon-circle--sm" style="color:var(--gym-accent);">${gymIcon("plus")}</span>
+          <div class="list-row__body">
+            <span class="list-row__title" style="color:var(--gym-accent);">Ajouter « ${raw} »</span>
+            <span class="list-row__meta">Exercice personnalisé, absent de la base</span>
+          </div>
+        </button>
+      `
+      : "";
+
+    document.getElementById("sheet-body").innerHTML =
+      customRow +
+      (list.length
+        ? list
+            .map(
+              (exo) => `
         <button type="button" class="sheet__row" data-exercise-id="${exo.id}">
           ${gymThumb(exo.icon, "thumb--sm")}
           <div class="list-row__body">
@@ -3350,9 +3362,30 @@ function gymRenderHistoryRow(entry) {
           <span class="list-row__chevron" style="color:var(--gym-accent);">${gymIcon("plus")}</span>
         </button>
       `
-          )
-          .join("")
-      : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucun exercice ne correspond à ta recherche.</div>`;
+            )
+            .join("")
+        : raw
+        ? ""
+        : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucun exercice ne correspond à ta recherche.</div>`);
+
+    const addCustomRow = document.getElementById("sheet-add-custom");
+    if (addCustomRow) {
+      addCustomRow.addEventListener("click", () => {
+        const customExercise = {
+          id: `custom-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+          name: raw,
+          muscle: "Exercice personnalisé",
+          bodyRegion: null,
+          equipment: null,
+          icon: "dumbbell",
+          custom: true,
+        };
+        EXERCISES.push(customExercise);
+        state.exercises.push({ exerciseId: customExercise.id, sets: 3, reps: "10-12" });
+        renderExerciseList();
+        closeExerciseSheet();
+      });
+    }
 
     document.querySelectorAll("#sheet-body [data-exercise-id]").forEach((row) => {
       row.addEventListener("click", () => {
@@ -3762,17 +3795,9 @@ function gymRenderHistoryRow(entry) {
   function renderExerciseHero() {
     const total = state.exercises.length;
     const exo = currentExercise();
-    const exerciseData = gymGetExercise(exo.exerciseId);
 
     document.getElementById("session-exo-position").textContent = `EXERCICE ${state.exerciseIndex + 1} / ${total}`;
     document.getElementById("session-exercise-title").textContent = exo.name;
-
-    // Photo propre à l'exercice affiché : à renseigner via un champ `image`
-    // sur l'exercice correspondant dans EXERCISES. Laissée vide sinon.
-    const media = document.getElementById("session-exercise-media");
-    media.style.backgroundImage = exerciseData && exerciseData.image ? `url('${exerciseData.image}')` : "none";
-    media.style.backgroundSize = "cover";
-    media.style.backgroundPosition = "center";
 
     document.getElementById("btn-prev-exercise").disabled = state.exerciseIndex === 0;
     document.getElementById("btn-next-exercise").disabled = state.exerciseIndex === total - 1;

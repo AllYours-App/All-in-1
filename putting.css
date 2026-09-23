@@ -638,33 +638,21 @@
 #page-putting .analyse-filters {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 2px;
-  margin: 0 -16px;
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-#page-putting .analyse-filters::-webkit-scrollbar {
-  display: none;
+  gap: 6px;
 }
 
 #page-putting .analyse-filter {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   align-items: flex-start;
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 8px 8px;
   cursor: pointer;
-  white-space: nowrap;
 }
 
 #page-putting .analyse-filter.is-active {
@@ -673,8 +661,12 @@
 }
 
 #page-putting .analyse-filter_label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 #page-putting .analyse-filter.is-active .analyse-filter_label {
@@ -684,11 +676,12 @@
 #page-putting .analyse-filter_value {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 13px;
+  gap: 3px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-primary);
   max-width: 100%;
+  min-width: 0;
 }
 
 #page-putting .filter-value-text {
@@ -792,6 +785,10 @@
   height: 100%;
   min-width: 0;
   border-radius: 4px;
+}
+
+#page-putting .bar-chart_fill-centered.is-negative {
+  background-color: var(--danger);
 }
 
 #page-putting .bar-chart_bar-wrap-centered .bar-chart_value {
@@ -913,43 +910,42 @@
 }
 
 #page-putting .stats-filters {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
 #page-putting .stats-filter {
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 13px;
+  padding: 8px 8px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
 }
 
 #page-putting .stats-filter .filter-value-text {
-  flex: 1;
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 #page-putting .stats-filter_icon {
-  width: 16px;
-  height: 16px;
-  color: var(--accent);
-  flex-shrink: 0;
+  display: none;
 }
 
 #page-putting .stats-filter_chevron {
-  width: 14px;
-  height: 14px;
-  color: var(--text-secondary);
-  flex-shrink: 0;
+  display: none;
 }
 
 #page-putting .line-chart_header {
@@ -1052,6 +1048,67 @@
   font-weight: 700;
 }
 
+#page-putting .line-chart-bar {
+  fill: var(--accent);
+  opacity: 0.85;
+}
+
+/* ---------- Toile d'araignée (Analyse Pente, 8 sommets) ---------- */
+#page-putting .radar-chart_wrap {
+  display: flex;
+  justify-content: center;
+}
+
+#page-putting .radar-chart {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  overflow: visible;
+}
+
+#page-putting .radar-grid {
+  fill: none;
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+#page-putting .radar-axis {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+#page-putting .radar-zero {
+  fill: none;
+  stroke: var(--text-tertiary);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+#page-putting .radar-data {
+  fill: var(--accent);
+  fill-opacity: 0.22;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+#page-putting .radar-dot {
+  fill: var(--accent);
+  stroke: var(--bg-card);
+  stroke-width: 2;
+}
+
+#page-putting .radar-label {
+  font-size: 9.5px;
+  fill: var(--text-secondary);
+}
+
+#page-putting .radar-label-value {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+
 #page-putting .fab-group[data-fab="parcours"] {
   bottom: calc(var(--app-nav-h) + var(--app-fab-gap));
 }
@@ -1145,6 +1202,12 @@
 }
 
 #page-putting .exercise-modal_head {
+  position: sticky;
+  top: -20px;
+  margin: -20px -16px 0;
+  padding: 20px 16px 10px;
+  background-color: var(--bg-card);
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1290,6 +1353,42 @@
 
 #page-putting .exercise-modal_preview-row-2col {
   grid-template-columns: 40px 1fr;
+}
+
+#page-putting .exercise-modal_preview-row-4col {
+  grid-template-columns: 24px 1fr 1fr 1fr;
+  gap: 5px;
+  padding: 7px 8px;
+}
+
+#page-putting .exercise-modal_preview-row-5col {
+  grid-template-columns: 22px 1fr 1fr 1fr 1.35fr;
+  gap: 4px;
+  padding: 7px 6px;
+}
+
+#page-putting .exercise-modal_preview-row-4col span,
+#page-putting .exercise-modal_preview-row-5col span {
+  font-size: 11px;
+}
+
+#page-putting .exercise-modal_preview-row-4col input,
+#page-putting .exercise-modal_preview-row-5col input,
+#page-putting .exercise-modal_preview-row-5col select {
+  width: 100%;
+  min-width: 0;
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 5px 3px;
+  font-size: 11px;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+#page-putting .exercise-modal_preview-row-5col select {
+  text-align: left;
+  padding: 5px 2px;
 }
 
 #page-putting .exercise-modal_preview-row:first-child {
@@ -1439,6 +1538,16 @@
   font-weight: 700;
   background-color: var(--bg-card-alt);
   border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+#page-putting .session-attempt.is-editable {
+  cursor: pointer;
+}
+
+#page-putting .session-edit-hint {
+  text-align: center;
+  font-size: 12px;
   color: var(--text-secondary);
 }
 
