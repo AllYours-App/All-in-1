@@ -406,10 +406,10 @@ html {
    ========================================================================== */
 
 #page-stats .kpi-card {
-  padding: var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-xs);
   min-width: 0;
 }
 
@@ -418,6 +418,8 @@ html {
   align-items: center;
   gap: var(--space-sm);
 }
+#page-stats .kpi-card__head .icon-badge { width: 28px; height: 28px; }
+#page-stats .kpi-card__head .icon-badge svg { width: 13px; height: 13px; }
 
 #page-stats .kpi-card__titles {
   min-width: 0;
@@ -437,7 +439,7 @@ html {
 }
 
 #page-stats .kpi-card__value {
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-tight);
   line-height: 1;
@@ -466,7 +468,7 @@ html {
 }
 
 #page-stats .kpi-card__sparkline {
-  height: 44px;
+  height: 28px;
   margin-top: auto;
 }
 #page-stats .kpi-card__sparkline canvas { width: 100% !important; height: 100% !important; }
@@ -476,37 +478,31 @@ html {
    ========================================================================== */
 
 #page-stats .analysis-card {
-  padding: var(--space-lg);
+  position: relative;
+  padding: var(--space-md) var(--space-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  min-height: 172px;
+  gap: var(--space-xs);
+  min-height: 0;
 }
 
 #page-stats .analysis-card__icon {
-  width: 34px;
-  height: 34px;
+  width: 24px;
+  height: 24px;
   color: var(--color-accent);
 }
 #page-stats .analysis-card__icon svg { width: 100%; height: 100%; }
 
 #page-stats .analysis-card__title {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
 }
 
-#page-stats .analysis-card__desc {
-  font-size: var(--fs-xs);
-  color: var(--color-text-secondary);
-  line-height: var(--lh-relaxed);
-  flex: 1;
-}
-
 #page-stats .analysis-card__arrow {
-  width: 30px;
-  height: 30px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border-accent);
   color: var(--color-accent);
@@ -515,7 +511,48 @@ html {
   justify-content: center;
   align-self: flex-end;
 }
-#page-stats .analysis-card__arrow svg { width: 14px; height: 14px; }
+#page-stats .analysis-card__arrow svg { width: 12px; height: 12px; }
+
+/* Bulle d'info "i" — remplace la description, en haut à droite de la carte */
+#page-stats .analysis-card__info {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  color: var(--color-text-tertiary);
+  font-size: 0.6rem;
+  font-style: italic;
+  font-weight: var(--fw-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+#page-stats .analysis-card__info:hover::after,
+#page-stats .analysis-card__info:focus-visible::after,
+#page-stats .analysis-card__info.is-open::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: 20px;
+  right: 0;
+  width: 140px;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-hover);
+  font-size: var(--fs-2xs);
+  font-style: normal;
+  font-weight: var(--fw-regular);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-relaxed);
+  text-align: left;
+  z-index: 5;
+}
 
 /* ==========================================================================
    HISTORICAL LIST — historique des rounds (liste compacte)

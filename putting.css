@@ -1448,6 +1448,228 @@
   }
 }
 
+#page-putting .quick-entry-wrapper {
+  background-color: var(--bg-page);
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  padding: calc(24px + env(safe-area-inset-top)) var(--app-padding) calc(40px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 360px) {
+  #page-putting .quick-entry-wrapper {
+    padding: calc(24px + env(safe-area-inset-top)) var(--app-padding-small) calc(40px + env(safe-area-inset-bottom));
+  }
+}
+
+#page-putting .quick-entry_back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+#page-putting .quick-entry_back svg {
+  width: 20px;
+  height: 20px;
+}
+
+#page-putting .quick-entry_intro {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 8px 0;
+}
+
+#page-putting .quick-entry_title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#page-putting .quick-entry_subtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+#page-putting .quick-entry_infocard {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px 16px;
+  gap: 14px;
+}
+
+#page-putting .quick-entry_infofield {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+#page-putting .quick-entry_infoicon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+#page-putting .quick-entry_infotext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+#page-putting .quick-entry_infolabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+#page-putting .quick-entry_infovalue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#page-putting .quick-entry_infoinput {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+#page-putting .quick-entry_infoinput::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+#page-putting .quick-entry_infodivider {
+  width: 1px;
+  align-self: stretch;
+  background-color: var(--border-subtle);
+}
+
+#page-putting .quick-holes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+#page-putting .quick-hole-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+#page-putting .quick-hole-card_head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#page-putting .quick-hole-card_number {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: #0b0f0c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#page-putting .quick-hole-card_stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+#page-putting .quick-hole-card_stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+#page-putting .quick-hole-card_stat svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+#page-putting .quick-hole-card_putts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+#page-putting .quick-putt-btn {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 7px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+#page-putting .quick-putt-btn.is-active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #0b0f0c;
+}
+
+#page-putting .quick-entry_save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 15px;
+}
+
+#page-putting .quick-entry_save svg {
+  width: 18px;
+  height: 18px;
+}
+
 #page-putting .session-progress {
   display: flex;
   flex-direction: column;

@@ -483,9 +483,9 @@
       : `type="button" data-goto="${item.goto}" class="card card--interactive analysis-card fade-up"`;
     return `
       <${tag} ${attrs} style="--fade-index:${index}; text-align:left;">
+        <span class="analysis-card__info" tabindex="0" aria-label="${item.description}" onclick="event.stopPropagation(); this.classList.toggle('is-open')">i</span>
         <div class="analysis-card__icon">${icon(item.icon)}</div>
         <div class="analysis-card__title">${item.title}</div>
-        <div class="analysis-card__desc">${item.description}</div>
         <div class="analysis-card__arrow">${icon('chevronRight')}</div>
       </${tag}>
     `;

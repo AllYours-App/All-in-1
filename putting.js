@@ -377,8 +377,8 @@ function renderPuttingTab() {
 <!-- Modale Nouvel exercice / Modifier -->
 <div id="exercise-modal-root"></div>
 
-<!-- Modale Nouveau parcours -->
-<div id="parcours-modal-root"></div>
+<!-- Écran Saisie rapide (Nouveau parcours) -->
+<main class="quick-entry-wrapper is-hidden" id="parcours-entry-root"></main>
 
 <!-- Popup de filtre (Sessions / Distance / Parcours / Comparer), réutilisé par les 3 onglets Analyse -->
 <div class="exercise-modal_overlay is-hidden" id="filter-sheet-overlay" onclick="closeFilterSheet()">
@@ -2168,13 +2168,27 @@ function openNewParcoursModal() {
     rows: generateParcoursRows(18),
   };
   newParcoursModalOpen = true;
+  document.querySelector('.putting_wrapper').classList.add('is-hidden');
+  document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
+  const navEl = document.querySelector('.bottom-nav');
+  if (navEl) navEl.classList.add('is-hidden');
+  document.getElementById('parcours-entry-root').classList.remove('is-hidden');
   renderNewParcoursModal();
+  window.scrollTo(0, 0);
 }
 
-function closeNewParcoursModal() {
+function closeNewParcoursModal(event) {
+  if (event) event.preventDefault();
   newParcoursModalOpen = false;
   newParcoursForm = null;
-  renderNewParcoursModal();
+  document.getElementById('parcours-entry-root').classList.add('is-hidden');
+  document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+  document.querySelectorAll('.fab-group').forEach(function (el) {
+    el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
+  });
+  const navEl = document.querySelector('.bottom-nav');
+  if (navEl) navEl.classList.remove('is-hidden');
+  window.scrollTo(0, 0);
 }
 
 function setParcoursHoles(n) {
@@ -2185,6 +2199,10 @@ function setParcoursHoles(n) {
   // Conserve les données déjà saisies pour les trous existants, n'en génère de nouveaux que si besoin
   f.rows = Array.from({ length: n }, function (_, i) { return oldRows[i] || blankParcoursRow(i); });
   renderNewParcoursModal();
+}
+
+function cycleParcoursHoles() {
+  setParcoursHoles(newParcoursForm.holesCount === 18 ? 9 : 18);
 }
 
 function setParcoursMode(mode) {
@@ -2204,16 +2222,41 @@ function setParcoursRowPutts(idx, v) {
   newParcoursForm.rows[idx].putts = isNaN(n) ? null : Math.max(0, Math.min(10, n));
 }
 
+// Boutons 1 / 2 / 3 de la carte "Saisie rapide" : un second clic sur le même chiffre le désélectionne
+function setParcoursRowPuttsQuick(idx, n) {
+  const row = newParcoursForm.rows[idx];
+  row.putts = row.putts === n ? null : n;
+  renderNewParcoursModal();
+}
+
 function setParcoursRowM(idx, v) {
   if ((v || '').trim() === '') { newParcoursForm.rows[idx].m = 0; return; }
   const n = parseFloat((v || '').replace(',', '.'));
   if (!isNaN(n)) newParcoursForm.rows[idx].m = Math.round(Math.max(0, Math.min(30, n)) * 10) / 10;
 }
 
+// Saisie de la distance via prompt() pour la carte compacte du mode express
+function promptParcoursRowM(idx) {
+  const current = newParcoursForm.rows[idx].m;
+  const v = prompt('Distance (m)', current ? String(current).replace('.', ',') : '');
+  if (v === null) return;
+  setParcoursRowM(idx, v);
+  renderNewParcoursModal();
+}
+
 function setParcoursRowClock(idx, v) {
   if ((v || '').trim() === '') { newParcoursForm.rows[idx].clock = null; return; }
   const n = parseInt(v, 10);
   newParcoursForm.rows[idx].clock = isNaN(n) ? null : Math.max(1, Math.min(12, n));
+}
+
+// Saisie de la pente (position sur cadran, 1 à 12h) via prompt() pour la carte compacte
+function promptParcoursRowClock(idx) {
+  const current = newParcoursForm.rows[idx].clock;
+  const v = prompt('Pente (position sur cadran, de 1 à 12h)', current !== null && current !== undefined ? current : '');
+  if (v === null) return;
+  setParcoursRowClock(idx, v);
+  renderNewParcoursModal();
 }
 
 function setParcoursRowResultat(idx, v) {
@@ -2250,68 +2293,104 @@ function saveNewParcours() {
 }
 
 function renderNewParcoursModal() {
-  const modalRoot = document.getElementById('parcours-modal-root');
-  if (!modalRoot) return;
+  const root = document.getElementById('parcours-entry-root');
+  if (!root) return;
   if (!newParcoursModalOpen || !newParcoursForm) {
-    modalRoot.innerHTML = '';
+    root.innerHTML = '';
     return;
   }
   const f = newParcoursForm;
   const isDetail = f.mode === 'complete';
-  const colClass = isDetail ? 'exercise-modal_preview-row-5col' : 'exercise-modal_preview-row-4col';
-  modalRoot.innerHTML = `
-    <div class="exercise-modal_overlay" onclick="closeNewParcoursModal()">
-      <div class="exercise-modal" onclick="event.stopPropagation()">
-        <div class="exercise-modal_head">
-          <h3 class="exercise-modal_title">Nouveau parcours</h3>
-          <button class="exercise-modal_close" onclick="closeNewParcoursModal()" aria-label="Fermer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-
-        <input type="text" class="exercise-modal_input" id="parcours-name-input" placeholder="Nom du parcours" value="${f.name}" oninput="updateParcoursName(this.value)">
-
-        <div class="exercise-modal_grid">
-          <button type="button" class="exercise-modal_field ${f.holesCount === 9 ? 'is-active' : ''}" onclick="setParcoursHoles(9)">
-            <span class="exercise-modal_field-label">Trous</span>
-            <span class="exercise-modal_field-value">9</span>
-          </button>
-          <button type="button" class="exercise-modal_field ${f.holesCount === 18 ? 'is-active' : ''}" onclick="setParcoursHoles(18)">
-            <span class="exercise-modal_field-label">Trous</span>
-            <span class="exercise-modal_field-value">18</span>
-          </button>
-        </div>
-
-        <div class="exercise-modal_grid">
-          <button type="button" class="exercise-modal_field ${f.mode === 'express' ? 'is-active' : ''}" onclick="setParcoursMode('express')">
-            <span class="exercise-modal_field-label">Session express</span>
-            <span class="exercise-modal_field-value">Distance, pente, putts</span>
-          </button>
-          <button type="button" class="exercise-modal_field ${isDetail ? 'is-active' : ''}" onclick="setParcoursMode('complete')">
-            <span class="exercise-modal_field-label">Session détaillée</span>
-            <span class="exercise-modal_field-value">+ résultat du putt</span>
-          </button>
-        </div>
-
-        <div class="exercise-modal_preview">
-          <div class="exercise-modal_preview-row exercise-modal_preview-head ${colClass}">
-            <span>Trou</span><span>Dist.</span><span>Pente</span><span>Putts</span>${isDetail ? '<span>Résultat</span>' : ''}
-          </div>
-          ${f.rows.map(function (r, i) {
-            return `
-            <div class="exercise-modal_preview-row ${colClass}">
-              <span>${r.hole}</span>
-              <input type="number" step="0.1" min="0" max="30" value="${r.m}" onchange="setParcoursRowM(${i}, this.value)">
-              <input type="number" min="1" max="12" title="Pente (h)" placeholder="--" value="${r.clock !== null && r.clock !== undefined ? r.clock : ''}" onchange="setParcoursRowClock(${i}, this.value)">
-              <input type="number" min="0" max="10" placeholder="--" value="${r.putts !== null ? r.putts : ''}" onchange="setParcoursRowPutts(${i}, this.value)">
-              ${isDetail ? `<select onchange="setParcoursRowResultat(${i}, this.value)">${PARCOURS_RESULTAT_OPTIONS.map(function (o) { return `<option value="${o.value}" ${r.resultat === o.value || (!r.resultat && !o.value) ? 'selected' : ''}>${o.label}</option>`; }).join('')}</select>` : ''}
-            </div>`;
-          }).join('')}
-        </div>
-
-        <button class="exercise-modal_save" id="parcours-save-btn" onclick="saveNewParcours()" ${!f.name.trim() ? 'disabled' : ''}>Enregistrer ce parcours</button>
-      </div>
+  root.innerHTML = `
+    <div class="quick-entry_top">
+      <a href="#" class="quick-entry_back" onclick="closeNewParcoursModal(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Retour
+      </a>
     </div>
+
+    <div class="quick-entry_intro">
+      <h1 class="quick-entry_title">Saisie rapide</h1>
+      <p class="quick-entry_subtitle">Renseignez pour chaque trou la distance, la pente et le nombre de putts.</p>
+    </div>
+
+    <div class="quick-entry_infocard">
+      <div class="quick-entry_infofield">
+        <svg class="quick-entry_infoicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg>
+        <div class="quick-entry_infotext">
+          <span class="quick-entry_infolabel">Parcours</span>
+          <input type="text" class="quick-entry_infoinput" id="parcours-name-input" placeholder="Nom du parcours" value="${f.name}" oninput="updateParcoursName(this.value)">
+        </div>
+      </div>
+      <div class="quick-entry_infodivider"></div>
+      <button type="button" class="quick-entry_infofield" onclick="cycleParcoursHoles()">
+        <svg class="quick-entry_infoicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
+        <div class="quick-entry_infotext">
+          <span class="quick-entry_infolabel">Trous</span>
+          <span class="quick-entry_infovalue">${f.holesCount} trous</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="exercise-modal_grid">
+      <button type="button" class="exercise-modal_field ${f.mode === 'express' ? 'is-active' : ''}" onclick="setParcoursMode('express')">
+        <span class="exercise-modal_field-label">Session express</span>
+        <span class="exercise-modal_field-value">Distance, pente, putts</span>
+      </button>
+      <button type="button" class="exercise-modal_field ${isDetail ? 'is-active' : ''}" onclick="setParcoursMode('complete')">
+        <span class="exercise-modal_field-label">Session détaillée</span>
+        <span class="exercise-modal_field-value">+ résultat du putt</span>
+      </button>
+    </div>
+
+    ${isDetail ? `
+    <div class="exercise-modal_preview">
+      <div class="exercise-modal_preview-row exercise-modal_preview-head exercise-modal_preview-row-5col">
+        <span>Trou</span><span>Dist.</span><span>Pente</span><span>Putts</span><span>Résultat</span>
+      </div>
+      ${f.rows.map(function (r, i) {
+        return `
+        <div class="exercise-modal_preview-row exercise-modal_preview-row-5col">
+          <span>${r.hole}</span>
+          <input type="number" step="0.1" min="0" max="30" value="${r.m}" onchange="setParcoursRowM(${i}, this.value)">
+          <input type="number" min="1" max="12" title="Pente (h)" placeholder="--" value="${r.clock !== null && r.clock !== undefined ? r.clock : ''}" onchange="setParcoursRowClock(${i}, this.value)">
+          <input type="number" min="0" max="10" placeholder="--" value="${r.putts !== null ? r.putts : ''}" onchange="setParcoursRowPutts(${i}, this.value)">
+          <select onchange="setParcoursRowResultat(${i}, this.value)">${PARCOURS_RESULTAT_OPTIONS.map(function (o) { return `<option value="${o.value}" ${r.resultat === o.value || (!r.resultat && !o.value) ? 'selected' : ''}>${o.label}</option>`; }).join('')}</select>
+        </div>`;
+      }).join('')}
+    </div>
+    ` : `
+    <div class="quick-holes-grid">
+      ${f.rows.map(function (r, i) {
+        return `
+        <div class="quick-hole-card">
+          <div class="quick-hole-card_head">
+            <span class="quick-hole-card_number">${r.hole}</span>
+            <div class="quick-hole-card_stats">
+              <button type="button" class="quick-hole-card_stat" onclick="promptParcoursRowM(${i})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
+                ${r.m ? r.m + ' m' : '--'}
+              </button>
+              <button type="button" class="quick-hole-card_stat" onclick="promptParcoursRowClock(${i})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 19H3z"/></svg>
+                ${r.clock !== null && r.clock !== undefined ? r.clock + 'h' : '--'}
+              </button>
+            </div>
+          </div>
+          <div class="quick-hole-card_putts">
+            <button type="button" class="quick-putt-btn ${r.putts === 1 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 1)">1</button>
+            <button type="button" class="quick-putt-btn ${r.putts === 2 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 2)">2</button>
+            <button type="button" class="quick-putt-btn ${r.putts === 3 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 3)">3</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    `}
+
+    <button class="exercise-modal_save quick-entry_save" id="parcours-save-btn" onclick="saveNewParcours()" ${!f.name.trim() ? 'disabled' : ''}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+      Enregistrer ce parcours
+    </button>
   `;
 }
 

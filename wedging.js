@@ -157,7 +157,7 @@ const Analytics = (function () {
       return `<text x="${lx}" y="${ly - 6}" class="wg-radar-label-num" text-anchor="${anchor}">${it.label}</text>
               <text x="${lx}" y="${ly + 10}" class="wg-radar-label-name" text-anchor="${anchor}">${it.display}</text>`;
     }).join('');
-    return `<svg viewBox="0 0 ${W} ${H}" class="wg-radar-svg">
+    return `<svg viewBox="0 0 ${W} ${H}" class="wg-radar-svg" style="display:block;width:100%;max-width:400px;height:auto;margin:0 auto;">
       ${ringsHtml}${spokesHtml}
       <polygon points="${pointsAttr}" class="wg-radar-shape"/>
       ${dotsHtml}${labelsHtml}
@@ -1024,6 +1024,7 @@ const Router = (function () {
     const route = ROUTES[path] || ROUTES["parcours"];
     const changed = path !== lastPath;
     lastPath = path;
+    document.body.classList.remove("no-scroll");
     try {
       document.getElementById("app").innerHTML = route.view(params);
     } catch (e) {

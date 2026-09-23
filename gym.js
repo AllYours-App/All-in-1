@@ -407,37 +407,6 @@ document.getElementById("app-root-gym").innerHTML = `
           <div id="exercise-list" style="display:flex; flex-direction:column;"></div>
         </div>
 
-        <!-- Étape 5 : repos & tempo -->
-        <div class="card step gym-anim-in">
-          <div class="step__head">
-            <span class="step__number">5</span>
-            <div>
-              <p class="step__heading">Temps de repos et tempo</p>
-              <p class="step__hint">Définis le temps de repos entre les séries et le tempo d'exécution.</p>
-            </div>
-          </div>
-          <div class="field--select-row">
-            <label class="field" style="align-items:flex-start;">
-              <span id="icon-rest"></span>
-              <span style="display:flex; flex-direction:column; gap:2px; width:100%;">
-                <span style="font-size:11.5px; color:var(--gym-text-secondary);">Repos</span>
-                <select id="select-repos" style="font-weight:700;"></select>
-              </span>
-            </label>
-            <label class="field" style="align-items:flex-start;">
-              <span id="icon-tempo"></span>
-              <span style="display:flex; flex-direction:column; gap:2px; width:100%;">
-                <span style="font-size:11.5px; color:var(--gym-text-secondary);">Tempo</span>
-                <select id="select-tempo" style="font-weight:700;"></select>
-              </span>
-              <button type="button" class="icon-btn" id="tempo-info" aria-label="Qu'est-ce que le tempo ?" style="flex-shrink:0;"></button>
-            </label>
-          </div>
-          <div class="card" id="tempo-info-popover" style="display:none; margin-top:4px; padding:14px 16px; background:rgba(255,255,255,0.04);">
-            <p class="list-row__meta" style="color:var(--gym-text-secondary);">Le tempo se lit <strong style="color:var(--gym-text);">Excentrique-Pause-Concentrique-Pause</strong>, en secondes. Exemple : <strong style="color:var(--gym-text);">2-0-2-0</strong> = 2s pour descendre, 0s de pause, 2s pour remonter, 0s de pause.</p>
-          </div>
-        </div>
-
         <button class="btn btn-primary" id="btn-create-session">
           <span id="icon-check-create"></span> Créer la séance
         </button>
@@ -528,6 +497,9 @@ document.getElementById("app-root-gym").innerHTML = `
           <div class="session-header__timer">
             <span class="session-header__timer-icon" id="icon-session-timer"></span>
             <span class="session-header__timer-value" id="session-timer">00:00:00</span>
+            <button type="button" class="session-header__pause" id="btn-reset-timer" aria-label="Réinitialiser le chrono">
+              <span id="icon-session-reset"></span>
+            </button>
             <button type="button" class="session-header__pause" id="btn-toggle-timer" aria-label="Mettre en pause">
               <span id="icon-session-pause"></span>
             </button>
@@ -870,6 +842,8 @@ const ICONS = {
   pause: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>`,
 
   layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 11v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-5"/></svg>`,
+
+  reset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.7-6M20 4v5h-5"/></svg>`,
 };
 
 
@@ -2418,17 +2392,23 @@ const SETS_BY_GOAL = { force: 4, endurance: 3, hypertrophie: 4, vitesse: 3, mobi
 
 function gymGetSessionDetail(session) {
   if (!session) return [];
-  // Si la séance a été créée avec des exercices détaillés (séries/répétitions
-  // choisies par la personne), on les utilise telles quelles.
+  // Si la séance a été créée avec des exercices détaillés (séries/répétitions/
+  // repos/tempo choisis par la personne, exercice par exercice), on les
+  // utilise telles quelles — chaque champ laissé vide retombe sur une valeur
+  // par défaut cohérente avec l'objectif de la séance (aucun de ces 4 champs
+  // n'est obligatoire à la création).
   if (Array.isArray(session.exercises) && session.exercises.length) {
     return session.exercises.map((item, index) => {
       const exo = gymGetExercise(item.exerciseId);
       return {
         exerciseId: item.exerciseId,
         name: exo ? exo.name : "Exercice",
-        sets: item.sets,
-        reps: item.reps,
-        rest: session.rest ? GYM_DATA.restOptions.find((r) => r.value === session.rest)?.label || session.rest : REST_BY_GOAL[session.goal] || "1 min",
+        sets: Number(item.sets) || SETS_BY_GOAL[session.goal] || 3,
+        reps: item.reps || REPS_BY_GOAL[session.goal] || "10-12",
+        rest: item.rest
+          ? GYM_DATA.restOptions.find((r) => r.value === item.rest)?.label || item.rest
+          : REST_BY_GOAL[session.goal] || "1 min",
+        tempo: item.tempo || "",
         status: index === 0 ? "en-cours" : "a-venir",
       };
     });
@@ -2443,6 +2423,7 @@ function gymGetSessionDetail(session) {
       sets: SETS_BY_GOAL[session.goal] || 3,
       reps: REPS_BY_GOAL[session.goal] || "10-12",
       rest: REST_BY_GOAL[session.goal] || "1 min",
+      tempo: "",
       status: index === 0 ? "en-cours" : "a-venir",
     };
   });
@@ -2851,7 +2832,7 @@ function gymRenderSessionRow(session, programId) {
  * page (plutôt qu'un onclick inline) pour rester compatible avec la vue en
  * module (fonction de suppression scopée à la page, pas globale).
  */
-function gymRenderEditableExerciseRow(exerciseId, sets, reps, rowIndex) {
+function gymRenderEditableExerciseRow(exerciseId, sets, reps, rest, tempo, rowIndex) {
   const exo = gymGetExercise(exerciseId);
   if (!exo) return "";
   return `
@@ -2866,13 +2847,29 @@ function gymRenderEditableExerciseRow(exerciseId, sets, reps, rowIndex) {
         <div class="exercise-row__stat">
           <label>Séries</label>
           <select class="select-chip" data-field="sets">
+            <option value="" ${!sets ? "selected" : ""}>—</option>
             ${[2, 3, 4, 5].map((n) => `<option value="${n}" ${n === sets ? "selected" : ""}>${n}</option>`).join("")}
           </select>
         </div>
         <div class="exercise-row__stat">
           <label>Répétitions</label>
           <select class="select-chip" data-field="reps">
+            <option value="" ${!reps ? "selected" : ""}>—</option>
             ${["6-8", "8-10", "10-12", "12-15", "15-20"].map((r) => `<option value="${r}" ${r === reps ? "selected" : ""}>${r}</option>`).join("")}
+          </select>
+        </div>
+        <div class="exercise-row__stat">
+          <label>Repos</label>
+          <select class="select-chip" data-field="rest">
+            <option value="" ${!rest ? "selected" : ""}>—</option>
+            ${GYM_DATA.restOptions.map((r) => `<option value="${r.value}" ${r.value === rest ? "selected" : ""}>${r.label}</option>`).join("")}
+          </select>
+        </div>
+        <div class="exercise-row__stat">
+          <label>Tempo</label>
+          <select class="select-chip" data-field="tempo">
+            <option value="" ${!tempo ? "selected" : ""}>—</option>
+            ${GYM_DATA.tempoOptions.map((t) => `<option value="${t}" ${t === tempo ? "selected" : ""}>${t}</option>`).join("")}
           </select>
         </div>
       </div>
@@ -3218,9 +3215,6 @@ function gymRenderHistoryRow(entry) {
   function fillIcons() {
     document.getElementById("program-picker-chevron").innerHTML = gymIcon("chevronDown");
     document.getElementById("icon-plus-add").innerHTML = gymIcon("plus");
-    document.getElementById("icon-rest").innerHTML = gymIcon("timer");
-    document.getElementById("icon-tempo").innerHTML = gymIcon("tempo");
-    document.getElementById("tempo-info").innerHTML = gymIcon("info");
     document.getElementById("icon-check-create").innerHTML = gymIcon("check");
     document.getElementById("sheet-close").innerHTML = closeIconSvg();
     document.getElementById("program-sheet-close").innerHTML = closeIconSvg();
@@ -3308,16 +3302,24 @@ function gymRenderHistoryRow(entry) {
   function renderExerciseList() {
     const container = document.getElementById("exercise-list");
     container.innerHTML = state.exercises.length
-      ? state.exercises.map((item, index) => gymRenderEditableExerciseRow(item.exerciseId, item.sets, item.reps, index)).join("")
+      ? state.exercises
+          .map((item, index) => gymRenderEditableExerciseRow(item.exerciseId, item.sets, item.reps, item.rest, item.tempo, index))
+          .join("")
       : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucun exercice ajouté pour l'instant.</div>`;
 
     container.querySelectorAll(".exercise-row").forEach((row) => {
       const index = Number(row.dataset.rowIndex);
       row.querySelector('[data-field="sets"]').addEventListener("change", (e) => {
-        state.exercises[index].sets = Number(e.target.value);
+        state.exercises[index].sets = e.target.value ? Number(e.target.value) : "";
       });
       row.querySelector('[data-field="reps"]').addEventListener("change", (e) => {
         state.exercises[index].reps = e.target.value;
+      });
+      row.querySelector('[data-field="rest"]').addEventListener("change", (e) => {
+        state.exercises[index].rest = e.target.value;
+      });
+      row.querySelector('[data-field="tempo"]').addEventListener("change", (e) => {
+        state.exercises[index].tempo = e.target.value;
       });
       row.querySelector("[data-remove-index]").addEventListener("click", () => {
         state.exercises.splice(index, 1);
@@ -3381,7 +3383,7 @@ function gymRenderHistoryRow(entry) {
           custom: true,
         };
         EXERCISES.push(customExercise);
-        state.exercises.push({ exerciseId: customExercise.id, sets: 3, reps: "10-12" });
+        state.exercises.push({ exerciseId: customExercise.id, sets: "", reps: "", rest: "", tempo: "" });
         renderExerciseList();
         closeExerciseSheet();
       });
@@ -3389,7 +3391,7 @@ function gymRenderHistoryRow(entry) {
 
     document.querySelectorAll("#sheet-body [data-exercise-id]").forEach((row) => {
       row.addEventListener("click", () => {
-        state.exercises.push({ exerciseId: row.dataset.exerciseId, sets: 3, reps: "10-12" });
+        state.exercises.push({ exerciseId: row.dataset.exerciseId, sets: "", reps: "", rest: "", tempo: "" });
         renderExerciseList();
         closeExerciseSheet();
       });
@@ -3410,25 +3412,6 @@ function gymRenderHistoryRow(entry) {
     document.getElementById("exercise-sheet").classList.remove("is-open");
   }
 
-  /* ---- Étape 5 : repos & tempo ---------------------------------------------------- */
-
-  function renderRestTempoSelects() {
-    const restSelect = document.getElementById("select-repos");
-    restSelect.innerHTML = GYM_DATA.restOptions
-      .map((r) => `<option value="${r.value}" ${r.value === state.rest ? "selected" : ""}>${r.label}</option>`)
-      .join("");
-
-    const tempoSelect = document.getElementById("select-tempo");
-    tempoSelect.innerHTML = GYM_DATA.tempoOptions
-      .map((t) => `<option value="${t}" ${t === state.tempo ? "selected" : ""}>${t}</option>`)
-      .join("");
-  }
-
-  function toggleTempoInfo() {
-    const popover = document.getElementById("tempo-info-popover");
-    popover.style.display = popover.style.display === "none" ? "block" : "none";
-  }
-
   /* ---- Validation finale ------------------------------------------------------------ */
 
   function onCreateSession() {
@@ -3446,9 +3429,7 @@ function gymRenderHistoryRow(entry) {
       date: new Date(),
       duration: 45,
       exerciseIds: state.exercises.map((e) => e.exerciseId),
-      exercises: state.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets, reps: e.reps })),
-      rest: state.rest,
-      tempo: state.tempo,
+      exercises: state.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets, reps: e.reps, rest: e.rest, tempo: e.tempo })),
       status: nextIndex === 1 ? "en-cours" : "verrouillee",
       goal: state.goals[0] || null,
       focusLabel: goalLabels.join(", "),
@@ -3481,9 +3462,6 @@ function gymRenderHistoryRow(entry) {
     "input",
     gymDebounce((e) => renderExerciseSheetList(e.target.value), 120)
   );
-  document.getElementById("select-repos").addEventListener("change", (e) => (state.rest = e.target.value));
-  document.getElementById("select-tempo").addEventListener("change", (e) => (state.tempo = e.target.value));
-  document.getElementById("tempo-info").addEventListener("click", toggleTempoInfo);
   document.getElementById("btn-create-session").addEventListener("click", onCreateSession);
 
   function render(params) {
@@ -3500,16 +3478,12 @@ function gymRenderHistoryRow(entry) {
     state.programId = (params && params.programme && gymGetProgram(params.programme) && params.programme) || GYM_DATA.programs[0].id;
     state.categories = [];
     state.goals = [];
-    state.rest = "90s";
-    state.tempo = "2-0-2-0";
     state.exercises = [];
-    document.getElementById("tempo-info-popover").style.display = "none";
 
     renderProgramPicker();
     renderCategoryGrid();
     renderGoalGrid();
     renderExerciseList();
-    renderRestTempoSelects();
   }
 
   GymViews["creer-seance"] = { render };
@@ -3702,6 +3676,7 @@ function gymRenderHistoryRow(entry) {
         name: item.name,
         repsLabel: item.reps,
         restLabel: item.rest,
+        tempoLabel: item.tempo || "—",
         sets: Array.from({ length: setsCount }, (_, i) => ({
           weight: "",
           reps: 0,
@@ -3771,7 +3746,9 @@ function gymRenderHistoryRow(entry) {
   }
 
   document.getElementById("icon-session-timer").innerHTML = gymIcon("clock");
+  document.getElementById("icon-session-reset").innerHTML = gymIcon("reset");
   document.getElementById("btn-toggle-timer").addEventListener("click", togglePause);
+  document.getElementById("btn-reset-timer").addEventListener("click", resetTimer);
   syncPauseIcon(); // icône présente dès le chargement
 
   /* ---- En-tête ---------------------------------------------------------------- */
@@ -3839,6 +3816,13 @@ function gymRenderHistoryRow(entry) {
         <span class="session-summary__text">
           <span class="session-summary__label">Temps de repos</span>
           <span class="session-summary__value">${exo.restLabel}</span>
+        </span>
+      </div>
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("tempo")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Tempo</span>
+          <span class="session-summary__value">${exo.tempoLabel}</span>
         </span>
       </div>
     `;
@@ -4055,8 +4039,9 @@ function gymRenderHistoryRow(entry) {
     if (isSameSession) {
       tickTimer();
     } else {
+      // Chrono en pause par défaut au lancement d'une séance : c'est la personne
+      // qui décide quand elle démarre son chrono (bouton lecture dans le header).
       resetTimer();
-      startTimer();
     }
   }
 

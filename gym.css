@@ -1253,16 +1253,17 @@ select:focus-visible,
 }
 
 .exercise-row__stats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--gym-gap-md);
   grid-column: 1 / -1;
 }
 
 .exercise-row__stat {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
 }
 
 .exercise-row__stat label {
@@ -2279,8 +2280,8 @@ body.gym-home-locked {
 
 .session-summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 8px;
   text-align: center;
 }
 
