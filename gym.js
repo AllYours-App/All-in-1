@@ -893,19 +893,21 @@ function gymAddDays(date, days) {
 }
 
 function gymFormatDate(date) {
+  const d = date instanceof Date ? date : new Date(date);
   const mois = [
     "janvier", "février", "mars", "avril", "mai", "juin",
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
   ];
-  return `${date.getDate().toString().padStart(2, "0")} ${mois[date.getMonth()]} ${date.getFullYear()}`;
+  return `${d.getDate().toString().padStart(2, "0")} ${mois[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function gymFormatMonthYear(date) {
+  const d = date instanceof Date ? date : new Date(date);
   const mois = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
     "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
   ];
-  return `${mois[date.getMonth()]} ${date.getFullYear()}`;
+  return `${mois[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 const GYM_TODAY = new Date();
@@ -3058,20 +3060,8 @@ function gymRenderHistoryRow(entry) {
     `;
   }
 
-  function renderProgressCard(program) {
-    const total = program.sessions.length;
-    const done = program.sessions.filter((s) => s.status === "terminee").length;
-    const percent = total ? Math.round((done / total) * 100) : 0;
-
+  function renderActions(program) {
     document.getElementById("program-progress-card").innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:baseline;">
-        <span class="gym-section-title">Progression</span>
-        <span class="list-row__meta">${total ? `${done} sur ${total} séances terminées` : "Aucune séance"}</span>
-      </div>
-      <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill" data-progress="${percent}" style="width:0%"></div></div>
-        <span class="progress-row__value">${percent}%</span>
-      </div>
       <div class="btn-grid">
         <button class="btn btn-primary" onclick="gymNavigate('creer-seance', {programme:'${program.id}'});">${gymIcon("plus")} Créer une séance</button>
         <button class="btn btn-secondary" onclick="gymSaveProgram('${program.id}', this);">${gymIcon("doc")} Enregistrer le programme</button>
@@ -3089,12 +3079,6 @@ function gymRenderHistoryRow(entry) {
       : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Tu n'as pas encore ajouté de séance à ce programme.</div>`;
   }
 
-  function animateProgressBars() {
-    document.querySelectorAll("#view-programme-detail .progress-fill[data-progress]").forEach((el) => {
-      gymAnimateProgress(el, Number(el.dataset.progress));
-    });
-  }
-
   function render(params) {
     const program = gymGetProgram(params.id);
     if (!program) {
@@ -3103,9 +3087,8 @@ function gymRenderHistoryRow(entry) {
     }
     renderHero(program);
     renderInfoRow(program);
-    renderProgressCard(program);
+    renderActions(program);
     renderSessionsList(program);
-    animateProgressBars();
   }
 
   GymViews["programme-detail"] = { render };
