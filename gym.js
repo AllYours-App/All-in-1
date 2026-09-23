@@ -2609,9 +2609,14 @@ function gymActivateView(view, params) {
   if (section) section.hidden = false;
 
   // Bloque le scroll du body tant que l'accueil (écran fixe, sans défilement) est affiché.
-  document.body.classList.toggle("gym-home-locked", view === "gym-home");
+  // Uniquement si Gym est bien le module affiché à l'écran : un popstate (retour
+  // navigateur) peut appeler cette fonction alors qu'on est sur un autre module
+  // (ex. Wedging, qui manipule aussi location.hash), sans quoi on verrouille le
+  // scroll d'un module qui n'est même pas visible.
+  const gymIsActivePage = !!document.getElementById("page-gym")?.classList.contains("active");
+  document.body.classList.toggle("gym-home-locked", gymIsActivePage && view === "gym-home");
   // Créer un programme : le document ne doit pas dépasser la hauteur visible (voir gym.css).
-  document.body.classList.toggle("gym-view-fit", view === "creer-programme");
+  document.body.classList.toggle("gym-view-fit", gymIsActivePage && view === "creer-programme");
 
   // Filet de sécurité : referme toute bottom-sheet restée ouverte en quittant sa vue.
   document.querySelectorAll(".sheet.is-open, .sheet-overlay.is-open").forEach((el) => {

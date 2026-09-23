@@ -1006,6 +1006,11 @@ Views.exercices = function () {
 
 const Router = (function () {
   let lastPath = null;
+  window.addEventListener("resize", () => {
+    if (document.getElementById("page-wedging")?.classList.contains("active")) {
+      document.body.classList.remove("no-scroll", "gym-home-locked", "gym-view-fit");
+    }
+  });
   const ROUTES = {
     "home": { view: Views.home },
     "parcours": { view: Views.parcours },
@@ -1024,7 +1029,7 @@ const Router = (function () {
     const route = ROUTES[path] || ROUTES["parcours"];
     const changed = path !== lastPath;
     lastPath = path;
-    document.body.classList.remove("no-scroll");
+    document.body.classList.remove("no-scroll", "gym-home-locked", "gym-view-fit");
     try {
       document.getElementById("app").innerHTML = route.view(params);
     } catch (e) {
