@@ -139,6 +139,28 @@
 }
 
 /* ---------------------------------------------------------------------------
+   HEADER NON FIXE — titre centré (Menu / FAQ)
+   Même technique de centrage par grid 3 colonnes que le header fixe
+   ci-dessus, mais en flux normal (pas de position:fixed).
+   --------------------------------------------------------------------------- */
+#page-menu .nav_component {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+#page-menu .nav_back-button {
+  grid-column: 1;
+  justify-self: start;
+}
+
+#page-menu .nav_title {
+  grid-column: 2;
+  justify-self: center;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
    BARRE DE NAVIGATION INFÉRIEURE — putting, wedging
    Fixe en bas, décalée des bords gauche/droite, coins hauts arrondis.
    Nombre d'onglets et libellés : définis dans le HTML de chaque module.

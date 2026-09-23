@@ -83,7 +83,7 @@
   grid-template-columns:1fr 1fr;
   gap:10px;
   max-width:var(--wg-max-width);
-  margin:0 auto 10px;
+  margin:16px auto 10px;
   padding:0 20px;
 }
 .wg-nav-card{
@@ -467,7 +467,7 @@
 
 /* ---------- Radar (répartition des coups par zone) ---------- */
 .wg-radar-wrap{display:flex;justify-content:center;}
-.wg-radar-svg{width:100%;max-width:340px;height:auto;}
+.wg-radar-svg{width:100%;max-width:none;height:auto;}
 .wg-radar-grid{fill:none;stroke:var(--wg-border);stroke-width:1;}
 .wg-radar-axis{stroke:var(--wg-border);stroke-width:1;}
 .wg-radar-shape{fill:rgba(215,255,47,0.22);stroke:var(--wg-accent);stroke-width:2;}

@@ -924,10 +924,11 @@ Views.dispersionAnalysis = function () {
     return `<div class="wg-insight-card"><div class="wg-insight-card-title">Dispersion à ${b}m (${bucketShots.length} coup${bucketShots.length > 1 ? 's' : ''})</div><div class="wg-insight-card-body">${Analytics.buildRadarChartSvg(items)}</div></div>`;
   }).join('');
   return `
-    ${UI.topbar("Parcours", "parcours", UI.ICONS.more)}
-    ${UI.analysisHeader("ANALYSE", "Toile d'araignée", "Dispersion de vos coups sur le parcours, par distance à faire.")}
-    <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
-    ${buckets.length ? `<section class="wg-section"><div class="wg-chip-row">${buckets.map(b => `<button class="wg-chip ${wedgeRadarDistances.has(b) ? 'active' : ''}" onclick="setWedgeRadarDistance(${b})">${b}m</button>`).join('')}</div></section>${cardsHtml}` : `<p class="wg-empty-state">Aucun coup enregistré pour le moment.</p>`}
+    ${UI.topbar("Wedging", "parcours", UI.ICONS.more)}
+    ${UI.analysisHeader("ANALYSE", "Dispersion", "Dispersion de vos coups sur le parcours, par distance à faire.")}
+    <section class="wg-section"><div class="wg-chip-row wg-chip-row--scroll">${wedgeShotsLimitButtonHtml()}${buckets.map(b => `<button class="wg-chip ${wedgeRadarDistances.has(b) ? 'active' : ''}" onclick="setWedgeRadarDistance(${b})">${b}m</button>`).join('')}</div></section>
+    ${wedgeShotsLimitPopupOpen ? wedgeShotsLimitPopupHtml() : ''}
+    ${buckets.length ? cardsHtml : `<p class="wg-empty-state">Aucun coup enregistré pour le moment.</p>`}
     ${UI.bottomNav("dispersion")}
   `;
 };
@@ -947,8 +948,8 @@ Views.distanceAnalysis = function () {
     return `<div class="wg-gauge-row"><div class="wg-gauge-label">${r.label}</div><div class="wg-gauge-track"><div class="wg-gauge-fill" style="width:${pct}%"></div><div class="wg-gauge-value" style="left:${pct}%">${r.avg}m</div></div></div>`;
   }).join('');
   return `
-    ${UI.topbar("Parcours", "parcours", UI.ICONS.more)}
-    ${UI.analysisHeader("ANALYSE", "Jauges", "Distance finale moyenne par palier de distance à faire.")}
+    ${UI.topbar("Wedging", "parcours", UI.ICONS.more)}
+    ${UI.analysisHeader("ANALYSE", "Distance", "Distance finale moyenne par palier de distance à faire.")}
     <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
     <section class="wg-section"><div class="wg-gauge-axis"><span>Distance à faire (paliers de 5m)</span><span>Résultat moyen (m)</span></div>${rowsHtml}</section>
     ${UI.bottomNav("distance")}
@@ -973,7 +974,7 @@ Views.sgAnalysis = function () {
     return `<div class="wg-sg-bar-row"><div class="wg-sg-bar-label">${e.label}</div><div class="wg-sg-bar-track"><div class="wg-sg-bar-center"></div><div class="wg-sg-bar-fill ${side}" style="${style}"></div></div><div class="wg-sg-bar-value">${Analytics.fmtSG(e.value)}</div></div>`;
   }).join('');
   return `
-    ${UI.topbar("Parcours", "parcours", UI.ICONS.more)}
+    ${UI.topbar("Wedging", "parcours", UI.ICONS.more)}
     ${UI.analysisHeader("ANALYSE", "Strokes Gained", "Estimation du gain de coups par palier de distance à faire (référence PGA Tour).")}
     <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
     <section class="wg-section">${rowsHtml}</section>
@@ -985,7 +986,6 @@ Views.sgAnalysis = function () {
 function wedgeExercisesListHtml() {
   return `
     ${UI.header({ title: "WEDGING", backLabel: "Home", backHash: "app-home", rightIcon: UI.ICONS.more })}
-    <p class="wg-subtitle">Maîtrisez vos distances, contrôlez vos approches.</p>
     ${UI.navCards("exercices")}
     <div class="wg-toolbar"><span class="wg-toolbar-title">MES EXERCICES</span><button class="wg-chip active" onclick="openWedgeExerciseModal()">${UI.ICONS.plus} Créer</button></div>
     <div class="wg-list mb-70">${wedgeExercises.length ? wedgeExercises.map(ex => wedgeExerciseCardHtml(ex)).join('') : '<p class="wg-empty-state">Aucun exercice pour le moment.</p>'}</div>
@@ -1039,7 +1039,7 @@ const Router = (function () {
         '<button class="wg-btn-secondary" style="margin-top:14px;" onclick="Router.go(\'parcours\')">Retour à l\'accueil</button>' +
         '</div>';
     }
-    if (changed) window.scrollTo(0, 0);
+    if (changed) requestAnimationFrame(() => window.scrollTo(0, 0));
   }
   function go(hash) { location.hash = "#" + hash; }
   window.addEventListener("hashchange", render);

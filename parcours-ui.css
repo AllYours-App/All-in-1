@@ -35,7 +35,7 @@
   --app-header-bg: var(--bg);
   --app-header-border: var(--border);
   --app-header-text: var(--text);
-  --app-header-text-secondary: var(--text-secondary);
+  --app-header-text-secondary: var(--text);
 }
 
 .back-link {

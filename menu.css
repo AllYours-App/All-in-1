@@ -30,9 +30,6 @@
    Header
    ========================================================================== */
 #page-menu .nav_component {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 24px 0 20px;
 }
 
