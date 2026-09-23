@@ -134,7 +134,7 @@ document.getElementById("app-root-gym").innerHTML = `
         <div class="card gym-anim-in home-quickstart">
           <span class="gym-eyebrow">Démarrer rapidement</span>
           <div class="quickstart__row">
-            <a class="quickstart__item" href="#" onclick="gymNavigate('seance-active'); return false;">
+            <a class="quickstart__item" href="#" onclick="gymOpenLaunchSheet(); return false;">
               <span class="quickstart__icon">
                 <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l12-7z"/></svg>
               </span>
@@ -534,8 +534,6 @@ document.getElementById("app-root-gym").innerHTML = `
           </div>
         </header>
 
-        <div class="session-progress-track"><div class="session-progress-fill" id="session-progress-fill" style="width:0%"></div></div>
-
         <main class="session-main">
 
           <!-- État vide : aucune séance active -->
@@ -707,6 +705,17 @@ document.getElementById("app-root-gym").innerHTML = `
       </main>
     </section>
 
+  </div>
+
+  <!-- Bottom sheet : choix d'une séance créée à lancer (accueil) -->
+  <div class="sheet-overlay" id="launch-sheet-overlay"></div>
+  <div class="sheet" id="launch-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Lancer une séance</span>
+      <button type="button" class="icon-btn" id="launch-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div class="sheet__body" id="launch-sheet-body"></div>
   </div>
 
   <!-- Bottom sheet : choix du programme (vue Créer une séance) -->
@@ -2325,6 +2334,8 @@ function gymSaveProgram(programId, button) {
   saved.push(program);
   gymWriteSavedPrograms(saved);
   if (button) button.innerHTML = `${gymIcon("check")} Programme enregistré`;
+  // Petite pause pour laisser voir la confirmation avant de revenir à l'accueil.
+  setTimeout(() => gymNavigate("gym-home"), 600);
 }
 
 function gymGetProgram(id) {
@@ -2690,6 +2701,50 @@ function gymHomeNextSessionClick() {
   gymNavigate("seance-active", { session: box.dataset.sessionId });
 }
 
+/**
+ * Ouvre la bottom sheet listant toutes les séances déjà créées (tous
+ * programmes confondus), pour permettre d'en lancer une directement
+ * depuis l'accueil ("Lancer une séance").
+ */
+function gymOpenLaunchSheet() {
+  const body = document.getElementById("launch-sheet-body");
+  const programsWithSessions = GYM_DATA.programs.filter((p) => p.sessions && p.sessions.length);
+
+  body.innerHTML = programsWithSessions.length
+    ? programsWithSessions
+        .map(
+          (program) => `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <span class="gym-eyebrow">${program.name}</span>
+              ${program.sessions.map((s) => gymRenderSessionRow(s, program.id)).join("")}
+            </div>
+          `
+        )
+        .join("")
+    : `
+        <div class="card" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; padding:32px 20px;">
+          <div class="icon-circle">${gymIcon("dumbbell")}</div>
+          <div>
+            <p class="list-row__title">Aucune séance créée</p>
+            <p class="list-row__meta">Crée d'abord un programme, puis une séance, pour pouvoir la lancer.</p>
+          </div>
+          <a class="btn btn-primary" href="#" onclick="gymCloseLaunchSheet(); gymNavigate('creer-seance'); return false;" style="width:auto; padding:12px 22px; font-size:13.5px;">Créer une séance</a>
+        </div>
+      `;
+
+  document.getElementById("launch-sheet-overlay").classList.add("is-open");
+  document.getElementById("launch-sheet").classList.add("is-open");
+}
+
+function gymCloseLaunchSheet() {
+  document.getElementById("launch-sheet-overlay").classList.remove("is-open");
+  document.getElementById("launch-sheet").classList.remove("is-open");
+}
+
+document.getElementById("launch-sheet-close").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+document.getElementById("launch-sheet-close").addEventListener("click", gymCloseLaunchSheet);
+document.getElementById("launch-sheet-overlay").addEventListener("click", gymCloseLaunchSheet);
+
 GymViews["gym-home"] = { render: gymRenderHomeNextSession };
 
 /* ==========================================================================
@@ -2996,10 +3051,9 @@ function gymRenderHistoryRow(entry) {
 
   function renderInfoRow(program) {
     document.getElementById("program-info-row").innerHTML = `
-      <div style="display:flex; justify-content:space-between; gap:8px; text-align:center;">
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; text-align:center;">
         <div class="summary-item">${gymIcon("dumbbell")}<span class="summary-item__value">${program.sessionsCount} séances</span><span class="summary-item__label">${program.frequencyPerWeek}x/semaine</span></div>
-        <div class="summary-item">${gymIcon("target")}<span class="summary-item__value">Objectif</span><span class="summary-item__label">${program.objectiveLabel}</span></div>
-        <div class="summary-item">${gymIcon("barChart")}<span class="summary-item__value">Niveau</span><span class="summary-item__label">${program.level}</span></div>
+        <div class="summary-item">${gymIcon("target")}<span class="summary-item__label">Objectif</span><span class="summary-item__value">${program.objectiveLabel}</span></div>
       </div>
     `;
   }
@@ -3118,7 +3172,6 @@ function gymRenderHistoryRow(entry) {
       description: "Ton programme personnalisé. Ajoute tes premières séances pour commencer à progresser.",
       sessionsCount: state.seances * state.duree,
       frequencyPerWeek: state.seances,
-      level: "Débutant",
       objectiveLabel: goal ? goal.label : "",
       currentIndex: 1,
       icon: goal ? goal.icon : "dumbbell",
@@ -3813,19 +3866,21 @@ function gymRenderHistoryRow(entry) {
           <span class="set-card__status">${statusBadge(set.status)}</span>
         </div>
         <div class="set-card__body">
-          <div class="set-card__field set-card__field--weight">
-            <span class="set-card__field-label">Poids</span>
-            <div class="set-card__weight-row">
-              <input type="number" inputmode="decimal" class="set-card__weight-input" placeholder="—" value="${set.weight}" data-set-index="${index}" data-field="weight" />
-              <span class="set-card__unit">kg</span>
-              <span class="set-card__valid-dot">${set.valid ? gymIcon("checkCircle") : gymIcon("timer")}</span>
+          <div class="set-card__inputs">
+            <div class="set-card__field set-card__field--weight">
+              <span class="set-card__field-label">Poids</span>
+              <div class="set-card__weight-row">
+                <input type="number" inputmode="decimal" class="set-card__weight-input" placeholder="—" value="${set.weight}" data-set-index="${index}" data-field="weight" />
+                <span class="set-card__unit">kg</span>
+                <span class="set-card__valid-dot">${set.valid ? gymIcon("checkCircle") : gymIcon("timer")}</span>
+              </div>
             </div>
-          </div>
-          <div class="set-card__field set-card__field--reps">
-            <span class="set-card__field-label">Répétitions</span>
-            <div class="set-card__reps-row">
-              <input type="number" class="set-card__reps-input" value="${set.reps}" data-set-index="${index}" data-field="reps" />
-              <span class="set-card__reps-target">/ ${set.target}</span>
+            <div class="set-card__field set-card__field--reps">
+              <span class="set-card__field-label">Répétitions</span>
+              <div class="set-card__reps-row">
+                <input type="number" class="set-card__reps-input" value="${set.reps}" data-set-index="${index}" data-field="reps" />
+                <span class="set-card__reps-target">/ ${set.target}</span>
+              </div>
             </div>
           </div>
           <button type="button" class="set-card__validate ${set.valid ? "is-valid" : ""}" data-set-index="${index}">
@@ -3875,14 +3930,6 @@ function gymRenderHistoryRow(entry) {
 
     renderSetsList();
     renderSummary();
-    updateOverallProgress();
-  }
-
-  function updateOverallProgress() {
-    const totalSets = state.exercises.reduce((sum, e) => sum + e.sets.length, 0);
-    const validSets = state.exercises.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).length, 0);
-    const percent = totalSets ? Math.round((validSets / totalSets) * 100) : 0;
-    gymAnimateProgress(document.getElementById("session-progress-fill"), percent);
   }
 
   /* ---- Actions basses : série suivante / terminer la séance ---------------------- */
@@ -3907,14 +3954,12 @@ function gymRenderHistoryRow(entry) {
         renderExerciseHero();
         renderSummary();
         renderSetsList();
-        updateOverallProgress();
         return;
       }
     }
 
     if (state.exerciseIndex < state.exercises.length - 1) {
       goToExercise(state.exerciseIndex + 1);
-      updateOverallProgress();
       return;
     }
 
@@ -3960,7 +4005,6 @@ function gymRenderHistoryRow(entry) {
     document.getElementById("session-content").style.display = "none";
     document.getElementById("session-actions").style.display = "none";
     document.getElementById("session-timer").textContent = "00:00:00";
-    document.getElementById("session-progress-fill").style.width = "0%";
 
     const backLink = document.getElementById("seance-active-back");
     backLink.onclick = (e) => {
@@ -3979,22 +4023,33 @@ function gymRenderHistoryRow(entry) {
     }
 
     const { program, session } = found;
+    // On revient sur la séance déjà affichée (ex. retour arrière puis re-entrée) :
+    // on garde l'avancement des séries et le chrono continue sans se réinitialiser.
+    const isSameSession = state.session && state.session.id === session.id;
+
     state.program = program;
     state.session = session;
-    state.exercises = buildExerciseState(session);
-    state.exerciseIndex = 0;
-    state.elapsedMs = 0;
 
     document.getElementById("session-empty").style.display = "none";
     document.getElementById("session-content").style.display = "flex";
     document.getElementById("session-actions").style.display = "flex";
 
+    if (!isSameSession) {
+      state.exercises = buildExerciseState(session);
+      state.exerciseIndex = 0;
+    }
+
     renderHead();
     renderExerciseHero();
     renderSummary();
     renderSetsList();
-    updateOverallProgress();
-    startTimer();
+
+    if (isSameSession) {
+      tickTimer();
+    } else {
+      resetTimer();
+      startTimer();
+    }
   }
 
   GymViews["seance-active"] = { render };

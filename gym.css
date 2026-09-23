@@ -2225,21 +2225,6 @@ body.gym-home-locked {
   height: 14px;
 }
 
-/* ---- Barre de progression de la séance (pleine largeur) ------------------ */
-
-.session-progress-track {
-  flex: 0 0 auto;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.session-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--gym-accent);
-  transition: width var(--gym-speed-slow) var(--gym-ease);
-}
-
 .session-main {
   flex: 1 1 auto;
   padding: 18px 20px 16px;
@@ -2322,10 +2307,10 @@ body.gym-home-locked {
 /* ---- Résumé séries / répétitions / repos ---------------------------------- */
 
 .session-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  text-align: center;
 }
 
 @media (max-width: 400px) {
@@ -2367,11 +2352,11 @@ body.gym-home-locked {
 }
 
 .session-summary__item {
-  flex: 1;
   min-width: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .session-summary__icon {
@@ -2389,6 +2374,7 @@ body.gym-home-locked {
 .session-summary__text {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
   min-width: 0;
 }
@@ -2399,7 +2385,6 @@ body.gym-home-locked {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--gym-text-secondary);
-  white-space: nowrap;
 }
 
 .session-summary__value {
@@ -2489,12 +2474,18 @@ body.gym-home-locked {
 
 .set-card__body {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.set-card__inputs {
+  display: flex;
   align-items: stretch;
   gap: 10px;
 }
 
 @media (max-width: 400px) {
-  .set-card__body {
+  .set-card__inputs {
     gap: 8px;
   }
   
@@ -2525,7 +2516,7 @@ body.gym-home-locked {
 }
 
 @media (max-width: 360px) {
-  .set-card__body {
+  .set-card__inputs {
     gap: 6px;
   }
   
@@ -2561,6 +2552,7 @@ body.gym-home-locked {
 }
 
 .set-card__field {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -2657,7 +2649,7 @@ body.gym-home-locked {
 }
 
 .set-card__validate {
-  flex: 1.1;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2667,7 +2659,7 @@ body.gym-home-locked {
   color: var(--gym-text-secondary);
   font-size: 12px;
   font-weight: 700;
-  padding: 8px 10px;
+  padding: 10px;
   text-align: center;
   transition: border-color var(--gym-speed-fast) var(--gym-ease), color var(--gym-speed-fast) var(--gym-ease);
 }
