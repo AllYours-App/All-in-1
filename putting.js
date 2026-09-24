@@ -408,26 +408,22 @@ function renderPuttingTab() {
 
   <div class="page-subtitle">Suivez l'évolution de votre performance au putting.</div>
 
-  <div class="stats-filters">
-    <button class="stats-filter" id="filter-btn-stats-sessions" onclick="openFilterSheet(event, 'stats', 'sessions')">
-      <svg class="stats-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>
-      <span class="filter-value-text">20 derniers rounds</span>
-      <svg class="stats-filter_chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  <div class="analyse-filters">
+    <button class="analyse-filter is-active" id="filter-btn-stats-sessions" onclick="openFilterSheet(event, 'stats', 'sessions')">
+      <span class="analyse-filter_label">Sessions</span>
+      <span class="analyse-filter_value"><span class="filter-value-text">20 dernières</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
-    <button class="stats-filter" id="filter-btn-stats-distance" onclick="openFilterSheet(event, 'stats', 'distance')">
-      <svg class="stats-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>
-      <span class="filter-value-text">Toutes distances</span>
-      <svg class="stats-filter_chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    <button class="analyse-filter" id="filter-btn-stats-distance" onclick="openFilterSheet(event, 'stats', 'distance')">
+      <span class="analyse-filter_label">Distance</span>
+      <span class="analyse-filter_value"><span class="filter-value-text">Toutes distances</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
-    <button class="stats-filter" id="filter-btn-stats-parcours" onclick="openFilterSheet(event, 'stats', 'parcours')">
-      <svg class="stats-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
-      <span class="filter-value-text">Parcours</span>
-      <svg class="stats-filter_chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    <button class="analyse-filter" id="filter-btn-stats-parcours" onclick="openFilterSheet(event, 'stats', 'parcours')">
+      <span class="analyse-filter_label">Parcours</span>
+      <span class="analyse-filter_value"><span class="filter-value-text">Tous les parcours</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
-    <button class="stats-filter" id="filter-btn-stats-compare" onclick="openFilterSheet(event, 'stats', 'compare')">
-      <svg class="stats-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="12" r="5"/><circle cx="16" cy="12" r="5"/></svg>
-      <span class="filter-value-text">Comparer</span>
-      <svg class="stats-filter_chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    <button class="analyse-filter" id="filter-btn-stats-compare" onclick="openFilterSheet(event, 'stats', 'compare')">
+      <span class="analyse-filter_label">Comparer</span>
+      <span class="analyse-filter_value"><span class="filter-value-text">Aucune</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
   </div>
 
@@ -449,61 +445,43 @@ function renderPuttingTab() {
   <div class="chart-card">
     <div class="line-chart_header">
       <div>
-        <div class="line-chart_title">Taux de réussite par round</div>
+        <div class="line-chart_title">Taux de réussite &amp; mètres par round</div>
         <div class="line-chart_subtitle">Évolution</div>
       </div>
       <div class="line-chart_legend">
-        <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
-        Taux de réussite
+        <span class="line-chart_legend-item">
+          <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
+          Taux de réussite
+        </span>
+        <span class="line-chart_legend-item is-b">
+          <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
+          Mètres
+        </span>
       </div>
     </div>
 
-    <svg class="line-chart" id="stats-rate-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg class="line-chart" id="stats-rate-meters-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
     <div class="line-chart_header">
       <div>
-        <div class="line-chart_title">1 Putt par round</div>
+        <div class="line-chart_title">1 putt &amp; 3 putts par round</div>
         <div class="line-chart_subtitle">Évolution</div>
       </div>
       <div class="line-chart_legend">
-        <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
-        1 Putt
+        <span class="line-chart_legend-item">
+          <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
+          1 Putt
+        </span>
+        <span class="line-chart_legend-item is-b">
+          <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
+          3 Putts
+        </span>
       </div>
     </div>
 
-    <svg class="line-chart" id="stats-oneputt-bar" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
-  </div>
-
-  <div class="chart-card">
-    <div class="line-chart_header">
-      <div>
-        <div class="line-chart_title">3 Putts par round</div>
-        <div class="line-chart_subtitle">Évolution</div>
-      </div>
-      <div class="line-chart_legend">
-        <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
-        3 Putts
-      </div>
-    </div>
-
-    <svg class="line-chart" id="stats-threeputt-bar" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
-  </div>
-
-  <div class="chart-card">
-    <div class="line-chart_header">
-      <div>
-        <div class="line-chart_title">Total mètres par round</div>
-        <div class="line-chart_subtitle">Évolution</div>
-      </div>
-      <div class="line-chart_legend">
-        <svg class="line-chart_legend-icon" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="20" y2="5"/><circle cx="10" cy="5" r="3" fill="currentColor" stroke="none"/></svg>
-        Mètres
-      </div>
-    </div>
-
-    <svg class="line-chart" id="stats-meters-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg class="line-chart" id="stats-putts-bars" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
 </main>
@@ -1001,6 +979,90 @@ function svgColumnChart(values, opts) {
   return grid + bars + axisTitle;
 }
 
+// Deux lignes superposées, chacune avec sa propre échelle normalisée (utile pour comparer deux métriques d'unités différentes, ex : % et mètres)
+function svgDualLineChart(valuesA, valuesB, opts) {
+  opts = opts || {};
+  const left = 40, right = 890, top = 20, bottom = 420;
+  function scaleOf(values, forceZeroMin) {
+    const vals = values.filter(function (v) { return v != null && !isNaN(v); });
+    if (!vals.length) return null;
+    let min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+    if (forceZeroMin) min = Math.min(0, min);
+    if (min === max) { min -= 1; max += 1; }
+    const pad = (max - min) * 0.12;
+    return { min: min - pad, max: max + pad };
+  }
+  const scaleA = scaleOf(valuesA, opts.forceZeroMinA);
+  const scaleB = scaleOf(valuesB, opts.forceZeroMinB);
+  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
+    const y = top + f * (bottom - top);
+    return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
+  }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
+  if (!scaleA && !scaleB) {
+    return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
+  }
+  const n = Math.max(valuesA.length, valuesB.length);
+  const stepX = n > 1 ? (right - left) / (n - 1) : 0;
+  function xAt(i) { return n > 1 ? left + i * stepX : (left + right) / 2; }
+  function drawSeries(values, scale, cls, fmt) {
+    if (!scale) return '';
+    function yAt(v) { return bottom - ((v - scale.min) / (scale.max - scale.min)) * (bottom - top); }
+    let path = '', points = [];
+    values.forEach(function (v, i) {
+      if (v == null || isNaN(v)) return;
+      const x = xAt(i), y = yAt(v);
+      path += (points.length ? ' L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+      points.push({ x: x, y: y, v: v });
+    });
+    const dots = points.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" class="line-chart-point ' + cls + '"/>'; }).join('');
+    const lastPt = points[points.length - 1];
+    const lastLabel = lastPt ? '<text x="' + lastPt.x.toFixed(1) + '" y="' + (lastPt.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value ' + cls + '">' + (fmt ? fmt(lastPt.v) : lastPt.v) + '</text>' : '';
+    return (path ? '<path d="' + path + '" class="line-chart-line ' + cls + '"/>' : '') + dots + lastLabel;
+  }
+  return grid + drawSeries(valuesA, scaleA, '', opts.fmtA) + drawSeries(valuesB, scaleB, 'is-b', opts.fmtB) + axisTitle;
+}
+
+// Barres groupées à deux séries sur une échelle commune (compte de trous par round, ex : 1 putt vs 3 putts)
+function svgDualColumnChart(valuesA, valuesB, opts) {
+  opts = opts || {};
+  const left = 40, right = 890, top = 20, bottom = 420;
+  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
+    const y = top + f * (bottom - top);
+    return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
+  }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
+  const allVals = valuesA.concat(valuesB).filter(function (v) { return v != null && !isNaN(v); });
+  if (!allVals.length) {
+    return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
+  }
+  const max = Math.max.apply(null, allVals.concat([1]));
+  const n = Math.max(valuesA.length, valuesB.length);
+  const slot = (right - left) / n;
+  const barW = Math.min(20, slot * 0.28);
+  const gap = Math.min(4, slot * 0.06);
+  let bars = '';
+  for (let i = 0; i < n; i++) {
+    const cx = left + slot * (i + 0.5);
+    const vA = valuesA[i], vB = valuesB[i];
+    if (vA != null && !isNaN(vA)) {
+      const h = Math.max(2, (vA / max) * (bottom - top));
+      const y = bottom - h;
+      const x = cx - gap / 2 - barW;
+      bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar"/>';
+      if (i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + vA + '</text>';
+    }
+    if (vB != null && !isNaN(vB)) {
+      const h = Math.max(2, (vB / max) * (bottom - top));
+      const y = bottom - h;
+      const x = cx + gap / 2;
+      bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar is-b"/>';
+      if (i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value is-b">' + vB + '</text>';
+    }
+  }
+  return grid + bars + axisTitle;
+}
+
 /* ---------- Fonctions de rendu : branchent les vraies données sur l'UI existante ---------- */
 
 function renderHomeStats() {
@@ -1110,14 +1172,14 @@ function renderStatsPerformance() {
   const meterVals = rounds.map(function (r) { return r.totalMeters || null; });
 
   svgSG.innerHTML = svgLineChart(sgVals, { centered: true, fmt: fmtSG, axisTitle: 'Rounds' });
-  const rateEl = document.getElementById('stats-rate-line');
-  if (rateEl) rateEl.innerHTML = svgLineChart(rateVals, { forceZeroMin: true, fmt: fmtPct, axisTitle: 'Rounds' });
-  const oneEl = document.getElementById('stats-oneputt-bar');
-  if (oneEl) oneEl.innerHTML = svgColumnChart(oneVals, { axisTitle: 'Rounds' });
-  const threeEl = document.getElementById('stats-threeputt-bar');
-  if (threeEl) threeEl.innerHTML = svgColumnChart(threeVals, { axisTitle: 'Rounds' });
-  const meterEl = document.getElementById('stats-meters-line');
-  if (meterEl) meterEl.innerHTML = svgLineChart(meterVals, { forceZeroMin: true, fmt: function (v) { return Math.round(v) + 'm'; }, axisTitle: 'Rounds' });
+  const rateMeterEl = document.getElementById('stats-rate-meters-line');
+  if (rateMeterEl) rateMeterEl.innerHTML = svgDualLineChart(rateVals, meterVals, {
+    forceZeroMinA: true, forceZeroMinB: true,
+    fmtA: fmtPct, fmtB: function (v) { return Math.round(v) + 'm'; },
+    axisTitle: 'Rounds',
+  });
+  const puttsEl = document.getElementById('stats-putts-bars');
+  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, { axisTitle: 'Rounds' });
 }
 
 function refreshAllAnalytics() {
@@ -1572,6 +1634,11 @@ function renderCombineSessionScreen() {
   const totalAttempts = c.attempts;
   const doneHoles = activeSession.holes.filter(function (h) { return h.results.length >= totalAttempts; }).length;
   const allDone = doneHoles === activeSession.holes.length;
+  const isHoleDone = hole.results.length >= totalAttempts;
+  // Tentative visée par les boutons Manqué / Réussi : la prochaine à jouer, ou la dernière si le trou est déjà complet (pour pouvoir la corriger)
+  const targetIndex = isHoleDone ? totalAttempts - 1 : hole.results.length;
+  const currentResult = hole.results[targetIndex];
+  const checkIcon = '<svg class="session-result-btn_check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
 
   flowRoot.innerHTML = `
     <div class="session-progress">
@@ -1585,15 +1652,11 @@ function renderCombineSessionScreen() {
         <span>${hole.m} m</span>
       </div>
       ${slopeArrowSvg(hole.clock)}
-      <div class="session-attempts">${combineAttemptsHtml(hole, totalAttempts)}</div>
-      ${hole.results.length >= totalAttempts ? `
-      <div class="session-edit-hint">Trou terminé — touche une tentative pour la modifier</div>
-      ` : `
+      ${totalAttempts > 1 ? `<div class="session-attempts">${combineAttemptsHtml(hole, totalAttempts)}</div>` : ''}
       <div class="session-result-buttons">
-        <button class="session-result-btn is-missed" onclick="setCombineResult('missed')">Manqué</button>
-        <button class="session-result-btn is-made" onclick="setCombineResult('made')">Réussi</button>
+        <button class="session-result-btn is-missed" onclick="setCombineResult('missed')">${currentResult === 'missed' ? checkIcon : ''}Manqué</button>
+        <button class="session-result-btn is-made" onclick="setCombineResult('made')">${currentResult === 'made' ? checkIcon : ''}Réussi</button>
       </div>
-      `}
     </div>
 
     <div class="session-holes-nav">
@@ -1611,11 +1674,15 @@ function renderCombineSessionScreen() {
 function setCombineResult(result) {
   const c = getCombineById(activeCombineId);
   const hole = activeSession.holes[activeHoleIndex];
-  if (hole.results.length >= c.attempts) return;
-  hole.results.push(result);
-
-  if (hole.results.length >= c.attempts && activeHoleIndex < activeSession.holes.length - 1) {
-    activeHoleIndex += 1;
+  const isHoleDone = hole.results.length >= c.attempts;
+  if (isHoleDone) {
+    // Trou déjà complet : on corrige la dernière tentative au lieu d'en empiler une nouvelle
+    hole.results[c.attempts - 1] = result;
+  } else {
+    hole.results.push(result);
+    if (hole.results.length >= c.attempts && activeHoleIndex < activeSession.holes.length - 1) {
+      activeHoleIndex += 1;
+    }
   }
   renderCombineSessionScreen();
 }
