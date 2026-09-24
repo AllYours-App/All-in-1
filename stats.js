@@ -903,12 +903,60 @@
     if (el) el.textContent = `${size}/14`;
   }
 
+  /* ========================================================================
+     COMPOSANT — Stepper (score / putts)
+     ======================================================================== */
+  function initSteppers(root) {
+    root.querySelectorAll('[data-stepper]').forEach((stepper) => {
+      const valueEl = stepper.querySelector('[data-value]');
+      const min = Number(stepper.dataset.min || 0);
+      const max = Number(stepper.dataset.max || 99);
+      let value = Number(valueEl.textContent);
+      stepper.querySelectorAll('.stepper__btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const delta = btn.dataset.action === 'inc' ? 1 : -1;
+          // On borne la valeur entre min et max pour éviter les scores absurdes
+          value = Math.min(max, Math.max(min, value + delta));
+          valueEl.textContent = value;
+        });
+      });
+    });
+  }
+
+  /* ========================================================================
+     COMPOSANT — Zone picker (placeholder fairway / green)
+     ======================================================================== */
+  function initZonePickers(root) {
+    root.querySelectorAll('.zone-map').forEach((zone) => {
+      const marker = zone.querySelector('.zone-map__marker');
+      zone.addEventListener('click', (e) => {
+        const rect = zone.getBoundingClientRect();
+        // Position du tap convertie en pourcentage de la zone, bornée pour
+        // que le marqueur ne sorte pas du cadre
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        marker.style.left = `${Math.min(96, Math.max(4, x))}%`;
+        marker.style.top = `${Math.min(96, Math.max(4, y))}%`;
+      });
+    });
+  }
+
+  // Écran "Saisie rapide" : saisie du score, des putts et des zones
+  // fairway/green pour le trou en cours.
+  function initSaisieRapide() {
+    const root = document.getElementById('screen-saisie-rapide');
+    if (!root) return;
+    initSteppers(root);
+    initZonePickers(root);
+  }
+
   const SCREEN_INIT = {
     dashboard: initDashboard,
     'par-distance': initParDistance,
     historique: initHistorique,
     putting: initPutting,
     'saisie-detaillee': initSaisieDetaillee,
+    'saisie-rapide': initSaisieRapide,
   };
 
   /* ========================================================================

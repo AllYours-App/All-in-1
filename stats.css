@@ -1197,3 +1197,183 @@ html {
 #page-stats .analysis-card--disabled { cursor: default; }
 #page-stats .analysis-card--disabled:hover { transform: none; box-shadow: var(--shadow-card); }
 #page-stats .analysis-card--disabled .analysis-card__arrow { opacity: 0.3; }
+
+/* ==========================================================================
+   SAISIE RAPIDE — écran de saisie par trou (score, putts, fairway, green)
+   ========================================================================== */
+
+#page-stats .qr-intro {
+  margin: var(--space-2xs) 0 var(--space-xl);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-relaxed);
+}
+
+/* ---------- Badge numéroté (réutilisé : trou, score, putts) ---------- */
+#page-stats .num-badge {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- Carte info trou (par / hcp / distance) ---------- */
+#page-stats .hole-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-color: var(--color-border-accent);
+}
+#page-stats .hole-card__info { flex: 1; min-width: 0; }
+#page-stats .hole-card__par {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+#page-stats .hole-card__hcp {
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+#page-stats .hole-card__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border);
+}
+#page-stats .hole-card__distance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+#page-stats .hole-card__distance svg { width: 16px; height: 16px; color: var(--color-text-tertiary); }
+
+/* ---------- Carte stepper (score / putts) ---------- */
+#page-stats .stepper-card {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+#page-stats .stepper-card__head { display: flex; align-items: flex-start; gap: var(--space-sm); }
+#page-stats .stepper-card__title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+#page-stats .stepper-card__desc {
+  font-size: 0.6875rem;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+#page-stats .stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs);
+}
+#page-stats .stepper__btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-card-hover);
+  color: var(--color-text-primary);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+#page-stats .stepper__btn:active { background: var(--color-accent); color: var(--color-bg-base); }
+#page-stats .stepper__value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  min-width: 32px;
+  text-align: center;
+}
+
+/* ---------- Carte zone (fairway / green) — placeholder simple ---------- */
+#page-stats .zone-card { padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
+#page-stats .zone-card__head { display: flex; align-items: flex-start; gap: var(--space-sm); }
+#page-stats .zone-card__title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+#page-stats .zone-card__desc {
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+#page-stats .zone-map {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(180deg, #1b3a1f 0%, #234a29 55%, #2c5a33 100%);
+}
+#page-stats .zone-map--fairway { max-width: 65%; aspect-ratio: 3 / 4; }
+#page-stats .zone-map--green { max-width: 60%; aspect-ratio: 1 / 1; }
+
+#page-stats .zone-map__marker {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1.5px solid var(--color-accent);
+  pointer-events: none;
+}
+#page-stats .zone-map__marker::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- Bouton Valider ---------- */
+#page-stats .qr-submit {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-xl);
+  padding: 18px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+#page-stats .qr-submit:active { background: var(--color-accent-dim); }
