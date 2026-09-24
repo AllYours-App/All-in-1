@@ -335,7 +335,6 @@ document.getElementById("app-root-gym").innerHTML = `
         <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
           <span class="gym-eyebrow">Créer une séance</span>
           <h1 class="gym-title-xl">Configure ta séance</h1>
-          <p class="gym-subtitle">Personnalise ta séance en quelques étapes. Tu pourras la modifier à tout moment.</p>
         </div>
 
         <div class="card" id="creer-seance-empty" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px; padding:32px 20px;">
@@ -368,34 +367,37 @@ document.getElementById("app-root-gym").innerHTML = `
           </button>
         </div>
 
-        <!-- Étape 2 : catégorie -->
+        <!-- Étape 2 : catégorie & objectif -->
         <div class="card step gym-anim-in">
           <div class="step__head">
             <span class="step__number">2</span>
             <div>
-              <p class="step__heading">Catégorie</p>
-              <p class="step__hint">Sélectionne la catégorie principale de cette séance.</p>
+              <p class="step__heading">Catégorie & objectif</p>
+              <p class="step__hint">Touche un champ pour choisir dans la liste.</p>
             </div>
           </div>
-          <div class="choice-grid" id="category-grid"></div>
-        </div>
-
-        <!-- Étape 3 : objectif -->
-        <div class="card step gym-anim-in">
-          <div class="step__head">
-            <span class="step__number">3</span>
-            <div>
-              <p class="step__heading">Objectif</p>
-              <p class="step__hint">Quel est l'objectif de cette séance ?</p>
-            </div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="card card--interactive list-row" id="category-picker-btn" style="border-color:var(--gym-border-strong); flex:1; min-width:0;">
+              <div class="list-row__body" style="min-width:0;">
+                <span class="list-row__meta">Catégorie</span>
+                <span class="list-row__title" id="category-picker-value" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">À définir</span>
+              </div>
+              <span class="list-row__chevron" id="category-picker-chevron"></span>
+            </button>
+            <button type="button" class="card card--interactive list-row" id="goal-picker-btn" style="border-color:var(--gym-border-strong); flex:1; min-width:0;">
+              <div class="list-row__body" style="min-width:0;">
+                <span class="list-row__meta">Objectif</span>
+                <span class="list-row__title" id="goal-picker-value" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">À définir</span>
+              </div>
+              <span class="list-row__chevron" id="goal-picker-chevron"></span>
+            </button>
           </div>
-          <div class="choice-grid" id="goal-grid"></div>
         </div>
 
-        <!-- Étape 4 : exercices -->
+        <!-- Étape 3 : exercices -->
         <div class="card step gym-anim-in">
           <div class="step__head" style="align-items:center;">
-            <span class="step__number">4</span>
+            <span class="step__number">3</span>
             <div style="flex:1;">
               <p class="step__heading">Exercices</p>
               <p class="step__hint">Ajoute les exercices de ta séance. Tu peux en ajouter plusieurs.</p>
@@ -696,6 +698,32 @@ document.getElementById("app-root-gym").innerHTML = `
       <button type="button" class="icon-btn" id="program-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div class="sheet__body" id="program-sheet-body"></div>
+  </div>
+
+  <!-- Bottom sheet : choix de la catégorie (vue Créer une séance) -->
+  <div class="sheet-overlay" id="category-sheet-overlay"></div>
+  <div class="sheet" id="category-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Catégorie</span>
+      <button type="button" class="icon-btn" id="category-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div class="sheet__body">
+      <div class="choice-grid" id="category-grid"></div>
+    </div>
+  </div>
+
+  <!-- Bottom sheet : choix de l'objectif (vue Créer une séance) -->
+  <div class="sheet-overlay" id="session-goal-sheet-overlay"></div>
+  <div class="sheet" id="session-goal-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Objectif</span>
+      <button type="button" class="icon-btn" id="session-goal-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div class="sheet__body">
+      <div class="choice-grid" id="goal-grid"></div>
+    </div>
   </div>
 
   <!-- Bottom sheet : ajout d'un exercice (vue Créer une séance) -->
@@ -2315,6 +2343,72 @@ function gymGetProgram(id) {
   return PROGRAMS.find((p) => p.id === id);
 }
 
+/* ---- Programme en cours (sélection manuelle depuis la liste des programmes) --- */
+
+const GYM_ACTIVE_PROGRAM_KEY = "gym-active-program-id";
+
+function gymGetActiveProgramId() {
+  try {
+    return localStorage.getItem(GYM_ACTIVE_PROGRAM_KEY) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function gymSetActiveProgramId(id) {
+  try {
+    localStorage.setItem(GYM_ACTIVE_PROGRAM_KEY, id);
+  } catch (e) {
+    // Stockage indisponible : on ignore.
+  }
+}
+
+/**
+ * Renvoie le programme "en cours" : celui explicitement choisi par la
+ * personne s'il existe encore, sinon (première utilisation) le premier
+ * programme ayant une séance en-cours.
+ */
+function gymGetActiveProgram() {
+  const explicit = gymGetProgram(gymGetActiveProgramId());
+  if (explicit) return explicit;
+  return GYM_DATA.programs.find((p) => (p.sessions || []).some((s) => s.status === "en-cours")) || null;
+}
+
+function gymIsProgramFinished(program) {
+  return program.sessions.length > 0 && program.sessions.every((s) => s.status === "terminee");
+}
+
+function gymHasMeaningfulProgress(program) {
+  return program.sessions.some((s) => s.status === "terminee") || program.currentIndex > 1;
+}
+
+function gymResetProgramProgress(program) {
+  program.sessions.forEach((s, i) => {
+    s.status = i === 0 ? "en-cours" : "verrouillee";
+  });
+  program.currentIndex = 1;
+}
+
+/**
+ * Définit un programme comme "programme en cours". Si un autre programme
+ * était actif, non terminé, et avait de la progression, celle-ci est
+ * réinitialisée après confirmation de la personne.
+ */
+function gymSetActiveProgram(programId) {
+  const next = gymGetProgram(programId);
+  if (!next) return;
+
+  const previous = gymGetActiveProgram();
+  if (previous && previous.id !== programId && !gymIsProgramFinished(previous) && gymHasMeaningfulProgress(previous)) {
+    const ok = confirm(`« ${previous.name} » n'est pas terminé. Le définir comme programme en cours réinitialisera sa progression. Continuer ?`);
+    if (!ok) return;
+    gymResetProgramProgress(previous);
+  }
+
+  gymSetActiveProgramId(programId);
+  gymNavigate("programmes");
+}
+
 /**
  * Supprime un programme (et toutes ses séances) après confirmation.
  */
@@ -2389,6 +2483,7 @@ function gymGroupHistoryByMonth(entries) {
 const REST_BY_GOAL = { force: "1 min 30", endurance: "45 sec", hypertrophie: "1 min", vitesse: "2 min", mobilite: "30 sec" };
 const REPS_BY_GOAL = { force: "6-8", endurance: "15-20", hypertrophie: "10-12", vitesse: "8-10", mobilite: "10-12" };
 const SETS_BY_GOAL = { force: 4, endurance: 3, hypertrophie: 4, vitesse: 3, mobilite: 3 };
+const TEMPO_BY_GOAL = { force: "4-0-1-0", endurance: "2-0-2-0", hypertrophie: "3-1-1-0", vitesse: "2-0-2-0", mobilite: "2-0-2-0" };
 
 function gymGetSessionDetail(session) {
   if (!session) return [];
@@ -2660,24 +2755,18 @@ function gymRenderHomeNextSession() {
   const box = document.getElementById("home-next-session");
   if (!box) return;
 
-  let found = null;
-  for (const program of GYM_DATA.programs) {
-    const session = (program.sessions || []).find((s) => s.status === "en-cours");
-    if (session) {
-      found = { program, session };
-      break;
-    }
-  }
+  const program = gymGetActiveProgram();
+  const session = program ? (program.sessions || []).find((s) => s.status === "en-cours") : null;
 
-  if (!found) {
+  if (!program || !session) {
     box.hidden = true;
     return;
   }
 
   box.hidden = false;
-  box.dataset.sessionId = found.session.id;
-  document.getElementById("home-next-session-title").textContent = `${found.program.name} — Séance ${found.session.index}`;
-  document.getElementById("home-next-session-meta").textContent = `${gymFormatDuration(found.session.duration)} · ${found.session.exerciseIds.length} exercices`;
+  box.dataset.sessionId = session.id;
+  document.getElementById("home-next-session-title").textContent = `${program.name} — Séance ${session.index}`;
+  document.getElementById("home-next-session-meta").textContent = `${gymFormatDuration(session.duration)} · ${session.exerciseIds.length} exercices`;
 }
 
 function gymHomeNextSessionClick() {
@@ -2783,6 +2872,12 @@ function gymRenderProgramCard(program) {
        <span class="list-row__meta">${done} séance${done > 1 ? "s" : ""} terminée${done > 1 ? "s" : ""} sur ${total}</span>`
     : `<span class="list-row__meta">Aucune séance ajoutée pour l'instant</span>`;
 
+  const activeProgram = gymGetActiveProgram();
+  const isActive = activeProgram && activeProgram.id === program.id;
+  const activeControl = isActive
+    ? `<span class="badge badge--current">${gymIcon("check")} Programme en cours</span>`
+    : `<button type="button" class="badge badge--upcoming" onclick="event.preventDefault(); event.stopPropagation(); gymSetActiveProgram('${program.id}');">Définir comme programme en cours</button>`;
+
   return `
     <a class="card card--interactive list-row" href="#" onclick="gymNavigate('programme-detail', {id:'${program.id}'}); return false;" style="align-items:flex-start; flex-direction:column; gap:16px;">
       <div class="list-row" style="width:100%;">
@@ -2795,6 +2890,7 @@ function gymRenderProgramCard(program) {
       </div>
       <div style="width:100%; display:flex; flex-direction:column; gap:8px;">
         ${progressBlock}
+        ${activeControl}
       </div>
     </a>
   `;
@@ -3219,10 +3315,14 @@ function gymRenderHistoryRow(entry) {
 
   function fillIcons() {
     document.getElementById("program-picker-chevron").innerHTML = gymIcon("chevronDown");
+    document.getElementById("category-picker-chevron").innerHTML = gymIcon("chevronDown");
+    document.getElementById("goal-picker-chevron").innerHTML = gymIcon("chevronDown");
     document.getElementById("icon-plus-add").innerHTML = gymIcon("plus");
     document.getElementById("icon-check-create").innerHTML = gymIcon("check");
     document.getElementById("sheet-close").innerHTML = closeIconSvg();
     document.getElementById("program-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("category-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("session-goal-sheet-close").innerHTML = closeIconSvg();
     document.getElementById("icon-sheet-search").innerHTML = gymIcon("search");
     document.getElementById("creer-seance-empty-icon").innerHTML = gymIcon("dumbbell");
   }
@@ -3270,7 +3370,7 @@ function gymRenderHistoryRow(entry) {
     document.getElementById("program-sheet").classList.remove("is-open");
   }
 
-  /* ---- Étape 2 : catégorie (choix multiple) -------------------------------------- */
+  /* ---- Étape 2 : catégorie & objectif (choix multiple, via bottom sheets) -------- */
 
   function renderCategoryGrid() {
     const grid = document.getElementById("category-grid");
@@ -3286,8 +3386,6 @@ function gymRenderHistoryRow(entry) {
       .join("");
   }
 
-  /* ---- Étape 3 : objectif (choix multiple) ---------------------------------------- */
-
   function renderGoalGrid() {
     const grid = document.getElementById("goal-grid");
     grid.innerHTML = GYM_DATA.trainingGoals
@@ -3302,7 +3400,34 @@ function gymRenderHistoryRow(entry) {
       .join("");
   }
 
-  /* ---- Étape 4 : liste des exercices --------------------------------------------- */
+  function updatePickerLabels() {
+    const categoryLabels = GYM_DATA.sessionCategories.filter((c) => state.categories.includes(c.id)).map((c) => c.label);
+    const goalLabels = GYM_DATA.trainingGoals.filter((g) => state.goals.includes(g.id)).map((g) => g.label);
+    document.getElementById("category-picker-value").textContent = categoryLabels.length ? categoryLabels.join(", ") : "À définir";
+    document.getElementById("goal-picker-value").textContent = goalLabels.length ? goalLabels.join(", ") : "À définir";
+  }
+
+  function openCategorySheet() {
+    document.getElementById("category-sheet-overlay").classList.add("is-open");
+    document.getElementById("category-sheet").classList.add("is-open");
+  }
+
+  function closeCategorySheet() {
+    document.getElementById("category-sheet-overlay").classList.remove("is-open");
+    document.getElementById("category-sheet").classList.remove("is-open");
+  }
+
+  function openGoalSheet() {
+    document.getElementById("session-goal-sheet-overlay").classList.add("is-open");
+    document.getElementById("session-goal-sheet").classList.add("is-open");
+  }
+
+  function closeGoalSheet() {
+    document.getElementById("session-goal-sheet-overlay").classList.remove("is-open");
+    document.getElementById("session-goal-sheet").classList.remove("is-open");
+  }
+
+  /* ---- Étape 3 : liste des exercices --------------------------------------------- */
 
   function renderExerciseList() {
     const container = document.getElementById("exercise-list");
@@ -3334,6 +3459,24 @@ function gymRenderHistoryRow(entry) {
   }
 
   /* ---- Bottom sheet : ajout d'exercice — recherche manuelle, jamais restreinte --- */
+
+  /**
+   * Valeurs par défaut proposées pour un exercice qu'on vient d'ajouter :
+   * calées sur l'objectif principal de la séance quand il y en a un, pour
+   * que la personne n'ait rien à saisir si elle ne le souhaite pas — mais
+   * les 4 champs restent modifiables (ou remettables à « — ») librement.
+   */
+  function gymDefaultExerciseConfig() {
+    const goalId = state.goals[0];
+    const restLabel = REST_BY_GOAL[goalId];
+    const restOption = restLabel && REST_OPTIONS.find((r) => r.label === restLabel);
+    return {
+      sets: SETS_BY_GOAL[goalId] || "",
+      reps: REPS_BY_GOAL[goalId] || "",
+      rest: restOption ? restOption.value : "",
+      tempo: TEMPO_BY_GOAL[goalId] || "",
+    };
+  }
 
   function renderExerciseSheetList(query) {
     const raw = query.trim();
@@ -3388,7 +3531,7 @@ function gymRenderHistoryRow(entry) {
           custom: true,
         };
         EXERCISES.push(customExercise);
-        state.exercises.push({ exerciseId: customExercise.id, sets: "", reps: "", rest: "", tempo: "" });
+        state.exercises.push({ exerciseId: customExercise.id, ...gymDefaultExerciseConfig() });
         renderExerciseList();
         closeExerciseSheet();
       });
@@ -3396,7 +3539,7 @@ function gymRenderHistoryRow(entry) {
 
     document.querySelectorAll("#sheet-body [data-exercise-id]").forEach((row) => {
       row.addEventListener("click", () => {
-        state.exercises.push({ exerciseId: row.dataset.exerciseId, sets: "", reps: "", rest: "", tempo: "" });
+        state.exercises.push({ exerciseId: row.dataset.exerciseId, ...gymDefaultExerciseConfig() });
         renderExerciseList();
         closeExerciseSheet();
       });
@@ -3452,13 +3595,25 @@ function gymRenderHistoryRow(entry) {
   document.getElementById("program-picker-btn").addEventListener("click", openProgramSheet);
   document.getElementById("program-sheet-overlay").addEventListener("click", closeProgramSheet);
   document.getElementById("program-sheet-close").addEventListener("click", closeProgramSheet);
+  document.getElementById("category-picker-btn").addEventListener("click", openCategorySheet);
+  document.getElementById("category-sheet-overlay").addEventListener("click", closeCategorySheet);
+  document.getElementById("category-sheet-close").addEventListener("click", closeCategorySheet);
+  document.getElementById("goal-picker-btn").addEventListener("click", openGoalSheet);
+  document.getElementById("session-goal-sheet-overlay").addEventListener("click", closeGoalSheet);
+  document.getElementById("session-goal-sheet-close").addEventListener("click", closeGoalSheet);
   gymSetupChoiceGrid(document.getElementById("category-grid"), {
     multiple: true,
-    onChange: (values) => (state.categories = values),
+    onChange: (values) => {
+      state.categories = values;
+      updatePickerLabels();
+    },
   });
   gymSetupChoiceGrid(document.getElementById("goal-grid"), {
     multiple: true,
-    onChange: (values) => (state.goals = values),
+    onChange: (values) => {
+      state.goals = values;
+      updatePickerLabels();
+    },
   });
   document.getElementById("btn-add-exercise").addEventListener("click", openExerciseSheet);
   document.getElementById("sheet-overlay").addEventListener("click", closeExerciseSheet);
@@ -3488,6 +3643,7 @@ function gymRenderHistoryRow(entry) {
     renderProgramPicker();
     renderCategoryGrid();
     renderGoalGrid();
+    updatePickerLabels();
     renderExerciseList();
   }
 
