@@ -1708,6 +1708,27 @@ function goToCombineHole(idx) {
 
 let quickStatsInfoOpen = false;
 
+// Icônes et helper partagés par l'écran Exercice rapide et l'écran Nouveau parcours
+const QUICK_ICON_PATHS = {
+  pin: '<path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/>',
+  flag: '<path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  bars: '<path d="M5 21V10"/><path d="M12 21V4"/><path d="M19 21v-7"/>',
+  distance: '<path d="M4 12h16"/><path d="M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>',
+  slope: '<path d="M4 20h16"/><path d="M4 20L16 6"/>',
+  putter: '<path d="M14 3l-5 15"/><path d="M4 21h7l-2-3"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
+};
+
+function quickIcon(cls, paths) {
+  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+}
+
+function escHtml(t) {
+  return String(t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
+}
+
 // Images de putt en arrière-plan : ExoRapidePutt12h, ExoRapidePutt1h, ... ExoRapidePutt11h
 const QUICK_PUTT_IMAGE_DIR = 'images/'; // dossier ou URL de base des images (avec "/" final)
 const QUICK_PUTT_IMAGE_EXT = '.png';  // extension des fichiers
@@ -1736,6 +1757,34 @@ function setQuickHolesCount(n) {
   }
   c.holesCount = n;
   renderCombineSessionScreen();
+}
+
+// Un clic sur l'encadré 9 / 18 trous passe de l'un à l'autre
+function toggleQuickHolesCount() {
+  const c = getCombineById(activeCombineId);
+  if (!c) return;
+  setQuickHolesCount(c.holesCount === 9 ? 18 : 9);
+}
+
+// Un clic sur l'encadré Rapide / Détaillée passe de l'un à l'autre
+function toggleQuickMode() {
+  const c = getCombineById(activeCombineId);
+  if (!c) return;
+  c.entryMode = c.entryMode === 'complete' ? 'express' : 'complete';
+  renderCombineSessionScreen();
+}
+
+// Saisie rapide : Manqué / Réussi
+function setQuickResult(result) {
+  const hole = activeSession.holes[activeHoleIndex];
+  hole.resultat = result === 'made' ? 'made' : null;
+  setCombineResult(result);
+}
+
+// Saisie détaillée : ouvre la grille 3x3 du résultat du putt
+function openQuickResultatPopup() {
+  parcoursPopup = { type: 'resultat', target: 'quick' };
+  renderParcoursPopup();
 }
 
 // Stats de l'exercice rapide : un putt raté compte pour 2 putts (1 putt raté + 1 putt pour finir)
@@ -1774,21 +1823,11 @@ function renderQuickSessionScreen() {
   const currentResult = hole.results[targetIndex];
   const st = quickSessionStats(activeSession);
 
-  const esc = function (t) {
-    return String(t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
-  const icon = function (cls, paths) {
-    return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
-  };
-  const pinPaths = '<path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/>';
-  const flagPaths = '<path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/>';
-  const starPaths = '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>';
-  const barsPaths = '<path d="M5 21V10"/><path d="M12 21V4"/><path d="M19 21v-7"/>';
-  const distancePaths = '<path d="M4 12h16"/><path d="M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>';
-  const slopePaths = '<path d="M4 20h16"/><path d="M4 20L16 6"/>';
-  const putterPaths = '<path d="M14 3l-5 15"/><path d="M4 21h7l-2-3"/>';
-  const targetPaths = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/>';
-  const trophyPaths = '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>';
+  const esc = escHtml;
+  const icon = quickIcon;
+  const { pin: pinPaths, flag: flagPaths, star: starPaths, bars: barsPaths, distance: distancePaths, slope: slopePaths, putter: putterPaths, target: targetPaths, trophy: trophyPaths } = QUICK_ICON_PATHS;
+  const isDetail = c.entryMode === 'complete';
+  const resultatLabelText = hole.resultat ? resultatLabel(hole.resultat) : (currentResult === 'missed' ? 'Manqué' : 'Résultat du putt');
 
   const penteIdx = penteCategoryIndex(hole.clock);
   const penteLabel = penteIdx == null ? '' : PENTE_LABELS[penteIdx];
@@ -1860,12 +1899,14 @@ function renderQuickSessionScreen() {
             </div>
           </div>
 
-          <div class="quick-session_panel">
-            <button type="button" class="quick-session_radio ${holes.length === 9 ? 'is-active' : ''}" onclick="setQuickHolesCount(9)">
-              <span class="quick-session_radio-dot"></span>9 trous
+          <div class="quick-session_panels">
+            <button type="button" class="quick-session_panel is-toggle" onclick="toggleQuickMode()">
+              <span class="quick-session_radio ${!isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Rapide</span>
+              <span class="quick-session_radio ${isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Détaillée</span>
             </button>
-            <button type="button" class="quick-session_radio ${holes.length === 18 ? 'is-active' : ''}" onclick="setQuickHolesCount(18)">
-              <span class="quick-session_radio-dot"></span>18 trous
+            <button type="button" class="quick-session_panel is-toggle" onclick="toggleQuickHolesCount()">
+              <span class="quick-session_radio ${holes.length === 9 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>9 trous</span>
+              <span class="quick-session_radio ${holes.length === 18 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>18 trous</span>
             </button>
           </div>
 
@@ -1874,12 +1915,18 @@ function renderQuickSessionScreen() {
         <div class="quick-session_bg" style="background-image:url('${puttImage}')"></div>
 
         <div class="session-result-buttons">
-          <button class="session-result-btn is-missed ${currentResult === 'missed' ? 'is-selected' : ''}" onclick="setCombineResult('missed')">
+          ${isDetail ? `
+          <button class="session-result-btn is-detail ${currentResult ? 'is-selected' : ''}" onclick="openQuickResultatPopup()">
+            <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${targetPaths}</svg></span>${esc(resultatLabelText)}
+          </button>
+          ` : `
+          <button class="session-result-btn is-missed ${currentResult === 'missed' ? 'is-selected' : ''}" onclick="setQuickResult('missed')">
             <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 8l8 8M16 8l-8 8"/></svg></span>Manqué
           </button>
-          <button class="session-result-btn is-made ${currentResult === 'made' ? 'is-selected' : ''}" onclick="setCombineResult('made')">
+          <button class="session-result-btn is-made ${currentResult === 'made' ? 'is-selected' : ''}" onclick="setQuickResult('made')">
             <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>Réussi
           </button>
+          `}
         </div>
       </div>
 
@@ -2180,7 +2227,7 @@ function randomQuickHole(i) {
   };
 }
 
-function startQuickExercise(holesCount) {
+function startQuickExercise(holesCount, entryMode) {
   holesCount = holesCount || 18;
   const quickCombine = {
     id: 'quick-' + Date.now(),
@@ -2190,6 +2237,7 @@ function startQuickExercise(holesCount) {
     rounds: 1,
     attempts: 1,
     isQuick: true,
+    entryMode: entryMode || 'express', // 'express' (Rapide) | 'complete' (Détaillée)
     previewRows: Array.from({ length: holesCount }, function (_, i) { return randomQuickHole(i); }),
   };
   puttingCombines.push(quickCombine);
@@ -2206,9 +2254,10 @@ function cleanupQuickCombine() {
 function retryQuickExercise() {
   const current = getCombineById(activeCombineId);
   const holesCount = current ? current.holesCount : 18;
+  const entryMode = current ? current.entryMode : 'express';
   cleanupQuickCombine();
   activeSession = null;
-  startQuickExercise(holesCount);
+  startQuickExercise(holesCount, entryMode);
 }
 
 function finishQuickExercise() {
@@ -2484,8 +2533,10 @@ function openNewParcoursModal() {
   newParcoursForm = {
     name: '',
     holesCount: 18,
-    mode: 'express', // 'express' | 'complete' (affiché "Détaillée")
+    mode: 'express', // 'express' (Rapide) | 'complete' (Détaillée)
     rows: generateParcoursRows(18),
+    activeIndex: 0,
+    statsInfoOpen: false,
   };
   newParcoursModalOpen = true;
   parcoursPopup = null;
@@ -2536,16 +2587,44 @@ function handleMainHeaderBack(event) {
 function setParcoursHoles(n) {
   const f = newParcoursForm;
   if (f.holesCount === n) return;
+  if (n < f.holesCount) {
+    const hasData = f.rows.slice(n).some(function (r) { return r.m || r.clock !== null || r.putts !== null; });
+    if (hasData && !confirm('Les trous ' + (n + 1) + ' à ' + f.holesCount + ' seront supprimés. Continuer ?')) return;
+  }
   const oldRows = f.rows;
   f.holesCount = n;
   // Conserve les données déjà saisies pour les trous existants, n'en génère de nouveaux que si besoin
   f.rows = Array.from({ length: n }, function (_, i) { return oldRows[i] || blankParcoursRow(i); });
+  if (f.activeIndex >= n) f.activeIndex = n - 1;
   renderNewParcoursModal();
 }
 
-function setParcoursMode(mode) {
-  if (newParcoursForm.mode === mode) return;
-  newParcoursForm.mode = mode;
+// Un clic sur l'encadré 9 / 18 trous passe de l'un à l'autre
+function toggleParcoursHoles() {
+  setParcoursHoles(newParcoursForm.holesCount === 9 ? 18 : 9);
+}
+
+// Un clic sur l'encadré Rapide / Détaillée passe de l'un à l'autre
+function toggleParcoursMode() {
+  const f = newParcoursForm;
+  f.mode = f.mode === 'complete' ? 'express' : 'complete';
+  renderNewParcoursModal();
+}
+
+function goToParcoursHole(idx) {
+  newParcoursForm.activeIndex = idx;
+  renderNewParcoursModal();
+}
+
+function toggleParcoursStatsInfo() {
+  newParcoursForm.statsInfoOpen = !newParcoursForm.statsInfoOpen;
+  renderNewParcoursModal();
+}
+
+// Passe au trou suivant une fois le résultat saisi (sauf sur le dernier trou)
+function advanceParcoursHole() {
+  const f = newParcoursForm;
+  if (f.activeIndex < f.rows.length - 1) f.activeIndex += 1;
   renderNewParcoursModal();
 }
 
@@ -2560,11 +2639,12 @@ function setParcoursRowPutts(idx, v) {
   newParcoursForm.rows[idx].putts = isNaN(n) ? null : Math.max(0, Math.min(10, n));
 }
 
-// Boutons 1 / 2 / 3 de la carte "Saisie rapide" : un second clic sur le même chiffre le désélectionne
-function setParcoursRowPuttsQuick(idx, n) {
+// Saisie rapide : Réussi = 1 putt, Manqué = 2 putts (le putt raté + le putt pour finir)
+function setParcoursRowResult(idx, result) {
   const row = newParcoursForm.rows[idx];
-  row.putts = row.putts === n ? null : n;
-  renderNewParcoursModal();
+  row.putts = result === 'made' ? 1 : 2;
+  row.resultat = result === 'made' ? 'made' : null;
+  advanceParcoursHole();
 }
 
 function setParcoursRowM(idx, v) {
@@ -2620,22 +2700,30 @@ function pickSlopeClock(h) {
   renderNewParcoursModal();
 }
 
-// Choix d'un résultat dans la grille 3x3 : "Rentré" au centre passe les putts à 1, tout le reste à 2
+// Choix d'un résultat dans la grille 3x3 : "Rentré" au centre = réussi (1 putt), tout le reste = manqué (2 putts)
+// Sert à la saisie détaillée de Nouveau parcours et de l'Exercice rapide (parcoursPopup.target === 'quick')
 function pickResultat(value) {
   if (!parcoursPopup) return;
-  const row = newParcoursForm.rows[parcoursPopup.rowIndex];
-  row.resultat = value;
-  row.putts = value === 'made' ? 1 : 2;
+  const isQuick = parcoursPopup.target === 'quick';
+  if (isQuick) {
+    activeSession.holes[activeHoleIndex].resultat = value;
+  } else {
+    const row = newParcoursForm.rows[parcoursPopup.rowIndex];
+    row.resultat = value;
+    row.putts = value === 'made' ? 1 : 2;
+  }
   parcoursPopup = null;
   renderParcoursPopup();
-  renderNewParcoursModal();
+  if (isQuick) setCombineResult(value === 'made' ? 'made' : 'missed');
+  else advanceParcoursHole();
 }
 
 function renderParcoursPopup() {
   const root = document.getElementById('parcours-popup-root');
   if (!root) return;
-  if (!parcoursPopup || !newParcoursForm) { root.innerHTML = ''; return; }
-  const row = newParcoursForm.rows[parcoursPopup.rowIndex];
+  const isQuick = !!parcoursPopup && parcoursPopup.target === 'quick';
+  if (!parcoursPopup || (!isQuick && !newParcoursForm)) { root.innerHTML = ''; return; }
+  const row = isQuick ? activeSession.holes[activeHoleIndex] : newParcoursForm.rows[parcoursPopup.rowIndex];
   const closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
   if (parcoursPopup.type === 'clock') {
@@ -2721,6 +2809,26 @@ function saveNewParcours() {
   renderParcoursHistory();
 }
 
+// Stats de la saisie en cours : mêmes règles que l'Exercice rapide (Manqué = 2 putts, Réussi = 1 putt)
+function parcoursSessionStats(rows) {
+  let played = 0, made = 0, putts = 0, sg = 0, sgCount = 0;
+  rows.forEach(function (r) {
+    if (r.putts === null || r.putts === undefined) return;
+    played += 1;
+    if (r.putts === 1) made += 1;
+    putts += r.putts;
+    if (r.m) { sg += puttSG(r.m, r.putts) || 0; sgCount += 1; }
+  });
+  return {
+    played: played,
+    made: made,
+    putts: putts,
+    avgPutts: played ? putts / played : null,
+    sgAvg: sgCount ? sg / sgCount : null,
+    rate: played ? (made / played) * 100 : null,
+  };
+}
+
 function renderNewParcoursModal() {
   const root = document.getElementById('parcours-entry-root');
   if (!root) return;
@@ -2730,9 +2838,21 @@ function renderNewParcoursModal() {
   }
   const f = newParcoursForm;
   const isDetail = f.mode === 'complete';
-  const flagIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>';
-  const slopeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 19H3z"/></svg>';
-  const puttsIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg>';
+  const rows = f.rows;
+  const idx = f.activeIndex;
+  const row = rows[idx];
+  const st = parcoursSessionStats(rows);
+  const esc = escHtml;
+  const icon = quickIcon;
+  const { pin: pinPaths, flag: flagPaths, star: starPaths, bars: barsPaths, distance: distancePaths, slope: slopePaths, putter: putterPaths, target: targetPaths, trophy: trophyPaths } = QUICK_ICON_PATHS;
+
+  const hasClock = row.clock !== null && row.clock !== undefined;
+  const penteIdx = hasClock ? penteCategoryIndex(row.clock) : null;
+  const penteLabel = penteIdx == null ? '' : PENTE_LABELS[penteIdx];
+  const puttImage = hasClock ? QUICK_PUTT_IMAGE_DIR + 'ExoRapidePutt' + row.clock + 'h' + QUICK_PUTT_IMAGE_EXT : '';
+  const sgClass = st.sgAvg == null ? '' : (st.sgAvg >= 0 ? 'is-accent' : 'is-negative');
+  const currentResult = row.putts === null || row.putts === undefined ? null : (row.putts === 1 ? 'made' : 'missed');
+  const resultatLabelText = row.resultat ? resultatLabel(row.resultat) : (currentResult === 'missed' ? 'Manqué' : 'Résultat du putt');
 
   root.innerHTML = `
     <div class="quick-entry_top">
@@ -2742,78 +2862,146 @@ function renderNewParcoursModal() {
       </a>
     </div>
 
-    <div class="quick-entry_infocard">
-      <div class="quick-entry_infofield">
-        <svg class="quick-entry_infoicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg>
-        <div class="quick-entry_infotext">
-          <span class="quick-entry_infolabel">Parcours</span>
-          <input type="text" class="quick-entry_infoinput" id="parcours-name-input" placeholder="Nom du parcours" value="${f.name}" oninput="updateParcoursName(this.value)">
+    <div class="quick-session">
+
+      <div class="quick-session_bar">
+        <div class="quick-session_bar-item is-wide">
+          ${icon('quick-session_bar-icon', pinPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Parcours</span>
+            <input type="text" class="quick-session_bar-input" id="parcours-name-input" placeholder="Nom du parcours" value="${esc(f.name)}" oninput="updateParcoursName(this.value)">
+          </div>
+        </div>
+        <div class="quick-session_bar-divider"></div>
+        <div class="quick-session_bar-item">
+          ${icon('quick-session_bar-icon', flagPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Trou</span>
+            <span class="quick-session_bar-value">${idx + 1} / ${rows.length}</span>
+          </div>
+        </div>
+        <div class="quick-session_bar-divider"></div>
+        <div class="quick-session_bar-item">
+          ${icon('quick-session_bar-icon', starPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Score</span>
+            <span class="quick-session_bar-value is-accent">${st.played ? st.made + ' / ' + st.played : '--'}</span>
+          </div>
+        </div>
+        <div class="quick-session_bar-divider"></div>
+        <div class="quick-session_bar-item">
+          ${icon('quick-session_bar-icon', barsPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Strokes Gained</span>
+            <span class="quick-session_bar-value ${sgClass}">${fmtSG(st.sgAvg)}</span>
+          </div>
         </div>
       </div>
-      <div class="quick-entry_infodivider"></div>
-      <div class="quick-session_panel quick-entry_holes">
-        <button type="button" class="quick-session_radio ${f.holesCount === 9 ? 'is-active' : ''}" onclick="setParcoursHoles(9)">
-          <span class="quick-session_radio-dot"></span>9 trous
-        </button>
-        <button type="button" class="quick-session_radio ${f.holesCount === 18 ? 'is-active' : ''}" onclick="setParcoursHoles(18)">
-          <span class="quick-session_radio-dot"></span>18 trous
-        </button>
-      </div>
-    </div>
 
-    <div class="exercise-modal_grid">
-      <button type="button" class="exercise-modal_field ${f.mode === 'express' ? 'is-active' : ''}" onclick="setParcoursMode('express')">
-        <span class="exercise-modal_field-label">Session express</span>
-        <span class="exercise-modal_field-value">Distance, pente, putts</span>
-      </button>
-      <button type="button" class="exercise-modal_field ${isDetail ? 'is-active' : ''}" onclick="setParcoursMode('complete')">
-        <span class="exercise-modal_field-label">Session détaillée</span>
-        <span class="exercise-modal_field-value">+ résultat du putt</span>
-      </button>
-    </div>
-
-    <div class="quick-holes-grid">
-      ${f.rows.map(function (r, i) {
-        return `
-        <div class="quick-hole-card">
-          <div class="quick-hole-card_head">
-            <span class="quick-hole-card_number">${r.hole}</span>
-            <div class="quick-hole-card_stats">
-              <button type="button" class="quick-hole-card_stat" onclick="promptParcoursRowM(${i})">${flagIcon}${r.m ? r.m + ' m' : '--'}</button>
-              <button type="button" class="quick-hole-card_stat" onclick="openSlopePopup(${i})">${slopeIcon}${r.clock !== null && r.clock !== undefined ? r.clock + 'h' : '--'}</button>
+      <div class="quick-session_card">
+        <div class="quick-session_main">
+          <div class="quick-session_info">
+            <div class="quick-session_hole">
+              <div class="quick-session_badge">${row.hole}</div>
+              <div class="quick-session_hole-text">
+                <div class="quick-session_hole-title">Trou ${row.hole}</div>
+              </div>
+            </div>
+            <div class="quick-session_metrics">
+              <button type="button" class="quick-session_metric is-editable" onclick="openSlopePopup(${idx})">
+                ${icon('quick-session_metric-icon', slopePaths)}
+                <div class="quick-session_metric-text">
+                  <span class="quick-session_metric-label">Pente</span>
+                  <span class="quick-session_metric-value">${hasClock ? row.clock + 'h' : '--'}</span>
+                  <span class="quick-session_metric-note">${penteLabel}</span>
+                </div>
+              </button>
+              <button type="button" class="quick-session_metric is-editable" onclick="promptParcoursRowM(${idx})">
+                ${icon('quick-session_metric-icon', distancePaths)}
+                <div class="quick-session_metric-text">
+                  <span class="quick-session_metric-label">Distance</span>
+                  <span class="quick-session_metric-value">${row.m ? row.m + ' m' : '--'}</span>
+                </div>
+              </button>
             </div>
           </div>
 
+          <div class="quick-session_panels">
+            <button type="button" class="quick-session_panel is-toggle" onclick="toggleParcoursMode()">
+              <span class="quick-session_radio ${!isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Rapide</span>
+              <span class="quick-session_radio ${isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Détaillée</span>
+            </button>
+            <button type="button" class="quick-session_panel is-toggle" onclick="toggleParcoursHoles()">
+              <span class="quick-session_radio ${f.holesCount === 9 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>9 trous</span>
+              <span class="quick-session_radio ${f.holesCount === 18 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>18 trous</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="quick-session_bg" ${puttImage ? `style="background-image:url('${puttImage}')"` : ''}></div>
+
+        <div class="session-result-buttons">
           ${isDetail ? `
-          <div class="quick-hole-card_section">
-            <span class="quick-hole-card_section-label">${puttsIcon}Putts</span>
-            <div class="quick-hole-card_putts">
-              <button type="button" class="quick-putt-btn ${r.putts === 0 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 0)">0</button>
-              <button type="button" class="quick-putt-btn ${r.putts === 1 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 1)">1</button>
-              <button type="button" class="quick-putt-btn ${r.putts === 2 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 2)">2</button>
-              <button type="button" class="quick-putt-btn ${r.putts === 3 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 3)">3</button>
-            </div>
-          </div>
-          <button type="button" class="quick-hole-card_resultat" onclick="openResultatPopup(${i})">
-            <span>${r.resultat ? resultatLabel(r.resultat) : 'Résultat'}</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          <button class="session-result-btn is-detail ${currentResult ? 'is-selected' : ''}" onclick="openResultatPopup(${idx})">
+            <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${targetPaths}</svg></span>${esc(resultatLabelText)}
           </button>
           ` : `
-          <div class="quick-hole-card_putts">
-            <button type="button" class="quick-putt-btn ${r.putts === 0 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 0)">0</button>
-            <button type="button" class="quick-putt-btn ${r.putts === 1 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 1)">1</button>
-            <button type="button" class="quick-putt-btn ${r.putts === 2 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 2)">2</button>
-            <button type="button" class="quick-putt-btn ${r.putts === 3 ? 'is-active' : ''}" onclick="setParcoursRowPuttsQuick(${i}, 3)">3</button>
-          </div>
+          <button class="session-result-btn is-missed ${currentResult === 'missed' ? 'is-selected' : ''}" onclick="setParcoursRowResult(${idx}, 'missed')">
+            <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 8l8 8M16 8l-8 8"/></svg></span>Manqué
+          </button>
+          <button class="session-result-btn is-made ${currentResult === 'made' ? 'is-selected' : ''}" onclick="setParcoursRowResult(${idx}, 'made')">
+            <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>Réussi
+          </button>
           `}
-        </div>`;
-      }).join('')}
-    </div>
+        </div>
+      </div>
 
-    <button class="exercise-modal_save quick-entry_save" id="parcours-save-btn" onclick="saveNewParcours()" ${!f.name.trim() ? 'disabled' : ''}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-      Enregistrer ce parcours
-    </button>
+      <div class="quick-session_holes">
+        ${rows.map(function (r, i) {
+          const isDone = r.putts !== null && r.putts !== undefined;
+          const state = (isDone ? (r.putts <= 1 ? 'is-done' : 'is-missed') : '') + (i === idx ? ' is-active' : '');
+          return `<button type="button" class="quick-session_hole-btn ${state}" onclick="goToParcoursHole(${i})">
+            <span class="quick-session_hole-num">${r.hole}</span>
+            <span class="quick-session_hole-dist">${r.m ? r.m + ' m' : '--'}</span>
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div class="quick-session_bar">
+        <div class="quick-session_bar-item">
+          ${icon('quick-session_bar-icon', putterPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Moy. putts</span>
+            <span class="quick-session_bar-value">${st.avgPutts == null ? '--' : st.avgPutts.toFixed(1)}</span>
+          </div>
+          <button type="button" class="quick-session_info-btn ${f.statsInfoOpen ? 'is-active' : ''}" onclick="toggleParcoursStatsInfo()" aria-label="Explication">i</button>
+        </div>
+        <div class="quick-session_bar-divider"></div>
+        <div class="quick-session_bar-item">
+          ${icon('quick-session_bar-icon', targetPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Putts totaux</span>
+            <span class="quick-session_bar-value">${st.putts}</span>
+          </div>
+        </div>
+        <div class="quick-session_bar-divider"></div>
+        <div class="quick-session_bar-item">
+          ${icon('quick-session_bar-icon', trophyPaths)}
+          <div class="quick-session_bar-text">
+            <span class="quick-session_bar-label">Taux de réussite</span>
+            <span class="quick-session_bar-value">${fmtPct(st.rate)}</span>
+            <div class="quick-session_track"><div class="quick-session_track-fill" style="width:${st.rate == null ? 0 : Math.round(st.rate)}%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      ${f.statsInfoOpen ? `<div class="mini-popup_info-text">Un putt raté compte pour 2 putts (le putt raté et le putt pour finir). Cette règle s'applique à la moyenne, au total et au Strokes Gained.</div>` : ''}
+
+      <button class="exercise-modal_save quick-entry_save" id="parcours-save-btn" onclick="saveNewParcours()" ${!f.name.trim() ? 'disabled' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        Enregistrer ce parcours
+      </button>
+    </div>
   `;
 }
 

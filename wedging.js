@@ -133,14 +133,14 @@ const Analytics = (function () {
   function buildRadarChartSvg(items) {
     const n = items.length;
     const validVals = items.filter(it => it.value !== null && it.value !== undefined).map(it => it.value);
-    const scaleMin = validVals.length ? Math.min(...validVals) : 0;
     const scaleMax = validVals.length ? Math.max(...validVals) : 1;
     const W = 320, H = 380, cx = W / 2, cy = 190, R = 105;
     const angleFor = i => (Math.PI * 2 * i / n) - Math.PI / 2;
+    // le centre = 0m (le trou), pas la valeur min du lot
     const radiusFor = v => {
       if (v === null || v === undefined) return 0;
-      if (scaleMax === scaleMin) return R;
-      return R * (v - scaleMin) / (scaleMax - scaleMin);
+      if (scaleMax === 0) return 0;
+      return R * v / scaleMax;
     };
     const pointsAttr = items.map((it, i) => { const r = radiusFor(it.value), a = angleFor(i); return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`; }).join(' ');
     const dotsHtml = items.map((it, i) => { const r = radiusFor(it.value), a = angleFor(i); return `<circle cx="${cx + r * Math.cos(a)}" cy="${cy + r * Math.sin(a)}" r="5" class="wg-radar-dot"/>`; }).join('');
@@ -336,7 +336,13 @@ function setWedgeNewShotBucket(b) { wedgeNewShotBucket = b; rerender(); }
 function wedgeKeypadPress(digit) { if (wedgeNewShotFinal.length >= 3) return; wedgeNewShotFinal += digit; rerender(); }
 function wedgeKeypadBackspace() { wedgeNewShotFinal = wedgeNewShotFinal.slice(0, -1); rerender(); }
 function wedgeKeypadClear() { wedgeNewShotFinal = ''; rerender(); }
-function setWedgeNewShotZone(z) { wedgeNewShotZone = z; rerender(); }
+function setWedgeNewShotZone(z) {
+  const wasGreen = wedgeNewShotZone === 'Green';
+  wedgeNewShotZone = z;
+  if (z === 'Green') wedgeNewShotFinal = '0'; // coup rentré : distance finale = 0, pas de saisie
+  else if (wasGreen) wedgeNewShotFinal = ''; // on quitte le centre : redemande une distance
+  rerender();
+}
 function openWedgeFinalPopup() { wedgeFinalPopupOpen = true; rerender(); }
 function closeWedgeFinalPopup() { wedgeFinalPopupOpen = false; rerender(); }
 function wedgeFinalPopupHtml() {
@@ -874,10 +880,15 @@ Views.parcours = function () {
       <div class="wg-range-grid">${WEDGE_BUCKETS.map(b => `<button type="button" class="wg-range-btn ${wedgeNewShotBucket === b ? 'active' : ''}" onclick="setWedgeNewShotBucket(${b})">${b}-${b + 4}m</button>`).join('')}</div>
 
       <label class="wg-label mt-12">Distance finale (m)</label>
+      ${wedgeNewShotZone === 'Green' ? `
+      <div class="wg-field-box wg-field-box--center wg-field-box--locked">
+        <div class="wg-field-box-value">0m</div>
+        <div class="wg-field-box-label">Coup rentré</div>
+      </div>` : `
       <div class="wg-field-box wg-field-box--center" onclick="openWedgeFinalPopup()">
         <div class="wg-field-box-value">${wedgeNewShotFinal ? wedgeNewShotFinal : '0'}m</div>
         <div class="wg-field-box-label">Toucher pour saisir</div>
-      </div>
+      </div>`}
 
       <label class="wg-label mt-12">Zone</label>
       <div class="wg-wheel-wrap">${UI.wheelSvg(wedgeNewShotZone, 'setWedgeNewShotZone')}</div>
