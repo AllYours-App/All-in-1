@@ -2,8 +2,6 @@
    PARTIE : PUTTING (regles scopees sous #page-putting)
    =========================================================================== */
 
-
-
 #page-putting {
   --accent:#8fd13f;
     --accent-dim: rgba(143, 209, 63, 0.12);
@@ -1511,28 +1509,6 @@
   height: 20px;
 }
 
-#page-putting .quick-entry_intro {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 4px 8px 0;
-}
-
-#page-putting .quick-entry_title {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-#page-putting .quick-entry_subtitle {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-secondary);
-}
-
 #page-putting .quick-entry_infocard {
   display: flex;
   align-items: center;
@@ -1602,6 +1578,25 @@
   background-color: var(--border-subtle);
 }
 
+#page-putting .quick-session_panel.quick-entry_holes {
+  flex-direction: row;
+  gap: 4px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+#page-putting .quick-entry_holes .quick-session_radio {
+  gap: 5px;
+  padding: 5px 8px 5px 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#page-putting .quick-entry_holes .quick-session_radio-dot {
+  width: 12px;
+  height: 12px;
+}
+
 #page-putting .quick-holes-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1667,7 +1662,7 @@
 
 #page-putting .quick-hole-card_putts {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
 }
 
@@ -1688,6 +1683,52 @@
   color: #0b0f0c;
 }
 
+#page-putting .quick-hole-card_section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#page-putting .quick-hole-card_section-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#page-putting .quick-hole-card_section-label svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+#page-putting .quick-hole-card_resultat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+#page-putting .quick-hole-card_resultat svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
 #page-putting .quick-entry_save {
   display: flex;
   align-items: center;
@@ -1700,6 +1741,161 @@
 #page-putting .quick-entry_save svg {
   width: 18px;
   height: 18px;
+}
+
+/* ---------- Popups pente (horloge) et résultat (grille 3x3), partagés Saisie rapide / détaillée ---------- */
+
+#page-putting .mini-popup_overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(4, 8, 6, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+#page-putting .mini-popup {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#page-putting .mini-popup_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#page-putting .mini-popup_title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#page-putting .mini-popup_head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+#page-putting .mini-popup_info,
+#page-putting .mini-popup_close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-card-alt);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+  padding: 0;
+}
+
+#page-putting .mini-popup_close svg {
+  width: 14px;
+  height: 14px;
+  font-style: normal;
+}
+
+#page-putting .mini-popup_info.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+#page-putting .mini-popup_info-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background-color: var(--bg-card-alt);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+#page-putting .clock-picker_svg {
+  width: 100%;
+  height: auto;
+}
+
+#page-putting .clock-picker_ring {
+  fill: none;
+  stroke: var(--border-subtle);
+  stroke-width: 2;
+}
+
+#page-putting .clock-picker_center {
+  fill: var(--border-subtle);
+}
+
+#page-putting .clock-picker_point circle {
+  fill: var(--bg-card-alt);
+  stroke: var(--border-subtle);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+#page-putting .clock-picker_point text {
+  fill: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+#page-putting .clock-picker_point.is-active circle {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+#page-putting .clock-picker_point.is-active text {
+  fill: #0b0f0c;
+}
+
+#page-putting .resultat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+#page-putting .resultat-grid_btn {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+}
+
+#page-putting .resultat-grid_btn.is-center {
+  background-color: rgba(143, 209, 63, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+#page-putting .resultat-grid_btn.is-active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #0b0f0c;
 }
 
 #page-putting .session-progress {
@@ -1748,8 +1944,8 @@
 }
 
 #page-putting .slope-visual {
-  width: 140px;
-  height: 140px;
+  width: 168px;
+  height: 168px;
 }
 
 #page-putting .slope-visual_ring {
@@ -1772,6 +1968,19 @@
 
 #page-putting .slope-visual_arrowhead {
   fill: var(--accent);
+}
+
+#page-putting .slope-visual_num {
+  fill: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+#page-putting .slope-visual_num.is-active {
+  fill: var(--accent);
+  font-weight: 700;
 }
 
 #page-putting .session-attempts {
@@ -2013,3 +2222,408 @@
   pointer-events: none;
 }
 
+/* ---------- Exercice rapide : écran de séance ---------- */
+
+#page-putting .quick-session {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#page-putting .quick-session_bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px 12px;
+  gap: 8px;
+}
+
+#page-putting .quick-session_bar-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+#page-putting .quick-session_bar-item.is-wide {
+  flex: 1.7;
+}
+
+#page-putting .quick-session_bar-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#page-putting .quick-session_bar-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+#page-putting .quick-session_bar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+#page-putting .quick-session_bar-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-putting .quick-session_bar-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-putting .quick-session_bar-value.is-accent {
+  color: var(--accent);
+}
+
+#page-putting .quick-session_bar-value.is-negative {
+  color: #e0574a;
+}
+
+#page-putting .quick-session_bar-divider {
+  width: 1px;
+  align-self: stretch;
+  background-color: var(--border-subtle);
+  flex-shrink: 0;
+}
+
+#page-putting .quick-session_info-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-card-alt);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#page-putting .quick-session_info-btn.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+#page-putting .quick-session_card {
+  --quick-image-height: 200px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#page-putting .quick-session_bg {
+  position: relative;
+  margin: 0 -16px;
+  height: var(--quick-image-height);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#page-putting .quick-session_bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, var(--bg-card) 0%, rgba(19, 25, 22, 0) 30%, rgba(19, 25, 22, 0) 70%, var(--bg-card) 100%);
+}
+
+#page-putting .quick-session_main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 108px);
+  gap: 16px;
+  align-items: start;
+}
+
+#page-putting .quick-session_info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+#page-putting .quick-session_hole {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#page-putting .quick-session_badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  background-color: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+#page-putting .quick-session_hole-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#page-putting .quick-session_metrics {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 16px;
+}
+
+#page-putting .quick-session_metric {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#page-putting .quick-session_metric-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+#page-putting .quick-session_metric-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+#page-putting .quick-session_metric-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+#page-putting .quick-session_metric-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#page-putting .quick-session_metric-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+#page-putting .quick-session_panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+#page-putting .quick-session_radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+#page-putting .quick-session_radio.is-active {
+  border-color: var(--accent);
+  background-color: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+#page-putting .quick-session_radio-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+#page-putting .quick-session_radio.is-active .quick-session_radio-dot {
+  border-color: var(--accent);
+}
+
+#page-putting .quick-session_radio.is-active .quick-session_radio-dot::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+#page-putting .quick-session_track {
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+#page-putting .quick-session_track-fill {
+  height: 100%;
+  border-radius: 2px;
+  background-color: var(--accent);
+}
+
+#page-putting .quick-session .session-result-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 10px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+#page-putting .quick-session .session-result-btn.is-selected {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+#page-putting .quick-session_btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+#page-putting .quick-session_btn-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+#page-putting .session-result-btn.is-missed .quick-session_btn-icon {
+  border: 1.5px solid #e0574a;
+}
+
+#page-putting .session-result-btn.is-made .quick-session_btn-icon {
+  background-color: #0b0f0c;
+  color: var(--accent);
+}
+
+#page-putting .quick-session_holes {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 14px 4px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px 10px;
+}
+
+#page-putting .quick-session_hole-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+#page-putting .quick-session_hole-num {
+  width: 100%;
+  max-width: 34px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-card-alt);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#page-putting .quick-session_hole-dist {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+#page-putting .quick-session_hole-btn.is-done .quick-session_hole-num {
+  background-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+#page-putting .quick-session_hole-btn.is-missed .quick-session_hole-num {
+  background-color: rgba(224, 87, 74, 0.16);
+  border-color: rgba(224, 87, 74, 0.4);
+  color: #e0574a;
+}
+
+#page-putting .quick-session_hole-btn.is-active .quick-session_hole-num {
+  border: 2px solid var(--accent);
+}
+
+#page-putting .quick-session_hole-btn.is-active .quick-session_hole-dist {
+  color: var(--text-primary);
+}
+
+@media (max-width: 360px) {
+  #page-putting .quick-session_card {
+    --quick-image-height: 170px;
+  }
+
+  #page-putting .quick-session_main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 100px);
+  }
+
+  #page-putting .quick-session_radio {
+    font-size: 12px;
+  }
+
+  #page-putting .quick-session_hole-dist {
+    font-size: 9px;
+  }
+}
