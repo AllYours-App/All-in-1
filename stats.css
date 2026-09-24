@@ -1202,14 +1202,6 @@ html {
    SAISIE RAPIDE — écran de saisie par trou (score, putts, fairway, green)
    ========================================================================== */
 
-#page-stats .qr-intro {
-  margin: var(--space-2xs) 0 var(--space-xl);
-  text-align: center;
-  font-size: var(--fs-sm);
-  color: var(--color-text-secondary);
-  line-height: var(--lh-relaxed);
-}
-
 /* ---------- Badge numéroté (réutilisé : trou, score, putts) ---------- */
 #page-stats .num-badge {
   width: 40px;
@@ -1364,7 +1356,6 @@ html {
 #page-stats .qr-submit {
   display: block;
   width: 100%;
-  margin-top: var(--space-xl);
   padding: 18px;
   border: none;
   border-radius: var(--radius-full);
