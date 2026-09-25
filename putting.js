@@ -1503,8 +1503,11 @@ function getCombineById(id) {
 // --- Entrée / sortie du flux ---
 function enterExerciseFlow(title) {
   document.querySelector('[data-header="main"]').classList.add('is-hidden');
+  document.querySelector('[data-header="stats"]').classList.add('is-hidden');
   document.querySelector('[data-header="exercise-flow"]').classList.remove('is-hidden');
   document.querySelector('.putting_wrapper').classList.add('is-hidden');
+  document.querySelector('.stats-wrapper').classList.add('is-hidden');
+  document.body.classList.remove('is-stats-screen');
   document.getElementById('exercise-flow-root').classList.remove('is-hidden');
   document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
   const selectBar = document.getElementById('exercise-select-bar');
