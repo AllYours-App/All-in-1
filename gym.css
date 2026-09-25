@@ -2280,46 +2280,46 @@ body.gym-home-locked {
 
 .session-summary {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 6px;
   text-align: center;
 }
 
 @media (max-width: 400px) {
   .session-summary {
-    gap: 6px;
+    gap: 6px 4px;
   }
-  
+
   .session-summary__icon {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
   }
-  
+
   .session-summary__label {
-    font-size: 10px;
+    font-size: 9px;
   }
-  
+
   .session-summary__value {
-    font-size: 15px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 360px) {
   .session-summary {
-    gap: 4px;
+    gap: 4px 3px;
   }
-  
+
   .session-summary__icon {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
   }
-  
+
   .session-summary__label {
-    font-size: 9px;
+    font-size: 8px;
   }
-  
+
   .session-summary__value {
-    font-size: 14px;
+    font-size: 12px;
   }
 }
 
@@ -2328,12 +2328,12 @@ body.gym-home-locked {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .session-summary__icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   color: var(--gym-accent);
   flex-shrink: 0;
 }
@@ -2352,7 +2352,7 @@ body.gym-home-locked {
 }
 
 .session-summary__label {
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -2360,7 +2360,7 @@ body.gym-home-locked {
 }
 
 .session-summary__value {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -2380,7 +2380,6 @@ body.gym-home-locked {
   border: 1.5px solid var(--gym-border);
 }
 
-.set-card.is-en-cours,
 .set-card.is-terminee {
   border-color: var(--gym-accent-border);
 }
@@ -2460,30 +2459,26 @@ body.gym-home-locked {
   .set-card__inputs {
     gap: 8px;
   }
-  
+
   .set-card__weight-row {
     padding: 6px 8px;
   }
-  
+
   .set-card__weight-input {
     font-size: 16px;
   }
-  
+
   .set-card__unit {
     font-size: 11px;
   }
-  
-  .set-card__reps-input {
+
+  .set-card__reps-value {
     font-size: 16px;
   }
-  
-  .set-card__reps-target {
-    font-size: 12px;
-  }
-  
+
   .set-card__validate {
-    padding: 6px 8px;
-    font-size: 11px;
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -2491,35 +2486,31 @@ body.gym-home-locked {
   .set-card__inputs {
     gap: 6px;
   }
-  
+
   .set-card__weight-row {
     padding: 5px 6px;
   }
-  
+
   .set-card__weight-input {
     font-size: 15px;
   }
-  
+
   .set-card__unit {
     font-size: 10px;
   }
-  
-  .set-card__reps-input {
+
+  .set-card__reps-value {
     font-size: 15px;
   }
-  
-  .set-card__reps-target {
-    font-size: 11px;
-  }
-  
+
   .set-card__validate {
-    padding: 5px 6px;
-    font-size: 10px;
+    width: 36px;
+    height: 36px;
   }
-  
+
   .set-card__validate svg {
-    width: 13px;
-    height: 13px;
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -2599,52 +2590,46 @@ body.gym-home-locked {
 
 .set-card__reps-row {
   display: flex;
-  align-items: baseline;
-  gap: 4px;
-  padding: 8px 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  padding: 8px 10px;
 }
 
-.set-card__reps-input {
-  width: 2.2em;
-  background: transparent;
-  border: none;
-  color: var(--gym-text);
+.set-card.is-terminee .set-card__reps-row {
+  border-color: var(--gym-accent-border);
+}
+
+.set-card__reps-value {
   font-size: 18px;
   font-weight: 800;
-  font-family: inherit;
-}
-
-.set-card__reps-target {
-  font-size: 13px;
-  color: var(--gym-text-secondary);
-  white-space: nowrap;
+  color: var(--gym-text);
 }
 
 .set-card__validate {
-  width: 100%;
+  align-self: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: var(--gym-radius-sm);
-  border: 1.5px solid var(--gym-border-strong);
-  color: var(--gym-text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 10px;
-  text-align: center;
-  transition: border-color var(--gym-speed-fast) var(--gym-ease), color var(--gym-speed-fast) var(--gym-ease);
+  border: 1.5px solid rgba(255, 92, 92, 0.4);
+  color: var(--gym-danger);
+  transition: border-color var(--gym-speed-fast) var(--gym-ease), color var(--gym-speed-fast) var(--gym-ease), background var(--gym-speed-fast) var(--gym-ease);
 }
 
 .set-card__validate svg {
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
 .set-card__validate.is-valid {
   border-color: var(--gym-accent-border);
   color: var(--gym-accent);
+  background: var(--gym-accent-dim);
 }
 
 /* ---- Actions basses --------------------------------------------------------- */

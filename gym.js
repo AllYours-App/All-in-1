@@ -807,6 +807,8 @@ const ICONS = {
 
   checkCircle: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.3L6.5 12l1.4-1.4 2.9 2.9 5.9-5.9 1.4 1.4-7.3 7.3z"/></svg>`,
 
+  cross: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
 
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>`,
@@ -4031,13 +4033,12 @@ function gymRenderHistoryRow(entry) {
             <div class="set-card__field set-card__field--reps">
               <span class="set-card__field-label">Répétitions</span>
               <div class="set-card__reps-row">
-                <input type="number" class="set-card__reps-input" value="${set.reps}" data-set-index="${index}" data-field="reps" />
-                <span class="set-card__reps-target">/ ${set.target}</span>
+                <span class="set-card__reps-value">${set.target}</span>
               </div>
             </div>
           </div>
-          <button type="button" class="set-card__validate ${set.valid ? "is-valid" : ""}" data-set-index="${index}">
-            ${set.valid ? gymIcon("check") : gymIcon("timer")} ${set.valid ? "Série validée" : "À compléter"}
+          <button type="button" class="set-card__validate ${set.valid ? "is-valid" : ""}" data-set-index="${index}" aria-label="${set.valid ? "Série réussie" : "Marquer la série en échec"}">
+            ${set.valid ? gymIcon("check") : gymIcon("cross")}
           </button>
         </div>
       </div>
@@ -4050,11 +4051,6 @@ function gymRenderHistoryRow(entry) {
         exo.sets[Number(e.target.dataset.setIndex)].weight = e.target.value;
       });
     });
-    list.querySelectorAll('[data-field="reps"]').forEach((input) => {
-      input.addEventListener("input", (e) => {
-        exo.sets[Number(e.target.dataset.setIndex)].reps = Number(e.target.value) || 0;
-      });
-    });
     list.querySelectorAll(".set-card__validate").forEach((btn) => {
       btn.addEventListener("click", () => toggleSetValid(Number(btn.dataset.setIndex)));
     });
@@ -4063,7 +4059,7 @@ function gymRenderHistoryRow(entry) {
   }
 
   /**
-   * Coche/décoche manuellement une série (bouton "Série validée"/"À compléter").
+   * Coche/décoche manuellement une série (bouton réussi/échec).
    */
   function toggleSetValid(index) {
     const exo = currentExercise();
