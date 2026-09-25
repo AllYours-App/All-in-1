@@ -16,7 +16,7 @@ function renderPuttingTab() {
     <svg class="page-header_back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
     <span class="page-header_back-label">Putting</span>
   </a>
-  <h1 class="page-header_title">Stats Performance</h1>
+  <h1 class="page-header_title">Performance</h1>
   <span class="page-header_menu"></span>
 </header>
 
@@ -37,14 +37,12 @@ function renderPuttingTab() {
       <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
       <div class="putting_tab-text">
         <div class="putting_tab-title">Parcours</div>
-        <div class="putting_tab-subtitle">Saisie réelle ou test</div>
       </div>
     </a>
     <a href="#" class="putting_tab" data-tab="exercices" onclick="selectPuttingTab(event, 'exercices')">
       <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>
       <div class="putting_tab-text">
         <div class="putting_tab-title">Exercices</div>
-        <div class="putting_tab-subtitle">Entraînement structuré</div>
       </div>
     </a>
   </div>
@@ -101,16 +99,6 @@ function renderPuttingTab() {
 
     <!-- Sous-panneau : Analyse Distance -->
     <div class="analyse-subpanel is-hidden" data-sub="analyse-distance">
-
-      <div class="analyse-header">
-        <div class="analyse-header_top">
-          <div>
-            <div class="analyse-header_eyebrow">Analyse</div>
-            <h2 class="analyse-header_title">Distance</h2>
-          </div>
-        </div>
-        <div class="analyse-header_desc">Vos performances selon la distance des putts.</div>
-      </div>
 
       <div class="analyse-filters">
         <button class="analyse-filter is-active" id="filter-btn-distance-sessions" onclick="openFilterSheet(event, 'distance', 'sessions')">
@@ -269,16 +257,6 @@ function renderPuttingTab() {
     <!-- Sous-panneau : Analyse Pente -->
     <div class="analyse-subpanel is-hidden" data-sub="analyse-pente">
 
-      <div class="analyse-header">
-        <div class="analyse-header_top">
-          <div>
-            <div class="analyse-header_eyebrow">Analyse</div>
-            <h2 class="analyse-header_title">Pente</h2>
-          </div>
-        </div>
-        <div class="analyse-header_desc">Vos performances selon la pente des putts.</div>
-      </div>
-
       <div class="analyse-filters">
         <button class="analyse-filter is-active" id="filter-btn-pente-sessions" onclick="openFilterSheet(event, 'pente', 'sessions')">
           <span class="analyse-filter_label">Sessions</span>
@@ -395,14 +373,12 @@ function renderPuttingTab() {
       <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
       <div class="putting_tab-text">
         <div class="putting_tab-title">Parcours</div>
-        <div class="putting_tab-subtitle">Saisie réelle ou test</div>
       </div>
     </a>
     <a href="#" class="putting_tab" data-tab="exercices" onclick="selectPuttingTab(event, 'exercices')">
       <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>
       <div class="putting_tab-text">
         <div class="putting_tab-title">Exercices</div>
-        <div class="putting_tab-subtitle">Entraînement structuré</div>
       </div>
     </a>
   </div>
@@ -578,6 +554,7 @@ function selectPuttingTab(event, tab) {
       el.classList.remove('is-active');
     });
     document.getElementById('main-header-back-label').textContent = 'Home';
+    document.getElementById('main-header-title').textContent = 'Putting';
   }
 
   function selectAnalyseSection(event, section) {
@@ -597,6 +574,7 @@ function selectPuttingTab(event, tab) {
       el.classList.toggle('is-active', el.dataset.section === section);
     });
     document.getElementById('main-header-back-label').textContent = section === 'home' ? 'Home' : 'Putting';
+    document.getElementById('main-header-title').textContent = section === 'analyse-distance' ? 'Distance' : 'Pente';
     if (section === 'analyse-distance') renderAnalyseDistance();
     if (section === 'analyse-pente') renderAnalysePente();
   }
@@ -1759,18 +1737,18 @@ function setQuickHolesCount(n) {
   renderCombineSessionScreen();
 }
 
-// Un clic sur l'encadré 9 / 18 trous passe de l'un à l'autre
-function toggleQuickHolesCount() {
+// Sélection explicite du nombre de trous (9 / 18)
+function selectQuickHolesCount(n) {
   const c = getCombineById(activeCombineId);
   if (!c) return;
-  setQuickHolesCount(c.holesCount === 9 ? 18 : 9);
+  setQuickHolesCount(n);
 }
 
-// Un clic sur l'encadré Rapide / Détaillée passe de l'un à l'autre
-function toggleQuickMode() {
+// Sélection explicite du mode (Rapide / Détaillée)
+function selectQuickMode(mode) {
   const c = getCombineById(activeCombineId);
-  if (!c) return;
-  c.entryMode = c.entryMode === 'complete' ? 'express' : 'complete';
+  if (!c || c.entryMode === mode) return;
+  c.entryMode = mode;
   renderCombineSessionScreen();
 }
 
@@ -1900,13 +1878,11 @@ function renderQuickSessionScreen() {
           </div>
 
           <div class="quick-session_panels">
-            <button type="button" class="quick-session_panel is-toggle" onclick="toggleQuickMode()">
-              <span class="quick-session_radio ${!isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Rapide</span>
-              <span class="quick-session_radio ${isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Détaillée</span>
+            <button type="button" class="quick-session_panel is-toggle" onclick="selectQuickMode('${isDetail ? 'express' : 'complete'}')">
+              <span class="quick-session_radio is-active"><span class="quick-session_radio-dot"></span>${isDetail ? 'Détaillée' : 'Rapide'}</span>
             </button>
-            <button type="button" class="quick-session_panel is-toggle" onclick="toggleQuickHolesCount()">
-              <span class="quick-session_radio ${holes.length === 9 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>9 trous</span>
-              <span class="quick-session_radio ${holes.length === 18 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>18 trous</span>
+            <button type="button" class="quick-session_panel is-toggle" onclick="selectQuickHolesCount(${holes.length === 9 ? 18 : 9})">
+              <span class="quick-session_radio is-active"><span class="quick-session_radio-dot"></span>${holes.length} trous</span>
             </button>
           </div>
 
@@ -2599,15 +2575,16 @@ function setParcoursHoles(n) {
   renderNewParcoursModal();
 }
 
-// Un clic sur l'encadré 9 / 18 trous passe de l'un à l'autre
-function toggleParcoursHoles() {
-  setParcoursHoles(newParcoursForm.holesCount === 9 ? 18 : 9);
+// Sélection explicite du nombre de trous (9 / 18)
+function selectParcoursHoles(n) {
+  setParcoursHoles(n);
 }
 
-// Un clic sur l'encadré Rapide / Détaillée passe de l'un à l'autre
-function toggleParcoursMode() {
+// Sélection explicite du mode (Rapide / Détaillée)
+function selectParcoursMode(mode) {
   const f = newParcoursForm;
-  f.mode = f.mode === 'complete' ? 'express' : 'complete';
+  if (f.mode === mode) return;
+  f.mode = mode;
   renderNewParcoursModal();
 }
 
@@ -2927,13 +2904,11 @@ function renderNewParcoursModal() {
           </div>
 
           <div class="quick-session_panels">
-            <button type="button" class="quick-session_panel is-toggle" onclick="toggleParcoursMode()">
-              <span class="quick-session_radio ${!isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Rapide</span>
-              <span class="quick-session_radio ${isDetail ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>Détaillée</span>
+            <button type="button" class="quick-session_panel is-toggle" onclick="selectParcoursMode('${isDetail ? 'express' : 'complete'}')">
+              <span class="quick-session_radio is-active"><span class="quick-session_radio-dot"></span>${isDetail ? 'Détaillée' : 'Rapide'}</span>
             </button>
-            <button type="button" class="quick-session_panel is-toggle" onclick="toggleParcoursHoles()">
-              <span class="quick-session_radio ${f.holesCount === 9 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>9 trous</span>
-              <span class="quick-session_radio ${f.holesCount === 18 ? 'is-active' : ''}"><span class="quick-session_radio-dot"></span>18 trous</span>
+            <button type="button" class="quick-session_panel is-toggle" onclick="selectParcoursHoles(${f.holesCount === 9 ? 18 : 9})">
+              <span class="quick-session_radio is-active"><span class="quick-session_radio-dot"></span>${f.holesCount} trous</span>
             </button>
           </div>
         </div>

@@ -143,9 +143,10 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 16px;
+  padding: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
   text-decoration: none;
   cursor: pointer;
@@ -1207,6 +1208,10 @@
 #page-putting .bottom-nav_sublabel {
   font-size: 9px;
   color: var(--text-tertiary);
+}
+
+#page-putting .bottom-nav_item.is-active {
+  background: none;
 }
 
 #page-putting .exercise-modal_overlay {
