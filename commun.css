@@ -343,6 +343,25 @@
    --------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
+   PAVÉ NUMÉRIQUE — clavier numérique réutilisable (distance finale, rayon de
+   validation, etc.). Généré côté JS par appKeypad() (commun.js).
+   Couleurs communes à tous les modules : mêmes tokens --wg-* partout
+   (définis en :root dans base.css), donc pas de variables --app-keypad-*
+   à renseigner par module, contrairement au header/nav ci-dessus.
+   Ajouter le sélecteur #page-X ci-dessous à chaque module qui l'adopte.
+   --------------------------------------------------------------------------- */
+#page-wedging .app-keypad-value{
+  font-size:32px;font-weight:700;text-align:center;color:var(--wg-accent);margin:8px 0 16px;
+}
+#page-wedging .app-keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;
+}
+#page-wedging .app-keypad button{
+  background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text);
+  border-radius:var(--wg-radius-sm);padding:16px 0;font-size:18px;cursor:pointer;
+}
+
+/* ---------------------------------------------------------------------------
    BLOCS "field-list" — cartes de champs/réglages, partagées entre le module
    Menu (réglages, radars, driver...) et le module Stats (écran "Saisie
    détaillée", ex. sac de golf). Couleurs sur les tokens --mn-* (base.css).

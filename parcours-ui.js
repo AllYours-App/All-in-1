@@ -162,6 +162,7 @@
    Réglages (unité de distance m / ft), persistés dans le navigateur
    -------------------------------------------------------------------------- */
 const M_TO_FT = 3.28084;
+const M_TO_YD = 1.09361;
 const PARCOURS_SETTINGS_KEY = "parcours-settings";
 
 let parcoursSettings = { distanceUnit: "m" };
@@ -209,6 +210,7 @@ let windCalcOpen = false;
 let windInfoOpen = false;
 let windDetailOpen = false;
 let elevationOpen = false;
+let distancesCalcOpen = false;
 let trackInfoOpen = false;
 
 let windCalc = { angle: 0, speedKmh: 20, distanceInput: 150 };
@@ -223,6 +225,7 @@ function renderCourseModals() {
     windInfoOpen ? windInfoHtml() : "",
     windDetailOpen ? windDetailHtml() : "",
     elevationOpen ? elevationCalcHtml() : "",
+    distancesCalcOpen ? distancesCalcHtml() : "",
     trackInfoOpen ? trackInfoHtml() : ""
   ].join("");
 }
@@ -632,6 +635,82 @@ function elevationCalcHtml() {
             </div>
           </div>
         `}
+      </div>
+    </div>
+  `;
+}
+
+/* --------------------------------------------------------------------------
+   Distances perso — lecture des distances saisies dans Menu > Mes distances.
+   State géré par menu.js (golfBag, personalDistances, golfClubCatalog,
+   settings.distanceUnit) : les deux scripts partagent le scope global de
+   la page, donc on lit directement ces variables sans dupliquer le state.
+   -------------------------------------------------------------------------- */
+function openDistancesCalc() { distancesCalcOpen = true; renderCourseModals(); }
+function closeDistancesCalc() { distancesCalcOpen = false; renderCourseModals(); }
+
+function goToMenuDistances() {
+  closeDistancesCalc();
+  if (typeof showPage === "function") showPage("menu");
+  if (typeof goToDistances === "function") goToDistances();
+}
+
+// Unité d'affichage par type de club : le putting se juge en feet, tout le
+// reste (mises en jeu, coups d'approche...) se juge en yards.
+function distanceUnitForClub(clubId) {
+  return clubId === "putter" ? "ft" : "yd";
+}
+function metersToClubUnit(meters, unit) {
+  return unit === "ft" ? meters * M_TO_FT : meters * M_TO_YD;
+}
+
+// Clubs du sac ayant une distance renseignée, convertis dans l'unité propre
+// à chaque club et triés du plus long au plus court coup réel (en mètres,
+// pour que la barre reste comparable même entre feet et yards).
+function distancesCalcRows() {
+  if (typeof golfBag === "undefined" || typeof personalDistances === "undefined" || typeof golfClubCatalog === "undefined") {
+    return [];
+  }
+  const menuUnit = (typeof settings !== "undefined" && settings.distanceUnit === "ft") ? "ft" : "m";
+  return golfClubCatalog
+    .filter((c) => golfBag.clubs.includes(c.id))
+    .map((c) => {
+      const raw = personalDistances[c.id];
+      const meters = (raw === null || raw === undefined || raw === "") ? null : distanceToMeters(raw, menuUnit);
+      if (meters === null) return { name: c.name, meters: null };
+      const unit = distanceUnitForClub(c.id);
+      return { name: c.name, meters, unit, display: Math.round(metersToClubUnit(meters, unit)) };
+    })
+    .filter((r) => r.meters !== null)
+    .sort((a, b) => b.meters - a.meters);
+}
+
+function distancesCalcHtml() {
+  const rows = distancesCalcRows();
+  const max = rows.length ? Math.max(...rows.map((r) => r.meters)) : 0;
+
+  return `
+    <div class="modal-overlay" onclick="closeDistancesCalc()">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <h3>Mes distances</h3>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeDistancesCalc()">✕</button>
+        </div>
+
+        ${rows.length === 0 ? `
+          <p class="hint-text">Aucune distance renseignée. Ajoute-les dans Menu &rsaquo; Mes distances.</p>
+          <button class="btn btn-primary" onclick="goToMenuDistances()">Renseigner mes distances</button>
+        ` : rows.map((r) => `
+          <div class="progress-row">
+            <div class="progress-labels">
+              <span>${r.name}</span>
+              <span>${r.display} ${r.unit}</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${max ? (r.meters / max) * 100 : 0}%;"></div>
+            </div>
+          </div>
+        `).join("")}
       </div>
     </div>
   `;

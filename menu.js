@@ -35,13 +35,15 @@ let radars = [
 
 let golfBag = { clubs: [] };
 
+let personalDistances = {}; // { clubId: distanceValue }
+
 let driverSettings = { length: null, weight: null };
 
 // Cible appelée par le bouton retour, réassignée par chaque écran qui en a besoin.
 let backTarget = () => showPage('home');
 
 function saveStateToLocalStorage() {
-  const data = { userProfile, settings, radars, golfBag, driverSettings };
+  const data = { userProfile, settings, radars, golfBag, driverSettings, personalDistances };
   localStorage.setItem("golfAppState", JSON.stringify(data));
 }
 
@@ -55,6 +57,7 @@ function loadStateFromLocalStorage() {
     if (Array.isArray(data.radars) && data.radars.length) radars = data.radars;
     if (data.golfBag) Object.assign(golfBag, data.golfBag);
     if (data.driverSettings) Object.assign(driverSettings, data.driverSettings);
+    if (data.personalDistances) Object.assign(personalDistances, data.personalDistances);
   } catch (e) {
     console.error("Erreur de lecture du localStorage", e);
   }
@@ -99,6 +102,9 @@ function renderMenuTab() {
       <h3>Profil</h3>
       <div class="field-row"><span class="label">Mon sac de golf</span><span class="val">
         <button onclick="goToGolfBag()">${golfBag.clubs.length}/14 clubs &#8250;</button>
+      </span></div>
+      <div class="field-row"><span class="label">Mes distances</span><span class="val">
+        <button onclick="goToDistances()">&#8250;</button>
       </span></div>
     </div>
     <div class="field-list">
@@ -370,6 +376,43 @@ function toggleClub(id, isChecked){
   }
   saveStateToLocalStorage();
   renderGolfBagScreen();
+}
+
+/* ==========================================================================
+   Écran Mes distances — un champ de distance par club présent dans le sac
+   (source de vérité pour la sélection : golfBag.clubs)
+   ========================================================================== */
+function goToDistances(){
+  renderDistancesScreen();
+}
+
+function renderDistancesScreen(){
+  backTarget = () => { showPage('menu'); renderMenuTab(); };
+  backBtn.classList.remove("is-hidden");
+  headerTitle.textContent = "Mes distances";
+  const unitLabel = settings.distanceUnit === 'ft' ? 'ft' : 'm';
+  // On affiche les clubs dans l'ordre du catalogue, filtrés sur ceux du sac
+  const selectedClubs = golfClubCatalog.filter(c => golfBag.clubs.includes(c.id));
+  menuRoot.innerHTML = `
+    ${topRowHtml()}
+    <div class="field-list">
+      <h3>Distances par club</h3>
+      ${selectedClubs.length === 0 ? `
+        <div class="field-row"><span class="label">Aucun club dans le sac</span></div>
+      ` : selectedClubs.map(c => `
+        <div class="field-row"><span class="label">${c.name}</span><span class="val">
+          <input type="number" step="1" value="${personalDistances[c.id] ?? ''}" onchange="updateDistance('${c.id}',this.value)"> ${unitLabel}
+        </span></div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Auto-save de la distance saisie pour un club donné
+function updateDistance(clubId, value){
+  const num = parseFloat(value);
+  personalDistances[clubId] = isNaN(num) ? null : num;
+  saveStateToLocalStorage();
 }
 
 /* ==========================================================================

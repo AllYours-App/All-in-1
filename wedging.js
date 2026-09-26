@@ -244,16 +244,7 @@ const UI = (function () {
       </div>
     </div>`;
   }
-  /* ---------- Clavier numérique réutilisable (distance finale, rayon de validation) ---------- */
-  function keypad(pressFn, backspaceFn, extraKey) {
-    const extra = extraKey ? `<button type="button" onclick="${extraKey.fn}">${extraKey.label}</button>` : `<button type="button" onclick="wedgeKeypadClear()">C</button>`;
-    return `<div class="wg-keypad">
-      ${[1,2,3,4,5,6,7,8,9].map(n => `<button type="button" onclick="${pressFn}('${n}')">${n}</button>`).join('')}
-      ${extra}
-      <button type="button" onclick="${pressFn}('0')">0</button>
-      <button type="button" onclick="${backspaceFn}()">&larr;</button>
-    </div>`;
-  }
+  /* Clavier numérique (distance finale, rayon de validation) : appKeypad() dans commun.js */
 
   /* ---------- Roue à 9 zones (Journal Parcours) : centre = Green (trou), 8 secteurs = directions ---------- */
   const CIRCLE_ANGLE_OFFSET = -22.5;
@@ -306,7 +297,7 @@ const UI = (function () {
     return `<svg viewBox="0 0 200 200" class="wg-wheel">${sectorsHtml}<circle cx="${cx}" cy="${cy}" r="${R_HOLE}" class="wg-wheel-hole"/></svg>`;
   }
 
-  return { ICONS, toast, formatDate, header, topbar, analysisHeader, navCards, bottomNav, modal, keypad, wheelSvg, twoRingWheelSvg };
+  return { ICONS, toast, formatDate, header, topbar, analysisHeader, navCards, bottomNav, modal, keypad: appKeypad, wheelSvg, twoRingWheelSvg };
 })();
 
 /* ==================== 5. ÉTAT GLOBAL WEDGE + INTERACTIONS ==================== */
@@ -347,8 +338,8 @@ function openWedgeFinalPopup() { wedgeFinalPopupOpen = true; rerender(); }
 function closeWedgeFinalPopup() { wedgeFinalPopupOpen = false; rerender(); }
 function wedgeFinalPopupHtml() {
   return UI.modal('Distance finale', `
-    <div class="wg-keypad-value">${wedgeNewShotFinal ? wedgeNewShotFinal : '0'}m</div>
-    ${UI.keypad('wedgeKeypadPress', 'wedgeKeypadBackspace')}
+    <div class="app-keypad-value">${wedgeNewShotFinal ? wedgeNewShotFinal : '0'}m</div>
+    ${UI.keypad('wedgeKeypadPress', 'wedgeKeypadBackspace', 'wedgeKeypadClear')}
     <button class="wg-btn-primary mt-10" onclick="closeWedgeFinalPopup()">OK</button>
   `, 'closeWedgeFinalPopup');
 }
@@ -548,8 +539,8 @@ function wedgeRadiusBackspace() { wedgeRadiusInput = wedgeRadiusInput.slice(0, -
 function confirmWedgeRadius() { const n = parseFloat(wedgeRadiusInput); if (!isNaN(n) && n > 0) wedgeExerciseForm.radius = n; closeWedgeRadiusPopup(); }
 function wedgeRadiusPopupHtml() {
   return UI.modal('Rayon de validation', `
-    <div class="wg-keypad-value">${wedgeRadiusInput || '0'}${wedgeExerciseForm.radiusUnit}</div>
-    ${UI.keypad('wedgeRadiusKeyPress', 'wedgeRadiusBackspace', { fn: "wedgeRadiusKeyPress('.')", label: '.' })}
+    <div class="app-keypad-value">${wedgeRadiusInput || '0'}${wedgeExerciseForm.radiusUnit}</div>
+    ${UI.keypad('wedgeRadiusKeyPress', 'wedgeRadiusBackspace', null, { fn: "wedgeRadiusKeyPress('.')", label: '.' })}
     <button class="wg-btn-primary mt-10" onclick="confirmWedgeRadius()">OK</button>
   `, 'closeWedgeRadiusPopup');
 }
