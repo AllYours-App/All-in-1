@@ -35,7 +35,9 @@ let radars = [
 
 let golfBag = { clubs: [] };
 
-let personalDistances = {}; // { clubId: distanceValue }
+let personalDistances = {}; // { clubId: distanceValue } — un club = une distance
+
+let wedgeDistances = {}; // { clubId: [{ id, label, value }, ...] } — les wedges acceptent plusieurs distances
 
 let driverSettings = { length: null, weight: null };
 
@@ -43,7 +45,7 @@ let driverSettings = { length: null, weight: null };
 let backTarget = () => showPage('home');
 
 function saveStateToLocalStorage() {
-  const data = { userProfile, settings, radars, golfBag, driverSettings, personalDistances };
+  const data = { userProfile, settings, radars, golfBag, driverSettings, personalDistances, wedgeDistances };
   localStorage.setItem("golfAppState", JSON.stringify(data));
 }
 
@@ -58,6 +60,7 @@ function loadStateFromLocalStorage() {
     if (data.golfBag) Object.assign(golfBag, data.golfBag);
     if (data.driverSettings) Object.assign(driverSettings, data.driverSettings);
     if (data.personalDistances) Object.assign(personalDistances, data.personalDistances);
+    if (data.wedgeDistances) Object.assign(wedgeDistances, data.wedgeDistances);
   } catch (e) {
     console.error("Erreur de lecture du localStorage", e);
   }
@@ -100,12 +103,8 @@ function renderMenuTab() {
     ${topRowHtml()}
     <div class="field-list">
       <h3>Profil</h3>
-      <div class="field-row"><span class="label">Mon sac de golf</span><span class="val">
-        <button onclick="goToGolfBag()">${golfBag.clubs.length}/14 clubs &#8250;</button>
-      </span></div>
-      <div class="field-row"><span class="label">Mes distances</span><span class="val">
-        <button onclick="goToDistances()">&#8250;</button>
-      </span></div>
+      <div class="field-row field-row-link" onclick="goToGolfBag()"><span class="label">Mon sac de golf</span><span class="val">${golfBag.clubs.length} club${golfBag.clubs.length > 1 ? 's' : ''} &#8250;</span></div>
+      <div class="field-row field-row-link" onclick="goToDistances()"><span class="label">Mes distances</span><span class="val">&#8250;</span></div>
     </div>
     <div class="field-list">
       <h3>Conditions de référence</h3>
@@ -121,7 +120,7 @@ function renderMenuTab() {
       <div class="field-row"><span class="label">Distance</span><span class="val">
         <select id="set-distance-unit" onchange="updateMenuSetting('distanceUnit',this.value)">
           <option value="m" ${settings.distanceUnit==='m'?'selected':''}>Mètres (m)</option>
-          <option value="ft" ${settings.distanceUnit==='ft'?'selected':''}>Feet (ft)</option>
+          <option value="ft" ${settings.distanceUnit==='ft'?'selected':''}>Yards/Feet</option>
         </select>
       </span></div>
     </div>
@@ -206,9 +205,33 @@ function renderMenuTab() {
   `;
 }
 
+// 1 mètre en yards (utilisé pour "Yards/Feet" : yards pour les coups pleins,
+// le putter n'ayant plus de distance suivie dans cet écran).
+const MENU_M_TO_YD = 1.09361;
+
+function convertMenuDistanceValue(value, fromUnit, toUnit){
+  if(value === null || value === undefined || value === '' || fromUnit === toUnit) return value;
+  const meters = fromUnit === 'ft' ? value / MENU_M_TO_YD : value;
+  const converted = toUnit === 'ft' ? meters * MENU_M_TO_YD : meters;
+  return Math.round(converted * 10) / 10;
+}
+
 // Auto-save générique pour les champs simples (température/altitude/unités) : appelé au onchange
 // de chaque input/select, sans re-render (évite d'effacer une saisie en cours dans un autre champ).
+// Cas particulier "distanceUnit" : les distances déjà enregistrées sont converties vers la
+// nouvelle unité pour rester justes (au lieu de garder l'ancien nombre avec un nouveau libellé).
 function updateMenuSetting(key, value){
+  if(key === 'distanceUnit' && value !== settings.distanceUnit){
+    const fromUnit = settings.distanceUnit, toUnit = value;
+    Object.keys(personalDistances).forEach(id => {
+      personalDistances[id] = convertMenuDistanceValue(personalDistances[id], fromUnit, toUnit);
+    });
+    Object.keys(wedgeDistances).forEach(id => {
+      (wedgeDistances[id] || []).forEach(entry => {
+        entry.value = convertMenuDistanceValue(entry.value, fromUnit, toUnit);
+      });
+    });
+  }
   settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
   saveStateToLocalStorage();
 }
@@ -298,7 +321,7 @@ function removeRadar(id){
 
 /* ==========================================================================
    Écran Sac de golf — sélection par case à cocher parmi un catalogue fixe
-   (max 14 clubs dans un sac réglementaire)
+   (aucune limite de nombre de clubs)
    ========================================================================== */
 const golfClubCatalog = [
   { id: 'driver', name: 'Driver' },
@@ -347,29 +370,28 @@ function renderGolfBagScreen(){
   backTarget = () => { showPage('menu'); renderMenuTab(); };
   backBtn.classList.remove("is-hidden");
   headerTitle.textContent = "Mon sac";
-  const maxReached = golfBag.clubs.length >= 14;
   menuRoot.innerHTML = `
     ${topRowHtml()}
     <div class="field-list">
-      <h3>Clubs (${golfBag.clubs.length}/14)</h3>
+      <h3>Clubs (${golfBag.clubs.length})</h3>
       ${golfClubCatalog.map(c => {
         const checked = golfBag.clubs.includes(c.id);
-        const disabled = !checked && maxReached;
         return `
         <div class="field-row"><span class="label">${c.name}</span><span class="val">
           <label class="radio-select">
-            <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleClub('${c.id}',this.checked)">
+            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleClub('${c.id}',this.checked)">
             <span class="radio-select-dot"></span>
           </label>
         </span></div>`;
       }).join('')}
     </div>
+    <button type="button" class="btn btn-primary menu-save-btn" onclick="backTarget()">Enregistrer</button>
   `;
 }
 
 function toggleClub(id, isChecked){
   if(isChecked){
-    if(golfBag.clubs.length >= 14 || golfBag.clubs.includes(id)) return;
+    if(golfBag.clubs.includes(id)) return;
     golfBag.clubs.push(id);
   } else {
     golfBag.clubs = golfBag.clubs.filter(cid => cid !== id);
@@ -380,38 +402,101 @@ function toggleClub(id, isChecked){
 
 /* ==========================================================================
    Écran Mes distances — un champ de distance par club présent dans le sac
-   (source de vérité pour la sélection : golfBag.clubs)
+   (source de vérité pour la sélection : golfBag.clubs). Le putter n'a pas
+   de distance suivie ici (jeu au feeling). Les wedges acceptent plusieurs
+   distances nommées (3/4 swing, plein swing...).
    ========================================================================== */
 function goToDistances(){
   renderDistancesScreen();
+}
+
+function isWedge(clubId){
+  return clubId.startsWith('wedge');
 }
 
 function renderDistancesScreen(){
   backTarget = () => { showPage('menu'); renderMenuTab(); };
   backBtn.classList.remove("is-hidden");
   headerTitle.textContent = "Mes distances";
-  const unitLabel = settings.distanceUnit === 'ft' ? 'ft' : 'm';
-  // On affiche les clubs dans l'ordre du catalogue, filtrés sur ceux du sac
-  const selectedClubs = golfClubCatalog.filter(c => golfBag.clubs.includes(c.id));
+  // "Yards/Feet" = yards pour tous les clubs de cet écran (le putter, en feet, n'y figure pas)
+  const unitLabel = settings.distanceUnit === 'ft' ? 'yd' : 'm';
+  const selectedClubs = golfClubCatalog.filter(c => c.id !== 'putter' && golfBag.clubs.includes(c.id));
   menuRoot.innerHTML = `
     ${topRowHtml()}
     <div class="field-list">
       <h3>Distances par club</h3>
       ${selectedClubs.length === 0 ? `
         <div class="field-row"><span class="label">Aucun club dans le sac</span></div>
-      ` : selectedClubs.map(c => `
+      ` : selectedClubs.map(c => isWedge(c.id) ? wedgeDistanceRowsHtml(c, unitLabel) : `
         <div class="field-row"><span class="label">${c.name}</span><span class="val">
           <input type="number" step="1" value="${personalDistances[c.id] ?? ''}" onchange="updateDistance('${c.id}',this.value)"> ${unitLabel}
         </span></div>
       `).join('')}
     </div>
+    <button type="button" class="btn btn-primary menu-save-btn" onclick="backTarget()">Enregistrer</button>
   `;
 }
 
-// Auto-save de la distance saisie pour un club donné
+// Auto-save de la distance saisie pour un club donné (hors wedges)
 function updateDistance(clubId, value){
   const num = parseFloat(value);
   personalDistances[clubId] = isNaN(num) ? null : num;
+  saveStateToLocalStorage();
+}
+
+// Garantit au moins une distance ("Distance 1") pour un wedge du sac
+function ensureWedgeEntries(clubId){
+  if(!Array.isArray(wedgeDistances[clubId]) || wedgeDistances[clubId].length === 0){
+    wedgeDistances[clubId] = [{ id: 'd1', label: 'Distance 1', value: null }];
+  }
+}
+
+// Bloc "nom du wedge" + une ligne éditable par distance + bouton d'ajout
+function wedgeDistanceRowsHtml(c, unitLabel){
+  ensureWedgeEntries(c.id);
+  const entries = wedgeDistances[c.id];
+  return `
+    <div class="field-row"><span class="label">${c.name}</span></div>
+    ${entries.map(e => `
+      <div class="field-row wedge-distance-row"><span class="label">
+        <input type="text" value="${e.label}" onchange="updateWedgeDistanceLabel('${c.id}','${e.id}',this.value)">
+      </span><span class="val">
+        <input type="number" step="1" value="${e.value ?? ''}" onchange="updateWedgeDistanceValue('${c.id}','${e.id}',this.value)"> ${unitLabel}
+        ${entries.length > 1 ? `<button type="button" onclick="removeWedgeDistance('${c.id}','${e.id}')">Suppr.</button>` : ''}
+      </span></div>
+    `).join('')}
+    <div class="resume-row"><button type="button" class="add-radar-btn" onclick="addWedgeDistance('${c.id}')"><span class="add-radar-plus">+</span>Ajouter une distance</button></div>
+  `;
+}
+
+function addWedgeDistance(clubId){
+  ensureWedgeEntries(clubId);
+  const n = wedgeDistances[clubId].length + 1;
+  wedgeDistances[clubId].push({ id: 'd' + Date.now(), label: 'Distance ' + n, value: null });
+  saveStateToLocalStorage();
+  renderDistancesScreen();
+}
+
+function removeWedgeDistance(clubId, entryId){
+  if(!wedgeDistances[clubId] || wedgeDistances[clubId].length <= 1) return;
+  wedgeDistances[clubId] = wedgeDistances[clubId].filter(e => e.id !== entryId);
+  saveStateToLocalStorage();
+  renderDistancesScreen();
+}
+
+// Le nom de la distance se modifie librement ; pas de re-render pour ne pas perdre le focus
+function updateWedgeDistanceLabel(clubId, entryId, value){
+  const entry = (wedgeDistances[clubId] || []).find(e => e.id === entryId);
+  if(!entry) return;
+  entry.label = value.trim() || entry.label;
+  saveStateToLocalStorage();
+}
+
+function updateWedgeDistanceValue(clubId, entryId, value){
+  const entry = (wedgeDistances[clubId] || []).find(e => e.id === entryId);
+  if(!entry) return;
+  const num = parseFloat(value);
+  entry.value = isNaN(num) ? null : num;
   saveStateToLocalStorage();
 }
 

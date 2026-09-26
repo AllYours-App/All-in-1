@@ -655,34 +655,47 @@ function goToMenuDistances() {
   if (typeof goToDistances === "function") goToDistances();
 }
 
-// Unité d'affichage par type de club : le putting se juge en feet, tout le
-// reste (mises en jeu, coups d'approche...) se juge en yards.
-function distanceUnitForClub(clubId) {
-  return clubId === "putter" ? "ft" : "yd";
+// Dans Menu, l'unité "Yards/Feet" représente des yards pour tous les clubs de
+// cet écran (le putter, en feet, n'a plus de distance suivie et est exclu ici).
+function distancesMenuIsYards() {
+  return typeof settings !== "undefined" && settings.distanceUnit === "ft";
 }
-function metersToClubUnit(meters, unit) {
-  return unit === "ft" ? meters * M_TO_FT : meters * M_TO_YD;
+function distancesMenuValueToMeters(value) {
+  return distancesMenuIsYards() ? Number(value) / M_TO_YD : Number(value);
+}
+function metersToDistancesMenuUnit(meters) {
+  return distancesMenuIsYards() ? meters * M_TO_YD : meters;
 }
 
-// Clubs du sac ayant une distance renseignée, convertis dans l'unité propre
-// à chaque club et triés du plus long au plus court coup réel (en mètres,
-// pour que la barre reste comparable même entre feet et yards).
+// Clubs du sac ayant une distance renseignée (hors putter), triés du plus
+// long au plus court coup réel (en mètres). Les wedges peuvent apporter
+// plusieurs lignes (une par distance nommée saisie dans Menu).
 function distancesCalcRows() {
-  if (typeof golfBag === "undefined" || typeof personalDistances === "undefined" || typeof golfClubCatalog === "undefined") {
+  if (typeof golfBag === "undefined" || typeof golfClubCatalog === "undefined") {
     return [];
   }
-  const menuUnit = (typeof settings !== "undefined" && settings.distanceUnit === "ft") ? "ft" : "m";
-  return golfClubCatalog
-    .filter((c) => golfBag.clubs.includes(c.id))
-    .map((c) => {
-      const raw = personalDistances[c.id];
-      const meters = (raw === null || raw === undefined || raw === "") ? null : distanceToMeters(raw, menuUnit);
-      if (meters === null) return { name: c.name, meters: null };
-      const unit = distanceUnitForClub(c.id);
-      return { name: c.name, meters, unit, display: Math.round(metersToClubUnit(meters, unit)) };
-    })
-    .filter((r) => r.meters !== null)
-    .sort((a, b) => b.meters - a.meters);
+  const unit = distancesMenuIsYards() ? "yd" : "m";
+  const rows = [];
+
+  golfClubCatalog
+    .filter((c) => c.id !== "putter" && golfBag.clubs.includes(c.id))
+    .forEach((c) => {
+      if (c.id.startsWith("wedge")) {
+        const entries = (typeof wedgeDistances !== "undefined" && wedgeDistances[c.id]) || [];
+        entries.forEach((e) => {
+          if (e.value === null || e.value === undefined || e.value === "") return;
+          const meters = distancesMenuValueToMeters(e.value);
+          rows.push({ name: `${c.name} · ${e.label}`, meters, unit, display: Math.round(metersToDistancesMenuUnit(meters)) });
+        });
+        return;
+      }
+      const raw = (typeof personalDistances !== "undefined") ? personalDistances[c.id] : null;
+      if (raw === null || raw === undefined || raw === "") return;
+      const meters = distancesMenuValueToMeters(raw);
+      rows.push({ name: c.name, meters, unit, display: Math.round(metersToDistancesMenuUnit(meters)) });
+    });
+
+  return rows.sort((a, b) => b.meters - a.meters);
 }
 
 function distancesCalcHtml() {

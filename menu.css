@@ -287,6 +287,25 @@
   padding-top: 4px;
 }
 
+/* field-row rendue cliquable sur toute sa largeur (Mon sac de golf, Mes distances) */
+#page-menu .field-row-link {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+#page-menu .field-row-link:active {
+  opacity: 0.6;
+}
+
+/* Distances de wedge : sous-lignes indentées sous le nom du club */
+#page-menu .wedge-distance-row {
+  padding-left: 14px;
+}
+
+#page-menu .menu-save-btn {
+  margin-top: 4px;
+}
+
 /* ==========================================================================
    Accessibilité — focus clavier visible
    ========================================================================== */
