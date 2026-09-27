@@ -632,47 +632,47 @@ let puttingCreativeForm = null;
    Utilise appKeypad() (commun.js). "target" identifie le champ à
    mettre à jour au clic sur Valider, voir applyNumericKeypadValue().
    ============================================================ */
-let numericKeypadPopup = null; // { title, target, value, decimal, unit }
+let puttingNumericKeypadPopup = null; // { title, target, value, decimal, unit }
 
 function openNumericKeypad(title, target, currentValue, decimal, unit) {
   const start = (currentValue === null || currentValue === undefined || currentValue === '') ? '' : String(currentValue).replace('.', ',');
-  numericKeypadPopup = { title: title, target: target, value: start, decimal: !!decimal, unit: unit || '' };
+  puttingNumericKeypadPopup = { title: title, target: target, value: start, decimal: !!decimal, unit: unit || '' };
   renderNumericKeypad();
 }
 
 function closeNumericKeypad() {
-  numericKeypadPopup = null;
+  puttingNumericKeypadPopup = null;
   renderNumericKeypad();
 }
 
 function keypadPress(d) {
-  if (!numericKeypadPopup || numericKeypadPopup.value.length >= 6) return;
-  numericKeypadPopup.value += d;
+  if (!puttingNumericKeypadPopup || puttingNumericKeypadPopup.value.length >= 6) return;
+  puttingNumericKeypadPopup.value += d;
   renderNumericKeypad();
 }
 
 function keypadDecimal() {
-  if (!numericKeypadPopup || !numericKeypadPopup.decimal) return;
-  if (numericKeypadPopup.value.indexOf(',') !== -1) return;
-  numericKeypadPopup.value += (numericKeypadPopup.value === '' ? '0,' : ',');
+  if (!puttingNumericKeypadPopup || !puttingNumericKeypadPopup.decimal) return;
+  if (puttingNumericKeypadPopup.value.indexOf(',') !== -1) return;
+  puttingNumericKeypadPopup.value += (puttingNumericKeypadPopup.value === '' ? '0,' : ',');
   renderNumericKeypad();
 }
 
 function keypadBackspace() {
-  if (!numericKeypadPopup) return;
-  numericKeypadPopup.value = numericKeypadPopup.value.slice(0, -1);
+  if (!puttingNumericKeypadPopup) return;
+  puttingNumericKeypadPopup.value = puttingNumericKeypadPopup.value.slice(0, -1);
   renderNumericKeypad();
 }
 
 function keypadClear() {
-  if (!numericKeypadPopup) return;
-  numericKeypadPopup.value = '';
+  if (!puttingNumericKeypadPopup) return;
+  puttingNumericKeypadPopup.value = '';
   renderNumericKeypad();
 }
 
 function confirmNumericKeypad() {
-  if (!numericKeypadPopup) return;
-  applyNumericKeypadValue(numericKeypadPopup.target, numericKeypadPopup.value);
+  if (!puttingNumericKeypadPopup) return;
+  applyNumericKeypadValue(puttingNumericKeypadPopup.target, puttingNumericKeypadPopup.value);
   closeNumericKeypad();
 }
 
@@ -714,8 +714,8 @@ function applyNumericKeypadValue(target, raw) {
 function renderNumericKeypad() {
   const root = document.getElementById('numeric-keypad-root');
   if (!root) return;
-  if (!numericKeypadPopup) { root.innerHTML = ''; return; }
-  const p = numericKeypadPopup;
+  if (!puttingNumericKeypadPopup) { root.innerHTML = ''; return; }
+  const p = puttingNumericKeypadPopup;
   const closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const extraKey = p.decimal ? { fn: 'keypadDecimal', label: ',' } : null;
   root.innerHTML = `
