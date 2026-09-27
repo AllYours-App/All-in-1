@@ -503,8 +503,9 @@ body.no-scroll .screen-view.active .screen {
 /* Bouton Par 3 : coin bas-gauche */
 .track-par3-btn {
   width: auto;
-  padding: 4px 8px;
-  font-size: 10px;
+  padding: 3px 6px;
+  font-size: 9px;
+  white-space: nowrap;
   background: rgba(5, 5, 5, 0.55);
   backdrop-filter: blur(4px);
 }
@@ -514,33 +515,7 @@ body.no-scroll .screen-view.active .screen {
   bottom: 10px;
   left: 10px;
   z-index: 4;
-}
-
-/* Bouton info "i" : coin bas-droit */
-.track-info-btn {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 4;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: rgba(5, 5, 5, 0.55);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-style: italic;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-}
-
-.track-info-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  max-width: 25%; /* reste dans la largeur du rough gauche (0-27%), ne déborde pas sur le fairway */
 }
 
 .mode-btn {

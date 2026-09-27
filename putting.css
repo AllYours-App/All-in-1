@@ -340,6 +340,7 @@
   padding: 14px 0;
   border-top: 1px solid var(--border-subtle);
   text-decoration: none;
+  cursor: pointer;
 }
 
 #page-putting .history-item:first-child {
@@ -1036,6 +1037,20 @@
 #page-putting .line-chart-axis-title {
   fill: var(--text-tertiary);
   font-size: 22px;
+}
+
+#page-putting .line-chart-ytick {
+  fill: var(--text-tertiary);
+  font-size: 19px;
+}
+
+#page-putting .line-chart-ytick.is-b {
+  fill: #5b9bd5;
+}
+
+#page-putting .line-chart-xtick {
+  fill: var(--text-tertiary);
+  font-size: 18px;
 }
 
 #page-putting .line-chart-line {
@@ -2300,27 +2315,32 @@
 
 #page-putting .quick-session_bar {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: stretch;
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 14px 12px;
-  gap: 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  padding: 12px 10px;
+  gap: 6px;
+  row-gap: 10px;
 }
 
+/* Icône + titre sur la même ligne ; la valeur passe à la ligne du dessous,
+   alignée à gauche au même niveau que l'icône (voir .quick-session_bar-text
+   en display:contents, qui rend label et valeur enfants directs du flex ici). */
 #page-putting .quick-session_bar-item {
   flex: 0 0 auto;
-  min-width: 68px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  align-content: flex-start;
+  column-gap: 5px;
+  row-gap: 3px;
 }
 
 #page-putting .quick-session_bar-item.is-wide {
-  flex: 1 1 130px;
-  min-width: 130px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 #page-putting .quick-session_bar-button {
@@ -2334,38 +2354,43 @@
 }
 
 #page-putting .quick-session_bar-icon {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
   color: var(--accent);
+  order: 0;
 }
 
 #page-putting .quick-session_bar-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: max-content;
-  flex: 1;
+  display: contents;
 }
 
 #page-putting .quick-session_bar-label {
-  font-size: 11px;
+  order: 1;
+  font-size: 10.5px;
   color: var(--text-secondary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 #page-putting .quick-session_bar-value {
+  order: 2;
+  flex-basis: 100%;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
+  text-align: left;
+}
+
+#page-putting .quick-session_bar-item.is-wide .quick-session_bar-value {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 #page-putting .quick-session_bar-input {
+  order: 2;
+  flex-basis: 100%;
   width: 100%;
   min-width: 0;
   background: none;
@@ -2374,6 +2399,7 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: left;
   text-overflow: ellipsis;
 }
 

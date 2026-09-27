@@ -425,7 +425,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" id="stats-sg-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg class="line-chart" id="stats-sg-line" viewBox="-50 0 1020 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
@@ -446,7 +446,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" id="stats-rate-meters-line" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg class="line-chart" id="stats-rate-meters-line" viewBox="-50 0 1020 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
   <div class="chart-card">
@@ -467,7 +467,7 @@ function renderPuttingTab() {
       </div>
     </div>
 
-    <svg class="line-chart" id="stats-putts-bars" viewBox="-30 0 950 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg class="line-chart" id="stats-putts-bars" viewBox="-50 0 1020 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
 </main>
@@ -564,6 +564,8 @@ function selectPuttingTab(event, tab) {
     });
     document.getElementById('main-header-back-label').textContent = 'Home';
     document.getElementById('main-header-title').textContent = 'Putting';
+    renderHomeStats();
+    renderExercicesStats();
   }
 
   function selectAnalyseSection(event, section) {
@@ -1001,6 +1003,32 @@ function svgRadarChart(values, labels, opts) {
 }
 
 // Ligne (tendance dans le temps, ex : SG par round, taux de réussite par round)
+// Valeurs affichées le long de l'axe des ordonnées (6 paliers, du haut/max au bas/min).
+// cls = 'is-b' pour l'axe de droite (2e série d'un graphe à double échelle), sinon axe de gauche.
+const Y_TICK_FRACTIONS = [0, 0.2, 0.4, 0.6, 0.8, 1];
+function yAxisTicks(min, max, top, bottom, fmt, cls) {
+  const isRight = cls === 'is-b';
+  return Y_TICK_FRACTIONS.map(function (f) {
+    const y = top + f * (bottom - top);
+    const v = max - f * (max - min);
+    const label = fmt ? fmt(v) : String(Math.round(v * 10) / 10);
+    return '<text x="' + (isRight ? 900 : 30) + '" y="' + (y + 6).toFixed(1) + '" text-anchor="' + (isRight ? 'start' : 'end') + '" class="line-chart-ytick ' + (cls || '') + '">' + label + '</text>';
+  }).join('');
+}
+
+// Libellés le long de l'axe des abscisses (dates/rounds), au plus ~6 répartis pour rester lisible
+function xAxisTickLabels(labels, xAt, n) {
+  if (!labels || !labels.length) return '';
+  const maxLabels = 6;
+  const step = n <= maxLabels ? 1 : Math.ceil(n / maxLabels);
+  const idxs = [];
+  for (let i = 0; i < n; i += step) idxs.push(i);
+  if (idxs[idxs.length - 1] !== n - 1) idxs.push(n - 1);
+  return idxs.map(function (i) {
+    return '<text x="' + xAt(i).toFixed(1) + '" y="442" text-anchor="middle" class="line-chart-xtick">' + (labels[i] || '') + '</text>';
+  }).join('');
+}
+
 function svgLineChart(values, opts) {
   opts = opts || {};
   const left = 40, right = 890, top = 20, bottom = 420;
@@ -1009,7 +1037,7 @@ function svgLineChart(values, opts) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
   }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
-  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
   if (!vals.length) {
     return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
   }
@@ -1044,7 +1072,9 @@ function svgLineChart(values, opts) {
   const dots = points.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" class="line-chart-point"/>'; }).join('');
   const lastPt = points[points.length - 1];
   const lastLabel = lastPt ? '<text x="' + lastPt.x.toFixed(1) + '" y="' + (lastPt.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + (opts.fmt ? opts.fmt(lastPt.v) : lastPt.v) + '</text>' : '';
-  return grid + zeroLine + (areaPath ? '<path d="' + areaPath + '" class="line-chart-glow"/>' : '') + (path ? '<path d="' + path + '" class="line-chart-line"/>' : '') + dots + lastLabel + axisTitle;
+  const yTicks = yAxisTicks(min, max, top, bottom, opts.fmt);
+  const xTicks = xAxisTickLabels(opts.labels, xAt, n);
+  return grid + zeroLine + (areaPath ? '<path d="' + areaPath + '" class="line-chart-glow"/>' : '') + (path ? '<path d="' + path + '" class="line-chart-line"/>' : '') + dots + lastLabel + yTicks + xTicks + axisTitle;
 }
 
 // Colonnes (dénombrements par round, ex : 1 putt / 3 putts par round) — mélange volontairement le type de graphe avec les lignes ci-dessus
@@ -1052,7 +1082,7 @@ function svgColumnChart(values, opts) {
   opts = opts || {};
   const left = 40, right = 890, top = 20, bottom = 420;
   const vals = values.filter(function (v) { return v != null && !isNaN(v); });
-  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
   let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
@@ -1065,15 +1095,18 @@ function svgColumnChart(values, opts) {
   const slot = (right - left) / n;
   const barW = Math.min(28, slot * 0.55);
   let bars = '';
+  function xAt(i) { return left + slot * (i + 0.5); }
   values.forEach(function (v, i) {
     if (v == null || isNaN(v)) return;
-    const cx = left + slot * (i + 0.5);
+    const cx = xAt(i);
     const h = Math.max(2, (v / max) * (bottom - top));
     const y = bottom - h;
     bars += '<rect x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar"/>';
     if (i === n - 1) bars += '<text x="' + cx.toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + v + '</text>';
   });
-  return grid + bars + axisTitle;
+  const yTicks = yAxisTicks(0, max, top, bottom, opts.fmt);
+  const xTicks = xAxisTickLabels(opts.labels, xAt, n);
+  return grid + bars + yTicks + xTicks + axisTitle;
 }
 
 // Deux lignes superposées, chacune avec sa propre échelle normalisée (utile pour comparer deux métriques d'unités différentes, ex : % et mètres)
@@ -1091,7 +1124,7 @@ function svgDualLineChart(valuesA, valuesB, opts) {
   }
   const scaleA = scaleOf(valuesA, opts.forceZeroMinA);
   const scaleB = scaleOf(valuesB, opts.forceZeroMinB);
-  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
   let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
@@ -1117,14 +1150,18 @@ function svgDualLineChart(valuesA, valuesB, opts) {
     const lastLabel = lastPt ? '<text x="' + lastPt.x.toFixed(1) + '" y="' + (lastPt.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value ' + cls + '">' + (fmt ? fmt(lastPt.v) : lastPt.v) + '</text>' : '';
     return (path ? '<path d="' + path + '" class="line-chart-line ' + cls + '"/>' : '') + dots + lastLabel;
   }
-  return grid + drawSeries(valuesA, scaleA, '', opts.fmtA) + drawSeries(valuesB, scaleB, 'is-b', opts.fmtB) + axisTitle;
+  // Axe de gauche = série A, axe de droite = série B (2 unités différentes, ex: % et mètres)
+  const yTicksA = scaleA ? yAxisTicks(scaleA.min, scaleA.max, top, bottom, opts.fmtA, '') : '';
+  const yTicksB = scaleB ? yAxisTicks(scaleB.min, scaleB.max, top, bottom, opts.fmtB, 'is-b') : '';
+  const xTicks = xAxisTickLabels(opts.labels, xAt, n);
+  return grid + drawSeries(valuesA, scaleA, '', opts.fmtA) + drawSeries(valuesB, scaleB, 'is-b', opts.fmtB) + yTicksA + yTicksB + xTicks + axisTitle;
 }
 
 // Barres groupées à deux séries sur une échelle commune (compte de trous par round, ex : 1 putt vs 3 putts)
 function svgDualColumnChart(valuesA, valuesB, opts) {
   opts = opts || {};
   const left = 40, right = 890, top = 20, bottom = 420;
-  const axisTitle = '<text x="465" y="485" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
   let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
@@ -1139,8 +1176,9 @@ function svgDualColumnChart(valuesA, valuesB, opts) {
   const barW = Math.min(20, slot * 0.28);
   const gap = Math.min(4, slot * 0.06);
   let bars = '';
+  function xAt(i) { return left + slot * (i + 0.5); }
   for (let i = 0; i < n; i++) {
-    const cx = left + slot * (i + 0.5);
+    const cx = xAt(i);
     const vA = valuesA[i], vB = valuesB[i];
     if (vA != null && !isNaN(vA)) {
       const h = Math.max(2, (vA / max) * (bottom - top));
@@ -1157,7 +1195,9 @@ function svgDualColumnChart(valuesA, valuesB, opts) {
       if (i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value is-b">' + vB + '</text>';
     }
   }
-  return grid + bars + axisTitle;
+  const yTicks = yAxisTicks(0, max, top, bottom, null);
+  const xTicks = xAxisTickLabels(opts.labels, xAt, n);
+  return grid + bars + yTicks + xTicks + axisTitle;
 }
 
 /* ---------- Fonctions de rendu : branchent les vraies données sur l'UI existante ---------- */
@@ -1269,16 +1309,17 @@ function renderStatsPerformance() {
   const oneVals = rounds.map(function (r) { return r.onePutts != null ? r.onePutts : null; });
   const threeVals = rounds.map(function (r) { return r.threePutts != null ? r.threePutts : null; });
   const meterVals = rounds.map(function (r) { return r.totalMeters || null; });
+  const dateLabels = rounds.map(function (r) { return new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }); });
 
-  svgSG.innerHTML = svgLineChart(sgVals, { centered: true, fmt: fmtSG, axisTitle: 'Rounds' });
+  svgSG.innerHTML = svgLineChart(sgVals, { centered: true, fmt: fmtSG, axisTitle: 'Rounds', labels: dateLabels });
   const rateMeterEl = document.getElementById('stats-rate-meters-line');
   if (rateMeterEl) rateMeterEl.innerHTML = svgDualLineChart(rateVals, meterVals, {
     forceZeroMinA: true, forceZeroMinB: true,
     fmtA: fmtPct, fmtB: function (v) { return Math.round(v) + 'm'; },
-    axisTitle: 'Rounds',
+    axisTitle: 'Rounds', labels: dateLabels,
   });
   const puttsEl = document.getElementById('stats-putts-bars');
-  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, { axisTitle: 'Rounds' });
+  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, { axisTitle: 'Rounds', labels: dateLabels });
   renderCompareCard('stats');
 }
 
@@ -1657,6 +1698,7 @@ function deleteCombine(id) {
 // --- État du flux ---
 let exerciseFlowScreen = null; // 'session' | 'recap' | 'review'
 let exerciseFlowOriginTab = 'exercices'; // onglet à retrouver au retour ('parcours' | 'exercices')
+let exerciseFlowFromStats = false; // true si on est entré dans le flux depuis l'écran Stats Performance
 let activeCombineId = null;
 let activeSession = null;      // session en cours (non sauvegardée)
 let activeHoleIndex = 0;
@@ -1669,6 +1711,7 @@ function getCombineById(id) {
 
 // --- Entrée / sortie du flux ---
 function enterExerciseFlow(title) {
+  exerciseFlowFromStats = document.body.classList.contains('is-stats-screen');
   document.querySelector('[data-header="main"]').classList.add('is-hidden');
   document.querySelector('[data-header="stats"]').classList.add('is-hidden');
   document.querySelector('[data-header="exercise-flow"]').classList.remove('is-hidden');
@@ -1695,15 +1738,31 @@ function exitExerciseFlow(event) {
   }
   cleanupQuickCombine();
   document.querySelector('[data-header="exercise-flow"]').classList.add('is-hidden');
-  document.querySelector('[data-header="main"]').classList.remove('is-hidden');
   document.getElementById('exercise-flow-root').classList.add('is-hidden');
-  document.querySelector('.putting_wrapper').classList.remove('is-hidden');
   exerciseFlowScreen = null;
   activeCombineId = null;
   activeSession = null;
   viewingSessionId = null;
   selectedCombineId = null;
-  selectPuttingTab({ preventDefault: function () {} }, exerciseFlowOriginTab);
+  const fromStats = exerciseFlowFromStats;
+  exerciseFlowFromStats = false;
+  if (fromStats) {
+    document.querySelector('[data-header="main"]').classList.add('is-hidden');
+    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
+    document.querySelector('.putting_wrapper').classList.add('is-hidden');
+    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
+    document.body.classList.add('is-stats-screen');
+    document.querySelectorAll('.fab-group').forEach(function (el) {
+      el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
+    });
+    const navEl = document.querySelector('.bottom-nav');
+    if (navEl) navEl.classList.remove('is-hidden');
+    renderStatsPerformance();
+  } else {
+    document.querySelector('[data-header="main"]').classList.remove('is-hidden');
+    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+    selectPuttingTab({ preventDefault: function () {} }, exerciseFlowOriginTab);
+  }
   exerciseFlowOriginTab = 'exercices';
   renderExerciseList();
   updateExerciseSelectBar();
@@ -2013,7 +2072,7 @@ function renderQuickSessionScreen() {
         <div class="quick-session_bar-item">
           ${icon('quick-session_bar-icon', barsPaths)}
           <div class="quick-session_bar-text">
-            <span class="quick-session_bar-label">Strokes Gained</span>
+            <span class="quick-session_bar-label">SG</span>
             <span class="quick-session_bar-value ${sgClass}">${fmtSG(st.sgAvg)}</span>
           </div>
         </div>
@@ -2425,7 +2484,7 @@ function quickSessionToRound(session, combine) {
   const onePutts = rows.filter(function (r) { return r.putts === 1; }).length;
   const threePutts = rows.filter(function (r) { return r.putts !== null && r.putts >= 3; }).length;
   const totalPutts = rows.reduce(function (sum, r) { return sum + (r.putts || 0); }, 0);
-  const totalMeters = rows.reduce(function (sum, r) { return sum + (r.putts != null ? (r.m || 0) : 0); }, 0);
+  const totalMeters = rows.reduce(function (sum, r) { return sum + distanceForTotal(r.putts, r.m); }, 0);
   const name = (session.location && session.location !== 'Non renseigné') ? session.location : 'Exercice rapide';
   return {
     id: Date.now(),
@@ -2676,6 +2735,7 @@ function toggleExerciseSort() {
    ============================================================ */
 let newParcoursModalOpen = false;
 let newParcoursForm = null;
+let parcoursModalFromStats = false; // true si la modale a été ouverte depuis l'écran Stats Performance
 
 // État du popup pente (horloge) / résultat, partagé par les 2 modes de saisie
 let parcoursPopup = null; // { type: 'clock' | 'resultat', rowIndex, infoOpen }
@@ -2718,6 +2778,11 @@ function openNewParcoursModal() {
   };
   newParcoursModalOpen = true;
   parcoursPopup = null;
+  parcoursModalFromStats = document.body.classList.contains('is-stats-screen');
+  document.querySelector('[data-header="stats"]').classList.add('is-hidden');
+  document.querySelector('[data-header="main"]').classList.remove('is-hidden');
+  document.querySelector('.stats-wrapper').classList.add('is-hidden');
+  document.body.classList.remove('is-stats-screen');
   document.querySelector('.putting_wrapper').classList.add('is-hidden');
   document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
   const navEl = document.querySelector('.bottom-nav');
@@ -2738,12 +2803,21 @@ function closeNewParcoursModal(event) {
   document.getElementById('parcours-entry-root').classList.add('is-hidden');
   document.getElementById('main-header-back-label').textContent = 'Home';
   document.getElementById('main-header-title').textContent = 'Putting';
-  document.querySelector('.putting_wrapper').classList.remove('is-hidden');
   document.querySelectorAll('.fab-group').forEach(function (el) {
     el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
   });
   const navEl = document.querySelector('.bottom-nav');
   if (navEl) navEl.classList.remove('is-hidden');
+  if (parcoursModalFromStats) {
+    document.querySelector('[data-header="main"]').classList.add('is-hidden');
+    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
+    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
+    document.body.classList.add('is-stats-screen');
+    renderStatsPerformance();
+  } else {
+    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+  }
+  parcoursModalFromStats = false;
   window.scrollTo(0, 0);
 }
 
@@ -2816,14 +2890,24 @@ function setParcoursRowPutts(idx, v) {
   newParcoursForm.rows[idx].putts = isNaN(n) ? null : Math.max(0, Math.min(10, n));
 }
 
-// Saisie rapide : 1, 2 ou 3 putts (1 putt = vert). Au-delà d'1 putt, la distance
-// comptabilisée pour ce trou est ramenée à 0,5 m (putt(s) restant(s) considéré(s) comme courts).
+// Saisie rapide : 1, 2 ou 3 putts (1 putt = vert). La distance de base saisie par
+// l'utilisateur est toujours conservée telle quelle (elle sert au Strokes Gained,
+// aux buckets d'analyse par distance, etc.). Seul le total de mètres comptabilisé
+// pour la séance utilise 0,5 m au-delà d'1 putt — voir distanceForTotal().
 function setParcoursRowPuttsExpress(idx, putts) {
   const row = newParcoursForm.rows[idx];
   row.putts = putts;
   row.resultat = putts === 1 ? 'made' : null;
-  if (putts > 1) row.m = 0.5;
   advanceParcoursHole();
+}
+
+// Distance comptabilisée dans le total de mètres d'une séance : la distance de
+// base si 1 putt, sinon un forfait de 0,5 m (putt(s) restant(s) considéré(s)
+// comme courts). Le Strokes Gained, lui, utilise toujours la distance de base
+// (voir puttSG / parcoursSessionStats) — cette fonction ne sert qu'au total de mètres.
+function distanceForTotal(putts, m) {
+  if (putts === null || putts === undefined) return 0;
+  return putts > 1 ? 0.5 : (m || 0);
 }
 
 function setParcoursRowM(idx, v) {
@@ -2984,7 +3068,7 @@ function saveNewParcours() {
   const onePutts = rows.filter(function (r) { return r.putts === 1; }).length;
   const threePutts = rows.filter(function (r) { return r.putts !== null && r.putts >= 3; }).length;
   const totalPutts = rows.reduce(function (sum, r) { return sum + (r.putts || 0); }, 0);
-  const totalMeters = rows.reduce(function (sum, r) { return sum + (r.m || 0); }, 0);
+  const totalMeters = rows.reduce(function (sum, r) { return sum + distanceForTotal(r.putts, r.m); }, 0);
 
   puttingRounds.push({
     id: Date.now(),
@@ -3140,7 +3224,7 @@ function renderNewParcoursModal() {
         <div class="quick-session_bar-item">
           ${icon('quick-session_bar-icon', barsPaths)}
           <div class="quick-session_bar-text">
-            <span class="quick-session_bar-label">Strokes Gained</span>
+            <span class="quick-session_bar-label">SG</span>
             <span class="quick-session_bar-value ${sgClass}">${fmtSG(st.sgAvg)}</span>
           </div>
         </div>
@@ -3238,7 +3322,7 @@ function renderNewParcoursModal() {
         </div>
       </div>
 
-      ${f.statsInfoOpen ? `<div class="mini-popup_info-text">Au-delà d'1 putt, la distance comptabilisée pour le trou passe à 0,5 m. Cette règle s'applique à la moyenne, au total et au Strokes Gained.</div>` : ''}
+      ${f.statsInfoOpen ? `<div class="mini-popup_info-text">Au-delà d'1 putt, le total de mètres de la séance compte 0,5 m pour ce trou (putt(s) restant(s) considéré(s) comme courts). Le Strokes Gained continue d'utiliser la distance de base saisie.</div>` : ''}
 
       ${allDone ? `
       <button class="exercise-modal_save quick-entry_save" onclick="goToParcoursRecap()">
@@ -3264,9 +3348,9 @@ function renderParcoursHistory() {
     const dateLabel = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
     const modeLabel = r.mode === 'complete' ? 'Détaillée' : 'Express';
     return `
-      <div class="history-item">
+      <div class="history-item" onclick="openRoundDetail(${r.id})" role="button" tabindex="0">
         <div class="history-item_content">
-          <div class="history-item_title">${r.name}</div>
+          <div class="history-item_title">${escHtml(r.name)}</div>
           <div class="history-item_meta">${dateLabel} &middot; ${r.holesCount} trous &middot; ${modeLabel} &middot; ${r.totalPutts} putts</div>
         </div>
         <div class="history-item_right">
@@ -3275,6 +3359,101 @@ function renderParcoursHistory() {
       </div>
     `;
   }).join('');
+}
+
+/* ---------- Détail d'une séance (Parcours ou Exercice rapide) depuis Activité récente ---------- */
+let viewingRoundId = null;
+
+function openRoundDetail(id) {
+  const r = puttingRounds.find(function (round) { return round.id === id; });
+  if (!r) return;
+  viewingRoundId = id;
+  parcoursModalFromStats = document.body.classList.contains('is-stats-screen');
+  document.querySelector('[data-header="stats"]').classList.add('is-hidden');
+  document.querySelector('[data-header="main"]').classList.remove('is-hidden');
+  document.querySelector('.stats-wrapper').classList.add('is-hidden');
+  document.body.classList.remove('is-stats-screen');
+  document.querySelector('.putting_wrapper').classList.add('is-hidden');
+  document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
+  const navEl = document.querySelector('.bottom-nav');
+  if (navEl) navEl.classList.add('is-hidden');
+  document.getElementById('main-header-back-label').textContent = 'Putting';
+  document.getElementById('main-header-title').textContent = 'Détail';
+  document.getElementById('parcours-entry-root').classList.remove('is-hidden');
+  renderRoundDetailScreen(r);
+  window.scrollTo(0, 0);
+}
+
+function closeRoundDetail() {
+  viewingRoundId = null;
+  document.getElementById('parcours-entry-root').classList.add('is-hidden');
+  document.getElementById('main-header-back-label').textContent = 'Home';
+  document.getElementById('main-header-title').textContent = 'Putting';
+  document.querySelectorAll('.fab-group').forEach(function (el) {
+    el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
+  });
+  const navEl = document.querySelector('.bottom-nav');
+  if (navEl) navEl.classList.remove('is-hidden');
+  if (parcoursModalFromStats) {
+    document.querySelector('[data-header="main"]').classList.add('is-hidden');
+    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
+    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
+    document.body.classList.add('is-stats-screen');
+    renderStatsPerformance();
+  } else {
+    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+  }
+  parcoursModalFromStats = false;
+  window.scrollTo(0, 0);
+}
+
+function renderRoundDetailScreen(r) {
+  const root = document.getElementById('parcours-entry-root');
+  if (!root) return;
+  const st = parcoursSessionStats(r.holes || []);
+  const dateLabel = new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const modeLabel = r.mode === 'complete' ? 'Détaillée' : 'Express';
+  const esc = escHtml;
+
+  root.innerHTML = `
+    <div class="quick-entry_top">
+      <a href="#" class="quick-entry_back" onclick="event.preventDefault();closeRoundDetail()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Retour
+      </a>
+    </div>
+
+    <div class="history-card">
+      <div class="history-card_header"><div class="history-card_title">${esc(r.name)}</div></div>
+      <div class="history-item_meta">${dateLabel} &middot; ${r.holesCount} trous &middot; ${modeLabel}</div>
+    </div>
+
+    <div class="stats_grid">
+      <div class="stat-card">
+        <div class="stat-card_label">SG Putting</div>
+        <div class="stat-card_value">${fmtSG(st.sgAvg)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card_label">1 putt</div>
+        <div class="stat-card_value">${fmtPct(st.rate)}</div>
+        <div class="stat-card_trend">${st.putts} putts au total</div>
+      </div>
+    </div>
+
+    <div class="history-card">
+      <div class="history-card_header"><div class="history-card_title">Détail par trou</div></div>
+      <div class="recap-table">
+        <div class="recap-table_row recap-table_head"><span>Trou</span><span>Distance</span><span>Putts</span></div>
+        ${(r.holes || []).map(function (h) {
+          return `<div class="recap-table_row">
+            <span>${h.hole}</span>
+            <span>${h.m != null ? h.m + ' m' : '--'}</span>
+            <span class="${h.putts === 1 ? 'recap-table_value-accent' : ''}">${h.putts != null ? h.putts : '--'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
 }
 
 // Expose renderPuttingTab globalement pour être appelée depuis index.html

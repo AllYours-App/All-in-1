@@ -235,7 +235,7 @@ function openCourseKeypad(title, target, currentValue, unit) {
 // d'une valeur déjà bornée à 18 finissait sans ça par rejeter silencieusement toute frappe.
 function openHoleNumberKeypad(trackerType, hole, index) {
   courseKeypadPopup = {
-    title: "Déplacer vers le trou n°",
+    title: "Trou " + (hole + 1) + " → déplacer vers le trou n°",
     mode: "renumber",
     trackerType: trackerType,
     hole: hole,
@@ -405,7 +405,7 @@ function renderCourseModals() {
     elevationOpen ? elevationCalcHtml() : "",
     distancesCalcOpen ? distancesCalcHtml() : "",
     trackInfoOpen ? trackInfoHtml() : "",
-    statsOpen ? statsModalHtml() : "",
+    historyOpen ? historyModalHtml() : "",
     courseKeypadPopup ? courseKeypadHtml() : ""
   ].join("");
 }
@@ -1065,9 +1065,14 @@ function fwTouchMove(e) {
   const scale = pinchClamp(fwPinch.startScale * (pinchTouchDist(a, b) / fwPinch.startDist), 1, 4);
   const midX = (a.clientX + b.clientX) / 2 - rect.left;
   const midY = (a.clientY + b.clientY) / 2 - rect.top;
+  // Le point du contenu situé sous les doigts au départ du geste doit rester sous les doigts
+  // pendant tout le pinch : c'est ce qui ancre le zoom sur le point pincé (et non sur le coin
+  // haut-gauche) et permet, à distance constante entre les doigts, un simple déplacement (pan).
+  const anchorX = (fwPinch.startMidX - fwPinch.startTx) / fwPinch.startScale;
+  const anchorY = (fwPinch.startMidY - fwPinch.startTy) / fwPinch.startScale;
   fwView.scale = scale;
-  fwView.tx = pinchClamp(fwPinch.startTx + (midX - fwPinch.startMidX), -(scale - 1) * fwPinch.rectW, 0);
-  fwView.ty = pinchClamp(fwPinch.startTy + (midY - fwPinch.startMidY), -(scale - 1) * fwPinch.rectH, 0);
+  fwView.tx = pinchClamp(midX - anchorX * scale, -(scale - 1) * fwPinch.rectW, 0);
+  fwView.ty = pinchClamp(midY - anchorY * scale, -(scale - 1) * fwPinch.rectH, 0);
   const layer = e.currentTarget.querySelector(".fw-zoom-layer");
   if (layer) layer.style.transform = `translate(${fwView.tx}px, ${fwView.ty}px) scale(${fwView.scale})`;
 }
@@ -1168,7 +1173,6 @@ function fwVisualHtml() {
       <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
       <button type="button" class="track-reset-btn track-reset-corner" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
       <button type="button" class="btn btn-secondary track-par3-btn track-par3-corner" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
-      <button type="button" class="track-info-btn" aria-label="Infos" onclick="event.stopPropagation(); openTrackInfo();">i</button>
 
       <div class="track-rail track-rail-right">
         <div class="track-rail-row">
@@ -1285,9 +1289,11 @@ function grTouchMove(e) {
   const scale = pinchClamp(grPinch.startScale * (pinchTouchDist(a, b) / grPinch.startDist), 1, 4);
   const midX = (a.clientX + b.clientX) / 2 - rect.left;
   const midY = (a.clientY + b.clientY) / 2 - rect.top;
+  const anchorX = (grPinch.startMidX - grPinch.startTx) / grPinch.startScale;
+  const anchorY = (grPinch.startMidY - grPinch.startTy) / grPinch.startScale;
   grView.scale = scale;
-  grView.tx = pinchClamp(grPinch.startTx + (midX - grPinch.startMidX), -(scale - 1) * grPinch.rectW, 0);
-  grView.ty = pinchClamp(grPinch.startTy + (midY - grPinch.startMidY), -(scale - 1) * grPinch.rectH, 0);
+  grView.tx = pinchClamp(midX - anchorX * scale, -(scale - 1) * grPinch.rectW, 0);
+  grView.ty = pinchClamp(midY - anchorY * scale, -(scale - 1) * grPinch.rectH, 0);
   const layer = e.currentTarget.querySelector(".gr-zoom-layer");
   if (layer) layer.style.transform = `translate(${grView.tx}px, ${grView.ty}px) scale(${grView.scale})`;
 }
@@ -1372,7 +1378,6 @@ function grVisualHtml() {
 
       <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
       <button type="button" class="track-reset-btn track-reset-corner" aria-label="Nouveau parcours green" onclick="event.stopPropagation(); resetGreenRound();">${TRACK_RESET_ICON}</button>
-      <button type="button" class="track-info-btn" aria-label="Infos" onclick="event.stopPropagation(); openTrackInfo();">i</button>
 
       <div class="track-rail track-rail-right">
         <div class="track-rail-row">
@@ -1393,14 +1398,14 @@ function renderGreen() {
 }
 
 /* ==========================================================================
-   STATS — bilan du parcours en cours (fairways/greens touchés, tendance
+   HISTORIQUE — bilan du parcours en cours (fairways/greens touchés, tendance
    dominante) + historique de progression, enregistrés en localStorage.
    ========================================================================== */
-let statsOpen = false;
+let historyOpen = false;
 const CAPTURE_STORAGE_KEY = "parcours-captures";
 
-function openStatsModal() { statsOpen = true; renderCourseModals(); }
-function closeStatsModal() { statsOpen = false; renderCourseModals(); }
+function openHistoryModal() { historyOpen = true; renderCourseModals(); }
+function closeHistoryModal() { historyOpen = false; renderCourseModals(); }
 
 function fwHitPercent() {
   let eligible = 0, hit = 0;
@@ -1442,22 +1447,22 @@ function roundTendance() {
   return votes[best] > 0 ? TENDANCE_LABELS[best] : null;
 }
 
-function statsHistory() {
+function loadHistoryEntries() {
   try { return JSON.parse(localStorage.getItem(CAPTURE_STORAGE_KEY) || "[]"); } catch (e) { return []; }
 }
 
-function statsModalHtml() {
+function historyModalHtml() {
   const fw = fwHitPercent();
   const gr = grHitPercent();
   const tendance = roundTendance();
-  const history = statsHistory().slice(-10).reverse();
+  const history = loadHistoryEntries().slice(-10).reverse();
 
   return `
-    <div class="modal-overlay" onclick="closeStatsModal()">
+    <div class="modal-overlay" onclick="closeHistoryModal()">
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
-          <h3>Stats</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeStatsModal()">✕</button>
+          <h3>Historique</h3>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeHistoryModal()">✕</button>
         </div>
 
         <p class="table-title">Ce parcours</p>
@@ -1475,7 +1480,7 @@ function statsModalHtml() {
           <span class="result-label">Tendance du jour</span>
           <span class="result-value">${tendance || "--"}</span>
         </div>
-        <button type="button" class="btn btn-primary" onclick="saveCaptureSnapshot()">Enregistrer ce bilan</button>
+        <button type="button" class="btn btn-primary" onclick="saveHistoryEntry()">Enregistrer ce bilan</button>
 
         <p class="table-title">Progression</p>
         ${history.length === 0 ? `<p class="hint-text">Aucun bilan enregistré pour l'instant.</p>` : `
@@ -1500,7 +1505,7 @@ function statsModalHtml() {
   `;
 }
 
-function saveCaptureSnapshot() {
+function saveHistoryEntry() {
   const snapshot = {
     date: new Date().toISOString(),
     fairwayPercent: fwHitPercent(),
