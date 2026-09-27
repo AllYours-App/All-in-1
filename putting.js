@@ -115,6 +115,8 @@ function renderPuttingTab() {
         </button>
       </div>
 
+      <div class="chart-card compare-card is-hidden" id="compare-card-distance"></div>
+
       <div class="chart-card">
         <div class="chart-card_header">
           <div class="chart-card_title">
@@ -276,6 +278,8 @@ function renderPuttingTab() {
         </button>
       </div>
 
+      <div class="chart-card compare-card is-hidden" id="compare-card-pente"></div>
+
       <div class="chart-card">
         <div class="chart-card_header">
           <div class="chart-card_title">
@@ -406,6 +410,8 @@ function renderPuttingTab() {
       <span class="analyse-filter_value"><span class="filter-value-text">Aucune</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
   </div>
+
+  <div class="chart-card compare-card is-hidden" id="compare-card-stats"></div>
 
   <div class="chart-card">
     <div class="line-chart_header">
@@ -1225,6 +1231,7 @@ function renderAnalyseDistance() {
     order.map(function (r) { return r.errTotal ? (r.speedErr / r.errTotal) * 100 : null; }),
     order.map(function (r) { return r.errTotal ? (r.slopeErr / r.errTotal) * 100 : null; })
   );
+  renderCompareCard('distance');
 }
 
 function renderAnalysePente() {
@@ -1238,6 +1245,7 @@ function renderAnalysePente() {
   sgRadar.innerHTML = svgRadarChart(sgValues, PENTE_LABELS, { centered: true, scaleMax: 0.3, fmt: fmtSG });
   const rateRadar = document.getElementById('pente-rate-radar');
   if (rateRadar) rateRadar.innerHTML = svgRadarChart(rateValues, PENTE_LABELS, { fmt: fmtPct });
+  renderCompareCard('pente');
 }
 
 function renderStatsPerformance() {
@@ -1271,6 +1279,7 @@ function renderStatsPerformance() {
   });
   const puttsEl = document.getElementById('stats-putts-bars');
   if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, { axisTitle: 'Rounds' });
+  renderCompareCard('stats');
 }
 
 function refreshAllAnalytics() {
@@ -1349,6 +1358,50 @@ function toggleCompareSession(group, sessionId) {
 function confirmCompareSelection(group) {
   updateFilterButtonUI(group, 'compare');
   closeFilterSheet();
+  renderCompareGroup(group);
+}
+
+function resetCompareSelection(group) {
+  filterState[group].compareA = null;
+  filterState[group].compareB = null;
+  confirmCompareSelection(group);
+}
+
+function renderCompareGroup(group) {
+  if (group === 'distance') renderAnalyseDistance();
+  else if (group === 'pente') renderAnalysePente();
+  else if (group === 'stats') renderStatsPerformance();
+}
+
+// Carte de comparaison : affiche côte à côte les stats de 2 séances (Parcours ou
+// Exercice rapide, désormais unifiés dans puttingRounds) sélectionnées via le filtre "Comparer"
+function renderCompareCard(group) {
+  const el = document.getElementById('compare-card-' + group);
+  if (!el) return;
+  const s = filterState[group];
+  if (!s.compareA || !s.compareB) { el.classList.add('is-hidden'); el.innerHTML = ''; return; }
+  const rA = puttingRounds.find(function (r) { return r.id === s.compareA; });
+  const rB = puttingRounds.find(function (r) { return r.id === s.compareB; });
+  if (!rA || !rB) { el.classList.add('is-hidden'); el.innerHTML = ''; return; }
+  const statsA = parcoursSessionStats(rA.holes || []);
+  const statsB = parcoursSessionStats(rB.holes || []);
+  const dateOf = function (r) { return new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }); };
+  const rows = [
+    ['SG Putting', fmtSG(statsA.sgAvg), fmtSG(statsB.sgAvg)],
+    ['1 putt', fmtPct(statsA.rate), fmtPct(statsB.rate)],
+    ['Moy. putts', statsA.avgPutts == null ? '--' : statsA.avgPutts.toFixed(1), statsB.avgPutts == null ? '--' : statsB.avgPutts.toFixed(1)],
+    ['Putts totaux', String(statsA.putts), String(statsB.putts)],
+  ];
+  el.classList.remove('is-hidden');
+  el.innerHTML =
+    '<div class="chart-card_header">' +
+      '<div class="chart-card_title">Comparaison</div>' +
+      '<button type="button" class="compare-card_reset" onclick="resetCompareSelection(\'' + group + '\')">Effacer</button>' +
+    '</div>' +
+    '<div class="compare-table">' +
+      '<div class="compare-table_row compare-table_head"><span></span><span>' + escHtml(rA.name) + '<br><small>' + dateOf(rA) + '</small></span><span>' + escHtml(rB.name) + '<br><small>' + dateOf(rB) + '</small></span></div>' +
+      rows.map(function (row) { return '<div class="compare-table_row"><span>' + row[0] + '</span><span>' + row[1] + '</span><span>' + row[2] + '</span></div>'; }).join('') +
+    '</div>';
 }
 
 function filterSheetTitle(type) {
@@ -1368,14 +1421,18 @@ function renderFilterSheet() {
 
   let optionsHtml = '';
   if (type === 'compare') {
-    if (!puttingSessions.length) {
-      optionsHtml = '<div class="filter-sheet_empty">Aucune session disponible pour le moment.</div>';
+    if (!puttingRounds.length) {
+      optionsHtml = '<div class="filter-sheet_empty">Aucune séance disponible pour le moment.</div>';
     } else {
-      optionsHtml = puttingSessions.slice().reverse().map(function (session) {
-        const isChecked = s.compareA === session.id || s.compareB === session.id;
-        const c = getCombineById(session.combineId);
-        const label = (c ? c.name : 'Exercice') + ' — ' + (session.dateLabel || '');
-        return '<button class="filter-sheet_option' + (isChecked ? ' is-selected' : '') + '" onclick="toggleCompareSession(\'' + group + '\', ' + session.id + ')">' +
+      const resetBtn = '<button class="filter-sheet_option' + (!s.compareA && !s.compareB ? ' is-selected' : '') + '" onclick="resetCompareSelection(\'' + group + '\')">' +
+        '<span>Aucune comparaison</span>' +
+        '<svg class="filter-sheet_check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>' +
+        '</button>';
+      optionsHtml = resetBtn + puttingRounds.slice().reverse().map(function (round) {
+        const isChecked = s.compareA === round.id || s.compareB === round.id;
+        const dateLabel = new Date(round.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+        const label = round.name + ' — ' + dateLabel;
+        return '<button class="filter-sheet_option' + (isChecked ? ' is-selected' : '') + '" onclick="toggleCompareSession(\'' + group + '\', ' + round.id + ')">' +
           '<span>' + label + '</span>' +
           '<svg class="filter-sheet_check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>' +
           '</button>';
@@ -2349,7 +2406,52 @@ function retryQuickExercise() {
   startQuickExercise(holesCount, entryMode);
 }
 
+// Convertit une séance d'exercice rapide (modèle "results[]") en round au format
+// "Parcours" (modèle "putts"), pour que Home / Analyse Distance / Analyse Pente /
+// Stats Performance / Activité récente traitent les deux sources de la même façon.
+function quickSessionToRound(session, combine) {
+  const rows = session.holes.map(function (h) {
+    const played = h.results && h.results.length > 0;
+    const isMade = played && h.results[0] === 'made';
+    const putts = played ? (isMade ? 1 : 2) : null;
+    return {
+      hole: h.hole,
+      m: h.m,
+      clock: h.clock,
+      putts: putts,
+      resultat: h.resultat || (isMade ? 'made' : null),
+    };
+  });
+  const onePutts = rows.filter(function (r) { return r.putts === 1; }).length;
+  const threePutts = rows.filter(function (r) { return r.putts !== null && r.putts >= 3; }).length;
+  const totalPutts = rows.reduce(function (sum, r) { return sum + (r.putts || 0); }, 0);
+  const totalMeters = rows.reduce(function (sum, r) { return sum + (r.putts != null ? (r.m || 0) : 0); }, 0);
+  const name = (session.location && session.location !== 'Non renseigné') ? session.location : 'Exercice rapide';
+  return {
+    id: Date.now(),
+    name: name,
+    dateISO: session.dateISO || new Date().toISOString(),
+    mode: combine ? combine.entryMode : 'express',
+    holesCount: rows.length,
+    onePutts: onePutts,
+    threePutts: threePutts,
+    totalPutts: totalPutts,
+    totalMeters: Math.round(totalMeters * 10) / 10,
+    holes: rows,
+    source: 'quick',
+  };
+}
+
 function finishQuickExercise() {
+  const combine = getCombineById(activeCombineId);
+  const played = activeSession && activeSession.holes && activeSession.holes.some(function (h) { return h.results && h.results.length; });
+  if (played) {
+    const round = quickSessionToRound(activeSession, combine);
+    puttingRounds.push(round);
+    saveStateToLocalStorage();
+    renderParcoursHistory();
+    showToast('Exercice enregistré');
+  }
   cleanupQuickCombine();
   activeSession = null;
   exitExerciseFlow();
@@ -2612,6 +2714,7 @@ function openNewParcoursModal() {
     rows: generateParcoursRows(18),
     activeIndex: 0,
     statsInfoOpen: false,
+    screen: 'entry', // 'entry' | 'recap'
   };
   newParcoursModalOpen = true;
   parcoursPopup = null;
@@ -2706,8 +2809,6 @@ function advanceParcoursHole() {
 
 function updateParcoursName(value) {
   newParcoursForm.name = value;
-  const btn = document.getElementById('parcours-save-btn');
-  if (btn) btn.disabled = !value.trim();
 }
 
 function setParcoursRowPutts(idx, v) {
@@ -2715,18 +2816,20 @@ function setParcoursRowPutts(idx, v) {
   newParcoursForm.rows[idx].putts = isNaN(n) ? null : Math.max(0, Math.min(10, n));
 }
 
-// Saisie rapide : Réussi = 1 putt, Manqué = 2 putts (le putt raté + le putt pour finir)
-function setParcoursRowResult(idx, result) {
+// Saisie rapide : 1, 2 ou 3 putts (1 putt = vert). Au-delà d'1 putt, la distance
+// comptabilisée pour ce trou est ramenée à 0,5 m (putt(s) restant(s) considéré(s) comme courts).
+function setParcoursRowPuttsExpress(idx, putts) {
   const row = newParcoursForm.rows[idx];
-  row.putts = result === 'made' ? 1 : 2;
-  row.resultat = result === 'made' ? 'made' : null;
+  row.putts = putts;
+  row.resultat = putts === 1 ? 'made' : null;
+  if (putts > 1) row.m = 0.5;
   advanceParcoursHole();
 }
 
 function setParcoursRowM(idx, v) {
   if ((v || '').trim() === '') { newParcoursForm.rows[idx].m = 0; return; }
   const n = parseFloat((v || '').replace(',', '.'));
-  if (!isNaN(n)) newParcoursForm.rows[idx].m = Math.round(Math.max(0, Math.min(30, n)) * 10) / 10;
+  if (!isNaN(n)) newParcoursForm.rows[idx].m = Math.round(Math.max(0, n) * 10) / 10;
 }
 
 // Saisie de la distance via le pavé numérique, pour la carte compacte du mode express
@@ -2853,10 +2956,28 @@ function renderParcoursPopup() {
   }
 }
 
+// La distance de chaque trou est désormais obligatoire (le lieu, lui, reste optionnel)
+function parcoursAllHolesComplete(f) {
+  return f.rows.every(function (r) { return r.putts !== null && r.putts !== undefined && r.m > 0; });
+}
+
+function goToParcoursRecap() {
+  if (!parcoursAllHolesComplete(newParcoursForm)) return;
+  newParcoursForm.screen = 'recap';
+  renderNewParcoursModal();
+  window.scrollTo(0, 0);
+}
+
+function backToParcoursEntry() {
+  newParcoursForm.screen = 'entry';
+  renderNewParcoursModal();
+  window.scrollTo(0, 0);
+}
+
 function saveNewParcours() {
   const f = newParcoursForm;
-  if (!f.name || !f.name.trim()) {
-    alert('Donne un nom à ce parcours avant de l\'enregistrer.');
+  if (!parcoursAllHolesComplete(f)) {
+    alert('Merci de renseigner la distance et le résultat de chaque trou avant d\'enregistrer.');
     return;
   }
   const rows = f.rows;
@@ -2867,7 +2988,7 @@ function saveNewParcours() {
 
   puttingRounds.push({
     id: Date.now(),
-    name: f.name.trim(),
+    name: (f.name && f.name.trim()) ? f.name.trim() : 'Parcours',
     dateISO: new Date().toISOString(),
     mode: f.mode,
     holesCount: f.holesCount,
@@ -2880,6 +3001,58 @@ function saveNewParcours() {
   saveStateToLocalStorage();
   closeNewParcoursModal();
   renderParcoursHistory();
+  showToast('Parcours enregistré');
+}
+
+// --- Récap de fin de session (même esprit que le récap de l'exercice rapide) ---
+function renderNewParcoursRecapScreen() {
+  const root = document.getElementById('parcours-entry-root');
+  if (!root) return;
+  const f = newParcoursForm;
+  const st = parcoursSessionStats(f.rows);
+  const esc = escHtml;
+
+  root.innerHTML = `
+    <div class="quick-entry_top">
+      <a href="#" class="quick-entry_back" onclick="event.preventDefault();backToParcoursEntry()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Retour
+      </a>
+    </div>
+
+    <div class="stats_grid">
+      <div class="stat-card">
+        <div class="stat-card_label">SG Putting</div>
+        <div class="stat-card_value">${fmtSG(st.sgAvg)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card_label">1 putt</div>
+        <div class="stat-card_value">${fmtPct(st.rate)}</div>
+        <div class="stat-card_trend">${st.putts} putts au total</div>
+      </div>
+    </div>
+
+    <input type="text" class="exercise-modal_input" placeholder="Lieu (optionnel)" value="${esc(f.name)}" oninput="updateParcoursName(this.value)">
+
+    <div class="history-card">
+      <div class="history-card_header"><div class="history-card_title">Détail par trou</div></div>
+      <div class="recap-table">
+        <div class="recap-table_row recap-table_head"><span>Trou</span><span>Distance</span><span>Putts</span></div>
+        ${f.rows.map(function (r) {
+          return `<div class="recap-table_row">
+            <span>${r.hole}</span>
+            <span>${r.m} m</span>
+            <span class="${r.putts === 1 ? 'recap-table_value-accent' : ''}">${r.putts != null ? r.putts : '--'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="exercise-item_actions" style="margin-top:0;">
+      <button class="exercise-item_action" onclick="backToParcoursEntry()">Modifier</button>
+      <button class="exercise-item_action is-primary" onclick="saveNewParcours()">Enregistrer</button>
+    </div>
+  `;
 }
 
 // Stats de la saisie en cours : mêmes règles que l'Exercice rapide (Manqué = 2 putts, Réussi = 1 putt)
@@ -2910,11 +3083,13 @@ function renderNewParcoursModal() {
     return;
   }
   const f = newParcoursForm;
+  if (f.screen === 'recap') { renderNewParcoursRecapScreen(); return; }
   const isDetail = f.mode === 'complete';
   const rows = f.rows;
   const idx = f.activeIndex;
   const row = rows[idx];
   const st = parcoursSessionStats(rows);
+  const allDone = parcoursAllHolesComplete(f);
   const esc = escHtml;
   const icon = quickIcon;
   const { pin: pinPaths, flag: flagPaths, star: starPaths, bars: barsPaths, distance: distancePaths, slope: slopePaths, putter: putterPaths, target: targetPaths, trophy: trophyPaths } = QUICK_ICON_PATHS;
@@ -2941,8 +3116,8 @@ function renderNewParcoursModal() {
         <div class="quick-session_bar-item is-wide">
           ${icon('quick-session_bar-icon', pinPaths)}
           <div class="quick-session_bar-text">
-            <span class="quick-session_bar-label">Parcours</span>
-            <input type="text" class="quick-session_bar-input" id="parcours-name-input" placeholder="Nom du parcours" value="${esc(f.name)}" oninput="updateParcoursName(this.value)">
+            <span class="quick-session_bar-label">Lieu</span>
+            <input type="text" class="quick-session_bar-input" id="parcours-name-input" placeholder="Lieu (optionnel)" value="${esc(f.name)}" oninput="updateParcoursName(this.value)">
           </div>
         </div>
         <div class="quick-session_bar-divider"></div>
@@ -3011,18 +3186,15 @@ function renderNewParcoursModal() {
 
         <div class="quick-session_bg" ${puttImage ? `style="background-image:url('${puttImage}')"` : ''}></div>
 
-        <div class="session-result-buttons">
+        <div class="session-result-buttons ${isDetail ? '' : 'is-triple'}">
           ${isDetail ? `
           <button class="session-result-btn is-detail ${currentResult ? 'is-selected' : ''}" onclick="openResultatPopup(${idx})">
             <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${targetPaths}</svg></span>${esc(resultatLabelText)}
           </button>
           ` : `
-          <button class="session-result-btn is-missed ${currentResult === 'missed' ? 'is-selected' : ''}" onclick="setParcoursRowResult(${idx}, 'missed')">
-            <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 8l8 8M16 8l-8 8"/></svg></span>Manqué
-          </button>
-          <button class="session-result-btn is-made ${currentResult === 'made' ? 'is-selected' : ''}" onclick="setParcoursRowResult(${idx}, 'made')">
-            <span class="quick-session_btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>Réussi
-          </button>
+          <button class="session-result-btn is-made ${row.putts === 1 ? 'is-selected' : ''}" onclick="setParcoursRowPuttsExpress(${idx}, 1)">1 putt</button>
+          <button class="session-result-btn is-missed ${row.putts === 2 ? 'is-selected' : ''}" onclick="setParcoursRowPuttsExpress(${idx}, 2)">2 putts</button>
+          <button class="session-result-btn is-missed ${row.putts === 3 ? 'is-selected' : ''}" onclick="setParcoursRowPuttsExpress(${idx}, 3)">3 putts</button>
           `}
         </div>
       </div>
@@ -3066,12 +3238,14 @@ function renderNewParcoursModal() {
         </div>
       </div>
 
-      ${f.statsInfoOpen ? `<div class="mini-popup_info-text">Un putt raté compte pour 2 putts (le putt raté et le putt pour finir). Cette règle s'applique à la moyenne, au total et au Strokes Gained.</div>` : ''}
+      ${f.statsInfoOpen ? `<div class="mini-popup_info-text">Au-delà d'1 putt, la distance comptabilisée pour le trou passe à 0,5 m. Cette règle s'applique à la moyenne, au total et au Strokes Gained.</div>` : ''}
 
-      <button class="exercise-modal_save quick-entry_save" id="parcours-save-btn" onclick="saveNewParcours()" ${!f.name.trim() ? 'disabled' : ''}>
+      ${allDone ? `
+      <button class="exercise-modal_save quick-entry_save" onclick="goToParcoursRecap()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-        Enregistrer ce parcours
+        Voir le récapitulatif
       </button>
+      ` : `<div class="quick-entry_hint">Renseigne la distance et le résultat de chaque trou pour terminer (${rows.filter(function (r) { return r.putts !== null && r.putts !== undefined && r.m > 0; }).length} / ${rows.length}).</div>`}
     </div>
   `;
 }
