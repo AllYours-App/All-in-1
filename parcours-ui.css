@@ -414,11 +414,9 @@ body.no-scroll .screen-view.active .screen {
   flex: 0 0 auto;
 }
 
-/* Bouton "nouveau parcours", intégré en haut à gauche de chaque encadré */
+/* Bouton "nouveau parcours" : sous le numéro de trou, collé à gauche */
 .track-reset-btn {
   position: absolute;
-  top: 10px;
-  left: 10px;
   z-index: 4;
   width: 32px;
   height: 32px;
@@ -433,6 +431,11 @@ body.no-scroll .screen-view.active .screen {
   backdrop-filter: blur(4px);
 }
 
+.track-reset-corner {
+  top: 52px;
+  left: 10px;
+}
+
 .track-reset-btn svg {
   width: 16px;
   height: 16px;
@@ -443,32 +446,39 @@ body.no-scroll .screen-view.active .screen {
   color: var(--accent);
 }
 
-/* Rails gauche (numéro du trou / Par 3) et droite (+ / − / crayon) */
+/* Rail haut-droit : "−" dans l'angle, "+" à sa gauche (même ligne), crayon en dessous */
 .track-rail {
   position: absolute;
-  top: 0;
-  bottom: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-end;
   gap: 8px;
   padding: 10px 6px;
   pointer-events: none;
   z-index: 4;
 }
 
-.track-rail-left {
-  left: 0;
-  top: 50px;
-}
-
 .track-rail-right {
-  right: 0;
+  top: 10px;
+  right: 10px;
 }
 
-.track-rail > * {
+.track-rail-row {
+  display: flex;
+  gap: 8px;
+}
+
+.track-rail > *,
+.track-rail-row > * {
   pointer-events: auto;
+}
+
+/* Numéro de trou : coin haut-gauche */
+.track-hole-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 4;
 }
 
 .hole-counter {
@@ -490,12 +500,47 @@ body.no-scroll .screen-view.active .screen {
   font-size: 12px;
 }
 
+/* Bouton Par 3 : coin bas-gauche */
 .track-par3-btn {
   width: auto;
   padding: 4px 8px;
   font-size: 10px;
   background: rgba(5, 5, 5, 0.55);
   backdrop-filter: blur(4px);
+}
+
+.track-par3-corner {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 4;
+}
+
+/* Bouton info "i" : coin bas-droit */
+.track-info-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(5, 5, 5, 0.55);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.track-info-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .mode-btn {
@@ -1509,6 +1554,10 @@ input[type="range"]::-moz-range-thumb {
   max-width: 340px;
 }
 
+.keypad-confirm-btn {
+  width: 100%;
+}
+
 .result-box {
   background: var(--card-alt);
   border: 1px solid var(--border);
@@ -1710,6 +1759,16 @@ input[type="range"]::-moz-range-thumb {
   cursor: crosshair;
   box-shadow: var(--shadow-soft);
   -webkit-tap-highlight-color: transparent;
+  touch-action: none; /* le pinch à 2 doigts est géré en JS (fwTouchStart/Move/End) */
+}
+
+/* Couche zoomable/déplaçable (pinch à 2 doigts) : contient tout le contenu du terrain,
+   les boutons/badges restent en dehors pour rester fixes à l'écran */
+.fw-zoom-layer {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .fw-flag {
@@ -1801,6 +1860,31 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.7), 0 0 0 4px rgba(255, 255, 255, 0.3);
 }
 
+/* Repère de distance générique (tee → green), purement indicatif */
+.fw-ruler-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fw-ruler-label {
+  position: absolute;
+  left: 6px;
+  transform: translateY(-50%);
+  font-size: 9px;
+  color: var(--text-muted);
+  background: rgba(5, 5, 5, 0.5);
+  padding: 1px 5px;
+  border-radius: 6px;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 1;
+  white-space: nowrap;
+}
+
 /* --------------------------------------------------------------------------
    Green — repérage des attaques de green sur 18 trous
    -------------------------------------------------------------------------- */
@@ -1810,7 +1894,6 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   flex: 1;
   min-height: 0;
-  container-type: size;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1818,6 +1901,17 @@ input[type="range"]::-moz-range-thumb {
   background: repeating-linear-gradient(135deg, #10240f, #10240f 6px, #0d1f0c 6px, #0d1f0c 12px);
   box-shadow: var(--shadow-soft);
   -webkit-tap-highlight-color: transparent;
+  touch-action: none; /* le pinch à 2 doigts est géré en JS (grTouchStart/Move/End) */
+}
+
+/* Couche zoomable/déplaçable (pinch à 2 doigts) ; porte le container-query utilisé par
+   .gr-green/.gr-ring (cqmin) pour que leur taille suive bien la couche, pas la fenêtre */
+.gr-zoom-layer {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .gr-green {
@@ -1864,6 +1958,33 @@ input[type="range"]::-moz-range-thumb {
 
 .gr-mark.is-extra {
   background: #C9A227;
+}
+
+/* Anneaux de distance génériques autour du drapeau, purement indicatifs */
+.gr-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gr-ring-label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  color: var(--text-muted);
+  background: rgba(5, 5, 5, 0.5);
+  padding: 1px 5px;
+  border-radius: 6px;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 1;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------

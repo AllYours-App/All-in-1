@@ -223,11 +223,52 @@ let lastBeta = null;
    Le résultat se met à jour en direct à chaque pression, comme le faisaient
    les oninput des inputs natifs qu'il remplace.
    -------------------------------------------------------------------------- */
-let courseKeypadPopup = null; // { title, target, value, unit }
+let courseKeypadPopup = null; // { title, target, value, unit, mode?, min?, max?, trackerType?, hole?, index? }
 
 function openCourseKeypad(title, target, currentValue, unit) {
   const start = (currentValue === null || currentValue === undefined || currentValue === "") ? "" : String(currentValue);
   courseKeypadPopup = { title: title, target: target, value: start, unit: unit || "" };
+  renderCourseModals();
+}
+// Pavé numérique dédié à la renumérotation d'un point (Fairway/Green) : borné 1-18, validation explicite
+// La valeur part vide (et non pré-remplie) : un pavé qui n'ajoute que des chiffres à la suite
+// d'une valeur déjà bornée à 18 finissait sans ça par rejeter silencieusement toute frappe.
+function openHoleNumberKeypad(trackerType, hole, index) {
+  courseKeypadPopup = {
+    title: "Déplacer vers le trou n°",
+    mode: "renumber",
+    trackerType: trackerType,
+    hole: hole,
+    index: index,
+    value: "",
+    unit: "",
+    min: 1,
+    max: 18
+  };
+  renderCourseModals();
+}
+// Pavé numérique dédié à la calibration de la distance générique tee → green (fairway)
+function openFwDistanceKeypad() {
+  courseKeypadPopup = {
+    title: "Longueur du trou (tee → green)",
+    mode: "fwDistance",
+    value: "",
+    unit: distanceUnitLabel(),
+    min: 1,
+    max: 999
+  };
+  renderCourseModals();
+}
+// Pavé numérique dédié à la calibration du rayon du green (distance au drapeau)
+function openGrDistanceKeypad() {
+  courseKeypadPopup = {
+    title: "Rayon du green (bord ↔ drapeau)",
+    mode: "grDistance",
+    value: "",
+    unit: distanceUnitLabel(),
+    min: 1,
+    max: 60
+  };
   renderCourseModals();
 }
 function closeCourseKeypad() {
@@ -235,30 +276,107 @@ function closeCourseKeypad() {
   renderCourseModals();
 }
 function courseKeypadPress(d) {
-  if (!courseKeypadPopup || courseKeypadPopup.value.length >= 5) return;
-  courseKeypadPopup.value += d;
+  const p = courseKeypadPopup;
+  if (!p) return;
+  const maxLen = p.max ? String(p.max).length : 5;
+  if (p.value.length >= maxLen) return;
+  const candidate = p.value + d;
+  if (p.max && Number(candidate) > p.max) return; // borne haute (ex: trou 18)
+  p.value = candidate;
+  if (p.mode) { renderCourseModals(); return; } // les modes "confirmés" attendent le bouton Valider
   applyCourseKeypadValue();
   renderCourseModals();
 }
 function courseKeypadBackspace() {
-  if (!courseKeypadPopup) return;
-  courseKeypadPopup.value = courseKeypadPopup.value.slice(0, -1);
+  const p = courseKeypadPopup;
+  if (!p) return;
+  p.value = p.value.slice(0, -1);
+  if (p.mode) { renderCourseModals(); return; }
   applyCourseKeypadValue();
   renderCourseModals();
 }
 function courseKeypadClear() {
-  if (!courseKeypadPopup) return;
-  courseKeypadPopup.value = "";
+  const p = courseKeypadPopup;
+  if (!p) return;
+  p.value = "";
+  if (p.mode) { renderCourseModals(); return; }
   applyCourseKeypadValue();
   renderCourseModals();
 }
-// Pousse la valeur en cours de saisie vers le champ visé par "target"
+// Pousse la valeur en cours de saisie vers le champ visé par "target" (modes "live", sans bouton Valider)
 function applyCourseKeypadValue() {
   const p = courseKeypadPopup;
   if (!p) return;
   if (p.target === "windSpeed") updateWindSpeed(p.value);
   else if (p.target === "windDistance") updateWindDistance(p.value);
   else if (p.target === "elevDistance") updateElevationInputDistance(p.value);
+}
+// Aiguille le bouton Valider vers le bon traitement selon le mode du pavé ouvert
+function confirmCourseKeypadValue() {
+  const p = courseKeypadPopup;
+  if (!p || !p.mode) return;
+  if (p.mode === "renumber") return confirmCourseKeypadRenumber();
+  if (p.mode === "fwDistance") return confirmFwDistance();
+  if (p.mode === "grDistance") return confirmGrDistance();
+}
+// Valide la renumérotation : déplace le point du trou source vers le trou saisi (1-18)
+function confirmCourseKeypadRenumber() {
+  const p = courseKeypadPopup;
+  const n = parseInt(p.value, 10);
+  if (!n || n < (p.min || 1) || n > (p.max || 18)) return;
+  const destIndex = n - 1;
+  if (destIndex === p.hole) { closeCourseKeypad(); return; }
+
+  if (p.trackerType === "fw") {
+    const [shot] = fwHoles[p.hole].shots.splice(p.index, 1);
+    fwHoles[destIndex].shots.push(shot);
+    fwSave();
+    closeCourseKeypad();
+    fwShowToast(destIndex, "renuméroté");
+  } else {
+    const [mark] = grHoles[p.hole].marks.splice(p.index, 1);
+    grHoles[destIndex].marks.push(mark);
+    grSave();
+    closeCourseKeypad();
+    grShowToast(destIndex, "renuméroté");
+  }
+}
+// Valide la nouvelle longueur du trou : les coups déjà posés conservent leur distance réelle
+// (leur position sur la règle est donc recalculée au prorata de l'ancien/nouveau repère)
+function confirmFwDistance() {
+  const p = courseKeypadPopup;
+  const n = parseFloat(p.value.replace(",", "."));
+  if (!n || n <= 0) { closeCourseKeypad(); return; }
+  const oldMaxM = fwRulerMaxM;
+  const newMaxM = distanceToMeters(n, parcoursSettings.distanceUnit);
+  fwHoles.forEach((h) => h.shots.forEach((s) => {
+    s.y = 100 - (100 - s.y) * (oldMaxM / newMaxM);
+    s.y = Math.max(0, Math.min(100, s.y));
+  }));
+  fwRulerMaxM = newMaxM;
+  fwSave();
+  closeCourseKeypad();
+  renderFairway();
+}
+// Valide le nouveau rayon de green : les points déjà posés conservent leur distance réelle au drapeau
+// (recalcul radial de leur position autour du centre, au prorata de l'ancien/nouveau rayon)
+function confirmGrDistance() {
+  const p = courseKeypadPopup;
+  const n = parseFloat(p.value.replace(",", "."));
+  if (!n || n <= 0) { closeCourseKeypad(); return; }
+  const oldRadiusM = grGreenRadiusM;
+  const newRadiusM = distanceToMeters(n, parcoursSettings.distanceUnit);
+  const ratio = oldRadiusM / newRadiusM;
+  grHoles.forEach((h) => h.marks.forEach((m) => {
+    m.x = 50 + (m.x - 50) * ratio;
+    m.y = 50 + (m.y - 50) * ratio;
+    m.x = Math.max(0, Math.min(100, m.x));
+    m.y = Math.max(0, Math.min(100, m.y));
+  }));
+  grGreenRadiusM = newRadiusM;
+  grSave();
+  closeCourseKeypad();
+  renderGreen();
 }
 function courseKeypadHtml() {
   const p = courseKeypadPopup;
@@ -271,6 +389,7 @@ function courseKeypadHtml() {
         </div>
         <div class="app-keypad-value">${p.value === "" ? "--" : p.value}${p.value !== "" && p.unit ? " " + p.unit : ""}</div>
         ${appKeypad("courseKeypadPress", "courseKeypadBackspace", "courseKeypadClear", null)}
+        ${p.mode ? `<button type="button" class="btn btn-primary keypad-confirm-btn" onclick="confirmCourseKeypadValue()">Valider</button>` : ""}
       </div>
     </div>
   `;
@@ -286,6 +405,7 @@ function renderCourseModals() {
     elevationOpen ? elevationCalcHtml() : "",
     distancesCalcOpen ? distancesCalcHtml() : "",
     trackInfoOpen ? trackInfoHtml() : "",
+    statsOpen ? statsModalHtml() : "",
     courseKeypadPopup ? courseKeypadHtml() : ""
   ].join("");
 }
@@ -302,6 +422,8 @@ function trackInfoHtml() {
           <button class="icon-btn" aria-label="Fermer" onclick="closeTrackInfo()">✕</button>
         </div>
         <p>Suivi de la dispersion pendant un parcours</p>
+        <p>Pince à deux doigts dans l'encadré pour zoomer et te déplacer, afin de placer tes points avec précision.</p>
+        <p>Touche un repère de distance pour l'ajuster à la réalité du trou : les points déjà placés se réajustent automatiquement.</p>
       </div>
     </div>
   `;
@@ -795,6 +917,45 @@ function distancesCalcHtml() {
 const TRACK_RESET_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6"></path><path d="M20 20v-6h-6"></path><path d="M5.5 15A9 9 0 0 0 20 14M18.5 9A9 9 0 0 0 4 10"></path></svg>`;
 const TRACK_PENCIL_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>`;
 
+/* --------------------------------------------------------------------------
+   Pinch-to-zoom générique (façon Maps), utilisable pour le fairway et le green.
+   Un seul point de contact = comportement normal (tap pour placer un point).
+   Deux points de contact = zoom + déplacement de la couche de contenu.
+   -------------------------------------------------------------------------- */
+function pinchTouchDist(a, b) {
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+function pinchClamp(v, min, max) {
+  return Math.min(max, Math.max(min, v));
+}
+
+/* --------------------------------------------------------------------------
+   Règle de distance générique (repère visuel tee → green), affichée en fond
+   du fairway et en anneaux concentriques sur le green. Ce ne sont pas des
+   distances réelles du trou (non stockées ici) mais un repère d'échelle.
+   -------------------------------------------------------------------------- */
+let fwRulerMaxM = 230; // distance tee → green : calibrable en tapant un repère, valeur par défaut sinon
+const FW_RULER_STOPS_PCT = [10, 30, 50, 70, 90]; // 0% = haut (green), 100% = bas (tee)
+
+function fwRulerHtml() {
+  return FW_RULER_STOPS_PCT.map((y) => {
+    const distM = fwRulerMaxM * (100 - y) / 100;
+    const label = Math.round(convertDistance(distM, parcoursSettings.distanceUnit));
+    return `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;" onclick="event.stopPropagation(); openFwDistanceKeypad();">${label} ${distanceUnitLabel()}</span>`;
+  }).join("");
+}
+
+let grGreenRadiusM = 15; // rayon du green (bord ↔ drapeau) : calibrable en tapant un repère
+const GR_RING_STEPS_M = [5, 10];
+
+function grRingsHtml() {
+  return GR_RING_STEPS_M.map((m) => {
+    const diameterCqmin = 70 * (m / grGreenRadiusM);
+    const label = Math.round(convertDistance(m, parcoursSettings.distanceUnit));
+    return `<div class="gr-ring" style="width:${diameterCqmin}cqmin;height:${diameterCqmin}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${diameterCqmin / 2}cqmin);" onclick="event.stopPropagation(); openGrDistanceKeypad();">${label} ${distanceUnitLabel()}</span>`;
+  }).join("");
+}
+
 /* ==========================================================================
    FAIRWAY — suivi des mises en jeu sur 18 trous (front-end uniquement,
    juste de l'état local + persistance navigateur, aucun calcul de stats)
@@ -815,6 +976,7 @@ function fwLoad() {
   try {
     const saved = JSON.parse(localStorage.getItem(FW_STORAGE_KEY) || "null");
     if (saved && Array.isArray(saved.holes) && saved.holes.length === 18) {
+      if (saved.maxDistanceM) fwRulerMaxM = saved.maxDistanceM;
       return saved.holes;
     }
   } catch (e) { /* localStorage indisponible : on repart d'un parcours vide */ }
@@ -822,7 +984,7 @@ function fwLoad() {
 }
 
 function fwSave() {
-  try { localStorage.setItem(FW_STORAGE_KEY, JSON.stringify({ holes: fwHoles })); } catch (e) { /* pas grave */ }
+  try { localStorage.setItem(FW_STORAGE_KEY, JSON.stringify({ holes: fwHoles, maxDistanceM: fwRulerMaxM })); } catch (e) { /* pas grave */ }
 }
 
 function fwCurrentHoleIndex() {
@@ -876,11 +1038,54 @@ function fwFindShotNear(xPercent, yPercent, rect) {
   return best;
 }
 
+/* --- Pinch-to-zoom (2 doigts) : état de vue + gestion tactile --- */
+let fwView = { scale: 1, tx: 0, ty: 0 };
+let fwPinch = { active: false, justPinched: false, startDist: 0, startScale: 1, startMidX: 0, startMidY: 0, startTx: 0, startTy: 0, rectW: 0, rectH: 0 };
+
+function fwTouchStart(e) {
+  if (e.touches.length !== 2) return;
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const [a, b] = e.touches;
+  fwPinch.active = true;
+  fwPinch.startDist = pinchTouchDist(a, b);
+  fwPinch.startScale = fwView.scale;
+  fwPinch.startMidX = (a.clientX + b.clientX) / 2 - rect.left;
+  fwPinch.startMidY = (a.clientY + b.clientY) / 2 - rect.top;
+  fwPinch.startTx = fwView.tx;
+  fwPinch.startTy = fwView.ty;
+  fwPinch.rectW = rect.width;
+  fwPinch.rectH = rect.height;
+}
+function fwTouchMove(e) {
+  if (!fwPinch.active || e.touches.length !== 2) return;
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const [a, b] = e.touches;
+  const scale = pinchClamp(fwPinch.startScale * (pinchTouchDist(a, b) / fwPinch.startDist), 1, 4);
+  const midX = (a.clientX + b.clientX) / 2 - rect.left;
+  const midY = (a.clientY + b.clientY) / 2 - rect.top;
+  fwView.scale = scale;
+  fwView.tx = pinchClamp(fwPinch.startTx + (midX - fwPinch.startMidX), -(scale - 1) * fwPinch.rectW, 0);
+  fwView.ty = pinchClamp(fwPinch.startTy + (midY - fwPinch.startMidY), -(scale - 1) * fwPinch.rectH, 0);
+  const layer = e.currentTarget.querySelector(".fw-zoom-layer");
+  if (layer) layer.style.transform = `translate(${fwView.tx}px, ${fwView.ty}px) scale(${fwView.scale})`;
+}
+function fwTouchEnd(e) {
+  if (fwPinch.active) fwPinch.justPinched = true; // évite qu'un doigt relevé ne déclenche un tap-placement
+  if (e.touches.length < 2) fwPinch.active = false;
+}
+
 function fwZoneTap(event) {
+  if (fwPinch.justPinched) { fwPinch.justPinched = false; return; }
   const zone = event.currentTarget;
-  const rect = zone.getBoundingClientRect();
-  let x = ((event.clientX - rect.left) / rect.width) * 100;
-  let y = ((event.clientY - rect.top) / rect.height) * 100;
+  const rect = zone.getBoundingClientRect(); // conteneur non transformé : le zoom porte sur .fw-zoom-layer
+  const rawX = event.clientX - rect.left;
+  const rawY = event.clientY - rect.top;
+  const contentX = (rawX - fwView.tx) / fwView.scale;
+  const contentY = (rawY - fwView.ty) / fwView.scale;
+  let x = (contentX / rect.width) * 100;
+  let y = (contentY / rect.height) * 100;
   x = Math.max(0, Math.min(100, x));
   y = Math.max(0, Math.min(100, y));
 
@@ -897,12 +1102,7 @@ function fwZoneTap(event) {
   if (fwMode === "edit") {
     const hit = fwFindShotNear(x, y, rect);
     if (!hit) return;
-    const [shot] = fwHoles[hit.hole].shots.splice(hit.index, 1);
-    const nextHole = hit.hole >= 17 ? 0 : hit.hole + 1;
-    fwHoles[nextHole].shots.push(shot);
-    fwSave();
-    fwShowToast(nextHole, "renuméroté");
-    renderFairway();
+    openHoleNumberKeypad("fw", hit.hole, hit.index);
     return;
   }
 
@@ -946,42 +1146,46 @@ function fwAllMarksHtml() {
   return html;
 }
 
-function renderFairway() {
-  const root = document.getElementById("fairway-root");
-  if (!root) return;
-
+function fwVisualHtml() {
   const holeNum = Math.min(fwCurrentHoleIndex() + 1, 18);
 
-  const html = `
-    <div class="fw-visual" onclick="fwZoneTap(event)">
-      <button type="button" class="track-reset-btn" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
+  return `
+    <div class="fw-visual" onclick="fwZoneTap(event)" ontouchstart="fwTouchStart(event)" ontouchmove="fwTouchMove(event)" ontouchend="fwTouchEnd(event)" ontouchcancel="fwTouchEnd(event)">
+      <div class="fw-zoom-layer" style="transform:translate(${fwView.tx}px, ${fwView.ty}px) scale(${fwView.scale});">
+        <div class="fw-stripe fw-stripe-rough-left"></div>
+        <div class="fw-stripe fw-stripe-fairway"></div>
+        <div class="fw-stripe fw-stripe-rough-right"></div>
 
-      <div class="fw-stripe fw-stripe-rough-left"></div>
-      <div class="fw-stripe fw-stripe-fairway"></div>
-      <div class="fw-stripe fw-stripe-rough-right"></div>
+        ${fwRulerHtml()}
 
-      <div class="fw-flag">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"></path><path d="M6 4h11l-3 4 3 4H6"></path></svg>
+        <div class="fw-flag">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"></path><path d="M6 4h11l-3 4 3 4H6"></path></svg>
+        </div>
+
+        ${fwAllMarksHtml()}
       </div>
 
-      ${fwAllMarksHtml()}
-
-      <div class="track-rail track-rail-left">
-        <span class="hole-counter">${holeNum}<em>/18</em></span>
-        <button type="button" class="btn btn-secondary track-par3-btn" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
-      </div>
+      <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
+      <button type="button" class="track-reset-btn track-reset-corner" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
+      <button type="button" class="btn btn-secondary track-par3-btn track-par3-corner" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
+      <button type="button" class="track-info-btn" aria-label="Infos" onclick="event.stopPropagation(); openTrackInfo();">i</button>
 
       <div class="track-rail track-rail-right">
-        <button type="button" class="mode-btn ${fwMode === "plus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('plus');" aria-label="Ajouter un coup">+</button>
-        <button type="button" class="mode-btn mode-btn-minus ${fwMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('minus');" aria-label="Retirer un coup">−</button>
+        <div class="track-rail-row">
+          <button type="button" class="mode-btn ${fwMode === "plus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('plus');" aria-label="Ajouter un coup">+</button>
+          <button type="button" class="mode-btn mode-btn-minus ${fwMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('minus');" aria-label="Retirer un coup">−</button>
+        </div>
         <button type="button" class="mode-btn mode-btn-edit ${fwMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('edit');" aria-label="Renuméroter un coup">${TRACK_PENCIL_ICON}</button>
       </div>
 
       ${fwLastLogged ? `<div class="fw-toast">Trou ${fwLastLogged.hole + 1} — ${fwLastLogged.label}</div>` : ""}
     </div>
   `;
+}
 
-  root.innerHTML = html;
+function renderFairway() {
+  const root = document.getElementById("fairway-root");
+  if (root) root.innerHTML = fwVisualHtml();
 }
 
 /* ==========================================================================
@@ -1004,6 +1208,7 @@ function grLoad() {
   try {
     const saved = JSON.parse(localStorage.getItem(GR_STORAGE_KEY) || "null");
     if (saved && Array.isArray(saved.holes) && saved.holes.length === 18) {
+      if (saved.greenRadiusM) grGreenRadiusM = saved.greenRadiusM;
       return saved.holes;
     }
   } catch (e) { /* localStorage indisponible : on repart d'un parcours vide */ }
@@ -1011,7 +1216,7 @@ function grLoad() {
 }
 
 function grSave() {
-  try { localStorage.setItem(GR_STORAGE_KEY, JSON.stringify({ holes: grHoles })); } catch (e) { /* pas grave */ }
+  try { localStorage.setItem(GR_STORAGE_KEY, JSON.stringify({ holes: grHoles, greenRadiusM: grGreenRadiusM })); } catch (e) { /* pas grave */ }
 }
 
 function grCurrentHoleIndex() {
@@ -1053,11 +1258,54 @@ function grFindMarkNear(xPercent, yPercent, rect) {
   return best;
 }
 
+/* --- Pinch-to-zoom (2 doigts) : état de vue + gestion tactile --- */
+let grView = { scale: 1, tx: 0, ty: 0 };
+let grPinch = { active: false, justPinched: false, startDist: 0, startScale: 1, startMidX: 0, startMidY: 0, startTx: 0, startTy: 0, rectW: 0, rectH: 0 };
+
+function grTouchStart(e) {
+  if (e.touches.length !== 2) return;
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const [a, b] = e.touches;
+  grPinch.active = true;
+  grPinch.startDist = pinchTouchDist(a, b);
+  grPinch.startScale = grView.scale;
+  grPinch.startMidX = (a.clientX + b.clientX) / 2 - rect.left;
+  grPinch.startMidY = (a.clientY + b.clientY) / 2 - rect.top;
+  grPinch.startTx = grView.tx;
+  grPinch.startTy = grView.ty;
+  grPinch.rectW = rect.width;
+  grPinch.rectH = rect.height;
+}
+function grTouchMove(e) {
+  if (!grPinch.active || e.touches.length !== 2) return;
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const [a, b] = e.touches;
+  const scale = pinchClamp(grPinch.startScale * (pinchTouchDist(a, b) / grPinch.startDist), 1, 4);
+  const midX = (a.clientX + b.clientX) / 2 - rect.left;
+  const midY = (a.clientY + b.clientY) / 2 - rect.top;
+  grView.scale = scale;
+  grView.tx = pinchClamp(grPinch.startTx + (midX - grPinch.startMidX), -(scale - 1) * grPinch.rectW, 0);
+  grView.ty = pinchClamp(grPinch.startTy + (midY - grPinch.startMidY), -(scale - 1) * grPinch.rectH, 0);
+  const layer = e.currentTarget.querySelector(".gr-zoom-layer");
+  if (layer) layer.style.transform = `translate(${grView.tx}px, ${grView.ty}px) scale(${grView.scale})`;
+}
+function grTouchEnd(e) {
+  if (grPinch.active) grPinch.justPinched = true;
+  if (e.touches.length < 2) grPinch.active = false;
+}
+
 function grZoneTap(event) {
+  if (grPinch.justPinched) { grPinch.justPinched = false; return; }
   const zone = event.currentTarget;
   const rect = zone.getBoundingClientRect();
-  let x = ((event.clientX - rect.left) / rect.width) * 100;
-  let y = ((event.clientY - rect.top) / rect.height) * 100;
+  const rawX = event.clientX - rect.left;
+  const rawY = event.clientY - rect.top;
+  const contentX = (rawX - grView.tx) / grView.scale;
+  const contentY = (rawY - grView.ty) / grView.scale;
+  let x = (contentX / rect.width) * 100;
+  let y = (contentY / rect.height) * 100;
   x = Math.max(0, Math.min(100, x));
   y = Math.max(0, Math.min(100, y));
 
@@ -1074,12 +1322,7 @@ function grZoneTap(event) {
   if (grMode === "edit") {
     const hit = grFindMarkNear(x, y, rect);
     if (!hit) return;
-    const [mark] = grHoles[hit.hole].marks.splice(hit.index, 1);
-    const nextHole = hit.hole >= 17 ? 0 : hit.hole + 1;
-    grHoles[nextHole].marks.push(mark);
-    grSave();
-    grShowToast(nextHole, "renuméroté");
-    renderGreen();
+    openHoleNumberKeypad("gr", hit.hole, hit.index);
     return;
   }
 
@@ -1113,35 +1356,160 @@ function grAllMarksHtml() {
   return html;
 }
 
-function renderGreen() {
-  const root = document.getElementById("green-root");
-  if (!root) return;
-
+function grVisualHtml() {
   const holeNum = Math.min(grCurrentHoleIndex() + 1, 18);
 
-  const html = `
-    <div class="gr-visual" onclick="grZoneTap(event)">
-      <button type="button" class="track-reset-btn" aria-label="Nouveau parcours green" onclick="event.stopPropagation(); resetGreenRound();">${TRACK_RESET_ICON}</button>
-
-      <div class="gr-green"></div>
-      <div class="gr-flag">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"></path><path d="M6 4h11l-3 4 3 4H6"></path></svg>
+  return `
+    <div class="gr-visual" onclick="grZoneTap(event)" ontouchstart="grTouchStart(event)" ontouchmove="grTouchMove(event)" ontouchend="grTouchEnd(event)" ontouchcancel="grTouchEnd(event)">
+      <div class="gr-zoom-layer" style="transform:translate(${grView.tx}px, ${grView.ty}px) scale(${grView.scale});">
+        <div class="gr-green"></div>
+        ${grRingsHtml()}
+        <div class="gr-flag">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"></path><path d="M6 4h11l-3 4 3 4H6"></path></svg>
+        </div>
+        ${grAllMarksHtml()}
       </div>
-      ${grAllMarksHtml()}
 
-      <div class="track-rail track-rail-left">
-        <span class="hole-counter">${holeNum}<em>/18</em></span>
-      </div>
+      <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
+      <button type="button" class="track-reset-btn track-reset-corner" aria-label="Nouveau parcours green" onclick="event.stopPropagation(); resetGreenRound();">${TRACK_RESET_ICON}</button>
+      <button type="button" class="track-info-btn" aria-label="Infos" onclick="event.stopPropagation(); openTrackInfo();">i</button>
 
       <div class="track-rail track-rail-right">
-        <button type="button" class="mode-btn ${grMode === "plus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('plus');" aria-label="Ajouter une marque">+</button>
-        <button type="button" class="mode-btn mode-btn-minus ${grMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('minus');" aria-label="Retirer une marque">−</button>
+        <div class="track-rail-row">
+          <button type="button" class="mode-btn ${grMode === "plus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('plus');" aria-label="Ajouter une marque">+</button>
+          <button type="button" class="mode-btn mode-btn-minus ${grMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('minus');" aria-label="Retirer une marque">−</button>
+        </div>
         <button type="button" class="mode-btn mode-btn-edit ${grMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('edit');" aria-label="Renuméroter une marque">${TRACK_PENCIL_ICON}</button>
       </div>
 
       ${grLastLogged !== null ? `<div class="fw-toast">Trou ${grLastLogged.hole + 1} — ${grLastLogged.label}</div>` : ""}
     </div>
   `;
+}
 
-  root.innerHTML = html;
+function renderGreen() {
+  const root = document.getElementById("green-root");
+  if (root) root.innerHTML = grVisualHtml();
+}
+
+/* ==========================================================================
+   STATS — bilan du parcours en cours (fairways/greens touchés, tendance
+   dominante) + historique de progression, enregistrés en localStorage.
+   ========================================================================== */
+let statsOpen = false;
+const CAPTURE_STORAGE_KEY = "parcours-captures";
+
+function openStatsModal() { statsOpen = true; renderCourseModals(); }
+function closeStatsModal() { statsOpen = false; renderCourseModals(); }
+
+function fwHitPercent() {
+  let eligible = 0, hit = 0;
+  fwHoles.forEach((h) => {
+    if (h.par3 || h.shots.length === 0) return;
+    eligible++;
+    if (h.shots[0].zone === "fairway") hit++;
+  });
+  return eligible === 0 ? null : Math.round((hit / eligible) * 100);
+}
+
+function grHitPercent() {
+  let total = 0, hit = 0;
+  grHoles.forEach((h) => h.marks.forEach((m) => {
+    total++;
+    const dist = Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2));
+    if (dist <= 35) hit++; // 35% ≈ rayon du cercle de green affiché (70cqmin de diamètre)
+  }));
+  return total === 0 ? null : Math.round((hit / total) * 100);
+}
+
+const TENDANCE_LABELS = { left: "Gauche", right: "Droite", short: "Court", long: "Long" };
+
+// Chaque point vote pour l'axe (gauche/droite ou court/long) où son écart au centre est le plus marqué
+function addTendanceVote(votes, point) {
+  const dx = point.x - 50;
+  const dy = point.y - 50;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    if (dx < 0) votes.left++; else if (dx > 0) votes.right++;
+  } else {
+    if (dy > 0) votes.short++; else if (dy < 0) votes.long++;
+  }
+}
+function roundTendance() {
+  const votes = { left: 0, right: 0, short: 0, long: 0 };
+  fwHoles.forEach((h) => h.shots.forEach((s) => addTendanceVote(votes, s)));
+  grHoles.forEach((h) => h.marks.forEach((m) => addTendanceVote(votes, m)));
+  const best = Object.keys(votes).reduce((a, b) => (votes[a] >= votes[b] ? a : b));
+  return votes[best] > 0 ? TENDANCE_LABELS[best] : null;
+}
+
+function statsHistory() {
+  try { return JSON.parse(localStorage.getItem(CAPTURE_STORAGE_KEY) || "[]"); } catch (e) { return []; }
+}
+
+function statsModalHtml() {
+  const fw = fwHitPercent();
+  const gr = grHitPercent();
+  const tendance = roundTendance();
+  const history = statsHistory().slice(-10).reverse();
+
+  return `
+    <div class="modal-overlay" onclick="closeStatsModal()">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <h3>Stats</h3>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeStatsModal()">✕</button>
+        </div>
+
+        <p class="table-title">Ce parcours</p>
+        <div class="field-grid-2">
+          <div class="result-box">
+            <span class="result-label">Fairways touchés</span>
+            <span class="result-value">${fw === null ? "--" : fw + " %"}</span>
+          </div>
+          <div class="result-box">
+            <span class="result-label">Greens touchés</span>
+            <span class="result-value">${gr === null ? "--" : gr + " %"}</span>
+          </div>
+        </div>
+        <div class="result-box">
+          <span class="result-label">Tendance du jour</span>
+          <span class="result-value">${tendance || "--"}</span>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="saveCaptureSnapshot()">Enregistrer ce bilan</button>
+
+        <p class="table-title">Progression</p>
+        ${history.length === 0 ? `<p class="hint-text">Aucun bilan enregistré pour l'instant.</p>` : `
+          <table class="data-table">
+            <thead>
+              <tr><th class="col-left">Date</th><th>Fairway</th><th>Green</th><th>Tendance</th></tr>
+            </thead>
+            <tbody>
+              ${history.map((h) => `
+                <tr>
+                  <td class="col-left">${new Date(h.date).toLocaleDateString()}</td>
+                  <td>${h.fairwayPercent === null || h.fairwayPercent === undefined ? "--" : h.fairwayPercent + "%"}</td>
+                  <td>${h.greenPercent === null || h.greenPercent === undefined ? "--" : h.greenPercent + "%"}</td>
+                  <td>${h.tendance || "--"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function saveCaptureSnapshot() {
+  const snapshot = {
+    date: new Date().toISOString(),
+    fairwayPercent: fwHitPercent(),
+    greenPercent: grHitPercent(),
+    tendance: roundTendance()
+  };
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(CAPTURE_STORAGE_KEY) || "[]"); } catch (e) { list = []; }
+  list.push(snapshot);
+  try { localStorage.setItem(CAPTURE_STORAGE_KEY, JSON.stringify(list)); } catch (e) { /* pas grave */ }
+  renderCourseModals(); // rafraîchit la modale : la progression affiche immédiatement le nouveau bilan
 }
