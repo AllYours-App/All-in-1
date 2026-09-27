@@ -68,6 +68,7 @@
   cursor:pointer;
 }
 .wg-icon-btn svg{width:18px;height:18px;}
+.wg-icon-btn.active{background:var(--wg-accent);border-color:var(--wg-accent);color:#0B0F14;}
 .wg-subtitle{
   text-align:center;
   color:var(--wg-text-secondary);
@@ -618,7 +619,8 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-wheel-center{fill:rgba(255,255,255,.14);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;}
 .wg-wheel-center:hover{fill:rgba(215,255,47,.22);}
 .wg-wheel-center.selected{fill:rgba(215,255,47,.45);}
-.wg-wheel-hole{fill:none;stroke:var(--wg-border);stroke-width:1.5;}
+.wg-wheel-hole{fill:rgba(215,255,47,.16);stroke:var(--wg-accent);stroke-width:1.5;cursor:pointer;transition:fill .2s;}
+.wg-wheel-hole:hover{fill:rgba(215,255,47,.34);}
 .wg-wheel-pole{stroke:#FFFFFF;stroke-width:2.5;stroke-linecap:round;}
 .wg-wheel-flag{fill:var(--wg-accent);}
 .wg-wheel-ball{fill:var(--wg-accent);stroke:#0B0F14;stroke-width:1.5;}
