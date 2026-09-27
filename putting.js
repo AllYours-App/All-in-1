@@ -355,6 +355,9 @@ function renderPuttingTab() {
 <!-- Modale Nouvel exercice / Modifier -->
 <div id="exercise-modal-root"></div>
 
+<!-- Popup pavé numérique — remplace prompt() natif pour toute saisie manuelle de chiffres -->
+<div id="numeric-keypad-root"></div>
+
 <!-- Écran Saisie rapide (Nouveau parcours) -->
 <main class="quick-entry-wrapper is-hidden" id="parcours-entry-root"></main>
 <div id="parcours-popup-root"></div>
@@ -622,6 +625,113 @@ let selectedCombineId = null;
 let editingCombineId = null;
 let puttingCreativeModalOpen = false;
 let puttingCreativeForm = null;
+
+/* ============================================================
+   PAVÉ NUMÉRIQUE — popup générique remplaçant prompt() natif pour
+   toute saisie manuelle de chiffres (distances, nombre de trous...).
+   Utilise appKeypad() (commun.js). "target" identifie le champ à
+   mettre à jour au clic sur Valider, voir applyNumericKeypadValue().
+   ============================================================ */
+let numericKeypadPopup = null; // { title, target, value, decimal, unit }
+
+function openNumericKeypad(title, target, currentValue, decimal, unit) {
+  const start = (currentValue === null || currentValue === undefined || currentValue === '') ? '' : String(currentValue).replace('.', ',');
+  numericKeypadPopup = { title: title, target: target, value: start, decimal: !!decimal, unit: unit || '' };
+  renderNumericKeypad();
+}
+
+function closeNumericKeypad() {
+  numericKeypadPopup = null;
+  renderNumericKeypad();
+}
+
+function keypadPress(d) {
+  if (!numericKeypadPopup || numericKeypadPopup.value.length >= 6) return;
+  numericKeypadPopup.value += d;
+  renderNumericKeypad();
+}
+
+function keypadDecimal() {
+  if (!numericKeypadPopup || !numericKeypadPopup.decimal) return;
+  if (numericKeypadPopup.value.indexOf(',') !== -1) return;
+  numericKeypadPopup.value += (numericKeypadPopup.value === '' ? '0,' : ',');
+  renderNumericKeypad();
+}
+
+function keypadBackspace() {
+  if (!numericKeypadPopup) return;
+  numericKeypadPopup.value = numericKeypadPopup.value.slice(0, -1);
+  renderNumericKeypad();
+}
+
+function keypadClear() {
+  if (!numericKeypadPopup) return;
+  numericKeypadPopup.value = '';
+  renderNumericKeypad();
+}
+
+function confirmNumericKeypad() {
+  if (!numericKeypadPopup) return;
+  applyNumericKeypadValue(numericKeypadPopup.target, numericKeypadPopup.value);
+  closeNumericKeypad();
+}
+
+// Applique la valeur saisie au champ visé par "target" (voir les appels à openNumericKeypad)
+function applyNumericKeypadValue(target, raw) {
+  const sep = target.indexOf(':');
+  const kind = sep === -1 ? target : target.slice(0, sep);
+  const key = sep === -1 ? null : target.slice(sep + 1);
+  const v = raw.replace(',', '.');
+
+  if (kind === 'creative') {
+    const f = puttingCreativeForm;
+    const isPuttField = key === 'puttMin' || key === 'puttMax';
+    if (isPuttField) {
+      const n = parseFloat(v);
+      if (isNaN(n) || n <= 0) return;
+      f[key] = Math.round(n * 10) / 10;
+    } else {
+      const n2 = parseInt(v, 10);
+      if (isNaN(n2) || n2 < 1) return;
+      f[key] = n2;
+    }
+    if (key === 'puttMax' && f.puttMax < f.puttMin) f.puttMax = f.puttMin;
+    if (key === 'puttMin' && f.puttMin > f.puttMax) f.puttMax = f.puttMin;
+    if (['holesCount', 'puttMin', 'puttMax'].indexOf(key) !== -1) regenerateCreativePreview(f);
+    renderExerciseModal();
+  } else if (kind === 'previewM') {
+    setPreviewRowM(parseInt(key, 10), v);
+    renderExerciseModal();
+  } else if (kind === 'previewClock') {
+    setPreviewRowClock(parseInt(key, 10), v);
+    renderExerciseModal();
+  } else if (kind === 'parcoursRowM') {
+    setParcoursRowM(parseInt(key, 10), v);
+    renderNewParcoursModal();
+  }
+}
+
+function renderNumericKeypad() {
+  const root = document.getElementById('numeric-keypad-root');
+  if (!root) return;
+  if (!numericKeypadPopup) { root.innerHTML = ''; return; }
+  const p = numericKeypadPopup;
+  const closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const extraKey = p.decimal ? { fn: 'keypadDecimal', label: ',' } : null;
+  root.innerHTML = `
+    <div class="mini-popup_overlay" onclick="closeNumericKeypad()">
+      <div class="mini-popup" onclick="event.stopPropagation()">
+        <div class="mini-popup_head">
+          <h3 class="mini-popup_title">${p.title}</h3>
+          <button type="button" class="mini-popup_close" onclick="closeNumericKeypad()" aria-label="Fermer">${closeIcon}</button>
+        </div>
+        <div class="app-keypad-value">${p.value === '' ? '--' : p.value}${p.value !== '' && p.unit ? ' ' + p.unit : ''}</div>
+        ${appKeypad('keypadPress', 'keypadBackspace', 'keypadClear', extraKey)}
+        <button type="button" class="exercise-modal_save" onclick="confirmNumericKeypad()">Valider</button>
+      </div>
+    </div>
+  `;
+}
 
 /* ---------- Filtres de tri (Sessions / Distance / Parcours / Comparer) ---------- */
 /* Communs aux 3 onglets analyse : Analyse Distance, Analyse Pente, Stats Performance */
@@ -2314,21 +2424,7 @@ function updateCreativeName(value) {
 function promptCreativeNumber(field, label) {
   const f = puttingCreativeForm;
   const isPuttField = field === 'puttMin' || field === 'puttMax';
-  const v = prompt(label, isPuttField ? String(f[field]).replace('.', ',') : f[field]);
-  if (v === null) return;
-  if (isPuttField) {
-    const n = parseFloat((v || '').replace(',', '.'));
-    if (isNaN(n) || n <= 0) return;
-    f[field] = Math.round(n * 10) / 10;
-  } else {
-    const n2 = parseInt(v, 10);
-    if (isNaN(n2) || n2 < 1) return;
-    f[field] = n2;
-  }
-  if (field === 'puttMax' && f.puttMax < f.puttMin) f.puttMax = f.puttMin;
-  if (field === 'puttMin' && f.puttMin > f.puttMax) f.puttMax = f.puttMin;
-  if (['holesCount', 'puttMin', 'puttMax'].indexOf(field) !== -1) regenerateCreativePreview(f);
-  renderExerciseModal();
+  openNumericKeypad(label, 'creative:' + field, f[field], isPuttField, isPuttField ? 'm' : '');
 }
 
 function setPreviewRowM(idx, v) {
@@ -2431,8 +2527,8 @@ function renderExerciseModal() {
             return `
             <div class="exercise-modal_preview-row">
               <span>${r.hole}</span>
-              <input type="number" step="0.1" min="0" max="30" value="${r.m}" onchange="setPreviewRowM(${i}, this.value)">
-              <input type="number" min="1" max="12" value="${r.clock}" onchange="setPreviewRowClock(${i}, this.value)">
+              <button type="button" onclick="openNumericKeypad('Distance trou ${r.hole} (m)', 'previewM:${i}', ${r.m}, true, 'm')">${r.m} m</button>
+              <button type="button" onclick="openNumericKeypad('Pente trou ${r.hole} (h)', 'previewClock:${i}', ${r.clock}, false, 'h')">${r.clock} h</button>
             </div>`;
           }).join('')}
         </div>
@@ -2633,13 +2729,10 @@ function setParcoursRowM(idx, v) {
   if (!isNaN(n)) newParcoursForm.rows[idx].m = Math.round(Math.max(0, Math.min(30, n)) * 10) / 10;
 }
 
-// Saisie de la distance via prompt() pour la carte compacte du mode express
+// Saisie de la distance via le pavé numérique, pour la carte compacte du mode express
 function promptParcoursRowM(idx) {
   const current = newParcoursForm.rows[idx].m;
-  const v = prompt('Distance (m)', current ? String(current).replace('.', ',') : '');
-  if (v === null) return;
-  setParcoursRowM(idx, v);
-  renderNewParcoursModal();
+  openNumericKeypad('Distance (m)', 'parcoursRowM:' + idx, current || '', true, 'm');
 }
 
 function setParcoursRowClock(idx, v) {

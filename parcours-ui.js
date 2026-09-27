@@ -217,6 +217,65 @@ let windCalc = { angle: 0, speedKmh: 20, distanceInput: 150 };
 let elevCalc = { angleHorizon: 0, angleCible: null, distanceInput: 150, permissionGranted: false, listening: false };
 let lastBeta = null;
 
+/* --------------------------------------------------------------------------
+   Pavé numérique — remplace les inputs type="number" natifs (vent, dénivelé)
+   pour toute saisie manuelle de chiffres. Utilise appKeypad() (commun.js).
+   Le résultat se met à jour en direct à chaque pression, comme le faisaient
+   les oninput des inputs natifs qu'il remplace.
+   -------------------------------------------------------------------------- */
+let numericKeypadPopup = null; // { title, target, value, unit }
+
+function openNumericKeypad(title, target, currentValue, unit) {
+  const start = (currentValue === null || currentValue === undefined || currentValue === "") ? "" : String(currentValue);
+  numericKeypadPopup = { title: title, target: target, value: start, unit: unit || "" };
+  renderCourseModals();
+}
+function closeNumericKeypad() {
+  numericKeypadPopup = null;
+  renderCourseModals();
+}
+function keypadPress(d) {
+  if (!numericKeypadPopup || numericKeypadPopup.value.length >= 5) return;
+  numericKeypadPopup.value += d;
+  applyNumericKeypadValue();
+  renderCourseModals();
+}
+function keypadBackspace() {
+  if (!numericKeypadPopup) return;
+  numericKeypadPopup.value = numericKeypadPopup.value.slice(0, -1);
+  applyNumericKeypadValue();
+  renderCourseModals();
+}
+function keypadClear() {
+  if (!numericKeypadPopup) return;
+  numericKeypadPopup.value = "";
+  applyNumericKeypadValue();
+  renderCourseModals();
+}
+// Pousse la valeur en cours de saisie vers le champ visé par "target"
+function applyNumericKeypadValue() {
+  const p = numericKeypadPopup;
+  if (!p) return;
+  if (p.target === "windSpeed") updateWindSpeed(p.value);
+  else if (p.target === "windDistance") updateWindDistance(p.value);
+  else if (p.target === "elevDistance") updateElevationInputDistance(p.value);
+}
+function numericKeypadHtml() {
+  const p = numericKeypadPopup;
+  return `
+    <div class="modal-overlay" onclick="closeNumericKeypad()">
+      <div class="modal-sheet keypad-sheet" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <h3>${p.title}</h3>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeNumericKeypad()">✕</button>
+        </div>
+        <div class="app-keypad-value">${p.value === "" ? "--" : p.value}${p.value !== "" && p.unit ? " " + p.unit : ""}</div>
+        ${appKeypad("keypadPress", "keypadBackspace", "keypadClear", null)}
+      </div>
+    </div>
+  `;
+}
+
 function renderCourseModals() {
   const root = document.getElementById("course-modal-root");
   if (!root) return;
@@ -226,7 +285,8 @@ function renderCourseModals() {
     windDetailOpen ? windDetailHtml() : "",
     elevationOpen ? elevationCalcHtml() : "",
     distancesCalcOpen ? distancesCalcHtml() : "",
-    trackInfoOpen ? trackInfoHtml() : ""
+    trackInfoOpen ? trackInfoHtml() : "",
+    numericKeypadPopup ? numericKeypadHtml() : ""
   ].join("");
 }
 
@@ -379,11 +439,11 @@ function windCalcHtml() {
         <div class="field-grid-2">
           <div class="input-box">
             <span class="input-box-label">Vitesse du vent (km/h)</span>
-            <input type="number" inputmode="numeric" value="${windCalc.speedKmh}" min="0" step="1" oninput="updateWindSpeed(this.value)">
+            <button type="button" class="input-box-value" onclick="openNumericKeypad('Vitesse du vent (km/h)', 'windSpeed', '${windCalc.speedKmh}', 'km/h')">${windCalc.speedKmh}</button>
           </div>
           <div class="input-box">
             <span class="input-box-label">Distance du coup (${distanceUnitLabel()})</span>
-            <input type="number" inputmode="numeric" value="${windCalc.distanceInput}" min="0" step="1" oninput="updateWindDistance(this.value)">
+            <button type="button" class="input-box-value" onclick="openNumericKeypad('Distance du coup', 'windDistance', '${windCalc.distanceInput}', '${distanceUnitLabel()}')">${windCalc.distanceInput}</button>
           </div>
         </div>
 
@@ -621,7 +681,7 @@ function elevationCalcHtml() {
 
           <div class="input-box">
             <span class="input-box-label">Distance du coup (${distanceUnitLabel()})</span>
-            <input type="number" inputmode="numeric" value="${elevCalc.distanceInput}" min="0" step="1" oninput="updateElevationInputDistance(this.value)">
+            <button type="button" class="input-box-value" onclick="openNumericKeypad('Distance du coup', 'elevDistance', '${elevCalc.distanceInput}', '${distanceUnitLabel()}')">${elevCalc.distanceInput}</button>
           </div>
 
           <div class="field-grid-2">

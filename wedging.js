@@ -670,10 +670,30 @@ function setWedgeExAttemptResult(value) {
   else finishWedgeExSession();
 }
 function setWedgeExInOut(made) { setWedgeExAttemptResult(!!made); }
-function submitWedgeExDistanceResult() {
-  const el = document.getElementById('wedge-ex-session-distance-input');
-  const val = parseFloat(el.value); if (isNaN(val)) return;
+
+/* ---------- Popup "Distance obtenue" (résultat en mètres, mode "distance") ---------- */
+let wedgeExDistancePopupOpen = false;
+let wedgeExDistanceInput = '';
+function openWedgeExDistancePopup() {
+  const s = wedgeExSession; const dist = s.distances[s.activeDistanceIdx];
+  const current = dist.results[s.activeAttempt];
+  wedgeExDistanceInput = (current !== null && current !== undefined) ? String(current) : '';
+  wedgeExDistancePopupOpen = true; rerender();
+}
+function closeWedgeExDistancePopup() { wedgeExDistancePopupOpen = false; rerender(); }
+function wedgeExDistanceKeyPress(k) { if (k === '.' && wedgeExDistanceInput.includes('.')) return; if (wedgeExDistanceInput.length >= 5) return; wedgeExDistanceInput += k; rerender(); }
+function wedgeExDistanceBackspace() { wedgeExDistanceInput = wedgeExDistanceInput.slice(0, -1); rerender(); }
+function confirmWedgeExDistance() {
+  const val = parseFloat(wedgeExDistanceInput); if (isNaN(val)) return;
+  closeWedgeExDistancePopup();
   setWedgeExAttemptResult(val);
+}
+function wedgeExDistancePopupHtml() {
+  return UI.modal('Distance obtenue', `
+    <div class="app-keypad-value">${wedgeExDistanceInput || '0'}m</div>
+    ${UI.keypad('wedgeExDistanceKeyPress', 'wedgeExDistanceBackspace', null, { fn: "wedgeExDistanceKeyPress('.')", label: '.' })}
+    <button class="wg-btn-primary mt-10" onclick="confirmWedgeExDistance()">Valider le tir</button>
+  `, 'closeWedgeExDistancePopup');
 }
 function wedgeExResultDotClass(ex, r) {
   if (r === null || r === undefined) return '';
@@ -688,7 +708,7 @@ function setWedgeExCircleZone(direction, ring) {
 }
 function wedgeExResultInputHtml(ex, currentResult) {
   if (ex.resultMode === 'zone') return `<div class="wg-text-muted wg-text-center mb-6">Vise le trou au centre — anneau intérieur = réussite, anneau extérieur = raté</div><div class="wg-wheel-wrap">${UI.twoRingWheelSvg(currentResult)}</div>`;
-  if (ex.resultMode === 'distance') return `<div class="wg-field"><label>Distance obtenue (m)</label><input type="number" class="wg-input" id="wedge-ex-session-distance-input" placeholder="Distance (m)" min="0" value="${currentResult !== null && currentResult !== undefined ? currentResult : ''}"></div><button class="wg-btn-primary" onclick="submitWedgeExDistanceResult()">Valider le tir</button>`;
+  if (ex.resultMode === 'distance') return `<div class="wg-field"><label>Distance obtenue (m)</label><button type="button" class="wg-input wg-input-btn" onclick="openWedgeExDistancePopup()">${currentResult !== null && currentResult !== undefined ? currentResult + ' m' : 'Toucher pour saisir'}</button></div>`;
   return `<div class="wg-field-row"><button class="wg-result-btn ${currentResult === true ? 'success active' : 'success'}" onclick="setWedgeExInOut(true)">In</button><button class="wg-result-btn ${currentResult === false ? 'fail active' : 'fail'}" onclick="setWedgeExInOut(false)">Aller</button></div>`;
 }
 function wedgeExSessionScreenHtml() {
@@ -705,7 +725,8 @@ function wedgeExSessionScreenHtml() {
     <section class="wg-section">${wedgeExResultInputHtml(ex, currentResult)}</section>
     <div class="wg-bottom-stats-bar"><div><b>${progress.done} / ${progress.total}</b>Progression</div></div>
     <div class="wg-ladder-grid">${distTabsHtml}</div>
-    <div style="height:24px;"></div>`;
+    <div style="height:24px;"></div>
+    ${wedgeExDistancePopupOpen ? wedgeExDistancePopupHtml() : ''}`;
 }
 function finishWedgeExSession() {
   const s = wedgeExSession; const ex = wedgeExercises.find(e => e.id === s.exerciseId); if (!ex) return;

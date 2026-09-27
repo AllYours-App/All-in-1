@@ -1487,7 +1487,8 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.03em;
 }
 
-.input-box input[type="number"] {
+.input-box input[type="number"],
+.input-box .input-box-value {
   background: transparent;
   border: none;
   color: var(--text);
@@ -1496,10 +1497,16 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   padding: 0;
   font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .input-box input[type="number"]:focus {
   outline: none;
+}
+
+.keypad-sheet {
+  max-width: 340px;
 }
 
 .result-box {

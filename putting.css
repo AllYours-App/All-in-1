@@ -1408,7 +1408,9 @@
 }
 
 #page-putting .exercise-modal_preview-row-4col input,
+#page-putting .exercise-modal_preview-row-4col button,
 #page-putting .exercise-modal_preview-row-5col input,
+#page-putting .exercise-modal_preview-row-5col button,
 #page-putting .exercise-modal_preview-row-5col select {
   width: 100%;
   min-width: 0;
@@ -1441,7 +1443,8 @@
   color: var(--text-primary);
 }
 
-#page-putting .exercise-modal_preview-row input {
+#page-putting .exercise-modal_preview-row input,
+#page-putting .exercise-modal_preview-row button {
   width: 100%;
   background-color: var(--bg-card-alt);
   border: 1px solid var(--border-subtle);
@@ -1449,6 +1452,7 @@
   padding: 6px 8px;
   font-size: 13px;
   color: var(--text-primary);
+  cursor: pointer;
 }
 
 #page-putting .exercise-modal_save {

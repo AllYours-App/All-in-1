@@ -292,6 +292,7 @@
   transition:border-color var(--wg-transition);
 }
 .wg-input:focus,.wg-select:focus,.wg-textarea:focus{border-color:var(--wg-accent);}
+.wg-input-btn{text-align:left;cursor:pointer;}
 .wg-textarea{resize:vertical;min-height:80px;}
 .wg-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
