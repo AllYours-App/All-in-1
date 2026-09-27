@@ -1153,6 +1153,12 @@ select:focus-visible,
   color: var(--gym-text-muted);
 }
 
+/* Champs readonly ouvrant le pavé numérique (voir gymOpenKeypad) */
+.gym-app input[readonly] {
+  cursor: pointer;
+  caret-color: transparent;
+}
+
 .field__suffix {
   font-size: 13.5px;
   color: var(--gym-text-secondary);

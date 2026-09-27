@@ -554,7 +554,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .mt-6{margin-top:6px;} .mt-8{margin-top:6px;} .mt-10{margin-top:8px;} .mt-12{margin-top:8px;}
 .mb-6{margin-bottom:6px;} .mb-8{margin-bottom:8px;} .mb-10{margin-bottom:10px;} .mb-70{margin-bottom:70px;}
 .wg-text-center{text-align:center;}
-.wg-text-muted{display:block;font-size:12.5px;color:var(--wg-text-secondary);}
+.wg-text-muted{display:block;font-size:12.5px;color:var(--wg-text-secondary);overflow-wrap:break-word;word-break:break-word;}
 .wg-text-muted-sm{font-size:11px;color:var(--wg-text-secondary);}
 .wg-info-note{font-size:12px;color:var(--wg-text-secondary);line-height:1.4;}
 .wg-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -622,6 +622,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-wheel-pole{stroke:#FFFFFF;stroke-width:2.5;stroke-linecap:round;}
 .wg-wheel-flag{fill:var(--wg-accent);}
 .wg-wheel-ball{fill:var(--wg-accent);stroke:#0B0F14;stroke-width:1.5;}
+.wg-wheel-ball--miss{fill:var(--wg-danger);}
 
 /* ---------- Cartes d'exercice (Créatif) ---------- */
 .wg-exercise-card2{
@@ -630,6 +631,13 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 }
 .wg-exercise-card2.selected{border-color:var(--wg-accent);}
 .wg-exercise-card2-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px;}
+.wg-exercise-card2-title-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+.wg-exercise-card2-title-wrap b{overflow-wrap:break-word;word-break:break-word;min-width:0;}
+.wg-badge-progress{
+  display:inline-block;flex-shrink:0;background:rgba(215,255,47,.14);color:var(--wg-accent);
+  border:1px solid var(--wg-accent);border-radius:999px;padding:3px 10px;
+  font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+}
 .wg-exercise-actions{display:flex;gap:10px;}
 .wg-exercise-actions button{background:none;border:none;color:var(--wg-text-secondary);width:22px;height:22px;cursor:pointer;}
 .wg-exercise-actions button svg{width:16px;height:16px;}
@@ -640,6 +648,8 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 
 /* ---------- Écran de session (attempts, ladder, résultats) ---------- */
 .wg-session-title{text-align:center;font-size:18px;font-weight:700;margin:16px 20px 4px;}
+.wg-session-subtitle{text-align:center;font-size:17px;font-weight:700;color:var(--wg-text);margin:0 20px 14px;}
+.wg-success-distance{font-size:12.5px;font-weight:600;color:var(--wg-accent);text-align:center;margin-bottom:10px;}
 .wg-attempts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .wg-attempt-btn{
   background:var(--wg-bg);border:1px solid var(--wg-border);border-radius:var(--wg-radius-sm);
@@ -662,7 +672,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 }
 .wg-bottom-stats-bar b{display:block;font-size:16px;color:var(--wg-text);font-weight:700;}
 .wg-ladder-grid{
-  display:flex;gap:8px;overflow-x:auto;max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 20px;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 20px;
 }
 .wg-ladder-item{
   flex-shrink:0;background:var(--wg-card);border:1px solid var(--wg-border);color:var(--wg-text-secondary);
@@ -688,6 +698,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-carousel-dots span{width:6px;height:6px;border-radius:50%;background:var(--wg-border);cursor:pointer;}
 .wg-carousel-dots span.active{background:var(--wg-accent);}
 .wg-session-list{list-style:none;margin:0;padding:0;max-width:var(--wg-max-width);margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px;}
+.wg-log-row-right{display:flex;align-items:center;gap:8px;}
 .wg-session-list li{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:var(--wg-card);border:1px solid var(--wg-border);border-radius:var(--wg-radius-sm);

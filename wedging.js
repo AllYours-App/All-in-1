@@ -31,7 +31,7 @@ function wedgeZoneDisplayLabel(zone) { return zone === 'Green' ? 'Trou' : zone; 
 /* ============================== 2. STORAGE ================================= */
 
 const Storage = (function () {
-  const KEYS = { SHOTS: "wedgingShots", EXERCISES: "wedgingExercises" };
+  const KEYS = { SHOTS: "wedgingShots", EXERCISES: "wedgingExercises", IN_PROGRESS: "wedgingInProgressSessions" };
   function read(key) {
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
     catch (e) { console.error("Wedging: lecture impossible", key, e); return []; }
@@ -44,7 +44,9 @@ const Storage = (function () {
     getShots: () => read(KEYS.SHOTS),
     writeShots: (arr) => write(KEYS.SHOTS, arr),
     getExercises: () => read(KEYS.EXERCISES),
-    writeExercises: (arr) => write(KEYS.EXERCISES, arr)
+    writeExercises: (arr) => write(KEYS.EXERCISES, arr),
+    getInProgress: () => read(KEYS.IN_PROGRESS),
+    writeInProgress: (arr) => write(KEYS.IN_PROGRESS, arr)
   };
 })();
 
@@ -292,7 +294,7 @@ const UI = (function () {
       return `<path d="${innerPath}" class="wg-wheel-sector wg-wheel-sector--in" onclick="setWedgeExCircleZone('${dir}','in')"/>
         <path d="${outerPath}" class="wg-wheel-sector wg-wheel-sector--out" onclick="setWedgeExCircleZone('${dir}','out')"/>
         ${selDir === dir && selRing === 'in' ? `<circle cx="${ix.toFixed(2)}" cy="${iy.toFixed(2)}" r="7" class="wg-wheel-ball"/>` : ''}
-        ${selDir === dir && selRing === 'out' ? `<circle cx="${ox.toFixed(2)}" cy="${oy.toFixed(2)}" r="7" class="wg-wheel-ball"/>` : ''}`;
+        ${selDir === dir && selRing === 'out' ? `<circle cx="${ox.toFixed(2)}" cy="${oy.toFixed(2)}" r="7" class="wg-wheel-ball wg-wheel-ball--miss"/>` : ''}`;
     }).join('');
     return `<svg viewBox="0 0 200 200" class="wg-wheel">${sectorsHtml}<circle cx="${cx}" cy="${cy}" r="${R_HOLE}" class="wg-wheel-hole"/></svg>`;
   }
@@ -305,7 +307,7 @@ const UI = (function () {
    persisté à chaque modification, et un simple "rerender()" (= re-rendu de la
    route courante) après chaque action, exactement comme l'ancien renderWedgeTab(). */
 
-function rerender() { Router.render(); }
+function rerender() { if (wedgeExSession) saveCurrentSessionAsInProgress(); Router.render(); }
 
 // --- Journal (Parcours) ---
 let wedgeRounds = normalizeWedgeRounds(Storage.getShots());
@@ -448,8 +450,35 @@ let wedgeViewedLogId = null;
 let wedgeExRadarDistance = null;
 let wedgeExReviewLimit = 20;
 let wedgeExSession = null;
+let wedgeExRecap = null;
+let wedgeRecapDistanceEditIdx = null;
+let wedgeRecapDistanceInput = '';
+let wedgeInProgressSessions = Array.isArray(Storage.getInProgress()) ? Storage.getInProgress() : [];
+let wedgeResumePopupExerciseId = null;
+let wedgeEditConflictPopupOpen = false;
+let wedgePendingEditPayload = null;
+let wedgeBallsPopupOpen = false;
+let wedgeBallsInput = '';
+let wedgeConfirmDeleteLogId = null;
 
 function persistWedgeExercises() { Storage.writeExercises(wedgeExercises); }
+function persistWedgeInProgressSessions() { Storage.writeInProgress(wedgeInProgressSessions); }
+function wedgeInProgressFor(exId) { return wedgeInProgressSessions.find(s => s.exerciseId === exId) || null; }
+function removeInProgressFor(exId) {
+  wedgeInProgressSessions = wedgeInProgressSessions.filter(s => s.exerciseId !== exId);
+  persistWedgeInProgressSessions();
+}
+// Sauvegarde la session en cours dès qu'au moins un tir a été enregistré, pour pouvoir
+// la retrouver (badge "En cours" + popup de reprise) même après avoir quitté l'écran.
+function saveCurrentSessionAsInProgress() {
+  const s = wedgeExSession; if (!s) return;
+  const hasProgress = s.elevator ? s.history.length > 0 : s.distances.some(d => d.results.some(r => r !== null));
+  if (!hasProgress) { removeInProgressFor(s.exerciseId); return; }
+  const idx = wedgeInProgressSessions.findIndex(e => e.exerciseId === s.exerciseId);
+  const entry = { exerciseId: s.exerciseId, session: s };
+  if (idx === -1) wedgeInProgressSessions.push(entry); else wedgeInProgressSessions[idx] = entry;
+  persistWedgeInProgressSessions();
+}
 
 function openWedgeExerciseModal(id) {
   editingWedgeExerciseId = id !== undefined ? id : null;
@@ -484,12 +513,39 @@ function saveWedgeExercise() {
   };
   if (editingWedgeExerciseId !== null) {
     const existing = wedgeExercises.find(e => e.id === editingWedgeExerciseId);
+    if (existing && existing.logs.length) {
+      wedgePendingEditPayload = payload;
+      wedgeEditConflictPopupOpen = true;
+      rerender();
+      return;
+    }
     if (existing) Object.assign(existing, payload);
   } else {
     wedgeExercises.push({ id: Date.now(), logs: [], ...payload });
   }
   persistWedgeExercises();
   closeWedgeExerciseModal();
+}
+function cancelEditConflict() { wedgeEditConflictPopupOpen = false; wedgePendingEditPayload = null; rerender(); }
+function confirmEditAsNewExercise() {
+  wedgeExercises.push({ id: Date.now(), logs: [], ...wedgePendingEditPayload });
+  wedgeEditConflictPopupOpen = false; wedgePendingEditPayload = null;
+  persistWedgeExercises();
+  closeWedgeExerciseModal();
+}
+function confirmEditOverwriteExercise() {
+  const existing = wedgeExercises.find(e => e.id === editingWedgeExerciseId);
+  if (existing) { Object.assign(existing, wedgePendingEditPayload); existing.logs = []; }
+  removeInProgressFor(editingWedgeExerciseId);
+  wedgeEditConflictPopupOpen = false; wedgePendingEditPayload = null;
+  persistWedgeExercises();
+  closeWedgeExerciseModal();
+}
+function wedgeEditConflictPopupHtml() {
+  return UI.modal("Exercice déjà utilisé", `
+    <p class="wg-text-muted mb-10">Cet exercice a déjà des sessions enregistrées. Tes modifications peuvent créer un nouvel exercice (l'historique actuel est conservé) ou remplacer celui-ci (son historique sera effacé).</p>
+    <div class="wg-field-row"><button class="wg-btn-secondary" onclick="confirmEditAsNewExercise()">Nouvel exercice</button><button class="wg-btn-primary" onclick="confirmEditOverwriteExercise()">Remplacer (efface l'historique)</button></div>
+  `, 'cancelEditConflict');
 }
 let wedgeConfirmDeleteExerciseId = null;
 function askDeleteWedgeExercise(id) { wedgeConfirmDeleteExerciseId = id; rerender(); }
@@ -498,6 +554,8 @@ function confirmDeleteWedgeExercise() {
   const id = wedgeConfirmDeleteExerciseId;
   wedgeExercises = wedgeExercises.filter(e => e.id !== id);
   if (wedgeExSession && wedgeExSession.exerciseId === id) wedgeExSession = null;
+  if (wedgeExRecap && wedgeExRecap.exerciseId === id) wedgeExRecap = null;
+  removeInProgressFor(id);
   if (selectedWedgeExerciseId === id) selectedWedgeExerciseId = null;
   if (wedgeReviewExerciseId === id) { wedgeReviewExerciseId = null; wedgeViewedLogId = null; }
   wedgeConfirmDeleteExerciseId = null;
@@ -547,6 +605,22 @@ function wedgeRadiusPopupHtml() {
 function incWedgeExerciseBalls(delta) {
   const f = wedgeExerciseForm; f.ballsPerDistance = Math.max(1, Math.min(30, f.ballsPerDistance + delta)); rerender();
 }
+function openWedgeBallsPopup() { wedgeBallsInput = String(wedgeExerciseForm.ballsPerDistance || ''); wedgeBallsPopupOpen = true; rerender(); }
+function closeWedgeBallsPopup() { wedgeBallsPopupOpen = false; rerender(); }
+function wedgeBallsKeyPress(k) { if (wedgeBallsInput.length >= 3) return; wedgeBallsInput += k; rerender(); }
+function wedgeBallsBackspace() { wedgeBallsInput = wedgeBallsInput.slice(0, -1); rerender(); }
+function confirmWedgeBalls() {
+  const n = parseInt(wedgeBallsInput, 10);
+  if (!isNaN(n) && n > 0) wedgeExerciseForm.ballsPerDistance = Math.max(1, Math.min(30, n));
+  closeWedgeBallsPopup();
+}
+function wedgeBallsPopupHtml() {
+  return UI.modal('Balles par distance', `
+    <div class="app-keypad-value">${wedgeBallsInput || '0'}</div>
+    ${UI.keypad('wedgeBallsKeyPress', 'wedgeBallsBackspace', null)}
+    <button class="wg-btn-primary mt-10" onclick="confirmWedgeBalls()">OK</button>
+  `, 'closeWedgeBallsPopup');
+}
 function setWedgeElevatorMode(mode) { wedgeExerciseForm.elevatorMode = mode; rerender(); }
 function incWedgeElevatorX(delta) {
   const f = wedgeExerciseForm; f.elevatorX = Math.max(1, Math.min(f.elevatorY, f.elevatorX + delta)); rerender();
@@ -568,7 +642,7 @@ function wedgeExerciseModalHtml() {
           <div class="wg-field-box-label">${f.resultMode === 'elevator' ? 'Paliers (du plus court au plus long)' : 'Distances'}</div>
           <div class="wg-field-box-value">${distList.length ? distList.map(d => d + 'm').join(', ') : 'Choisir'}</div>
         </div>
-        ${f.resultMode === 'elevator' ? '' : `<div class="wg-stepper"><div class="wg-field-box-label">Balles / distance</div><div class="wg-stepper-controls"><button type="button" onclick="incWedgeExerciseBalls(-1)">−</button><span class="wg-stepper-value">${f.ballsPerDistance}</span><button type="button" onclick="incWedgeExerciseBalls(1)">+</button></div></div>`}
+        ${f.resultMode === 'elevator' ? '' : `<div class="wg-stepper"><div class="wg-field-box-label">Balles / distance</div><div class="wg-stepper-controls"><button type="button" onclick="incWedgeExerciseBalls(-1)">−</button><span class="wg-stepper-value" style="cursor:pointer;" onclick="openWedgeBallsPopup()">${f.ballsPerDistance}</span><button type="button" onclick="incWedgeExerciseBalls(1)">+</button></div></div>`}
       </div>
       <div class="wg-field-box-grid">
         <div class="wg-field-box wg-col-span-full" onclick="openWedgeResultModePopup()">
@@ -609,12 +683,13 @@ function wedgeResultModePopupHtml() {
 function wedgeExerciseCardHtml(ex) {
   const lastLog = ex.logs.length ? ex.logs[ex.logs.length - 1] : null;
   const selected = selectedWedgeExerciseId === ex.id;
+  const inProgress = !!wedgeInProgressFor(ex.id);
   const formatLabel = ex.resultMode === 'elevator'
     ? `${ex.distances.map(d => d + 'm').join(' → ')} — Ascenseur (${ex.elevatorMode === 'xy' ? `${ex.elevatorX} sur ${ex.elevatorY} balles` : '1 balle, balles illimitées'})`
-    : `${ex.distances.map(d => d + 'm').join('/')} — ${ex.ballsPerDistance} balles/distance — ${resultModeLabel(ex.resultMode)}${(ex.resultMode === 'inout' || ex.resultMode === 'zone') ? ` (${ex.radius}${ex.radiusUnit})` : ''}`;
+    : `${ex.distances.map(d => d + 'm').join(' / ')} — ${ex.ballsPerDistance} balles/distance — ${resultModeLabel(ex.resultMode)}${(ex.resultMode === 'inout' || ex.resultMode === 'zone') ? ` (${ex.radius}${ex.radiusUnit})` : ''}`;
   return `<div class="wg-exercise-card2 ${selected ? 'selected' : ''}" onclick="selectWedgeExercise(${ex.id})">
     <div class="wg-exercise-card2-head">
-      <b>${ex.name}</b>
+      <span class="wg-exercise-card2-title-wrap"><b>${ex.name}</b>${inProgress ? `<span class="wg-badge-progress" onclick="event.stopPropagation(); openWedgeResumePopup(${ex.id})">En cours</span>` : ''}</span>
       ${selected ? `<div class="wg-exercise-actions">
           <button title="Supprimer" onclick="event.stopPropagation(); askDeleteWedgeExercise(${ex.id})">${UI.ICONS.close}</button>
           <button title="Dupliquer" onclick="event.stopPropagation(); duplicateWedgeExercise(${ex.id})">${UI.ICONS.duplicate}</button>
@@ -648,7 +723,29 @@ function startWedgeExerciseSession(id) {
 }
 function startSelectedWedgeExercise() {
   if (!selectedWedgeExerciseId) { UI.toast("Sélectionne d'abord un exercice dans la liste."); return; }
+  if (wedgeInProgressFor(selectedWedgeExerciseId)) { openWedgeResumePopup(selectedWedgeExerciseId); return; }
   startWedgeExerciseSession(selectedWedgeExerciseId);
+}
+function openWedgeResumePopup(id) { wedgeResumePopupExerciseId = id; rerender(); }
+function closeWedgeResumePopup() { wedgeResumePopupExerciseId = null; rerender(); }
+function resumeWedgeExerciseFromPopup() {
+  const entry = wedgeInProgressFor(wedgeResumePopupExerciseId);
+  if (entry) { wedgeExSession = entry.session; selectedWedgeExerciseId = entry.exerciseId; }
+  wedgeResumePopupExerciseId = null;
+  rerender();
+}
+function restartWedgeExerciseFromPopup() {
+  const id = wedgeResumePopupExerciseId;
+  removeInProgressFor(id);
+  wedgeResumePopupExerciseId = null;
+  startWedgeExerciseSession(id);
+}
+function wedgeResumePopupHtml() {
+  const ex = wedgeExercises.find(e => e.id === wedgeResumePopupExerciseId);
+  return UI.modal('Session en cours', `
+    <p class="wg-text-muted mb-10">Tu as une session en cours pour « ${ex ? ex.name : ''} ». Reprendre où tu t'es arrêté, ou recommencer à zéro ?</p>
+    <div class="wg-field-row"><button class="wg-btn-secondary" onclick="restartWedgeExerciseFromPopup()">Recommencer</button><button class="wg-btn-primary" onclick="resumeWedgeExerciseFromPopup()">Reprendre</button></div>
+  `, 'closeWedgeResumePopup');
 }
 function cancelWedgeExerciseSession() { wedgeExSession = null; rerender(); }
 function setWedgeExActiveAttempt(idx) { wedgeExSession.activeAttempt = idx; rerender(); }
@@ -706,10 +803,20 @@ function setWedgeExCircleZone(direction, ring) {
   const zone = made ? `${direction}-Proche` : direction;
   setWedgeExAttemptResult({ zone, direction, ring, made });
 }
-function wedgeExResultInputHtml(ex, currentResult) {
-  if (ex.resultMode === 'zone') return `<div class="wg-text-muted wg-text-center mb-6">Vise le trou au centre — anneau intérieur = réussite, anneau extérieur = raté</div><div class="wg-wheel-wrap">${UI.twoRingWheelSvg(currentResult)}</div>`;
+// Distance réelle à réussir : directe en mètres, ou calculée depuis un pourcentage de la distance à faire
+function wedgeExSuccessDistanceLabel(ex, distance) {
+  if ((ex.resultMode !== 'zone' && ex.resultMode !== 'inout') || !ex.radius) return '';
+  if (ex.radiusUnit === '%') {
+    const meters = Math.round(distance * (ex.radius / 100) * 100) / 100;
+    return `Réussite si à moins de ${meters}m du trou (${ex.radius}% de ${distance}m)`;
+  }
+  return `Réussite si à moins de ${ex.radius}m du trou`;
+}
+function wedgeExResultInputHtml(ex, currentResult, distance) {
+  const successInfo = wedgeExSuccessDistanceLabel(ex, distance);
+  if (ex.resultMode === 'zone') return `<div class="wg-text-muted wg-text-center mb-6">Vise le trou au centre — anneau intérieur = réussite, anneau extérieur = raté</div>${successInfo ? `<div class="wg-success-distance">${successInfo}</div>` : ''}<div class="wg-wheel-wrap">${UI.twoRingWheelSvg(currentResult)}</div>`;
   if (ex.resultMode === 'distance') return `<div class="wg-field"><label>Distance obtenue (m)</label><button type="button" class="wg-input wg-input-btn" onclick="openWedgeExDistancePopup()">${currentResult !== null && currentResult !== undefined ? currentResult + ' m' : 'Toucher pour saisir'}</button></div>`;
-  return `<div class="wg-field-row"><button class="wg-result-btn ${currentResult === true ? 'success active' : 'success'}" onclick="setWedgeExInOut(true)">In</button><button class="wg-result-btn ${currentResult === false ? 'fail active' : 'fail'}" onclick="setWedgeExInOut(false)">Aller</button></div>`;
+  return `${successInfo ? `<div class="wg-success-distance">${successInfo}</div>` : ''}<div class="wg-field-row"><button class="wg-result-btn ${currentResult === true ? 'success active' : 'success'}" onclick="setWedgeExInOut(true)">Réussi</button><button class="wg-result-btn ${currentResult === false ? 'fail active' : 'fail'}" onclick="setWedgeExInOut(false)">Manqué</button></div>`;
 }
 function wedgeExSessionScreenHtml() {
   const s = wedgeExSession; const ex = wedgeExercises.find(e => e.id === s.exerciseId);
@@ -720,13 +827,19 @@ function wedgeExSessionScreenHtml() {
   const currentResult = dist.results[s.activeAttempt];
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
     <div class="wg-session-title">${ex.name}</div>
-    <div class="wg-section-desc wg-text-center">${dist.distance}m — Balle ${s.activeAttempt + 1}/${dist.results.length}</div>
+    <div class="wg-session-subtitle">${dist.distance}m - ${s.activeAttempt + 1}/${dist.results.length}</div>
     <section class="wg-section"><h4 class="mb-8">Balles</h4><div class="wg-attempts-grid">${attemptsHtml}</div></section>
-    <section class="wg-section">${wedgeExResultInputHtml(ex, currentResult)}</section>
+    <section class="wg-section">${wedgeExResultInputHtml(ex, currentResult, dist.distance)}</section>
     <div class="wg-bottom-stats-bar"><div><b>${progress.done} / ${progress.total}</b>Progression</div></div>
     <div class="wg-ladder-grid">${distTabsHtml}</div>
     <div style="height:24px;"></div>
     ${wedgeExDistancePopupOpen ? wedgeExDistancePopupHtml() : ''}`;
+}
+function computeWedgeShotsSummary(ex, shots) {
+  if (!shots.length) return ex.resultMode === 'distance' ? { avgDistance: 0, total: 0 } : { made: 0, greenCount: 0, total: 0, pct: 0 };
+  if (ex.resultMode === 'zone') { const greenCount = shots.filter(x => x.made).length; return { greenCount, total: shots.length, pct: Math.round((greenCount / shots.length) * 100) }; }
+  if (ex.resultMode === 'distance') return { avgDistance: Math.round((shots.reduce((n, x) => n + x.resultDistance, 0) / shots.length) * 100) / 100, total: shots.length };
+  const made = shots.filter(x => x.made).length; return { made, total: shots.length, pct: Math.round((made / shots.length) * 100) };
 }
 function finishWedgeExSession() {
   const s = wedgeExSession; const ex = wedgeExercises.find(e => e.id === s.exerciseId); if (!ex) return;
@@ -737,13 +850,8 @@ function finishWedgeExSession() {
     else if (ex.resultMode === 'distance') shots.push({ distance: d.distance, resultDistance: r });
     else shots.push({ distance: d.distance, made: r });
   }));
-  let summary;
-  if (!shots.length) summary = ex.resultMode === 'distance' ? { avgDistance: 0, total: 0 } : { made: 0, greenCount: 0, total: 0, pct: 0 };
-  else if (ex.resultMode === 'zone') { const greenCount = shots.filter(x => x.made).length; summary = { greenCount, total: shots.length, pct: Math.round((greenCount / shots.length) * 100) }; }
-  else if (ex.resultMode === 'distance') summary = { avgDistance: Math.round((shots.reduce((n, x) => n + x.resultDistance, 0) / shots.length) * 100) / 100, total: shots.length };
-  else { const made = shots.filter(x => x.made).length; summary = { made, total: shots.length, pct: Math.round((made / shots.length) * 100) }; }
-  ex.logs.push({ id: Date.now(), date: new Date().toISOString(), shots, summary });
-  wedgeExSession = null; persistWedgeExercises(); UI.toast('Session terminée'); rerender();
+  wedgeExRecap = { exerciseId: ex.id, elevator: false, shots, summary: computeWedgeShotsSummary(ex, shots) };
+  rerender();
 }
 function wedgeExElevatorScreenHtml() {
   const s = wedgeExSession; const ex = wedgeExercises.find(e => e.id === s.exerciseId);
@@ -786,10 +894,94 @@ function finishWedgeExElevatorSession() {
   const ex = wedgeExercises.find(e => e.id === s.exerciseId); if (!ex) return;
   const shots = s.history.map(h => ({ distance: h.distance, made: h.made }));
   const summary = { total: shots.length, maxLevelIdx: s.maxLevelIdx, maxDistance: s.levels[s.maxLevelIdx], finalDistance: s.levels[s.currentLevelIdx] };
-  ex.logs.push({ id: Date.now(), date: new Date().toISOString(), shots, summary });
-  wedgeExSession = null; persistWedgeExercises(); UI.toast('Session terminée'); rerender();
+  wedgeExRecap = { exerciseId: ex.id, elevator: true, shots, summary };
+  rerender();
 }
 
+/* ---------- Récapitulatif modifiable avant enregistrement ---------- */
+function wedgeExRecapShotLabel(ex, s) {
+  if (ex.resultMode === 'zone') return `${s.direction || s.zone} — ${s.made ? 'Réussi' : 'Raté'}`;
+  if (ex.resultMode === 'distance') return `${s.resultDistance}m`;
+  return s.made ? 'Réussi' : 'Raté';
+}
+function toggleWedgeRecapShot(i) {
+  const ex = wedgeExercises.find(e => e.id === wedgeExRecap.exerciseId); if (!ex) return;
+  if (ex.resultMode === 'distance') { openWedgeRecapDistanceEdit(i); return; }
+  const s = wedgeExRecap.shots[i];
+  s.made = !s.made;
+  if (!wedgeExRecap.elevator) wedgeExRecap.summary = computeWedgeShotsSummary(ex, wedgeExRecap.shots);
+  rerender();
+}
+function openWedgeRecapDistanceEdit(i) {
+  wedgeRecapDistanceEditIdx = i;
+  wedgeRecapDistanceInput = String(wedgeExRecap.shots[i].resultDistance);
+  rerender();
+}
+function closeWedgeRecapDistanceEdit() { wedgeRecapDistanceEditIdx = null; rerender(); }
+function wedgeRecapDistanceKeyPress(k) { if (k === '.' && wedgeRecapDistanceInput.includes('.')) return; if (wedgeRecapDistanceInput.length >= 5) return; wedgeRecapDistanceInput += k; rerender(); }
+function wedgeRecapDistanceBackspace() { wedgeRecapDistanceInput = wedgeRecapDistanceInput.slice(0, -1); rerender(); }
+function confirmWedgeRecapDistance() {
+  const ex = wedgeExercises.find(e => e.id === wedgeExRecap.exerciseId);
+  const val = parseFloat(wedgeRecapDistanceInput);
+  if (!isNaN(val) && ex) {
+    wedgeExRecap.shots[wedgeRecapDistanceEditIdx].resultDistance = val;
+    wedgeExRecap.summary = computeWedgeShotsSummary(ex, wedgeExRecap.shots);
+  }
+  wedgeRecapDistanceEditIdx = null; rerender();
+}
+function wedgeRecapDistancePopupHtml() {
+  return UI.modal('Distance obtenue', `
+    <div class="app-keypad-value">${wedgeRecapDistanceInput || '0'}m</div>
+    ${UI.keypad('wedgeRecapDistanceKeyPress', 'wedgeRecapDistanceBackspace', null, { fn: "wedgeRecapDistanceKeyPress('.')", label: '.' })}
+    <button class="wg-btn-primary mt-10" onclick="confirmWedgeRecapDistance()">Valider</button>
+  `, 'closeWedgeRecapDistanceEdit');
+}
+function discardWedgeExRecap() {
+  if (wedgeExRecap) removeInProgressFor(wedgeExRecap.exerciseId);
+  wedgeExRecap = null; wedgeExSession = null; rerender();
+}
+function saveWedgeExRecap() {
+  const ex = wedgeExercises.find(e => e.id === wedgeExRecap.exerciseId); if (!ex) return;
+  ex.logs.push({ id: Date.now(), date: new Date().toISOString(), shots: wedgeExRecap.shots, summary: wedgeExRecap.summary });
+  removeInProgressFor(ex.id);
+  wedgeExRecap = null; wedgeExSession = null;
+  persistWedgeExercises();
+  UI.toast('Session enregistrée');
+  rerender();
+}
+function wedgeExRecapScreenHtml() {
+  const ex = wedgeExercises.find(e => e.id === wedgeExRecap.exerciseId);
+  if (!ex) { wedgeExRecap = null; return wedgeExercisesListHtml(); }
+  const rows = wedgeExRecap.shots.map((s, i) => `<li onclick="toggleWedgeRecapShot(${i})">${ex.resultMode !== 'distance' ? `<span class="wg-dot ${s.made ? 'made' : 'missed'}"></span>` : ''}<span>Tir ${i + 1} — ${s.distance}m</span><span class="wg-text-muted-sm">${wedgeExRecapShotLabel(ex, s)}</span></li>`).join('');
+  return `<div class="wg-topbar"><button class="wg-back-btn" onclick="discardWedgeExRecap()">${UI.ICONS.back} Annuler</button></div>
+    <div class="wg-session-title">${ex.name}</div>
+    <div class="wg-section-desc wg-text-center">Récapitulatif — touche un tir pour le corriger</div>
+    <div class="wg-insight-card-title wg-text-center mt-10">${wedgeLogSummaryText(ex, { summary: wedgeExRecap.summary })}</div>
+    <ul class="wg-session-list">${rows}</ul>
+    <div class="wg-fab"><button class="wg-btn-primary" onclick="saveWedgeExRecap()">Enregistrer</button></div>
+    <div style="height:90px;"></div>
+    ${wedgeRecapDistanceEditIdx !== null ? wedgeRecapDistancePopupHtml() : ''}`;
+}
+
+function askDeleteWedgeLog(logId) { wedgeConfirmDeleteLogId = logId; rerender(); }
+function cancelDeleteWedgeLog() { wedgeConfirmDeleteLogId = null; rerender(); }
+function confirmDeleteWedgeLog() {
+  const ex = wedgeExercises.find(e => e.id === wedgeReviewExerciseId);
+  if (ex) {
+    ex.logs = ex.logs.filter(l => l.id !== wedgeConfirmDeleteLogId);
+    persistWedgeExercises();
+  }
+  if (wedgeViewedLogId === wedgeConfirmDeleteLogId) wedgeViewedLogId = null;
+  wedgeConfirmDeleteLogId = null;
+  UI.toast('Session supprimée');
+  rerender();
+}
+function wedgeConfirmDeleteLogModalHtml() {
+  return UI.modal('Supprimer la session', `
+    <p class="wg-text-muted mb-10">Supprimer définitivement cette session ? Cette action est irréversible.</p>
+    <div class="wg-field-row"><button class="wg-btn-secondary" onclick="cancelDeleteWedgeLog()">Annuler</button><button class="wg-btn-primary" onclick="confirmDeleteWedgeLog()">Supprimer</button></div>
+  `, 'cancelDeleteWedgeLog');
+}
 function reviewWedgeExercise(id) { wedgeReviewExerciseId = id; wedgeReviewChartIndex = 0; wedgeViewedLogId = null; wedgeExRadarDistance = null; rerender(); }
 function closeWedgeExerciseReview() { wedgeReviewExerciseId = null; wedgeViewedLogId = null; rerender(); }
 function setWedgeReviewChart(i) { wedgeReviewChartIndex = i; rerender(); }
@@ -819,10 +1011,13 @@ function wedgeExRadarHtml(ex) {
 function wedgeExEvolutionHtml(ex) {
   const valueFn = ex.resultMode === 'distance' ? l => l.summary.avgDistance : ex.resultMode === 'elevator' ? l => l.summary.maxDistance : l => l.summary.pct;
   const unitLabel = ex.resultMode === 'distance' ? 'Distance moyenne (m)' : ex.resultMode === 'elevator' ? 'Meilleur palier atteint (m)' : 'Réussite (%)';
-  return wedgeExLineChart(ex.logs, valueFn, unitLabel);
+  // Test libre (distance) : on affiche la distance de chaque session plutôt qu'un simple point.
+  return wedgeExLineChart(ex.logs, valueFn, unitLabel, { showValues: ex.resultMode === 'distance', valueSuffix: 'm' });
 }
-function wedgeExLineChart(history, valueFn, unitLabel) {
+function wedgeExLineChart(history, valueFn, unitLabel, opts) {
   if (!history.length) return ``;
+  const showValues = !!(opts && opts.showValues);
+  const valueSuffix = (opts && opts.valueSuffix) || '';
   const values = history.map(valueFn); const n = values.length;
   const scale = Analytics.niceScale(Math.min(...values), Math.max(...values));
   const W = 340, H = 260, padL = 40, padR = 14, padT = 14, padB = 30;
@@ -830,7 +1025,13 @@ function wedgeExLineChart(history, valueFn, unitLabel) {
   const xFor = i => padL + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
   const yFor = v => padT + plotH - ((v - scale.min) / ((scale.max - scale.min) || 1)) * plotH;
   const pointsAttr = values.map((v, i) => `${xFor(i)},${yFor(v)}`).join(' ');
-  const dotsHtml = values.map((v, i) => `<circle cx="${xFor(i)}" cy="${yFor(v)}" r="5" class="wg-radar-dot" onclick="viewWedgeExerciseLog(${history[i].id})" style="cursor:pointer;"/>`).join('');
+  const dotsHtml = values.map((v, i) => {
+    const x = xFor(i), y = yFor(v);
+    if (showValues) {
+      return `<g onclick="viewWedgeExerciseLog(${history[i].id})" style="cursor:pointer;"><circle cx="${x}" cy="${y}" r="11" fill="transparent"/><circle cx="${x}" cy="${y}" r="3" class="wg-radar-dot"/><text x="${x}" y="${y - 10}" class="wg-radar-value" text-anchor="middle">${v}${valueSuffix}</text></g>`;
+    }
+    return `<circle cx="${x}" cy="${y}" r="5" class="wg-radar-dot" onclick="viewWedgeExerciseLog(${history[i].id})" style="cursor:pointer;"/>`;
+  }).join('');
   const yGridHtml = scale.ticks.map(t => { const y = yFor(t); return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" class="wg-radar-grid"/><text x="${padL - 6}" y="${y + 4}" class="wg-chart-axis-text" text-anchor="end">${t}</text>`; }).join('');
   const xStep = Math.max(1, Math.ceil(n / 6));
   const xLabelsHtml = values.map((_, i) => { if (i % xStep !== 0 && i !== n - 1) return ''; return `<text x="${xFor(i)}" y="${H - padB + 18}" class="wg-chart-axis-text" text-anchor="middle">${i + 1}</text>`; }).join('');
@@ -843,7 +1044,7 @@ function wedgeExerciseReviewHtml() {
   const logs = ex.logs; const charts = wedgeReviewChartsFor(ex);
   const chartHtml = charts[wedgeReviewChartIndex].build(logs);
   const dotsHtml = charts.map((c, i) => `<span class="${i === wedgeReviewChartIndex ? 'active' : ''}" onclick="setWedgeReviewChart(${i})"></span>`).join('');
-  const sessionRows = logs.slice().reverse().map(l => `<li onclick="viewWedgeExerciseLog(${l.id})"><span>${UI.formatDate(l.date)}<br><span class="wg-text-muted-sm">${wedgeLogSummaryText(ex, l)}</span></span><span class="wg-text-muted-sm">${l.summary.total} balles</span></li>`).join('');
+  const sessionRows = logs.slice().reverse().map(l => `<li onclick="viewWedgeExerciseLog(${l.id})"><span>${UI.formatDate(l.date)}<br><span class="wg-text-muted-sm">${wedgeLogSummaryText(ex, l)}</span></span><span class="wg-log-row-right"><span class="wg-text-muted-sm">${l.summary.total} balles</span><button class="wg-btn-danger" onclick="event.stopPropagation(); askDeleteWedgeLog(${l.id})">${UI.ICONS.trash}</button></span></li>`).join('');
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseReview()">${UI.ICONS.back} Exercices</button></div>
     <div class="wg-session-title">${ex.name}</div>
     <div class="wg-insight-card-title wg-text-center mt-10">${charts[wedgeReviewChartIndex].title}</div>
@@ -851,7 +1052,8 @@ function wedgeExerciseReviewHtml() {
     <div class="wg-carousel-dots">${dotsHtml}</div>
     <div class="wg-section-desc mt-10">Voir les sessions précédentes</div>
     <ul class="wg-session-list">${sessionRows || '<li>Aucune session pour cet exercice.</li>'}</ul>
-    <div style="height:24px;"></div>`;
+    <div style="height:24px;"></div>
+    ${wedgeConfirmDeleteLogId !== null ? wedgeConfirmDeleteLogModalHtml() : ''}`;
 }
 function wedgeExerciseLogDetailHtml(ex) {
   const log = ex.logs.find(l => l.id === wedgeViewedLogId);
@@ -863,12 +1065,13 @@ function wedgeExerciseLogDetailHtml(ex) {
     else { resultLabel = s.made ? 'Réussi' : 'Raté'; dotClass = s.made ? 'made' : 'missed'; }
     return `<li>${dotClass ? `<span class="wg-dot ${dotClass}"></span>` : ''}<span>Tir ${i + 1} — ${s.distance}m</span><span class="wg-text-muted-sm">${resultLabel}</span></li>`;
   }).join('');
-  return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseLog()">${UI.ICONS.back} Retour</button></div>
+  return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseLog()">${UI.ICONS.back} Retour</button><button class="wg-icon-btn" onclick="askDeleteWedgeLog(${log.id})">${UI.ICONS.trash}</button></div>
     <div class="wg-session-title">${ex.name}</div>
     <div class="wg-section-desc wg-text-center">${UI.formatDate(log.date)}</div>
     <div class="wg-insight-card-title mt-10">${wedgeLogSummaryText(ex, log)}</div>
     <ul class="wg-session-list">${shotRows}</ul>
-    <div style="height:24px;"></div>`;
+    <div style="height:24px;"></div>
+    ${wedgeConfirmDeleteLogId !== null ? wedgeConfirmDeleteLogModalHtml() : ''}`;
 }
 
 /* =============================== 6. VUES ===================================== */
@@ -1016,10 +1219,14 @@ function wedgeExercisesListHtml() {
     ${wedgeExerciseModalOpen ? wedgeExerciseModalHtml() : ''}
     ${wedgeDistancesPopupOpen ? wedgeDistancesPopupHtml() : ''}
     ${wedgeResultModePopupOpen ? wedgeResultModePopupHtml() : ''}
+    ${wedgeBallsPopupOpen ? wedgeBallsPopupHtml() : ''}
     ${wedgeConfirmDeleteExerciseId !== null ? wedgeConfirmDeleteModalHtml() : ''}
+    ${wedgeResumePopupExerciseId !== null ? wedgeResumePopupHtml() : ''}
+    ${wedgeEditConflictPopupOpen ? wedgeEditConflictPopupHtml() : ''}
   `;
 }
 Views.exercices = function () {
+  if (wedgeExRecap) return wedgeExRecapScreenHtml();
   if (wedgeExSession) return wedgeExSession.elevator ? wedgeExElevatorScreenHtml() : wedgeExSessionScreenHtml();
   if (wedgeReviewExerciseId !== null) return wedgeExerciseReviewHtml();
   return wedgeExercisesListHtml();

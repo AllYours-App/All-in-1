@@ -223,54 +223,54 @@ let lastBeta = null;
    Le résultat se met à jour en direct à chaque pression, comme le faisaient
    les oninput des inputs natifs qu'il remplace.
    -------------------------------------------------------------------------- */
-let numericKeypadPopup = null; // { title, target, value, unit }
+let courseKeypadPopup = null; // { title, target, value, unit }
 
-function openNumericKeypad(title, target, currentValue, unit) {
+function openCourseKeypad(title, target, currentValue, unit) {
   const start = (currentValue === null || currentValue === undefined || currentValue === "") ? "" : String(currentValue);
-  numericKeypadPopup = { title: title, target: target, value: start, unit: unit || "" };
+  courseKeypadPopup = { title: title, target: target, value: start, unit: unit || "" };
   renderCourseModals();
 }
-function closeNumericKeypad() {
-  numericKeypadPopup = null;
+function closeCourseKeypad() {
+  courseKeypadPopup = null;
   renderCourseModals();
 }
-function keypadPress(d) {
-  if (!numericKeypadPopup || numericKeypadPopup.value.length >= 5) return;
-  numericKeypadPopup.value += d;
-  applyNumericKeypadValue();
+function courseKeypadPress(d) {
+  if (!courseKeypadPopup || courseKeypadPopup.value.length >= 5) return;
+  courseKeypadPopup.value += d;
+  applyCourseKeypadValue();
   renderCourseModals();
 }
-function keypadBackspace() {
-  if (!numericKeypadPopup) return;
-  numericKeypadPopup.value = numericKeypadPopup.value.slice(0, -1);
-  applyNumericKeypadValue();
+function courseKeypadBackspace() {
+  if (!courseKeypadPopup) return;
+  courseKeypadPopup.value = courseKeypadPopup.value.slice(0, -1);
+  applyCourseKeypadValue();
   renderCourseModals();
 }
-function keypadClear() {
-  if (!numericKeypadPopup) return;
-  numericKeypadPopup.value = "";
-  applyNumericKeypadValue();
+function courseKeypadClear() {
+  if (!courseKeypadPopup) return;
+  courseKeypadPopup.value = "";
+  applyCourseKeypadValue();
   renderCourseModals();
 }
 // Pousse la valeur en cours de saisie vers le champ visé par "target"
-function applyNumericKeypadValue() {
-  const p = numericKeypadPopup;
+function applyCourseKeypadValue() {
+  const p = courseKeypadPopup;
   if (!p) return;
   if (p.target === "windSpeed") updateWindSpeed(p.value);
   else if (p.target === "windDistance") updateWindDistance(p.value);
   else if (p.target === "elevDistance") updateElevationInputDistance(p.value);
 }
-function numericKeypadHtml() {
-  const p = numericKeypadPopup;
+function courseKeypadHtml() {
+  const p = courseKeypadPopup;
   return `
-    <div class="modal-overlay" onclick="closeNumericKeypad()">
+    <div class="modal-overlay" onclick="closeCourseKeypad()">
       <div class="modal-sheet keypad-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>${p.title}</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeNumericKeypad()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeCourseKeypad()">✕</button>
         </div>
         <div class="app-keypad-value">${p.value === "" ? "--" : p.value}${p.value !== "" && p.unit ? " " + p.unit : ""}</div>
-        ${appKeypad("keypadPress", "keypadBackspace", "keypadClear", null)}
+        ${appKeypad("courseKeypadPress", "courseKeypadBackspace", "courseKeypadClear", null)}
       </div>
     </div>
   `;
@@ -286,7 +286,7 @@ function renderCourseModals() {
     elevationOpen ? elevationCalcHtml() : "",
     distancesCalcOpen ? distancesCalcHtml() : "",
     trackInfoOpen ? trackInfoHtml() : "",
-    numericKeypadPopup ? numericKeypadHtml() : ""
+    courseKeypadPopup ? courseKeypadHtml() : ""
   ].join("");
 }
 
@@ -439,11 +439,11 @@ function windCalcHtml() {
         <div class="field-grid-2">
           <div class="input-box">
             <span class="input-box-label">Vitesse du vent (km/h)</span>
-            <button type="button" class="input-box-value" onclick="openNumericKeypad('Vitesse du vent (km/h)', 'windSpeed', '${windCalc.speedKmh}', 'km/h')">${windCalc.speedKmh}</button>
+            <button type="button" class="input-box-value" onclick="openCourseKeypad('Vitesse du vent (km/h)', 'windSpeed', '${windCalc.speedKmh}', 'km/h')">${windCalc.speedKmh}</button>
           </div>
           <div class="input-box">
             <span class="input-box-label">Distance du coup (${distanceUnitLabel()})</span>
-            <button type="button" class="input-box-value" onclick="openNumericKeypad('Distance du coup', 'windDistance', '${windCalc.distanceInput}', '${distanceUnitLabel()}')">${windCalc.distanceInput}</button>
+            <button type="button" class="input-box-value" onclick="openCourseKeypad('Distance du coup', 'windDistance', '${windCalc.distanceInput}', '${distanceUnitLabel()}')">${windCalc.distanceInput}</button>
           </div>
         </div>
 
@@ -681,7 +681,7 @@ function elevationCalcHtml() {
 
           <div class="input-box">
             <span class="input-box-label">Distance du coup (${distanceUnitLabel()})</span>
-            <button type="button" class="input-box-value" onclick="openNumericKeypad('Distance du coup', 'elevDistance', '${elevCalc.distanceInput}', '${distanceUnitLabel()}')">${elevCalc.distanceInput}</button>
+            <button type="button" class="input-box-value" onclick="openCourseKeypad('Distance du coup', 'elevDistance', '${elevCalc.distanceInput}', '${distanceUnitLabel()}')">${elevCalc.distanceInput}</button>
           </div>
 
           <div class="field-grid-2">

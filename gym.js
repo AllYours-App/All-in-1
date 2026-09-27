@@ -279,7 +279,7 @@ document.getElementById("app-root-gym").innerHTML = `
             </div>
             <label class="field">
               <span id="icon-field-seances"></span>
-              <input type="number" id="input-seances" min="1" max="7" placeholder="3" inputmode="numeric" />
+              <input type="text" id="input-seances" placeholder="3" inputmode="none" readonly />
               <span class="field__suffix">/ semaine</span>
             </label>
           </div>
@@ -293,7 +293,7 @@ document.getElementById("app-root-gym").innerHTML = `
             </div>
             <label class="field">
               <span id="icon-field-duree"></span>
-              <input type="number" id="input-duree" min="1" max="52" placeholder="8" inputmode="numeric" />
+              <input type="text" id="input-duree" placeholder="8" inputmode="none" readonly />
               <span class="field__suffix">semaines</span>
             </label>
           </div>
@@ -840,6 +840,22 @@ document.getElementById("app-root-gym").innerHTML = `
       </label>
       <button class="btn btn-primary" id="btn-create-goal">Créer l'objectif</button>
     </div>
+  </div>
+
+  <!-- Bottom sheet : pavé numérique commun (remplace le clavier natif sur tous les champs à saisie manuelle de chiffres) -->
+  <div class="sheet-overlay" id="keypad-sheet-overlay"></div>
+  <div class="sheet" id="keypad-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title" id="keypad-sheet-title">Valeur</span>
+      <button type="button" class="icon-btn" id="keypad-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div class="sheet__body">
+      <div class="app-keypad-value" id="keypad-value">0</div>
+      <div class="app-keypad" id="keypad-grid"></div>
+      <button type="button" class="btn btn-primary" id="keypad-confirm">Valider</button>
+    </div>
+  </div>
 `;
 
 /* ==========================================================================
@@ -2818,6 +2834,107 @@ function gymSetupChoiceGrid(container, { multiple = false, onChange } = {}) {
   });
 }
 
+/* ==========================================================================
+   GYM — Pavé numérique commun (app-keypad, voir commun.css)
+   Remplace le clavier natif sur tous les champs à saisie manuelle de chiffres
+   (séances/semaine, durée, poids...). Un seul sheet, réutilisé pour tous les
+   champs : gymOpenKeypad({ input, title, decimal, min, max }).
+   Confirmer réécrit input.value et déclenche un event "input" (bubbles) pour
+   que les listeners déjà branchés sur ces champs continuent de fonctionner
+   sans changement. Fermer via l'overlay ou la croix annule la saisie.
+   ========================================================================== */
+
+let gymKeypadTarget = null;
+let gymKeypadValue = "";
+let gymKeypadDecimal = false;
+let gymKeypadMin = null;
+let gymKeypadMax = null;
+
+function gymKeypadBackspaceIcon() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9.5l-5 5M13 9.5l5 5"/></svg>`;
+}
+
+function gymKeypadRenderGrid() {
+  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", gymKeypadDecimal ? "." : "", "0", "back"];
+  document.getElementById("keypad-grid").innerHTML = keys
+    .map((key) => {
+      if (key === "") return `<button type="button" tabindex="-1" style="visibility:hidden;"></button>`;
+      if (key === "back") return `<button type="button" data-key="back" aria-label="Effacer">${gymKeypadBackspaceIcon()}</button>`;
+      return `<button type="button" data-key="${key}">${key}</button>`;
+    })
+    .join("");
+
+  document.getElementById("keypad-grid")
+    .querySelectorAll("[data-key]")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => gymKeypadPressKey(btn.dataset.key));
+    });
+}
+
+function gymKeypadUpdateDisplay() {
+  document.getElementById("keypad-value").textContent = gymKeypadValue === "" ? "0" : gymKeypadValue;
+}
+
+function gymKeypadPressKey(key) {
+  if (key === "back") {
+    gymKeypadValue = gymKeypadValue.slice(0, -1);
+  } else if (key === ".") {
+    if (!gymKeypadValue.includes(".")) gymKeypadValue = gymKeypadValue === "" ? "0." : gymKeypadValue + ".";
+  } else {
+    const next = gymKeypadValue + key;
+    if (gymKeypadMax !== null && Number(next) > gymKeypadMax) return;
+    gymKeypadValue = next;
+  }
+  gymKeypadUpdateDisplay();
+}
+
+/**
+ * Ouvre le pavé numérique pour un champ donné.
+ * input : élément <input readonly> à remplir.
+ * title : titre affiché dans le sheet.
+ * decimal : autorise la virgule (touche ".").
+ * min / max : bornes appliquées à la confirmation (max aussi bloqué en saisie).
+ */
+function gymOpenKeypad({ input, title = "Valeur", decimal = false, min = null, max = null }) {
+  gymKeypadTarget = input;
+  gymKeypadValue = input.value ? String(input.value) : "";
+  gymKeypadDecimal = decimal;
+  gymKeypadMin = min;
+  gymKeypadMax = max;
+
+  document.getElementById("keypad-sheet-title").textContent = title;
+  gymKeypadRenderGrid();
+  gymKeypadUpdateDisplay();
+
+  document.getElementById("keypad-sheet-overlay").classList.add("is-open");
+  document.getElementById("keypad-sheet").classList.add("is-open");
+}
+
+function gymCloseKeypad() {
+  document.getElementById("keypad-sheet-overlay").classList.remove("is-open");
+  document.getElementById("keypad-sheet").classList.remove("is-open");
+  gymKeypadTarget = null;
+}
+
+function gymConfirmKeypad() {
+  if (!gymKeypadTarget || gymKeypadValue === "" || gymKeypadValue === ".") {
+    gymCloseKeypad();
+    return;
+  }
+  let num = Number(gymKeypadValue);
+  if (gymKeypadMin !== null && num < gymKeypadMin) num = gymKeypadMin;
+  if (gymKeypadMax !== null && num > gymKeypadMax) num = gymKeypadMax;
+
+  gymKeypadTarget.value = num;
+  gymKeypadTarget.dispatchEvent(new Event("input", { bubbles: true }));
+  gymCloseKeypad();
+}
+
+document.getElementById("keypad-sheet-close").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+document.getElementById("keypad-sheet-close").addEventListener("click", gymCloseKeypad);
+document.getElementById("keypad-sheet-overlay").addEventListener("click", gymCloseKeypad);
+document.getElementById("keypad-confirm").addEventListener("click", gymConfirmKeypad);
+
 /**
  * Anti-rebond simple, utilisé pour la barre de recherche.
  */
@@ -3495,9 +3612,15 @@ function gymRenderLineChart(points) {
     state.seances = e.target.value ? Number(e.target.value) : null;
     updateRecap();
   });
+  document.getElementById("input-seances").addEventListener("click", () => {
+    gymOpenKeypad({ input: document.getElementById("input-seances"), title: "Séances / semaine", min: 1, max: 7 });
+  });
   document.getElementById("input-duree").addEventListener("input", (e) => {
     state.duree = e.target.value ? Number(e.target.value) : null;
     updateRecap();
+  });
+  document.getElementById("input-duree").addEventListener("click", () => {
+    gymOpenKeypad({ input: document.getElementById("input-duree"), title: "Durée (semaines)", min: 1, max: 52 });
   });
   document.getElementById("btn-generer").addEventListener("click", onGenerate);
 
@@ -4246,7 +4369,7 @@ function gymRenderLineChart(points) {
             <div class="set-card__field set-card__field--weight">
               <span class="set-card__field-label">Poids</span>
               <div class="set-card__weight-row">
-                <input type="number" inputmode="decimal" class="set-card__weight-input" placeholder="—" value="${set.weight}" data-set-index="${index}" data-field="weight" />
+                <input type="text" inputmode="none" readonly class="set-card__weight-input" placeholder="—" value="${set.weight}" data-set-index="${index}" data-field="weight" />
                 <span class="set-card__unit">kg</span>
                 <span class="set-card__valid-dot">${set.valid ? gymIcon("checkCircle") : gymIcon("timer")}</span>
               </div>
@@ -4270,6 +4393,9 @@ function gymRenderLineChart(points) {
     list.querySelectorAll('[data-field="weight"]').forEach((input) => {
       input.addEventListener("input", (e) => {
         exo.sets[Number(e.target.dataset.setIndex)].weight = e.target.value;
+      });
+      input.addEventListener("click", () => {
+        gymOpenKeypad({ input, title: "Poids (kg)", decimal: true, min: 0 });
       });
     });
     list.querySelectorAll(".set-card__validate").forEach((btn) => {
