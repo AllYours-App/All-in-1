@@ -352,17 +352,20 @@
    --------------------------------------------------------------------------- */
 #page-wedging .app-keypad-value,
 #page-putting .app-keypad-value,
-#page-parcours .app-keypad-value{
+#page-parcours .app-keypad-value,
+#page-gym .app-keypad-value{
   font-size:32px;font-weight:700;text-align:center;color:var(--wg-accent);margin:8px 0 16px;
 }
 #page-wedging .app-keypad,
 #page-putting .app-keypad,
-#page-parcours .app-keypad{
+#page-parcours .app-keypad,
+#page-gym .app-keypad{
   display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;
 }
 #page-wedging .app-keypad button,
 #page-putting .app-keypad button,
-#page-parcours .app-keypad button{
+#page-parcours .app-keypad button,
+#page-gym .app-keypad button{
   background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text);
   border-radius:var(--wg-radius-sm);padding:16px 0;font-size:18px;cursor:pointer;
 }
