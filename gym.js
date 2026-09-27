@@ -574,12 +574,42 @@ document.getElementById("app-root-gym").innerHTML = `
           <p class="gym-subtitle">Suivez l'évolution de vos performances et de votre condition physique.</p>
         </div>
 
-        <div class="card gym-anim-in" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding:40px 24px;">
+        <!-- État vide : aucune séance terminée pour le moment -->
+        <div class="card gym-anim-in" id="progression-empty" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding:40px 24px;">
           <div class="icon-circle" id="progression-empty-icon"></div>
           <div>
             <p class="list-row__title">Pas encore de données</p>
             <p class="list-row__meta">Termine tes premières séances pour voir apparaître ta progression ici.</p>
           </div>
+        </div>
+
+        <!-- Contenu : rempli dès qu'au moins une séance a été terminée -->
+        <div id="progression-content" style="display:none; flex-direction:column; gap:20px;">
+
+          <div class="card session-summary gym-anim-in" id="progression-stats" style="grid-template-columns: repeat(3, 1fr);"></div>
+
+          <div class="card chart-card gym-anim-in">
+            <div class="chart-card__head">
+              <span class="gym-eyebrow">Volume total par séance</span>
+              <span class="chart-card__value" id="progression-volume-value">—</span>
+            </div>
+            <div id="progression-volume-chart"></div>
+          </div>
+
+          <section id="progression-exercise-section" style="display:flex; flex-direction:column; gap:14px;">
+            <div class="gym-section-head">
+              <h2 class="gym-section-title">Charge par exercice</h2>
+            </div>
+            <div class="tabs" id="progression-exercise-tabs"></div>
+            <div class="card chart-card">
+              <div class="chart-card__head">
+                <span class="gym-eyebrow" id="progression-exercise-name">—</span>
+                <span class="chart-card__value" id="progression-exercise-value">—</span>
+              </div>
+              <div id="progression-exercise-chart"></div>
+            </div>
+          </section>
+
         </div>
       </main>
     </section>
@@ -622,6 +652,50 @@ document.getElementById("app-root-gym").innerHTML = `
           Plus de séances
           <span id="icon-chevron-more"></span>
         </button>
+      </main>
+    </section>
+
+    <!-- ============================== VUE : RÉCAP DE SÉANCE ============================== -->
+    <section class="gym-view" id="view-seance-recap" hidden>
+      <header class="gym-header">
+        <a class="gym-header__back" href="#" id="recap-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          GYM
+        </a>
+        <button class="gym-header__action" aria-label="Options">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <main class="gym-main">
+
+        <!-- Bandeau affiché uniquement juste après avoir terminé la séance -->
+        <div class="card card--accent gym-anim-in" id="recap-congrats" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px;"></div>
+
+        <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
+          <span class="gym-eyebrow" id="recap-eyebrow">—</span>
+          <h1 class="gym-title-xl" id="recap-title">—</h1>
+          <p class="gym-subtitle" id="recap-meta">—</p>
+        </div>
+
+        <div class="card session-summary gym-anim-in" id="recap-summary"></div>
+
+        <section style="display:flex; flex-direction:column; gap:14px;">
+          <div class="gym-section-head">
+            <h2 class="gym-section-title">Détail par exercice</h2>
+          </div>
+          <div id="recap-exercises" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </section>
+
+        <div class="card" id="recap-empty" style="display:none; text-align:center; color:var(--gym-text-secondary); font-size:14px;">
+          Séance introuvable.
+        </div>
+
+        <div id="recap-actions" style="display:flex; flex-direction:column; gap:10px;">
+          <button type="button" class="btn btn-primary" id="btn-recap-primary">Voir le programme</button>
+          <button type="button" class="btn btn-secondary" id="btn-recap-home">Retour à l'accueil</button>
+        </div>
+
       </main>
     </section>
 
@@ -900,6 +974,15 @@ function gymFormatDate(date) {
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
   ];
   return `${d.getDate().toString().padStart(2, "0")} ${mois[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/**
+ * Date courte "12/03" utilisée comme label d'axe dans les graphes de
+ * progression (plus compacte qu'une date complète).
+ */
+function gymFormatShortDate(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
 }
 
 function gymFormatMonthYear(date) {
@@ -2539,6 +2622,93 @@ function gymFindSessionById(sessionId) {
   return { program: null, session: null };
 }
 
+/**
+ * Construit un instantané complet d'une séance qui vient d'être terminée
+ * (poids/répétitions/validité de chaque série + agrégats) et l'ajoute en
+ * tête de l'historique. C'est ce snapshot — indépendant du programme, qui
+ * peut être modifié ou supprimé par la suite — qui alimente à la fois la
+ * page Historique (liste + détail) et la page Progression (graphes).
+ */
+function gymRecordSessionHistory(program, session, exercisesState, elapsedMs) {
+  const goalMeta = GYM_DATA.trainingGoals.find((g) => g.id === session.goal);
+
+  const exercisesSnapshot = exercisesState.map((exo) => ({
+    exerciseId: exo.exerciseId,
+    name: exo.name,
+    repsLabel: exo.repsLabel,
+    restLabel: exo.restLabel,
+    tempoLabel: exo.tempoLabel,
+    sets: exo.sets.map((s) => ({
+      weight: Number(s.weight) || 0,
+      reps: Number(s.reps) || 0,
+      target: s.target,
+      valid: !!s.valid,
+    })),
+  }));
+
+  const totalSets = exercisesSnapshot.reduce((sum, e) => sum + e.sets.length, 0);
+  const validSets = exercisesSnapshot.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).length, 0);
+  const totalReps = exercisesSnapshot.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).reduce((a, s) => a + s.reps, 0), 0);
+  const totalVolume = Math.round(
+    exercisesSnapshot.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).reduce((a, s) => a + s.weight * s.reps, 0), 0)
+  );
+
+  // Comparaison avec la précédente exécution de cette même séance (même
+  // programme + même id de séance), pour donner un delta de volume
+  // pertinent (deux séances différentes n'ont pas le même volume "normal").
+  const previous = GYM_DATA.history.find((h) => h.programId === program.id && h.sessionId === session.id);
+  const delta = previous && previous.totalVolume > 0 ? Math.round(((totalVolume - previous.totalVolume) / previous.totalVolume) * 100) : 0;
+
+  const entry = {
+    id: `h-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    type: "programme",
+    programId: program.id,
+    programName: program.name,
+    sessionId: session.id,
+    sessionIndex: session.index,
+    sessionTitle: session.title && session.title.trim() ? session.title : `Séance ${session.index}`,
+    goal: session.goal,
+    icon: goalMeta ? goalMeta.icon : program.icon || "dumbbell",
+    typeLabel: program.name,
+    sessionLabel: `Séance ${session.index} · ${exercisesSnapshot.length} exercice${exercisesSnapshot.length > 1 ? "s" : ""}`,
+    tag: goalMeta ? goalMeta.label : "Séance",
+    date: new Date(),
+    duration: Math.max(1, Math.round(elapsedMs / 60000)),
+    totalVolume,
+    totalSets,
+    validSets,
+    totalReps,
+    delta,
+    deltaLabel: previous ? "vs séance précédente" : "Première fois",
+    exercises: exercisesSnapshot,
+  };
+
+  GYM_DATA.history.unshift(entry);
+  return entry;
+}
+
+/**
+ * Pour chaque exercice déjà réalisé (séries validées avec un poids saisi),
+ * la liste chronologique de ses points de progression (charge maximale et
+ * volume de la séance), utilisée par les courbes de la page Progression.
+ */
+function gymGetExerciseProgressList() {
+  const map = new Map();
+  // L'historique est trié du plus récent au plus ancien (unshift à chaque
+  // séance terminée) : on repart de la fin pour reconstituer l'ordre
+  // chronologique attendu par un graphe.
+  [...GYM_DATA.history].reverse().forEach((entry) => {
+    entry.exercises.forEach((exo) => {
+      const validSets = exo.sets.filter((s) => s.valid && s.weight > 0);
+      if (!validSets.length) return;
+      const maxWeight = Math.max(...validSets.map((s) => s.weight));
+      if (!map.has(exo.exerciseId)) map.set(exo.exerciseId, { exerciseId: exo.exerciseId, name: exo.name, points: [] });
+      map.get(exo.exerciseId).points.push({ date: entry.date, maxWeight });
+    });
+  });
+  return Array.from(map.values());
+}
+
 /* ---- Export global ---------------------------------------------------------------- */
 
 const GYM_DATA = {
@@ -3032,9 +3202,8 @@ function gymRenderHistoryRow(entry) {
   const metaLine = entry.duration
     ? `${gymIcon("calendar")} ${gymFormatDate(entry.date)} · ${gymFormatDuration(entry.duration)}`
     : `${gymIcon("calendar")} ${gymFormatDate(entry.date)}`;
-  const targetView = entry.type === "programme" ? "programme-detail" : "historique";
   return `
-    <a class="card card--interactive list-row" href="#" onclick="gymNavigate('${targetView}'); return false;">
+    <a class="card card--interactive list-row" href="#" onclick="gymNavigate('seance-recap', {history:'${entry.id}', from:'historique'}); return false;">
       ${gymThumb(entry.icon, "thumb--sm")}
       <div class="list-row__body">
         <span class="list-row__title">${entry.typeLabel}</span>
@@ -3047,6 +3216,58 @@ function gymRenderHistoryRow(entry) {
         <span class="list-row__meta" style="font-size:11.5px;">${entry.deltaLabel}</span>
       </div>
     </a>
+  `;
+}
+
+/**
+ * Graphe en courbe (SVG inline, sans librairie externe) à partir d'une
+ * liste de points {date, value} triée chronologiquement. Utilisé par la
+ * page Progression pour tracer le volume total et la charge par exercice.
+ */
+function gymRenderLineChart(points) {
+  if (!points.length) return "";
+
+  const width = 300;
+  const height = 130;
+  const padX = 6;
+  const padTop = 14;
+  const padBottom = 22;
+  const innerW = width - padX * 2;
+  const innerH = height - padTop - padBottom;
+
+  const values = points.map((p) => p.value);
+  const max = Math.max(...values);
+  const min = Math.min(...values, 0);
+  const range = max - min || 1;
+  const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
+
+  const coords = points.map((p, i) => ({
+    x: padX + (points.length > 1 ? stepX * i : innerW / 2),
+    y: padTop + innerH - ((p.value - min) / range) * innerH,
+    ...p,
+  }));
+
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  const areaPath =
+    coords.length > 1
+      ? `${linePath} L${coords[coords.length - 1].x.toFixed(1)},${(padTop + innerH).toFixed(1)} L${coords[0].x.toFixed(1)},${(padTop + innerH).toFixed(1)} Z`
+      : "";
+
+  const dots = coords.map((c) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3" class="chart-dot"></circle>`).join("");
+
+  const labelEvery = Math.max(1, Math.ceil(coords.length / 4));
+  const labels = coords
+    .filter((_, i) => i === 0 || i === coords.length - 1 || i % labelEvery === 0)
+    .map((c) => `<text x="${c.x.toFixed(1)}" y="${height - 6}" class="chart-axis-label" text-anchor="middle">${gymFormatShortDate(c.date)}</text>`)
+    .join("");
+
+  return `
+    <svg viewBox="0 0 ${width} ${height}" class="chart-svg" preserveAspectRatio="none">
+      ${areaPath ? `<path d="${areaPath}" class="chart-area"></path>` : ""}
+      <path d="${linePath}" class="chart-line"></path>
+      ${dots}
+      ${labels}
+    </svg>
   `;
 }
 
@@ -4122,6 +4343,7 @@ function gymRenderHistoryRow(entry) {
    */
   function finalizeSession() {
     if (!state.session || !state.program) return;
+    const elapsedMs = state.elapsedMs + (state.timerStart ? Date.now() - state.timerStart : 0);
     stopTimerInterval();
     state.session.status = "terminee";
     const next = state.program.sessions.find((s) => s.index === state.session.index + 1);
@@ -4129,7 +4351,8 @@ function gymRenderHistoryRow(entry) {
       next.status = "en-cours";
       state.program.currentIndex = next.index;
     }
-    gymNavigate("programme-detail", { id: state.program.id });
+    const entry = gymRecordSessionHistory(state.program, state.session, state.exercises, elapsedMs);
+    gymNavigate("seance-recap", { history: entry.id, from: "session" });
   }
 
   document.getElementById("btn-next-series").addEventListener("click", goToNextSeries);
@@ -4209,12 +4432,96 @@ function gymRenderHistoryRow(entry) {
    GYM — Vue : Progression
    ========================================================================== */
 (function () {
+  const state = {
+    exerciseId: null,
+  };
+
   function fillIcons() {
     document.getElementById("progression-empty-icon").innerHTML = gymIcon("trendUp");
   }
 
+  function renderStats() {
+    const history = GYM_DATA.history;
+    const totalVolume = history.reduce((sum, h) => sum + h.totalVolume, 0);
+    const totalSets = history.reduce((sum, h) => sum + h.validSets, 0);
+
+    document.getElementById("progression-stats").innerHTML = `
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("calendar")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Séances</span>
+          <span class="session-summary__value">${history.length}</span>
+        </span>
+      </div>
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("dumbbell")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Volume cumulé</span>
+          <span class="session-summary__value">${totalVolume} kg</span>
+        </span>
+      </div>
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("layers")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Séries validées</span>
+          <span class="session-summary__value">${totalSets}</span>
+        </span>
+      </div>
+    `;
+  }
+
+  function renderVolumeChart() {
+    // GYM_DATA.history est du plus récent au plus ancien : on repart de la
+    // fin pour tracer le graphe dans l'ordre chronologique.
+    const points = [...GYM_DATA.history].reverse().map((h) => ({ date: h.date, value: h.totalVolume }));
+    document.getElementById("progression-volume-chart").innerHTML = gymRenderLineChart(points);
+    document.getElementById("progression-volume-value").textContent = `${points[points.length - 1].value} kg`;
+  }
+
+  function renderExerciseTabs(list) {
+    document.getElementById("progression-exercise-tabs").innerHTML = list
+      .map((exo) => `<button type="button" class="tab ${exo.exerciseId === state.exerciseId ? "is-active" : ""}" data-value="${exo.exerciseId}">${exo.name}</button>`)
+      .join("");
+  }
+
+  function renderExerciseChart(list) {
+    const exo = list.find((e) => e.exerciseId === state.exerciseId) || list[0];
+    if (!exo) return;
+    state.exerciseId = exo.exerciseId;
+
+    const points = exo.points.map((p) => ({ date: p.date, value: p.maxWeight }));
+    document.getElementById("progression-exercise-chart").innerHTML = gymRenderLineChart(points);
+    document.getElementById("progression-exercise-name").textContent = exo.name;
+    document.getElementById("progression-exercise-value").textContent = `${points[points.length - 1].value} kg`;
+  }
+
+  // Liaison unique : le conteneur d'onglets existe dès le chargement du document.
+  gymSetupTabs(document.getElementById("progression-exercise-tabs"), (value) => {
+    state.exerciseId = value;
+    renderExerciseChart(gymGetExerciseProgressList());
+  });
+
   function render() {
     fillIcons();
+
+    const hasHistory = GYM_DATA.history.length > 0;
+    document.getElementById("progression-empty").style.display = hasHistory ? "none" : "flex";
+    document.getElementById("progression-content").style.display = hasHistory ? "flex" : "none";
+    if (!hasHistory) return;
+
+    renderStats();
+    renderVolumeChart();
+
+    const exerciseList = gymGetExerciseProgressList();
+    const section = document.getElementById("progression-exercise-section");
+    section.style.display = exerciseList.length ? "flex" : "none";
+    if (exerciseList.length) {
+      if (!state.exerciseId || !exerciseList.some((e) => e.exerciseId === state.exerciseId)) {
+        state.exerciseId = exerciseList[0].exerciseId;
+      }
+      renderExerciseTabs(exerciseList);
+      renderExerciseChart(exerciseList);
+    }
   }
 
   GymViews["progression"] = { render };
@@ -4295,6 +4602,151 @@ function gymRenderHistoryRow(entry) {
   }
 
   GymViews["historique"] = { render };
+})();
+
+/* ==========================================================================
+   GYM — Vue : Récap de séance
+   Résumé détaillé (poids/répétitions par série, par exercice) d'une
+   séance terminée. Deux points d'entrée : juste après avoir terminé une
+   séance (bandeau de félicitations, params.from === "session"), ou en
+   cliquant sur une entrée de l'historique (params.from === "historique").
+   ========================================================================== */
+
+(function () {
+  function renderCongrats(show) {
+    const box = document.getElementById("recap-congrats");
+    box.style.display = show ? "flex" : "none";
+    if (!show) return;
+    box.innerHTML = `
+      <div class="icon-circle">${gymIcon("checkCircle")}</div>
+      <div>
+        <p class="list-row__title">Séance terminée !</p>
+        <p class="list-row__meta">Bravo, elle a bien été enregistrée dans ton historique.</p>
+      </div>
+    `;
+  }
+
+  function renderSummary(entry) {
+    document.getElementById("recap-summary").innerHTML = `
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("dumbbell")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Volume</span>
+          <span class="session-summary__value">${entry.totalVolume} kg</span>
+        </span>
+      </div>
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("layers")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Séries</span>
+          <span class="session-summary__value">${entry.validSets} / ${entry.totalSets}</span>
+        </span>
+      </div>
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("check")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Répétitions</span>
+          <span class="session-summary__value">${entry.totalReps}</span>
+        </span>
+      </div>
+      <div class="session-summary__item">
+        <span class="session-summary__icon">${gymIcon("clock")}</span>
+        <span class="session-summary__text">
+          <span class="session-summary__label">Durée</span>
+          <span class="session-summary__value">${gymFormatDuration(entry.duration)}</span>
+        </span>
+      </div>
+    `;
+  }
+
+  function renderExercises(entry) {
+    document.getElementById("recap-exercises").innerHTML = entry.exercises
+      .map((exo) => {
+        const validCount = exo.sets.filter((s) => s.valid).length;
+        const pills = exo.sets
+          .map(
+            (s, i) => `
+            <span class="recap-set-pill ${s.valid ? "is-valid" : "is-invalid"}">
+              <span class="recap-set-pill__index">${i + 1}</span>
+              <span class="recap-set-pill__value">${s.weight || 0} kg × ${s.reps || 0}</span>
+              <span class="recap-set-pill__icon">${gymIcon(s.valid ? "check" : "cross")}</span>
+            </span>
+          `
+          )
+          .join("");
+        return `
+          <div class="card recap-exercise">
+            <div class="recap-exercise__head">
+              ${gymThumb("dumbbell", "thumb--sm")}
+              <div class="list-row__body">
+                <span class="list-row__title">${exo.name}</span>
+                <span class="list-row__meta">${validCount} / ${exo.sets.length} séries validées</span>
+              </div>
+            </div>
+            <div class="recap-exercise__sets">${pills}</div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  function findEntry(id) {
+    return GYM_DATA.history.find((h) => h.id === id);
+  }
+
+  function render(params) {
+    const entry = params && params.history ? findEntry(params.history) : null;
+    const from = (params && params.from) || "historique";
+
+    if (!entry) {
+      renderCongrats(false);
+      document.getElementById("recap-eyebrow").textContent = "";
+      document.getElementById("recap-title").textContent = "Séance introuvable";
+      document.getElementById("recap-meta").textContent = "";
+      document.getElementById("recap-summary").innerHTML = "";
+      document.getElementById("recap-exercises").innerHTML = "";
+      document.getElementById("recap-actions").style.display = "none";
+      document.getElementById("recap-empty").style.display = "block";
+      document.getElementById("recap-back").onclick = (e) => {
+        e.preventDefault();
+        gymNavigate("gym-home");
+      };
+      return;
+    }
+
+    document.getElementById("recap-empty").style.display = "none";
+    document.getElementById("recap-actions").style.display = "flex";
+    renderCongrats(from === "session");
+
+    document.getElementById("recap-eyebrow").textContent = entry.programName.toUpperCase();
+    document.getElementById("recap-title").textContent = entry.sessionTitle;
+    document.getElementById("recap-meta").textContent = `${gymFormatDate(entry.date)} · ${entry.tag}`;
+
+    renderSummary(entry);
+    renderExercises(entry);
+
+    const program = gymGetProgram(entry.programId);
+
+    document.getElementById("recap-back").onclick = (e) => {
+      e.preventDefault();
+      if (from === "historique") gymNavigate("historique");
+      else if (program) gymNavigate("programme-detail", { id: entry.programId });
+      else gymNavigate("gym-home");
+    };
+
+    document.getElementById("btn-recap-home").onclick = () => gymNavigate("gym-home");
+
+    const primaryBtn = document.getElementById("btn-recap-primary");
+    if (program) {
+      primaryBtn.style.display = "";
+      primaryBtn.textContent = "Voir le programme";
+      primaryBtn.onclick = () => gymNavigate("programme-detail", { id: entry.programId });
+    } else {
+      primaryBtn.style.display = "none";
+    }
+  }
+
+  GymViews["seance-recap"] = { render };
 })();
 
 /* ==========================================================================

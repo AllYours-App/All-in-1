@@ -2679,6 +2679,140 @@ body.gym-home-locked {
 }
 
 /* ==========================================================================
+   GYM — Récap de séance (détail poids/répétitions par exercice)
+   ========================================================================== */
+
+.recap-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recap-exercise__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recap-exercise__sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recap-set-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--gym-radius-pill);
+  border: 1.5px solid var(--gym-border-strong);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gym-text-secondary);
+}
+
+.recap-set-pill.is-valid {
+  border-color: var(--gym-accent-border);
+  background: var(--gym-accent-dim);
+  color: var(--gym-text);
+}
+
+.recap-set-pill.is-invalid {
+  opacity: 0.55;
+}
+
+.recap-set-pill__index {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.recap-set-pill__icon {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  display: flex;
+  color: var(--gym-accent);
+}
+
+.recap-set-pill.is-invalid .recap-set-pill__icon {
+  color: var(--gym-text-muted);
+}
+
+.recap-set-pill__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 360px) {
+  .recap-set-pill {
+    padding: 6px 9px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+}
+
+/* ==========================================================================
+   GYM — Graphiques (page Progression)
+   ========================================================================== */
+
+.chart-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.chart-card__value {
+  font-size: 19px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: 130px;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--gym-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-area {
+  fill: var(--gym-accent);
+  opacity: 0.08;
+  stroke: none;
+}
+
+.chart-dot {
+  fill: var(--gym-bg);
+  stroke: var(--gym-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-axis-label {
+  fill: var(--gym-text-muted);
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* ==========================================================================
    GYM — Application single-page (gestion de l'affichage des vues)
    ========================================================================== */
 
