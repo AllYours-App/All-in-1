@@ -697,9 +697,6 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-insight-card-title{font-size:13px;font-weight:700;margin-bottom:8px;}
 .wg-chart-axis-title{font-size:11px;color:var(--wg-text-secondary);margin-bottom:6px;text-align:center;}
 .wg-chart-axis-text{fill:var(--wg-text-secondary);font-size:9px;}
-.wg-carousel-dots{display:flex;justify-content:center;gap:6px;margin:4px 0 16px;}
-.wg-carousel-dots span{width:6px;height:6px;border-radius:50%;background:var(--wg-border);cursor:pointer;}
-.wg-carousel-dots span.active{background:var(--wg-accent);}
 .wg-session-list{list-style:none;margin:0;padding:0;max-width:var(--wg-max-width);margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px;}
 .wg-log-row-right{display:flex;align-items:center;gap:8px;}
 .wg-session-list li{
