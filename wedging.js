@@ -450,7 +450,6 @@ let wedgeRadiusPopupOpen = false;
 let wedgeRadiusInput = '';
 let selectedWedgeExerciseId = null;
 let wedgeReviewExerciseId = null;
-let wedgeReviewChartIndex = 0;
 let wedgeViewedLogId = null;
 let wedgeExReviewLimit = 20;
 let wedgeExSession = null;
@@ -468,6 +467,7 @@ let wedgeBallsInput = '';
 let wedgeConfirmDeleteLogId = null;
 let wedgeConfirmDeleteLogExerciseId = null;
 let wedgeExercisesTab = 'list';
+let wedgeExercisesSort = null; // null = ordre de création | 'az' | 'type'
 
 function persistWedgeExercises() { Storage.writeExercises(wedgeExercises); }
 function persistWedgeInProgressSessions() { Storage.writeInProgress(wedgeInProgressSessions); }
@@ -1001,6 +1001,15 @@ function wedgeAllExerciseLogs() {
   return rows;
 }
 function setWedgeExercisesTab(tab) { wedgeExercisesTab = tab; rerender(); }
+function setWedgeExercisesSort(mode) { wedgeExercisesSort = wedgeExercisesSort === mode ? null : mode; rerender(); }
+function wedgeSortedExercises() {
+  const list = wedgeExercises.slice();
+  const byName = (a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+  const typeOrder = ['zone', 'distance', 'inout', 'elevator'];
+  if (wedgeExercisesSort === 'az') list.sort(byName);
+  else if (wedgeExercisesSort === 'type') list.sort((a, b) => (typeOrder.indexOf(a.resultMode) - typeOrder.indexOf(b.resultMode)) || byName(a, b));
+  return list;
+}
 function wedgeExerciseHistoryHtml() {
   const rows = wedgeAllExerciseLogs();
   const rowsHtml = rows.map(({ ex, log }) => `<li onclick="editWedgeExerciseLog(${ex.id}, ${log.id})">
@@ -1051,14 +1060,52 @@ function wedgeConfirmDeleteLogModalHtml() {
     <div class="wg-field-row"><button class="wg-btn-secondary" onclick="cancelDeleteWedgeLog()">Annuler</button><button class="wg-btn-primary" onclick="confirmDeleteWedgeLog()">Supprimer</button></div>
   `, 'cancelDeleteWedgeLog');
 }
-function reviewWedgeExercise(id) { wedgeReviewExerciseId = id; wedgeReviewChartIndex = 0; wedgeViewedLogId = null; rerender(); }
+function reviewWedgeExercise(id) { wedgeReviewExerciseId = id; wedgeViewedLogId = null; rerender(); }
 function closeWedgeExerciseReview() { wedgeReviewExerciseId = null; wedgeViewedLogId = null; rerender(); }
-function setWedgeReviewChart(i) { wedgeReviewChartIndex = i; rerender(); }
 function viewWedgeExerciseLog(id) { wedgeViewedLogId = id; rerender(); }
 function closeWedgeExerciseLog() { wedgeViewedLogId = null; rerender(); }
+function wedgeExAvgDistanceForDistance(log, d) {
+  const shots = log.shots.filter(s => s.distance === d);
+  if (!shots.length) return 0;
+  return Math.round((shots.reduce((n, s) => n + s.resultDistance, 0) / shots.length) * 100) / 100;
+}
+function wedgeExPctForDistance(log, d) {
+  const shots = d === null ? log.shots : log.shots.filter(s => s.distance === d);
+  if (!shots.length) return 0;
+  return Math.round((shots.filter(s => s.made).length / shots.length) * 100);
+}
+// Un graphe par distance de l'exercice (évolution round après round) + un graphe de moyenne toutes distances confondues.
+function wedgeExPerDistanceCharts(ex, unitLabel, valueFn, opts, distanceLabel) {
+  const charts = [];
+  ex.distances.slice().sort((a, b) => a - b).forEach(d => {
+    const logs = ex.logs.filter(l => l.shots.some(s => s.distance === d));
+    if (!logs.length) return;
+    charts.push({ title: distanceLabel ? distanceLabel(d) : `${d}m`, build: () => wedgeExLineChart(logs, l => valueFn(l, d), unitLabel, opts) });
+  });
+  return charts;
+}
 function wedgeReviewChartsFor(ex) {
   const charts = [];
-  if (ex.resultMode === 'zone') charts.push({ title: "Toile d'araignée", build: () => wedgeExRadarHtml(ex) });
+  if (ex.resultMode === 'zone') {
+    charts.push({ title: "Toile d'araignée", build: () => wedgeExRadarHtml(ex) });
+    charts.push({ title: 'Évolution', build: () => wedgeExEvolutionHtml(ex) });
+    return charts;
+  }
+  if (ex.resultMode === 'distance') {
+    charts.push(...wedgeExPerDistanceCharts(ex, 'Distance obtenue (m)', wedgeExAvgDistanceForDistance, { showValues: true, valueSuffix: 'm' }));
+    if (ex.logs.length) charts.push({ title: 'Moyenne — toutes distances', build: () => wedgeExLineChart(ex.logs, l => l.summary.avgDistance, 'Distance moyenne (m)', { showValues: true, valueSuffix: 'm' }) });
+    return charts;
+  }
+  if (ex.resultMode === 'inout') {
+    charts.push(...wedgeExPerDistanceCharts(ex, 'Réussite (%)', wedgeExPctForDistance));
+    if (ex.logs.length) charts.push({ title: 'Moyenne — toutes distances', build: () => wedgeExLineChart(ex.logs, l => l.summary.pct, 'Réussite (%)') });
+    return charts;
+  }
+  if (ex.resultMode === 'elevator') {
+    charts.push(...wedgeExPerDistanceCharts(ex, 'Réussite (%)', wedgeExPctForDistance, null, d => `Palier ${d}m`));
+    if (ex.logs.length) charts.push({ title: 'Moyenne — tous paliers', build: () => wedgeExLineChart(ex.logs, l => wedgeExPctForDistance(l, null), 'Réussite (%)') });
+    return charts;
+  }
   charts.push({ title: 'Évolution', build: () => wedgeExEvolutionHtml(ex) });
   return charts;
 }
@@ -1111,14 +1158,11 @@ function wedgeExerciseReviewHtml() {
   if (!ex) { wedgeReviewExerciseId = null; return wedgeExercisesListHtml(); }
   if (wedgeViewedLogId !== null) return wedgeExerciseLogDetailHtml(ex);
   const logs = ex.logs; const charts = wedgeReviewChartsFor(ex);
-  const chartHtml = charts[wedgeReviewChartIndex].build(logs);
-  const dotsHtml = charts.map((c, i) => `<span class="${i === wedgeReviewChartIndex ? 'active' : ''}" onclick="setWedgeReviewChart(${i})"></span>`).join('');
+  const chartsHtml = charts.map(c => `<div class="wg-insight-card-title wg-text-center mt-10">${c.title}</div>${c.build(logs)}`).join('');
   const sessionRows = logs.slice().reverse().map(l => `<li onclick="viewWedgeExerciseLog(${l.id})"><span>${UI.formatDate(l.date)}<br><span class="wg-text-muted-sm">${wedgeLogSummaryText(ex, l)}</span></span><span class="wg-log-row-right"><span class="wg-text-muted-sm">${l.summary.total} balles</span><button class="wg-btn-danger" onclick="event.stopPropagation(); askDeleteWedgeLog(${l.id})">${UI.ICONS.trash}</button></span></li>`).join('');
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseReview()">${UI.ICONS.back} Exercices</button></div>
     <div class="wg-session-title">${ex.name}</div>
-    <div class="wg-insight-card-title wg-text-center mt-10">${charts[wedgeReviewChartIndex].title}</div>
-    ${chartHtml}
-    <div class="wg-carousel-dots">${dotsHtml}</div>
+    ${chartsHtml}
     <div class="wg-section-desc mt-10">Voir les sessions précédentes</div>
     <ul class="wg-session-list">${sessionRows || '<li>Aucune session pour cet exercice.</li>'}</ul>
     <div style="height:24px;"></div>
@@ -1289,7 +1333,11 @@ function wedgeExercisesListHtml() {
     </div>
     ${isHistory ? wedgeExerciseHistoryHtml() : `
       <div class="wg-toolbar"><span class="wg-toolbar-title">MES EXERCICES</span><button class="wg-chip active" onclick="openWedgeExerciseModal()">${UI.ICONS.plus} Créer</button></div>
-      <div class="wg-list mb-70">${wedgeExercises.length ? wedgeExercises.map(ex => wedgeExerciseCardHtml(ex)).join('') : '<p class="wg-empty-state">Aucun exercice pour le moment.</p>'}</div>
+      <div class="wg-chip-row mb-10">
+        <button class="wg-chip ${wedgeExercisesSort === 'az' ? 'active' : ''}" onclick="setWedgeExercisesSort('az')">A → Z</button>
+        <button class="wg-chip ${wedgeExercisesSort === 'type' ? 'active' : ''}" onclick="setWedgeExercisesSort('type')">Type d'exercice</button>
+      </div>
+      <div class="wg-list mb-70">${wedgeExercises.length ? wedgeSortedExercises().map(ex => wedgeExerciseCardHtml(ex)).join('') : '<p class="wg-empty-state">Aucun exercice pour le moment.</p>'}</div>
     `}
     ${!isHistory ? `<div class="wg-fab"><button class="wg-btn-primary" onclick="startSelectedWedgeExercise()">Lancer l'exercice →</button></div>` : ''}
     ${wedgeExerciseModalOpen ? wedgeExerciseModalHtml() : ''}
