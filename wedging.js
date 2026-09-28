@@ -828,7 +828,7 @@ function wedgeExSessionScreenHtml() {
   const s = wedgeExSession; const ex = wedgeExercises.find(e => e.id === s.exerciseId);
   if (!ex) { wedgeExSession = null; return wedgeExercisesListHtml(); }
   const dist = s.distances[s.activeDistanceIdx]; const progress = wedgeExSessionProgress(s);
-  const attemptsHtml = dist.results.map((r, idx) => `<button class="wg-attempt-btn ${idx === s.activeAttempt ? 'active' : ''}" onclick="setWedgeExActiveAttempt(${idx})"><span>${idx + 1}</span><span class="wg-dot ${wedgeExResultDotClass(ex, r)}"></span></button>`).join('');
+  const attemptsHtml = dist.results.map((r, idx) => `<button class="wg-attempt-btn ${idx === s.activeAttempt ? 'active' : ''}" onclick="setWedgeExActiveAttempt(${idx})"><span>${idx + 1}</span>${ex.resultMode === 'distance' && r !== null && r !== undefined ? `<span class="wg-attempt-value">${r}</span>` : `<span class="wg-dot ${wedgeExResultDotClass(ex, r)}"></span>`}</button>`).join('');
   const distTabsHtml = s.distances.map((dd, idx) => `<button class="wg-ladder-item ${idx === s.activeDistanceIdx ? 'active' : ''}" onclick="setWedgeExActiveDistance(${idx})">${dd.distance}m</button>`).join('');
   const currentResult = dist.results[s.activeAttempt];
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
@@ -882,18 +882,20 @@ function wedgeExElevatorScreenHtml() {
 }
 function setWedgeExElevatorResult(made) {
   const s = wedgeExSession; s.history.push({ levelIdx: s.currentLevelIdx, distance: s.levels[s.currentLevelIdx], made });
+  const lastIdx = s.levels.length - 1; let topValidated = false;
   if (s.validationMode === 'xy') {
     s.levelAttempts.push(made);
     if (s.levelAttempts.length >= s.xyY) {
       const successCount = s.levelAttempts.filter(Boolean).length; const passed = successCount >= s.xyX;
-      if (passed) { s.currentLevelIdx = Math.min(s.currentLevelIdx + 1, s.levels.length - 1); s.maxLevelIdx = Math.max(s.maxLevelIdx, s.currentLevelIdx); }
+      if (passed) { if (s.currentLevelIdx === lastIdx) topValidated = true; s.currentLevelIdx = Math.min(s.currentLevelIdx + 1, s.levels.length - 1); s.maxLevelIdx = Math.max(s.maxLevelIdx, s.currentLevelIdx); }
       else s.currentLevelIdx = Math.max(s.currentLevelIdx - 1, 0);
       s.levelAttempts = [];
     }
   } else {
-    if (made) { s.currentLevelIdx = Math.min(s.currentLevelIdx + 1, s.levels.length - 1); s.maxLevelIdx = Math.max(s.maxLevelIdx, s.currentLevelIdx); }
+    if (made) { if (s.currentLevelIdx === lastIdx) topValidated = true; s.currentLevelIdx = Math.min(s.currentLevelIdx + 1, s.levels.length - 1); s.maxLevelIdx = Math.max(s.maxLevelIdx, s.currentLevelIdx); }
     else s.currentLevelIdx = Math.max(s.currentLevelIdx - 1, 0);
   }
+  if (topValidated) { finishWedgeExElevatorSession(); return; }
   rerender();
 }
 function finishWedgeExElevatorSession() {

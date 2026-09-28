@@ -661,6 +661,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-dot{width:8px;height:8px;border-radius:50%;background:var(--wg-border);display:inline-block;}
 .wg-dot.made{background:var(--wg-accent);}
 .wg-dot.missed{background:var(--wg-danger);}
+.wg-attempt-value{font-size:11px;font-weight:700;color:var(--wg-accent);line-height:8px;white-space:nowrap;}
 .wg-result-btn{
   flex:1;background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text);
   border-radius:var(--wg-radius-sm);padding:16px;font-size:15px;font-weight:700;cursor:pointer;
