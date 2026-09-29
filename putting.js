@@ -807,7 +807,7 @@ function expectedPutts(distanceM) {
 
 // SG d'un trou = putts attendus (référence Tour) - putts réellement pris (positif = mieux que le Tour)
 function puttSG(distanceM, puttsTaken) {
-  if (distanceM == null || puttsTaken == null || isNaN(distanceM) || isNaN(puttsTaken)) return null;
+  if (distanceM == null || puttsTaken == null || isNaN(distanceM) || isNaN(puttsTaken) || distanceM <= 0) return null;
   return expectedPutts(distanceM) - puttsTaken;
 }
 
@@ -882,6 +882,7 @@ function getFilteredHoles(group) {
 // Remplit un bar-chart "simple" existant (valeurs déjà en %, 0-100) sans regénérer son HTML
 function fillBarChart(container, values, fmt) {
   if (!container) return;
+  cmpReset(container);
   const rows = container.querySelectorAll('.bar-chart_row');
   rows.forEach(function (row, i) {
     const v = values[i];
@@ -896,6 +897,7 @@ function fillBarChart(container, values, fmt) {
 // Remplit un bar-chart "double" (vitesse + pente) existant
 function fillDualBarChart(container, speedValues, slopeValues) {
   if (!container) return;
+  cmpReset(container);
   const rows = container.querySelectorAll('.bar-chart_row');
   rows.forEach(function (row, i) {
     const wraps = row.querySelectorAll('.bar-chart_bar-wrap');
@@ -914,6 +916,7 @@ function fillDualBarChart(container, speedValues, slopeValues) {
 // Remplit un bar-chart "centré" existant (ex : SG, positif/négatif)
 function fillCenteredBarChart(container, values, fmt, scaleMax) {
   if (!container) return;
+  cmpReset(container);
   const rows = container.querySelectorAll('.bar-chart_row');
   const nums = values.filter(function (v) { return v != null; }).map(Math.abs);
   const max = Math.max(scaleMax || 0.2, nums.length ? Math.max.apply(null, nums) : 0.2);
@@ -945,7 +948,7 @@ function svgRadarChart(values, labels, opts) {
   const centered = !!opts.centered;
   let min, max;
   if (centered) {
-    const nums = values.filter(function (v) { return v != null; }).map(Math.abs);
+    const nums = values.concat(opts.valuesB || []).filter(function (v) { return v != null; }).map(Math.abs);
     const m = Math.max(opts.scaleMax || 0.2, nums.length ? Math.max.apply(null, nums) : 0.2);
     min = -m; max = m;
   } else { min = 0; max = 100; }
@@ -986,6 +989,17 @@ function svgRadarChart(values, labels, opts) {
     dots += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" class="radar-dot"/>';
   }
   const dataPoly = '<polygon points="' + dataPts.join(' ') + '" class="radar-data"/>';
+  let polyB = '';
+  if (opts.valuesB) {
+    const ptsB = []; let dotsB = '';
+    for (let i = 0; i < n; i++) {
+      const a = angleFor(i), r = radiusFor(opts.valuesB[i]);
+      const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+      ptsB.push(x.toFixed(1) + ',' + y.toFixed(1));
+      dotsB += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" class="radar-dot is-b"/>';
+    }
+    polyB = '<polygon points="' + ptsB.join(' ') + '" class="radar-data is-b"/>' + dotsB;
+  }
   let labelsHtml = '';
   const LR = R + 32;
   for (let i = 0; i < n; i++) {
@@ -998,8 +1012,12 @@ function svgRadarChart(values, labels, opts) {
     const valTxt = opts.fmt ? opts.fmt(v) : (v == null ? '--' : v);
     labelsHtml += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" class="radar-label">' + labels[i] + '</text>';
     labelsHtml += '<text x="' + x.toFixed(1) + '" y="' + (y + 13).toFixed(1) + '" text-anchor="' + anchor + '" class="radar-label-value">' + valTxt + '</text>';
+    if (opts.valuesB) {
+      const vB = opts.valuesB[i];
+      labelsHtml += '<text x="' + x.toFixed(1) + '" y="' + (y + 25).toFixed(1) + '" text-anchor="' + anchor + '" class="radar-label-value is-b">' + (opts.fmt ? opts.fmt(vB) : (vB == null ? '--' : vB)) + '</text>';
+    }
   }
-  return '<svg class="radar-chart" viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg">' + rings + axes + zeroRing + dataPoly + dots + labelsHtml + '</svg>';
+  return '<svg class="radar-chart" viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg">' + rings + axes + zeroRing + dataPoly + dots + polyB + labelsHtml + '</svg>';
 }
 
 // Ligne (tendance dans le temps, ex : SG par round, taux de réussite par round)
@@ -1069,9 +1087,11 @@ function svgLineChart(values, opts) {
       points.map(function (p) { return ' L ' + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join('') +
       ' L ' + points[points.length - 1].x.toFixed(1) + ' ' + bottom + ' Z';
   }
-  const dots = points.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" class="line-chart-point"/>'; }).join('');
+  const isPtB = function (p) { return !!opts.labelAll && p.x > (left + right) / 2; };
+  const dots = points.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" class="line-chart-point' + (isPtB(p) ? ' is-b' : '') + '"/>'; }).join('');
   const lastPt = points[points.length - 1];
-  const lastLabel = lastPt ? '<text x="' + lastPt.x.toFixed(1) + '" y="' + (lastPt.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + (opts.fmt ? opts.fmt(lastPt.v) : lastPt.v) + '</text>' : '';
+  const lblOf = function (p) { return '<text x="' + p.x.toFixed(1) + '" y="' + (p.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value' + (isPtB(p) ? ' is-b' : '') + '">' + (opts.fmt ? opts.fmt(p.v) : p.v) + '</text>'; };
+  const lastLabel = opts.labelAll ? points.map(lblOf).join('') : (lastPt ? lblOf(lastPt) : '');
   const yTicks = yAxisTicks(min, max, top, bottom, opts.fmt);
   const xTicks = xAxisTickLabels(opts.labels, xAt, n);
   return grid + zeroLine + (areaPath ? '<path d="' + areaPath + '" class="line-chart-glow"/>' : '') + (path ? '<path d="' + path + '" class="line-chart-line"/>' : '') + dots + lastLabel + yTicks + xTicks + axisTitle;
@@ -1147,7 +1167,8 @@ function svgDualLineChart(valuesA, valuesB, opts) {
     });
     const dots = points.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" class="line-chart-point ' + cls + '"/>'; }).join('');
     const lastPt = points[points.length - 1];
-    const lastLabel = lastPt ? '<text x="' + lastPt.x.toFixed(1) + '" y="' + (lastPt.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value ' + cls + '">' + (fmt ? fmt(lastPt.v) : lastPt.v) + '</text>' : '';
+    const lblOf = function (p) { return '<text x="' + p.x.toFixed(1) + '" y="' + (p.y - 16).toFixed(1) + '" text-anchor="middle" class="line-chart-value ' + cls + '">' + (fmt ? fmt(p.v) : p.v) + '</text>'; };
+    const lastLabel = opts.labelAll ? points.map(lblOf).join('') : (lastPt ? lblOf(lastPt) : '');
     return (path ? '<path d="' + path + '" class="line-chart-line ' + cls + '"/>' : '') + dots + lastLabel;
   }
   // Axe de gauche = série A, axe de droite = série B (2 unités différentes, ex: % et mètres)
@@ -1185,14 +1206,14 @@ function svgDualColumnChart(valuesA, valuesB, opts) {
       const y = bottom - h;
       const x = cx - gap / 2 - barW;
       bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar"/>';
-      if (i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + vA + '</text>';
+      if (opts.labelAll || i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + vA + '</text>';
     }
     if (vB != null && !isNaN(vB)) {
       const h = Math.max(2, (vB / max) * (bottom - top));
       const y = bottom - h;
       const x = cx + gap / 2;
       bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar is-b"/>';
-      if (i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value is-b">' + vB + '</text>';
+      if (opts.labelAll || i === n - 1) bars += '<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value is-b">' + vB + '</text>';
     }
   }
   const yTicks = yAxisTicks(0, max, top, bottom, null);
@@ -1257,20 +1278,82 @@ function computeBucketStats(holes, bucketIndexFn, bucketCount) {
   return { all: all, rows: rows };
 }
 
+/* ---------- Mode comparaison : session A (vert) vs session B (bleu) dans le même graphe ---------- */
+function getCompareRounds(group) {
+  const st = filterState[group];
+  if (!st.compareA || !st.compareB) return null;
+  const A = puttingRounds.find(function (r) { return r.id === st.compareA; });
+  const B = puttingRounds.find(function (r) { return r.id === st.compareB; });
+  return (A && B) ? { A: A, B: B } : null;
+}
+function roundHoles(r) { return (r.holes || []).filter(function (h) { return h.putts != null; }); }
+
+// Les barres statiques de l'HTML sont mémorisées, puis restaurées quand on quitte la comparaison
+function cmpReset(container) {
+  if (container && container._origHTML !== undefined) {
+    container.innerHTML = container._origHTML;
+    container._origHTML = undefined;
+    container.classList.remove('is-compare');
+  }
+}
+function cmpBuildRows(container, barsForRow) {
+  if (!container) return;
+  if (container._origHTML === undefined) container._origHTML = container.innerHTML;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = container._origHTML;
+  const labels = Array.from(tmp.querySelectorAll('.bar-chart_row .bar-chart_label')).map(function (el) { return el.innerHTML; });
+  tmp.querySelectorAll('.bar-chart_row').forEach(function (r) { r.remove(); });
+  const rows = labels.map(function (lab, i) {
+    return '<div class="bar-chart_row"><div class="bar-chart_label">' + lab + '</div><div class="bar-chart_bar-wrap-dual">' + barsForRow(i) + '</div></div>';
+  }).join('');
+  container.classList.add('is-compare');
+  container.innerHTML = rows + tmp.innerHTML;
+}
+function cmpBar(v, cls, fmt) {
+  const w = v == null ? 0 : Math.max(2, Math.min(100, v));
+  return '<div class="bar-chart_bar-wrap"><div class="bar-chart_fill ' + cls + '" style="width:' + w + '%;"></div><div class="bar-chart_value">' + (v == null ? '--' : fmt(v)) + '</div></div>';
+}
+function cmpCenteredBar(v, cls, fmt, max) {
+  let w = 0, left = 50;
+  if (v != null) { w = Math.min(50, (Math.abs(v) / max) * 50); left = v >= 0 ? 50 : 50 - w; }
+  return '<div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div>' +
+    '<div class="bar-chart_fill bar-chart_fill-centered ' + cls + '" style="width:' + w + '%;left:' + left + '%;"></div>' +
+    '<div class="bar-chart_value">' + (v == null ? '--' : fmt(v)) + '</div></div>';
+}
+
 function renderAnalyseDistance() {
   const sgChart = document.getElementById('distance-sg-chart');
   if (!sgChart) return;
   refreshParcoursFilterOptions();
-  const holes = getFilteredHoles('distance');
-  const stats = computeBucketStats(holes, function (h) { return distanceBucketIndex(h.m); }, 5);
-  const order = [stats.all].concat(stats.rows);
-  fillCenteredBarChart(sgChart, order.map(function (r) { return r.sgCount ? r.sgSum / r.sgCount : null; }), fmtSG, 0.3);
-  fillBarChart(document.getElementById('distance-rate-chart'), order.map(function (r) { return r.total ? (r.made1 / r.total) * 100 : null; }), fmtPct);
-  fillDualBarChart(
-    document.getElementById('distance-error-chart'),
-    order.map(function (r) { return r.errTotal ? (r.speedErr / r.errTotal) * 100 : null; }),
-    order.map(function (r) { return r.errTotal ? (r.slopeErr / r.errTotal) * 100 : null; })
-  );
+  const rateChart = document.getElementById('distance-rate-chart');
+  const errChart = document.getElementById('distance-error-chart');
+  const rowsOf = function (holes) {
+    const st = computeBucketStats(holes, function (h) { return distanceBucketIndex(h.m); }, 5);
+    return [st.all].concat(st.rows);
+  };
+  const sgOf = function (r) { return r.sgCount ? r.sgSum / r.sgCount : null; };
+  const rateOf = function (r) { return r.total ? (r.made1 / r.total) * 100 : null; };
+  const speedOf = function (r) { return r.errTotal ? (r.speedErr / r.errTotal) * 100 : null; };
+  const slopeOf = function (r) { return r.errTotal ? (r.slopeErr / r.errTotal) * 100 : null; };
+  const cmp = getCompareRounds('distance');
+  if (cmp) {
+    const A = rowsOf(roundHoles(cmp.A)), B = rowsOf(roundHoles(cmp.B));
+    const sgA = A.map(sgOf), sgB = B.map(sgOf);
+    const max = Math.max.apply(null, [0.3].concat(sgA.concat(sgB).filter(function (v) { return v != null; }).map(Math.abs)));
+    cmpBuildRows(sgChart, function (i) { return cmpCenteredBar(sgA[i], '', fmtSG, max) + cmpCenteredBar(sgB[i], 'is-b', fmtSG, max); });
+    const rA = A.map(rateOf), rB = B.map(rateOf);
+    cmpBuildRows(rateChart, function (i) { return cmpBar(rA[i], '', fmtPct) + cmpBar(rB[i], 'is-b', fmtPct); });
+    const vA = A.map(speedOf), vB = B.map(speedOf), pA = A.map(slopeOf), pB = B.map(slopeOf);
+    const fV = function (v) { return 'V ' + Math.round(v) + '%'; }, fP = function (v) { return 'P ' + Math.round(v) + '%'; };
+    cmpBuildRows(errChart, function (i) {
+      return cmpBar(vA[i], '', fV) + cmpBar(vB[i], 'is-b', fV) + cmpBar(pA[i], '', fP) + cmpBar(pB[i], 'is-b', fP);
+    });
+  } else {
+    const order = rowsOf(getFilteredHoles('distance'));
+    fillCenteredBarChart(sgChart, order.map(sgOf), fmtSG, 0.3);
+    fillBarChart(rateChart, order.map(rateOf), fmtPct);
+    fillDualBarChart(errChart, order.map(speedOf), order.map(slopeOf));
+  }
   renderCompareCard('distance');
 }
 
@@ -1278,13 +1361,19 @@ function renderAnalysePente() {
   const sgRadar = document.getElementById('pente-sg-radar');
   if (!sgRadar) return;
   refreshParcoursFilterOptions();
-  const holes = getFilteredHoles('pente');
-  const stats = computeBucketStats(holes, function (h) { return penteCategoryIndex(h.clock); }, 8);
-  const sgValues = stats.rows.map(function (r) { return r.sgCount ? r.sgSum / r.sgCount : null; });
-  const rateValues = stats.rows.map(function (r) { return r.total ? (r.made1 / r.total) * 100 : null; });
-  sgRadar.innerHTML = svgRadarChart(sgValues, PENTE_LABELS, { centered: true, scaleMax: 0.3, fmt: fmtSG });
+  const valsOf = function (holes) {
+    const st = computeBucketStats(holes, function (h) { return penteCategoryIndex(h.clock); }, 8);
+    return {
+      sg: st.rows.map(function (r) { return r.sgCount ? r.sgSum / r.sgCount : null; }),
+      rate: st.rows.map(function (r) { return r.total ? (r.made1 / r.total) * 100 : null; }),
+    };
+  };
+  const cmp = getCompareRounds('pente');
+  const A = valsOf(cmp ? roundHoles(cmp.A) : getFilteredHoles('pente'));
+  const B = cmp ? valsOf(roundHoles(cmp.B)) : null;
+  sgRadar.innerHTML = svgRadarChart(A.sg, PENTE_LABELS, { centered: true, scaleMax: 0.3, fmt: fmtSG, valuesB: B ? B.sg : null });
   const rateRadar = document.getElementById('pente-rate-radar');
-  if (rateRadar) rateRadar.innerHTML = svgRadarChart(rateValues, PENTE_LABELS, { fmt: fmtPct });
+  if (rateRadar) rateRadar.innerHTML = svgRadarChart(A.rate, PENTE_LABELS, { fmt: fmtPct, valuesB: B ? B.rate : null });
   renderCompareCard('pente');
 }
 
@@ -1292,7 +1381,9 @@ function renderStatsPerformance() {
   const svgSG = document.getElementById('stats-sg-line');
   if (!svgSG) return;
   refreshParcoursFilterOptions();
-  const rounds = getFilteredRounds('stats');
+  const cmp = getCompareRounds('stats');
+  const rounds = cmp ? [cmp.A, cmp.B] : getFilteredRounds('stats');
+  const cmpOpts = cmp ? { labelAll: true } : {};
   const sgVals = rounds.map(function (r) {
     const holes = (r.holes || []).filter(function (h) { return h.putts != null && h.m != null; });
     if (!holes.length) return null;
@@ -1309,17 +1400,17 @@ function renderStatsPerformance() {
   const oneVals = rounds.map(function (r) { return r.onePutts != null ? r.onePutts : null; });
   const threeVals = rounds.map(function (r) { return r.threePutts != null ? r.threePutts : null; });
   const meterVals = rounds.map(function (r) { return r.totalMeters || null; });
-  const dateLabels = rounds.map(function (r) { return new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }); });
+  const dateLabels = rounds.map(function (r, i) { return (cmp ? (i ? 'B · ' : 'A · ') : '') + new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }); });
 
-  svgSG.innerHTML = svgLineChart(sgVals, { centered: true, fmt: fmtSG, axisTitle: 'Rounds', labels: dateLabels });
+  svgSG.innerHTML = svgLineChart(sgVals, Object.assign({ centered: true, fmt: fmtSG, axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels }, cmpOpts));
   const rateMeterEl = document.getElementById('stats-rate-meters-line');
-  if (rateMeterEl) rateMeterEl.innerHTML = svgDualLineChart(rateVals, meterVals, {
+  if (rateMeterEl) rateMeterEl.innerHTML = svgDualLineChart(rateVals, meterVals, Object.assign({
     forceZeroMinA: true, forceZeroMinB: true,
     fmtA: fmtPct, fmtB: function (v) { return Math.round(v) + 'm'; },
-    axisTitle: 'Rounds', labels: dateLabels,
-  });
+    axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels,
+  }, cmpOpts));
   const puttsEl = document.getElementById('stats-putts-bars');
-  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, { axisTitle: 'Rounds', labels: dateLabels });
+  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, Object.assign({ axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels }, cmpOpts));
   renderCompareCard('stats');
 }
 
@@ -1440,7 +1531,7 @@ function renderCompareCard(group) {
       '<button type="button" class="compare-card_reset" onclick="resetCompareSelection(\'' + group + '\')">Effacer</button>' +
     '</div>' +
     '<div class="compare-table">' +
-      '<div class="compare-table_row compare-table_head"><span></span><span>' + escHtml(rA.name) + '<br><small>' + dateOf(rA) + '</small></span><span>' + escHtml(rB.name) + '<br><small>' + dateOf(rB) + '</small></span></div>' +
+      '<div class="compare-table_row compare-table_head"><span></span><span><i class="cmp-dot"></i>' + escHtml(rA.name) + '<br><small>' + dateOf(rA) + '</small></span><span><i class="cmp-dot is-b"></i>' + escHtml(rB.name) + '<br><small>' + dateOf(rB) + '</small></span></div>' +
       rows.map(function (row) { return '<div class="compare-table_row"><span>' + row[0] + '</span><span>' + row[1] + '</span><span>' + row[2] + '</span></div>'; }).join('') +
     '</div>';
 }
@@ -1996,7 +2087,7 @@ function openQuickResultatPopup() {
 
 // Stats de l'exercice rapide : un putt raté compte pour 2 putts (1 putt raté + 1 putt pour finir)
 function quickSessionStats(session) {
-  let played = 0, made = 0, putts = 0, sg = 0;
+  let played = 0, made = 0, putts = 0, sg = 0, sgCount = 0;
   session.holes.forEach(function (h) {
     if (!h.results.length) return;
     const isMade = h.results[0] === 'made';
@@ -2004,14 +2095,15 @@ function quickSessionStats(session) {
     played += 1;
     if (isMade) made += 1;
     putts += holePutts;
-    sg += puttSG(h.m, holePutts) || 0;
+    const holeSg = puttSG(h.m, holePutts);
+    if (holeSg != null) { sg += holeSg; sgCount += 1; }
   });
   return {
     played: played,
     made: made,
     putts: putts,
     avgPutts: played ? putts / played : null,
-    sgAvg: played ? sg / played : null,
+    sgAvg: sgCount ? sg / sgCount : null,
     rate: played ? (made / played) * 100 : null,
   };
 }
@@ -3147,7 +3239,7 @@ function parcoursSessionStats(rows) {
     played += 1;
     if (r.putts === 1) made += 1;
     putts += r.putts;
-    if (r.m) { sg += puttSG(r.m, r.putts) || 0; sgCount += 1; }
+    const rowSg = puttSG(r.m, r.putts); if (rowSg != null) { sg += rowSg; sgCount += 1; }
   });
   return {
     played: played,

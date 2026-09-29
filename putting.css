@@ -2793,3 +2793,22 @@
     font-size: 9px;
   }
 }
+
+/* ---------- Mode comparaison : session A (accent) vs session B (bleu) ---------- */
+#page-putting .bar-chart_fill.is-b { background-color: #5b9bd5; }
+#page-putting .bar-chart.is-compare { gap: 12px; }
+#page-putting .bar-chart.is-compare .bar-chart_bar-wrap { height: 12px; }
+#page-putting .bar-chart.is-compare .bar-chart_bar-wrap-dual { gap: 3px; }
+#page-putting .bar-chart.is-compare .bar-chart_value { font-size: 10px; }
+#page-putting .radar-data.is-b { fill: #5b9bd5; fill-opacity: 0.18; stroke: #5b9bd5; }
+#page-putting .radar-dot.is-b { fill: #5b9bd5; }
+#page-putting .radar-label-value.is-b { fill: #5b9bd5; }
+#page-putting .cmp-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background-color: var(--accent);
+}
+#page-putting .cmp-dot.is-b { background-color: #5b9bd5; }

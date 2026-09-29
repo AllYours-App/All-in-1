@@ -469,7 +469,7 @@
 
 /* ---------- Radar (répartition des coups par zone) ---------- */
 .wg-radar-wrap{display:flex;justify-content:center;}
-.wg-radar-svg{width:100%;max-width:none;height:auto;}
+#page-wedging svg.wg-radar-svg{width:100%;max-width:none;height:auto;}
 .wg-radar-grid{fill:none;stroke:var(--wg-border);stroke-width:1;}
 .wg-radar-axis{stroke:var(--wg-border);stroke-width:1;}
 .wg-radar-shape{fill:rgba(215,255,47,0.22);stroke:var(--wg-accent);stroke-width:2;}
