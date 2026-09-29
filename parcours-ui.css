@@ -270,19 +270,20 @@
 
 .quick-action-btn {
   position: relative;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px 10px 14px;
+  padding: 16px 4px 14px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
@@ -398,7 +399,10 @@ body.no-scroll .screen-view.active .screen {
   position: relative;
 }
 
-.track-block-green .quick-action-info {
+.track-info-corner {
+  top: auto;
+  bottom: 4px;
+  right: 4px;
   z-index: 4;
 }
 
@@ -433,7 +437,12 @@ body.no-scroll .screen-view.active .screen {
 
 .track-reset-corner {
   top: 52px;
-  left: 10px;
+  left: 4px;
+}
+
+/* Reset du fairway : dans le rail, sous le crayon */
+.track-reset-inline {
+  position: static;
 }
 
 .track-reset-btn svg {
@@ -453,14 +462,14 @@ body.no-scroll .screen-view.active .screen {
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
-  padding: 10px 6px;
+  padding: 0;
   pointer-events: none;
   z-index: 4;
 }
 
 .track-rail-right {
-  top: 10px;
-  right: 10px;
+  top: 4px;
+  right: 4px;
 }
 
 .track-rail-row {
@@ -501,21 +510,26 @@ body.no-scroll .screen-view.active .screen {
 }
 
 /* Bouton Par 3 : coin bas-gauche */
-.track-par3-btn {
+.track-par3-btn.btn {
   width: auto;
-  padding: 3px 6px;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  padding: 1px 3px;
   font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
   white-space: nowrap;
   background: rgba(5, 5, 5, 0.55);
   backdrop-filter: blur(4px);
 }
 
-.track-par3-corner {
+.track-par3-btn.track-par3-corner {
   position: absolute;
   bottom: 10px;
   left: 10px;
   z-index: 4;
-  max-width: 25%; /* reste dans la largeur du rough gauche (0-27%), ne déborde pas sur le fairway */
+  max-width: 18%; /* reste dans la largeur du rough gauche (0-27%), ne déborde pas sur le fairway */
 }
 
 .mode-btn {
@@ -1557,6 +1571,42 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1.25;
 }
 
+.tendance-box {
+  cursor: pointer;
+}
+
+.tendance-box .result-value {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.tendance-box .result-value svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.75;
+}
+
+.tendance-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+  padding: 10px 12px;
+  margin: 4px 0 10px;
+}
+
+.tendance-edit-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .compass-wrap {
   display: flex;
   justify-content: center;
@@ -1847,8 +1897,8 @@ input[type="range"]::-moz-range-thumb {
 
 .fw-ruler-label {
   position: absolute;
-  left: 6px;
-  transform: translateY(-50%);
+  left: 27%;
+  transform: translate(-50%, -50%);
   font-size: 9px;
   color: var(--text-muted);
   background: rgba(5, 5, 5, 0.5);
@@ -1858,6 +1908,8 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   z-index: 1;
   white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -1935,6 +1987,10 @@ input[type="range"]::-moz-range-thumb {
   background: #C9A227;
 }
 
+.gr-mark.is-outside {
+  background: var(--danger);
+}
+
 /* Anneaux de distance génériques autour du drapeau, purement indicatifs */
 .gr-ring {
   position: absolute;
@@ -1956,10 +2012,22 @@ input[type="range"]::-moz-range-thumb {
   background: rgba(5, 5, 5, 0.5);
   padding: 1px 5px;
   border-radius: 6px;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
+  cursor: default;
   z-index: 1;
   white-space: nowrap;
+}
+
+/* Repère de limite du green : distance saisie par l'utilisateur uniquement ("---" par défaut) */
+.gr-ring-label-boundary {
+  font-weight: 700;
+}
+
+.gr-ring-label.is-editable {
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
 }
 
 /* --------------------------------------------------------------------------

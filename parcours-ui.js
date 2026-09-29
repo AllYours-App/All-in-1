@@ -193,6 +193,17 @@ function setDistanceUnit(u) {
   parcoursSettings.distanceUnit = u;
   saveSettings();
   renderCourseModals();
+  renderFairway();
+  renderGreen();
+}
+// Unité du fairway uniquement : m <-> yd (indépendante du réglage m/ft des calculs Vent / Dénivelé)
+const FW_UNIT_KEY = "parcours-fairway-unit";
+let fwUnit = "m";
+try { if (localStorage.getItem(FW_UNIT_KEY) === "yd") fwUnit = "yd"; } catch (e) { /* défaut : m */ }
+function toggleFairwayUnit() {
+  fwUnit = fwUnit === "m" ? "yd" : "m";
+  try { localStorage.setItem(FW_UNIT_KEY, fwUnit); } catch (e) { /* pas grave */ }
+  renderFairway();
 }
 function unitToggleHtml() {
   return `
@@ -366,13 +377,16 @@ function confirmGrDistance() {
   if (!n || n <= 0) { closeCourseKeypad(); return; }
   const oldRadiusM = grGreenRadiusM;
   const newRadiusM = distanceToMeters(n, parcoursSettings.distanceUnit);
-  const ratio = oldRadiusM / newRadiusM;
-  grHoles.forEach((h) => h.marks.forEach((m) => {
-    m.x = 50 + (m.x - 50) * ratio;
-    m.y = 50 + (m.y - 50) * ratio;
-    m.x = Math.max(0, Math.min(100, m.x));
-    m.y = Math.max(0, Math.min(100, m.y));
-  }));
+  if (oldRadiusM !== null) {
+    // Un rayon était déjà défini : les points déjà posés conservent leur distance réelle au drapeau
+    const ratio = oldRadiusM / newRadiusM;
+    grHoles.forEach((h) => h.marks.forEach((m) => {
+      m.x = 50 + (m.x - 50) * ratio;
+      m.y = 50 + (m.y - 50) * ratio;
+      m.x = Math.max(0, Math.min(100, m.x));
+      m.y = Math.max(0, Math.min(100, m.y));
+    }));
+  }
   grGreenRadiusM = newRadiusM;
   grSave();
   closeCourseKeypad();
@@ -406,6 +420,7 @@ function renderCourseModals() {
     distancesCalcOpen ? distancesCalcHtml() : "",
     trackInfoOpen ? trackInfoHtml() : "",
     historyOpen ? historyModalHtml() : "",
+    tendanceEditState ? tendanceEditHtml() : "",
     courseKeypadPopup ? courseKeypadHtml() : ""
   ].join("");
 }
@@ -934,26 +949,42 @@ function pinchClamp(v, min, max) {
    du fairway et en anneaux concentriques sur le green. Ce ne sont pas des
    distances réelles du trou (non stockées ici) mais un repère d'échelle.
    -------------------------------------------------------------------------- */
-let fwRulerMaxM = 230; // distance tee → green : calibrable en tapant un repère, valeur par défaut sinon
-const FW_RULER_STOPS_PCT = [10, 30, 50, 70, 90]; // 0% = haut (green), 100% = bas (tee)
+let fwRulerMaxM = 300; // distance tee → green : calibrable en tapant un repère (mode Modifier), 300 par défaut
+const FW_RULER_STEP_M = 50; // graduation tous les 50m
+const FW_RULER_TOP_MARGIN_PCT = 8; // pas de graduation collée tout en haut (zone du green) : on laisse une marge
 
 function fwRulerHtml() {
-  return FW_RULER_STOPS_PCT.map((y) => {
-    const distM = fwRulerMaxM * (100 - y) / 100;
-    const label = Math.round(convertDistance(distM, parcoursSettings.distanceUnit));
-    return `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;" onclick="event.stopPropagation(); openFwDistanceKeypad();">${label} ${distanceUnitLabel()}</span>`;
-  }).join("");
+  let html = "";
+  for (let d = FW_RULER_STEP_M; d < fwRulerMaxM; d += FW_RULER_STEP_M) { // pas de repère à 0
+    const y = 100 - (d / fwRulerMaxM) * 100;
+    if (y < FW_RULER_TOP_MARGIN_PCT) continue; // marge : aucune distance affichée jusqu'en haut
+    const label = Math.round(fwUnit === "yd" ? d * M_TO_YD : d);
+    html += `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;" onclick="event.stopPropagation(); toggleFairwayUnit();">${label} ${fwUnit}</span>`;
+  }
+  return html;
 }
 
-let grGreenRadiusM = 15; // rayon du green (bord ↔ drapeau) : calibrable en tapant un repère
-const GR_RING_STEPS_M = [5, 10];
+let grGreenRadiusM = null; // distance bord du green ↔ drapeau : "---" tant que l'utilisateur ne l'a pas définie
+const GR_RING_STEPS_M = [5, 10, 15]; // repères fixes et génériques, indépendants de grGreenRadiusM
+const GR_RING_SCALE_CQMIN_PER_M = 4; // échelle fixe (diamètre en cqmin par mètre) pour ces 3 anneaux
+const GR_BOUNDARY_DIAMETER_CQMIN = 70; // même diamètre que .gr-green : le repère de limite suit son bord
 
 function grRingsHtml() {
-  return GR_RING_STEPS_M.map((m) => {
-    const diameterCqmin = 70 * (m / grGreenRadiusM);
+  const editable = grMode === "edit";
+
+  let html = GR_RING_STEPS_M.map((m) => {
+    const diameterCqmin = m * GR_RING_SCALE_CQMIN_PER_M;
     const label = Math.round(convertDistance(m, parcoursSettings.distanceUnit));
-    return `<div class="gr-ring" style="width:${diameterCqmin}cqmin;height:${diameterCqmin}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${diameterCqmin / 2}cqmin);" onclick="event.stopPropagation(); openGrDistanceKeypad();">${label} ${distanceUnitLabel()}</span>`;
+    return `<div class="gr-ring" style="width:${diameterCqmin}cqmin;height:${diameterCqmin}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${diameterCqmin / 2}cqmin);">${label} ${distanceUnitLabel()}</span>`;
   }).join("");
+
+  // Limite du green : distance définie uniquement par l'utilisateur, jamais devinée/recalculée automatiquement
+  const boundaryText = grGreenRadiusM === null ? "---" : Math.round(convertDistance(grGreenRadiusM, parcoursSettings.distanceUnit)) + " " + distanceUnitLabel();
+  const boundaryCls = "gr-ring-label gr-ring-label-boundary" + (editable ? " is-editable" : "");
+  const boundaryClick = editable ? ` onclick="event.stopPropagation(); openGrDistanceKeypad();"` : "";
+  html += `<span class="${boundaryCls}" style="top:calc(50% - ${GR_BOUNDARY_DIAMETER_CQMIN / 2}cqmin);"${boundaryClick}>${boundaryText}</span>`;
+
+  return html;
 }
 
 /* ==========================================================================
@@ -1136,6 +1167,7 @@ function resetFairwayRound() {
   fwHoles = fwDefaultHoles();
   fwMode = "plus";
   fwLastLogged = null;
+  fwTendanceOverride = null;
   fwSave();
   renderFairway();
 }
@@ -1171,7 +1203,6 @@ function fwVisualHtml() {
       </div>
 
       <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
-      <button type="button" class="track-reset-btn track-reset-corner" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
       <button type="button" class="btn btn-secondary track-par3-btn track-par3-corner" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
 
       <div class="track-rail track-rail-right">
@@ -1180,6 +1211,7 @@ function fwVisualHtml() {
           <button type="button" class="mode-btn mode-btn-minus ${fwMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('minus');" aria-label="Retirer un coup">−</button>
         </div>
         <button type="button" class="mode-btn mode-btn-edit ${fwMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('edit');" aria-label="Renuméroter un coup">${TRACK_PENCIL_ICON}</button>
+        <button type="button" class="track-reset-btn track-reset-inline" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
       </div>
 
       ${fwLastLogged ? `<div class="fw-toast">Trou ${fwLastLogged.hole + 1} — ${fwLastLogged.label}</div>` : ""}
@@ -1347,6 +1379,7 @@ function resetGreenRound() {
   grHoles = grDefaultHoles();
   grMode = "plus";
   grLastLogged = null;
+  grTendanceOverride = null;
   grSave();
   renderGreen();
 }
@@ -1355,7 +1388,11 @@ function grAllMarksHtml() {
   let html = "";
   for (let i = 0; i < 18; i++) {
     grHoles[i].marks.forEach((m, mi) => {
-      const cls = mi > 0 ? "gr-mark is-extra" : "gr-mark";
+      const distFromCenter = Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2));
+      const outside = distFromCenter > 35; // 35% ≈ rayon du cercle de green affiché (70cqmin de diamètre)
+      let cls = "gr-mark";
+      if (outside) cls += " is-outside";
+      else if (mi > 0) cls += " is-extra";
       html += `<div class="${cls}" style="left:${m.x}%;top:${m.y}%;">${i + 1}</div>`;
     });
   }
@@ -1386,6 +1423,8 @@ function grVisualHtml() {
         </div>
         <button type="button" class="mode-btn mode-btn-edit ${grMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('edit');" aria-label="Renuméroter une marque">${TRACK_PENCIL_ICON}</button>
       </div>
+
+      <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
 
       ${grLastLogged !== null ? `<div class="fw-toast">Trou ${grLastLogged.hole + 1} — ${grLastLogged.label}</div>` : ""}
     </div>
@@ -1439,12 +1478,59 @@ function addTendanceVote(votes, point) {
     if (dy > 0) votes.short++; else if (dy < 0) votes.long++;
   }
 }
-function roundTendance() {
-  const votes = { left: 0, right: 0, short: 0, long: 0 };
-  fwHoles.forEach((h) => h.shots.forEach((s) => addTendanceVote(votes, s)));
-  grHoles.forEach((h) => h.marks.forEach((m) => addTendanceVote(votes, m)));
+function tendanceFromVotes(votes) {
   const best = Object.keys(votes).reduce((a, b) => (votes[a] >= votes[b] ? a : b));
   return votes[best] > 0 ? TENDANCE_LABELS[best] : null;
+}
+function fwTendance() {
+  const votes = { left: 0, right: 0, short: 0, long: 0 };
+  fwHoles.forEach((h) => h.shots.forEach((s) => addTendanceVote(votes, s)));
+  return tendanceFromVotes(votes);
+}
+function grTendance() {
+  const votes = { left: 0, right: 0, short: 0, long: 0 };
+  grHoles.forEach((h) => h.marks.forEach((m) => addTendanceVote(votes, m)));
+  return tendanceFromVotes(votes);
+}
+
+// Correction manuelle du texte de tendance, en cas de désaccord avec le calcul automatique
+let fwTendanceOverride = null;
+let grTendanceOverride = null;
+let tendanceEditState = null; // { key: "fw" | "gr" }
+
+function fwTendanceDisplay() { return fwTendanceOverride !== null ? fwTendanceOverride : fwTendance(); }
+function grTendanceDisplay() { return grTendanceOverride !== null ? grTendanceOverride : grTendance(); }
+
+function openTendanceEdit(key) {
+  tendanceEditState = { key: key, value: key === "fw" ? (fwTendanceDisplay() || "") : (grTendanceDisplay() || "") };
+  renderCourseModals();
+}
+function closeTendanceEdit() { tendanceEditState = null; renderCourseModals(); }
+function confirmTendanceEdit() {
+  const t = tendanceEditState;
+  if (!t) return;
+  const input = document.getElementById("tendance-edit-input");
+  const val = input ? input.value.trim() : "";
+  if (t.key === "fw") fwTendanceOverride = val === "" ? null : val;
+  else grTendanceOverride = val === "" ? null : val;
+  tendanceEditState = null;
+  renderCourseModals();
+}
+function tendanceEditHtml() {
+  const t = tendanceEditState;
+  const title = t.key === "fw" ? "Tendance fairway" : "Tendance green";
+  return `
+    <div class="modal-overlay" onclick="closeTendanceEdit()">
+      <div class="modal-sheet keypad-sheet" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <h3>${title}</h3>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeTendanceEdit()">✕</button>
+        </div>
+        <input type="text" id="tendance-edit-input" class="tendance-edit-input" value="${t.value.replace(/"/g, "&quot;")}" placeholder="Ex : Gauche, Court…" autofocus>
+        <button type="button" class="btn btn-primary keypad-confirm-btn" onclick="confirmTendanceEdit()">Valider</button>
+      </div>
+    </div>
+  `;
 }
 
 function loadHistoryEntries() {
@@ -1454,7 +1540,6 @@ function loadHistoryEntries() {
 function historyModalHtml() {
   const fw = fwHitPercent();
   const gr = grHitPercent();
-  const tendance = roundTendance();
   const history = loadHistoryEntries().slice(-10).reverse();
 
   return `
@@ -1476,9 +1561,15 @@ function historyModalHtml() {
             <span class="result-value">${gr === null ? "--" : gr + " %"}</span>
           </div>
         </div>
-        <div class="result-box">
-          <span class="result-label">Tendance du jour</span>
-          <span class="result-value">${tendance || "--"}</span>
+        <div class="field-grid-2">
+          <div class="result-box tendance-box" onclick="openTendanceEdit('fw')">
+            <span class="result-label">Tendance fairway</span>
+            <span class="result-value">${fwTendanceDisplay() || "--"} ${TRACK_PENCIL_ICON}</span>
+          </div>
+          <div class="result-box tendance-box" onclick="openTendanceEdit('gr')">
+            <span class="result-label">Tendance green</span>
+            <span class="result-value">${grTendanceDisplay() || "--"} ${TRACK_PENCIL_ICON}</span>
+          </div>
         </div>
         <button type="button" class="btn btn-primary" onclick="saveHistoryEntry()">Enregistrer ce bilan</button>
 
@@ -1486,7 +1577,7 @@ function historyModalHtml() {
         ${history.length === 0 ? `<p class="hint-text">Aucun bilan enregistré pour l'instant.</p>` : `
           <table class="data-table">
             <thead>
-              <tr><th class="col-left">Date</th><th>Fairway</th><th>Green</th><th>Tendance</th></tr>
+              <tr><th class="col-left">Date</th><th>Fairway</th><th>Green</th><th>Tend. fairway</th><th>Tend. green</th></tr>
             </thead>
             <tbody>
               ${history.map((h) => `
@@ -1494,7 +1585,8 @@ function historyModalHtml() {
                   <td class="col-left">${new Date(h.date).toLocaleDateString()}</td>
                   <td>${h.fairwayPercent === null || h.fairwayPercent === undefined ? "--" : h.fairwayPercent + "%"}</td>
                   <td>${h.greenPercent === null || h.greenPercent === undefined ? "--" : h.greenPercent + "%"}</td>
-                  <td>${h.tendance || "--"}</td>
+                  <td>${h.fwTendance || h.tendance || "--"}</td>
+                  <td>${h.grTendance || "--"}</td>
                 </tr>
               `).join("")}
             </tbody>
@@ -1510,7 +1602,8 @@ function saveHistoryEntry() {
     date: new Date().toISOString(),
     fairwayPercent: fwHitPercent(),
     greenPercent: grHitPercent(),
-    tendance: roundTendance()
+    fwTendance: fwTendanceDisplay(),
+    grTendance: grTendanceDisplay()
   };
   let list = [];
   try { list = JSON.parse(localStorage.getItem(CAPTURE_STORAGE_KEY) || "[]"); } catch (e) { list = []; }
