@@ -532,7 +532,8 @@ body.no-scroll .screen-view.active .screen {
   max-width: 18%; /* reste dans la largeur du rough gauche (0-27%), ne déborde pas sur le fairway */
 }
 
-.mode-btn.mode-btn-offgreen {
+.mode-btn.mode-btn-offgreen,
+.mode-btn.track-unit-btn {
   width: auto;
   height: auto;
   border-radius: var(--radius-pill);
@@ -540,8 +541,28 @@ body.no-scroll .screen-view.active .screen {
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
-  text-transform: uppercase;
   white-space: nowrap;
+}
+
+.mode-btn.mode-btn-offgreen {
+  text-transform: uppercase;
+}
+
+/* Coin bas-gauche : "Hors green" au-dessus du bouton d'unité */
+.track-corner-bl {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.track-corner-bl > * {
+  pointer-events: auto;
 }
 
 .mode-btn {
@@ -1916,12 +1937,9 @@ input[type="range"]::-moz-range-thumb {
   background: rgba(5, 5, 5, 0.5);
   padding: 1px 5px;
   border-radius: 6px;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
   z-index: 1;
   white-space: nowrap;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -1957,8 +1975,8 @@ input[type="range"]::-moz-range-thumb {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 70cqmin;
-  height: 70cqmin;
+  width: 94cqmin;
+  height: 94cqmin;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: repeating-radial-gradient(circle at center, #1b3d14 0, #1b3d14 14px, #204a18 14px, #204a18 28px);
@@ -2030,18 +2048,6 @@ input[type="range"]::-moz-range-thumb {
   cursor: default;
   z-index: 1;
   white-space: nowrap;
-}
-
-/* Repère de limite du green : distance saisie par l'utilisateur uniquement ("---" par défaut) */
-.gr-ring-label-boundary {
-  font-weight: 700;
-}
-
-.gr-ring-label.is-editable {
-  pointer-events: auto;
-  cursor: pointer;
-  color: var(--accent);
-  border: 1px dashed var(--accent);
 }
 
 /* --------------------------------------------------------------------------

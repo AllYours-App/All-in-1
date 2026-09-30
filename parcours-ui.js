@@ -193,17 +193,19 @@ function setDistanceUnit(u) {
   parcoursSettings.distanceUnit = u;
   saveSettings();
   renderCourseModals();
+}
+// Unité du fairway ET du green : m <-> yd (indépendante du réglage m/ft des calculs Vent / Dénivelé)
+const TRACK_UNIT_KEY = "parcours-fairway-unit";
+let trackUnit = "m";
+try { if (localStorage.getItem(TRACK_UNIT_KEY) === "yd") trackUnit = "yd"; } catch (e) { /* défaut : m */ }
+function trackDistance(meters) {
+  return Math.round(trackUnit === "yd" ? meters * M_TO_YD : meters);
+}
+function toggleTrackUnit() {
+  trackUnit = trackUnit === "m" ? "yd" : "m";
+  try { localStorage.setItem(TRACK_UNIT_KEY, trackUnit); } catch (e) { /* pas grave */ }
   renderFairway();
   renderGreen();
-}
-// Unité du fairway uniquement : m <-> yd (indépendante du réglage m/ft des calculs Vent / Dénivelé)
-const FW_UNIT_KEY = "parcours-fairway-unit";
-let fwUnit = "m";
-try { if (localStorage.getItem(FW_UNIT_KEY) === "yd") fwUnit = "yd"; } catch (e) { /* défaut : m */ }
-function toggleFairwayUnit() {
-  fwUnit = fwUnit === "m" ? "yd" : "m";
-  try { localStorage.setItem(FW_UNIT_KEY, fwUnit); } catch (e) { /* pas grave */ }
-  renderFairway();
 }
 function unitToggleHtml() {
   return `
@@ -270,18 +272,6 @@ function openFwDistanceKeypad() {
   };
   renderCourseModals();
 }
-// Pavé numérique dédié à la calibration du rayon du green (distance au drapeau)
-function openGrDistanceKeypad() {
-  courseKeypadPopup = {
-    title: "Rayon du green (bord ↔ drapeau)",
-    mode: "grDistance",
-    value: "",
-    unit: distanceUnitLabel(),
-    min: 1,
-    max: 60
-  };
-  renderCourseModals();
-}
 function closeCourseKeypad() {
   courseKeypadPopup = null;
   renderCourseModals();
@@ -328,7 +318,6 @@ function confirmCourseKeypadValue() {
   if (!p || !p.mode) return;
   if (p.mode === "renumber") return confirmCourseKeypadRenumber();
   if (p.mode === "fwDistance") return confirmFwDistance();
-  if (p.mode === "grDistance") return confirmGrDistance();
 }
 // Valide la renumérotation : déplace le point du trou source vers le trou saisi (1-18)
 function confirmCourseKeypadRenumber() {
@@ -368,29 +357,6 @@ function confirmFwDistance() {
   fwSave();
   closeCourseKeypad();
   renderFairway();
-}
-// Valide le nouveau rayon de green : les points déjà posés conservent leur distance réelle au drapeau
-// (recalcul radial de leur position autour du centre, au prorata de l'ancien/nouveau rayon)
-function confirmGrDistance() {
-  const p = courseKeypadPopup;
-  const n = parseFloat(p.value.replace(",", "."));
-  if (!n || n <= 0) { closeCourseKeypad(); return; }
-  const oldRadiusM = grGreenRadiusM;
-  const newRadiusM = distanceToMeters(n, parcoursSettings.distanceUnit);
-  if (oldRadiusM !== null) {
-    // Un rayon était déjà défini : les points déjà posés conservent leur distance réelle au drapeau
-    const ratio = oldRadiusM / newRadiusM;
-    grHoles.forEach((h) => h.marks.forEach((m) => {
-      m.x = 50 + (m.x - 50) * ratio;
-      m.y = 50 + (m.y - 50) * ratio;
-      m.x = Math.max(0, Math.min(100, m.x));
-      m.y = Math.max(0, Math.min(100, m.y));
-    }));
-  }
-  grGreenRadiusM = newRadiusM;
-  grSave();
-  closeCourseKeypad();
-  renderGreen();
 }
 function courseKeypadHtml() {
   const p = courseKeypadPopup;
@@ -958,33 +924,25 @@ function fwRulerHtml() {
   for (let d = FW_RULER_STEP_M; d < fwRulerMaxM; d += FW_RULER_STEP_M) { // pas de repère à 0
     const y = 100 - (d / fwRulerMaxM) * 100;
     if (y < FW_RULER_TOP_MARGIN_PCT) continue; // marge : aucune distance affichée jusqu'en haut
-    const label = Math.round(fwUnit === "yd" ? d * M_TO_YD : d);
-    html += `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;" onclick="event.stopPropagation(); toggleFairwayUnit();">${label} ${fwUnit}</span>`;
+    html += `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;">${trackDistance(d)} ${trackUnit}</span>`;
   }
   return html;
 }
 
-let grGreenRadiusM = null; // distance bord du green ↔ drapeau : "---" tant que l'utilisateur ne l'a pas définie
-const GR_RING_STEPS_M = [5, 10, 15]; // repères fixes et génériques, indépendants de grGreenRadiusM
-const GR_RING_SCALE_CQMIN_PER_M = 4; // échelle fixe (diamètre en cqmin par mètre) pour ces 3 anneaux
-const GR_BOUNDARY_DIAMETER_CQMIN = 70; // même diamètre que .gr-green : le repère de limite suit son bord
+// Repères fixes et génériques (en mètres, convertis à l'affichage). Le "30+" est placé juste avant
+// la limite du green, et aucune distance n'est affichée sur la limite elle-même.
+const GR_RING_STEPS_M = [5, 10, 20, 30];
+const GR_RING_SCALE_CQMIN_PER_M = 2.8; // diamètre de l'anneau (cqmin) par mètre : 30 m -> 84cqmin
+const GR_GREEN_DIAMETER_CQMIN = 94; // même diamètre que .gr-green
+const GR_GREEN_RADIUS_PCT = GR_GREEN_DIAMETER_CQMIN / 2; // rayon du green, en % de la zone
 
 function grRingsHtml() {
-  const editable = grMode === "edit";
-
-  let html = GR_RING_STEPS_M.map((m) => {
+  return GR_RING_STEPS_M.map((m, i) => {
     const diameterCqmin = m * GR_RING_SCALE_CQMIN_PER_M;
-    const label = Math.round(convertDistance(m, parcoursSettings.distanceUnit));
-    return `<div class="gr-ring" style="width:${diameterCqmin}cqmin;height:${diameterCqmin}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${diameterCqmin / 2}cqmin);">${label} ${distanceUnitLabel()}</span>`;
+    const isLast = i === GR_RING_STEPS_M.length - 1;
+    const label = trackDistance(m) + (isLast ? "+" : "");
+    return `<div class="gr-ring" style="width:${diameterCqmin}cqmin;height:${diameterCqmin}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${diameterCqmin / 2}cqmin);">${label} ${trackUnit}</span>`;
   }).join("");
-
-  // Limite du green : distance définie uniquement par l'utilisateur, jamais devinée/recalculée automatiquement
-  const boundaryText = grGreenRadiusM === null ? "---" : Math.round(convertDistance(grGreenRadiusM, parcoursSettings.distanceUnit)) + " " + distanceUnitLabel();
-  const boundaryCls = "gr-ring-label gr-ring-label-boundary" + (editable ? " is-editable" : "");
-  const boundaryClick = editable ? ` onclick="event.stopPropagation(); openGrDistanceKeypad();"` : "";
-  html += `<span class="${boundaryCls}" style="top:calc(50% - ${GR_BOUNDARY_DIAMETER_CQMIN / 2}cqmin);"${boundaryClick}>${boundaryText}</span>`;
-
-  return html;
 }
 
 /* ==========================================================================
@@ -1244,7 +1202,7 @@ let grOffNext = false; // prochain point posé = hors green (se désarme après 
 // Un point est sur le green sauf s'il est forcé "hors green" (off) ou situé hors du cercle affiché
 function grMarkOnGreen(m) {
   if (m.off) return false;
-  return Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2)) <= 35; // 35% ≈ rayon du cercle de green (70cqmin de diamètre)
+  return Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2)) <= GR_GREEN_RADIUS_PCT;
 }
 
 function grToggleOffNext() {
@@ -1257,7 +1215,6 @@ function grLoad() {
   try {
     const saved = JSON.parse(localStorage.getItem(GR_STORAGE_KEY) || "null");
     if (saved && Array.isArray(saved.holes) && saved.holes.length === 18) {
-      if (saved.greenRadiusM) grGreenRadiusM = saved.greenRadiusM;
       return saved.holes;
     }
   } catch (e) { /* localStorage indisponible : on repart d'un parcours vide */ }
@@ -1265,7 +1222,7 @@ function grLoad() {
 }
 
 function grSave() {
-  try { localStorage.setItem(GR_STORAGE_KEY, JSON.stringify({ holes: grHoles, greenRadiusM: grGreenRadiusM })); } catch (e) { /* pas grave */ }
+  try { localStorage.setItem(GR_STORAGE_KEY, JSON.stringify({ holes: grHoles })); } catch (e) { /* pas grave */ }
 }
 
 function grCurrentHoleIndex() {
@@ -1437,7 +1394,11 @@ function grVisualHtml() {
           <button type="button" class="mode-btn mode-btn-minus ${grMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('minus');" aria-label="Retirer une marque">−</button>
         </div>
         <button type="button" class="mode-btn mode-btn-edit ${grMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('edit');" aria-label="Renuméroter une marque">${TRACK_PENCIL_ICON}</button>
+      </div>
+
+      <div class="track-corner-bl">
         <button type="button" class="mode-btn mode-btn-offgreen ${grOffNext ? "active" : ""}" onclick="event.stopPropagation(); grToggleOffNext();" aria-label="Prochain point hors green">Hors green</button>
+        <button type="button" class="mode-btn track-unit-btn" onclick="event.stopPropagation(); toggleTrackUnit();" aria-label="Changer l'unité de distance">${trackUnit}</button>
       </div>
 
       <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
@@ -1481,7 +1442,11 @@ function grHitPercent() {
   return total === 0 ? null : Math.round((hit / total) * 100);
 }
 
-const TENDANCE_LABELS = { left: "Gauche", right: "Droite", short: "Court", long: "Long" };
+const TENDANCE_LABELS = {
+  left: "Gauche", right: "Droite", short: "Court", long: "Long",
+  short_left: "Court + gauche", short_right: "Court + droite",
+  long_left: "Long + gauche", long_right: "Long + droite"
+};
 
 // Chaque point vote pour l'axe (gauche/droite ou court/long) où son écart au centre est le plus marqué
 function addTendanceVote(votes, point) {
@@ -1502,9 +1467,23 @@ function fwTendance() {
   fwHoles.forEach((h) => h.shots.forEach((s) => addTendanceVote(votes, s)));
   return tendanceFromVotes(votes);
 }
+// Green : 8 secteurs de 45° autour du drapeau (4 axes + 4 diagonales)
+const GR_DIAGONAL_RATIO = Math.tan(Math.PI / 8); // en dessous : l'écart est sur un seul axe
+function addGreenTendanceVote(votes, point) {
+  const dx = point.x - 50;
+  const dy = point.y - 50;
+  if (dx === 0 && dy === 0) return;
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  const vertical = dy > 0 ? "short" : "long";
+  const horizontal = dx < 0 ? "left" : "right";
+  let key;
+  if (Math.min(ax, ay) / Math.max(ax, ay) > GR_DIAGONAL_RATIO) key = vertical + "_" + horizontal;
+  else key = ax >= ay ? horizontal : vertical;
+  votes[key] = (votes[key] || 0) + 1;
+}
 function grTendance() {
-  const votes = { left: 0, right: 0, short: 0, long: 0 };
-  grHoles.forEach((h) => h.marks.forEach((m) => addTendanceVote(votes, m)));
+  const votes = { left: 0, right: 0, short: 0, long: 0, short_left: 0, short_right: 0, long_left: 0, long_right: 0 };
+  grHoles.forEach((h) => h.marks.forEach((m) => addGreenTendanceVote(votes, m)));
   return tendanceFromVotes(votes);
 }
 
