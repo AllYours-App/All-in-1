@@ -532,6 +532,18 @@ body.no-scroll .screen-view.active .screen {
   max-width: 18%; /* reste dans la largeur du rough gauche (0-27%), ne déborde pas sur le fairway */
 }
 
+.mode-btn.mode-btn-offgreen {
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-pill);
+  padding: 5px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .mode-btn {
   width: 32px;
   height: 32px;
@@ -1989,6 +2001,8 @@ input[type="range"]::-moz-range-thumb {
 
 .gr-mark.is-outside {
   background: var(--danger);
+  outline: 1.5px dashed rgba(255, 255, 255, 0.85);
+  outline-offset: 1px;
 }
 
 /* Anneaux de distance génériques autour du drapeau, purement indicatifs */

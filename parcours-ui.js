@@ -1239,6 +1239,19 @@ let grHoles = grLoad();
 let grMode = "plus"; // 'plus' (ajoute) | 'minus' (retire un point tapé) | 'edit' (renumérote un point tapé)
 let grLastLogged = null;
 let grToastTimer = null;
+let grOffNext = false; // prochain point posé = hors green (se désarme après la pose)
+
+// Un point est sur le green sauf s'il est forcé "hors green" (off) ou situé hors du cercle affiché
+function grMarkOnGreen(m) {
+  if (m.off) return false;
+  return Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2)) <= 35; // 35% ≈ rayon du cercle de green (70cqmin de diamètre)
+}
+
+function grToggleOffNext() {
+  grOffNext = !grOffNext;
+  if (grOffNext) grMode = "plus";
+  renderGreen();
+}
 
 function grLoad() {
   try {
@@ -1273,6 +1286,7 @@ function grShowToast(hole, label) {
 
 function grSetMode(mode) {
   grMode = mode;
+  grOffNext = false;
   renderGreen();
 }
 
@@ -1367,9 +1381,11 @@ function grZoneTap(event) {
   // mode "plus" (par défaut) : ajoute une marque sur le trou en cours
   const idx = grCurrentHoleIndex();
   if (idx >= 18) return;
-  grHoles[idx].marks.push({ x, y });
+  const off = grOffNext;
+  grHoles[idx].marks.push(off ? { x, y, off: true } : { x, y });
+  grOffNext = false;
   grSave();
-  grShowToast(idx, "enregistré");
+  grShowToast(idx, off ? "enregistré hors green" : "enregistré");
   renderGreen();
 }
 
@@ -1378,6 +1394,7 @@ function resetGreenRound() {
   if (hasData && !confirm("Effacer les greens enregistrés et recommencer à zéro ?")) return;
   grHoles = grDefaultHoles();
   grMode = "plus";
+  grOffNext = false;
   grLastLogged = null;
   grTendanceOverride = null;
   grSave();
@@ -1388,10 +1405,8 @@ function grAllMarksHtml() {
   let html = "";
   for (let i = 0; i < 18; i++) {
     grHoles[i].marks.forEach((m, mi) => {
-      const distFromCenter = Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2));
-      const outside = distFromCenter > 35; // 35% ≈ rayon du cercle de green affiché (70cqmin de diamètre)
       let cls = "gr-mark";
-      if (outside) cls += " is-outside";
+      if (!grMarkOnGreen(m)) cls += " is-outside";
       else if (mi > 0) cls += " is-extra";
       html += `<div class="${cls}" style="left:${m.x}%;top:${m.y}%;">${i + 1}</div>`;
     });
@@ -1422,6 +1437,7 @@ function grVisualHtml() {
           <button type="button" class="mode-btn mode-btn-minus ${grMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('minus');" aria-label="Retirer une marque">−</button>
         </div>
         <button type="button" class="mode-btn mode-btn-edit ${grMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); grSetMode('edit');" aria-label="Renuméroter une marque">${TRACK_PENCIL_ICON}</button>
+        <button type="button" class="mode-btn mode-btn-offgreen ${grOffNext ? "active" : ""}" onclick="event.stopPropagation(); grToggleOffNext();" aria-label="Prochain point hors green">Hors green</button>
       </div>
 
       <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
@@ -1460,8 +1476,7 @@ function grHitPercent() {
   let total = 0, hit = 0;
   grHoles.forEach((h) => h.marks.forEach((m) => {
     total++;
-    const dist = Math.sqrt(Math.pow(m.x - 50, 2) + Math.pow(m.y - 50, 2));
-    if (dist <= 35) hit++; // 35% ≈ rayon du cercle de green affiché (70cqmin de diamètre)
+    if (grMarkOnGreen(m)) hit++;
   }));
   return total === 0 ? null : Math.round((hit / total) * 100);
 }
