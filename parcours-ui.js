@@ -402,9 +402,15 @@ function trackInfoHtml() {
           <h3>Fairway &amp; Green</h3>
           <button class="icon-btn" aria-label="Fermer" onclick="closeTrackInfo()">✕</button>
         </div>
-        <p>Suivi de la dispersion pendant un parcours</p>
-        <p>Pince à deux doigts dans l'encadré pour zoomer et te déplacer, afin de placer tes points avec précision.</p>
-        <p>Touche un repère de distance pour l'ajuster à la réalité du trou : les points déjà placés se réajustent automatiquement.</p>
+        <p>
+          <strong>+</strong> : ajoute un point à l'endroit touché<br>
+          <strong>−</strong> : touche un point pour le retirer<br>
+          <strong>Modifier</strong> : touche un point pour changer son numéro de trou<br>
+          <strong>Reset</strong> : efface le parcours et repart du trou 1<br>
+          <strong>Par 3</strong> (fairway) : passe le trou en cours<br>
+          <strong>Hors green</strong> : le prochain point posé compte hors green<br>
+          <strong>m / yd</strong> : change l'unité des distances
+        </p>
       </div>
     </div>
   `;
@@ -916,32 +922,33 @@ function pinchClamp(v, min, max) {
    distances réelles du trou (non stockées ici) mais un repère d'échelle.
    -------------------------------------------------------------------------- */
 let fwRulerMaxM = 300; // distance tee → green : calibrable en tapant un repère (mode Modifier), 300 par défaut
-const FW_RULER_STEP_M = 50; // graduation tous les 50m
-const FW_RULER_TOP_MARGIN_PCT = 8; // pas de graduation collée tout en haut (zone du green) : on laisse une marge
+const FW_RULER_MARKS_M = [100, 150, 225, 300]; // repères affichés (mètres)
+const FW_RULER_Y_FIRST_PCT = 80; // hauteur du 1er repère (100 m), en % depuis le haut : bas du fairway
+const FW_RULER_Y_LAST_PCT = 14; // hauteur du dernier repère (300 m) : marge gardée en haut (zone du green)
 
 function fwRulerHtml() {
   let html = "";
-  for (let d = FW_RULER_STEP_M; d < fwRulerMaxM; d += FW_RULER_STEP_M) { // pas de repère à 0
-    const y = 100 - (d / fwRulerMaxM) * 100;
-    if (y < FW_RULER_TOP_MARGIN_PCT) continue; // marge : aucune distance affichée jusqu'en haut
+  FW_RULER_MARKS_M.forEach((d) => {
+    const y = FW_RULER_Y_FIRST_PCT + ((d - FW_RULER_MARKS_M[0]) / (FW_RULER_MARKS_M[FW_RULER_MARKS_M.length - 1] - FW_RULER_MARKS_M[0])) * (FW_RULER_Y_LAST_PCT - FW_RULER_Y_FIRST_PCT);
     html += `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;">${trackDistance(d)} ${trackUnit}</span>`;
-  }
+  });
   return html;
 }
 
-// Repères fixes et génériques (en mètres, convertis à l'affichage). Le "30+" est placé juste avant
-// la limite du green, et aucune distance n'est affichée sur la limite elle-même.
-const GR_RING_STEPS_M = [5, 10, 20, 30];
-const GR_RING_SCALE_CQMIN_PER_M = 2.8; // diamètre de l'anneau (cqmin) par mètre : 30 m -> 84cqmin
+// Repères fixes et génériques (distance en mètres, convertie à l'affichage ; diamètre en cqmin).
+// Le "30+" est placé juste avant la limite du green, et aucune distance n'est affichée sur la limite elle-même.
+const GR_RINGS = [
+  { m: 5, diameter: 28 },
+  { m: 15, diameter: 56 },
+  { m: 30, diameter: 84, plus: true }
+];
 const GR_GREEN_DIAMETER_CQMIN = 94; // même diamètre que .gr-green
 const GR_GREEN_RADIUS_PCT = GR_GREEN_DIAMETER_CQMIN / 2; // rayon du green, en % de la zone
 
 function grRingsHtml() {
-  return GR_RING_STEPS_M.map((m, i) => {
-    const diameterCqmin = m * GR_RING_SCALE_CQMIN_PER_M;
-    const isLast = i === GR_RING_STEPS_M.length - 1;
-    const label = trackDistance(m) + (isLast ? "+" : "");
-    return `<div class="gr-ring" style="width:${diameterCqmin}cqmin;height:${diameterCqmin}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${diameterCqmin / 2}cqmin);">${label} ${trackUnit}</span>`;
+  return GR_RINGS.map((r) => {
+    const label = trackDistance(r.m) + (r.plus ? "+" : "");
+    return `<div class="gr-ring" style="width:${r.diameter}cqmin;height:${r.diameter}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${r.diameter / 2}cqmin);">${label} ${trackUnit}</span>`;
   }).join("");
 }
 
@@ -1161,7 +1168,9 @@ function fwVisualHtml() {
       </div>
 
       <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
-      <button type="button" class="btn btn-secondary track-par3-btn track-par3-corner" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
+      <div class="track-corner-bl">
+        <button type="button" class="mode-btn mode-btn-offgreen" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
+      </div>
 
       <div class="track-rail track-rail-right">
         <div class="track-rail-row">
@@ -1397,8 +1406,8 @@ function grVisualHtml() {
       </div>
 
       <div class="track-corner-bl">
-        <button type="button" class="mode-btn mode-btn-offgreen ${grOffNext ? "active" : ""}" onclick="event.stopPropagation(); grToggleOffNext();" aria-label="Prochain point hors green">Hors green</button>
         <button type="button" class="mode-btn track-unit-btn" onclick="event.stopPropagation(); toggleTrackUnit();" aria-label="Changer l'unité de distance">${trackUnit}</button>
+        <button type="button" class="mode-btn mode-btn-offgreen ${grOffNext ? "active" : ""}" onclick="event.stopPropagation(); grToggleOffNext();" aria-label="Prochain point hors green">Hors green</button>
       </div>
 
       <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
@@ -1462,9 +1471,13 @@ function tendanceFromVotes(votes) {
   const best = Object.keys(votes).reduce((a, b) => (votes[a] >= votes[b] ? a : b));
   return votes[best] > 0 ? TENDANCE_LABELS[best] : null;
 }
+// Fairway : uniquement gauche ou droite (selon le côté de l'axe central où tombe le point)
 function fwTendance() {
-  const votes = { left: 0, right: 0, short: 0, long: 0 };
-  fwHoles.forEach((h) => h.shots.forEach((s) => addTendanceVote(votes, s)));
+  const votes = { left: 0, right: 0 };
+  fwHoles.forEach((h) => h.shots.forEach((s) => {
+    if (s.x < 50) votes.left++;
+    else if (s.x > 50) votes.right++;
+  }));
   return tendanceFromVotes(votes);
 }
 // Green : 8 secteurs de 45° autour du drapeau (4 axes + 4 diagonales)
