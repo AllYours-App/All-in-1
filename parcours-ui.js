@@ -159,9 +159,8 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   Réglages (unité de distance m / ft), persistés dans le navigateur
+   Réglages (unité de distance m / yd), persistés dans le navigateur
    -------------------------------------------------------------------------- */
-const M_TO_FT = 3.28084;
 const M_TO_YD = 1.09361;
 const PARCOURS_SETTINGS_KEY = "parcours-settings";
 
@@ -169,9 +168,8 @@ let parcoursSettings = { distanceUnit: "m" };
 (function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(PARCOURS_SETTINGS_KEY) || "{}");
-    if (saved && (saved.distanceUnit === "m" || saved.distanceUnit === "ft")) {
-      parcoursSettings.distanceUnit = saved.distanceUnit;
-    }
+    if (saved && saved.distanceUnit === "m") parcoursSettings.distanceUnit = "m";
+    else if (saved && (saved.distanceUnit === "yd" || saved.distanceUnit === "ft")) parcoursSettings.distanceUnit = "yd"; // "ft" : ancienne valeur, migrée en yards
   } catch (e) { /* localStorage indisponible : on garde la valeur par défaut */ }
 })();
 
@@ -180,21 +178,21 @@ function saveSettings() {
 }
 
 function convertDistance(meters, unit) {
-  return unit === "ft" ? meters * M_TO_FT : meters;
+  return unit === "yd" ? meters * M_TO_YD : meters;
 }
 function distanceToMeters(value, unit) {
   if (value === null || value === undefined || value === "" || isNaN(value)) return null;
-  return unit === "ft" ? Number(value) / M_TO_FT : Number(value);
+  return unit === "yd" ? Number(value) / M_TO_YD : Number(value);
 }
 function distanceUnitLabel() {
-  return parcoursSettings.distanceUnit === "ft" ? "ft" : "m";
+  return parcoursSettings.distanceUnit === "yd" ? "yd" : "m";
 }
 function setDistanceUnit(u) {
   parcoursSettings.distanceUnit = u;
   saveSettings();
   renderCourseModals();
 }
-// Unité du fairway ET du green : m <-> yd (indépendante du réglage m/ft des calculs Vent / Dénivelé)
+// Unité du fairway ET du green : m <-> yd (indépendante du réglage m/yd des calculs Vent / Dénivelé)
 const TRACK_UNIT_KEY = "parcours-fairway-unit";
 let trackUnit = "m";
 try { if (localStorage.getItem(TRACK_UNIT_KEY) === "yd") trackUnit = "yd"; } catch (e) { /* défaut : m */ }
@@ -211,7 +209,7 @@ function unitToggleHtml() {
   return `
     <div class="segmented unit-toggle">
       <button type="button" class="${parcoursSettings.distanceUnit === "m" ? "active" : ""}" onclick="setDistanceUnit('m')">m</button>
-      <button type="button" class="${parcoursSettings.distanceUnit === "ft" ? "active" : ""}" onclick="setDistanceUnit('ft')">ft</button>
+      <button type="button" class="${parcoursSettings.distanceUnit === "yd" ? "active" : ""}" onclick="setDistanceUnit('yd')">yd</button>
     </div>
   `;
 }
