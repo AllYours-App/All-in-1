@@ -27,6 +27,21 @@ function applyBackground() {
   el.style.backgroundImage = `url("${getBackgroundByHour()}")`;
 }
 
+// Affiche le prénom enregistré dans le menu (localStorage) dans le titre d'accueil
+function renderHomeGreeting() {
+  const el = document.querySelector("[data-user-firstname]");
+  if (!el) return;
+  let firstName = "";
+  try {
+    const data = JSON.parse(localStorage.getItem("golfAppState"));
+    firstName = (data && data.userProfile && data.userProfile.firstName) || "";
+  } catch (e) {}
+  el.textContent = firstName;
+}
+
+// Expose la fonction pour que le menu puisse la rappeler après saisie
+window.renderHomeGreeting = renderHomeGreeting;
+
 // Écrit une valeur dans un [data-stat="..."]. Si la valeur est vide/absente, affiche "_"
 function setStat(name, value) {
   const el = document.querySelector(`[data-stat="${name}"]`);
@@ -82,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   updateProgressRing();
   applyBackground();
+  renderHomeGreeting();
 
   // Appel réel à brancher sur la source de données
   renderGolfStats({});

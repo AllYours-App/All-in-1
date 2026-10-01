@@ -9,7 +9,7 @@ const headerTitle = document.getElementById("headerTitle");
    State global de l'app + persistance localStorage
    ========================================================================== */
 let userProfile = {
-  name: "Thomas Martin",
+  firstName: "",
   index: null,
 };
 
@@ -68,6 +68,19 @@ function loadStateFromLocalStorage() {
   } catch (e) {
     console.error("Erreur de lecture du localStorage", e);
   }
+}
+
+// Échappe les caractères HTML d'une saisie libre avant injection dans innerHTML
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Enregistre le prénom et met à jour le titre de la Home Page
+function updateFirstName(value) {
+  userProfile.firstName = value.trim().slice(0, 20);
+  saveStateToLocalStorage();
+  if (window.renderHomeGreeting) window.renderHomeGreeting();
+  renderMenuTab();
 }
 
 /* ==========================================================================
@@ -176,7 +189,7 @@ function topRowHtml() {
           </div>
         </div>
         <div class="profile_info">
-          <h2 class="profile_name">${userProfile.name}</h2>
+          <h2 class="profile_name">${escapeHtml(userProfile.firstName) || "Mon profil"}</h2>
           <p class="profile_index" id="profileIndex" onclick="openMenuKeypad('Index','profileIndex','${userProfile.index ?? ''}', true, true, '')">${indexLabel()}</p>
         </div>
       </div>
@@ -196,6 +209,9 @@ function renderMenuTab() {
     ${topRowHtml()}
     <div class="field-list">
       <h3>Profil</h3>
+      <div class="field-row"><span class="label">Prénom</span><span class="val">
+        <input type="text" value="${escapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ton prénom" onchange="updateFirstName(this.value)">
+      </span></div>
       <div class="field-row field-row-link" onclick="goToGolfBag()"><span class="label">Mon sac de golf</span><span class="val">${golfBag.clubs.length} club${golfBag.clubs.length > 1 ? 's' : ''} &#8250;</span></div>
       <div class="field-row field-row-link" onclick="goToDistances()"><span class="label">Mes distances</span><span class="val">&#8250;</span></div>
     </div>
