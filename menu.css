@@ -70,12 +70,40 @@
   border-radius: var(--mn-radius-l);
   overflow: hidden;
   margin-bottom: 16px;
+  position: relative;
 }
 
 #page-menu .profile_cover {
   height: 92px;
   width: 100%;
   background: linear-gradient(180deg, #1c2418 0%, #10140d 100%);
+}
+
+#page-menu .profile_logout-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--mn-surface-border);
+  color: var(--mn-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+#page-menu .profile_logout-button:active {
+  opacity: 0.6;
+}
+
+#page-menu .profile_logout-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 #page-menu .profile_card-content {

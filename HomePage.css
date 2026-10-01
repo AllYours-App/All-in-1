@@ -134,34 +134,6 @@
   border: 2px solid rgba(7, 15, 22, 0.9);
 }
 
-/* ============ DECONNEXION ============ */
-
-.logout_button {
-  position: absolute;
-  top: 84px; /* 24px (profil) + 48px (hauteur profil) + 12px d'écart */
-  right: 24px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--color-bg-profile);
-  border: 1px solid var(--color-border-strong);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: scale 0.15s ease;
-  z-index: 4;
-}
-
-.logout_button svg {
-  width: 20px;
-  height: 20px;
-}
-
-.logout_button:focus-visible {
-  outline: 2px solid var(--color-blue);
-  outline-offset: 3px;
-}
-
 /* ============ BOUTONS CIRCULAIRES ============ */
 
 .orbit-buttons_wrapper {

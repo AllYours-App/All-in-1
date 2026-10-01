@@ -178,10 +178,19 @@ function indexLabel() {
   return userProfile.index === null ? "Index non renseigné" : `Index ${userProfile.index}`;
 }
 
-function topRowHtml() {
+// showLogout : true uniquement sur l'écran Menu principal (pas sur Mon sac, Mes distances, Aide)
+function topRowHtml(showLogout = false) {
   return `
     <section class="profile_card">
       <div class="profile_cover"></div>
+      ${showLogout ? `
+      <button class="profile_logout-button" type="button" aria-label="Se déconnecter" onclick="window.authLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <path d="M16 17l5-5-5-5"/>
+          <path d="M21 12H9"/>
+        </svg>
+      </button>` : ''}
       <div class="profile_card-content">
         <div class="profile_avatar-wrapper">
           <div class="profile_avatar-image">
@@ -206,7 +215,7 @@ function renderMenuTab() {
   backBtn.classList.remove("is-hidden");
   headerTitle.textContent = "Menu";
   menuRoot.innerHTML = `
-    ${topRowHtml()}
+    ${topRowHtml(true)}
     <div class="field-list">
       <h3>Profil</h3>
       <div class="field-row field-row-link" onclick="goToGolfBag()"><span class="label">Mon sac de golf</span><span class="val">${golfBag.clubs.length} club${golfBag.clubs.length > 1 ? 's' : ''} &#8250;</span></div>
