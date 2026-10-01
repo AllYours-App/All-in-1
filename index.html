@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Golf App</title>
+<script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛳</text></svg>">
 <link rel="stylesheet" href="base.css">
 <link rel="stylesheet" href="commun.css">
@@ -15,12 +16,13 @@
 <link rel="stylesheet" href="vitesse.css">
 <link rel="stylesheet" href="stats.css">
 <link rel="stylesheet" href="menu.css">
+<link rel="stylesheet" href="auth.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 </head>
 <body>
 
 <!-- ============================ PARTIE : HOME ============================ -->
-<div id="page-home" class="app-page active">
+<div id="page-home" class="app-page">
 <div class="page-wrapper">
   <main class="home-screen_component">
 
@@ -501,16 +503,6 @@
     </section>
   </main>
 
-  <div class="fab-row">
-    <button class="fab" type="button" data-goto="saisie-rapide">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>
-      Saisie rapide
-    </button>
-    <button class="fab" type="button">
-      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>
-      Saisie détaillée
-    </button>
-  </div>
 </section>
 
 <!-- ======================================================================
@@ -866,6 +858,205 @@
 </div>
 </div>
 
+<!-- ======================= PARTIE : AUTH (connexion + inscription) ======================= -->
+<div id="page-login" class="app-page active">
+  <section class="auth_component">
+
+    <div class="auth_background">
+      <img class="auth_background-image" data-auth-background alt="" decoding="async">
+      <div class="auth_background-overlay"></div>
+    </div>
+
+    <div class="auth_content">
+
+      <div class="auth_logo">
+        <svg class="auth_logo-icon" width="44" height="72" viewBox="0 0 44 72" fill="none" aria-hidden="true">
+          <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
+          <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
+        </svg>
+        <div class="auth_logo-text">GOLF</div>
+      </div>
+
+      <div class="auth_header is-login">
+        <h1 class="auth_heading">Bienvenue</h1>
+        <p class="auth_subheading">Connectez-vous pour retrouver votre progression.</p>
+      </div>
+
+      <form class="auth_form" data-auth-form="login" novalidate>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 7l9 6 9-6"/>
+          </svg>
+          <input class="auth_input" type="email" name="email" placeholder="Adresse e-mail" autocomplete="email" inputmode="email" required>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password" placeholder="Mot de passe" autocomplete="current-password" required>
+          <button class="auth_toggle" type="button" data-auth-toggle aria-label="Afficher le mot de passe">
+            <svg class="auth_toggle-icon is-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="auth_toggle-icon is-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7c2 0 3.8.7 5.3 1.7M22 12s-3.6 7-10 7c-2 0-3.8-.7-5.3-1.7"/>
+              <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+              <path d="M3 3l18 18"/>
+            </svg>
+          </button>
+        </label>
+
+        <button class="auth_forgot" type="button" data-auth-goto="forgot-password">Mot de passe oublié ?</button>
+
+        <p class="auth_error" data-auth-error role="alert"></p>
+
+        <button class="auth_button is-primary" type="submit">Se connecter</button>
+      </form>
+
+      <div class="auth_divider">
+        <div class="auth_divider-line"></div>
+        <div class="auth_divider-text">OU</div>
+        <div class="auth_divider-line"></div>
+      </div>
+
+      <div class="auth_social">
+        <button class="auth_button is-social" type="button" data-auth-provider="apple">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+          </svg>
+          <span>Continuer avec Apple</span>
+        </button>
+
+        <button class="auth_button is-social" type="button" data-auth-provider="google">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+          <span>Continuer avec Google</span>
+        </button>
+      </div>
+
+      <div class="auth_switch">
+        <span class="auth_switch-text">Pas encore de compte ?</span>
+        <button class="auth_switch-link" type="button" data-auth-goto="signup">Créer un compte</button>
+      </div>
+
+      <p class="auth_legal">
+        En continuant, vous acceptez nos
+        <a class="auth_legal-link" href="#">conditions d'utilisation</a>
+        et notre politique de confidentialité.
+      </p>
+
+    </div>
+  </section>
+</div>
+
+<div id="page-signup" class="app-page">
+  <section class="auth_component">
+
+    <div class="auth_background">
+      <img class="auth_background-image" data-auth-background alt="" decoding="async">
+      <div class="auth_background-overlay"></div>
+    </div>
+
+    <div class="auth_content">
+
+      <div class="auth_logo">
+        <svg class="auth_logo-icon" width="44" height="72" viewBox="0 0 44 72" fill="none" aria-hidden="true">
+          <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
+          <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
+        </svg>
+        <div class="auth_logo-text">GOLF</div>
+      </div>
+
+      <div class="auth_header">
+        <h1 class="auth_heading">Créer un compte</h1>
+        <p class="auth_subheading">Rejoignez-nous pour suivre votre progression.</p>
+      </div>
+
+      <form class="auth_form" data-auth-form="signup" novalidate>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 7l9 6 9-6"/>
+          </svg>
+          <input class="auth_input" type="email" name="email" placeholder="Adresse e-mail" autocomplete="email" inputmode="email" required>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password" placeholder="Mot de passe" autocomplete="new-password" required>
+          <button class="auth_toggle" type="button" data-auth-toggle aria-label="Afficher le mot de passe">
+            <svg class="auth_toggle-icon is-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="auth_toggle-icon is-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7c2 0 3.8.7 5.3 1.7M22 12s-3.6 7-10 7c-2 0-3.8-.7-5.3-1.7"/>
+              <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+              <path d="M3 3l18 18"/>
+            </svg>
+          </button>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password-confirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" required>
+        </label>
+
+        <p class="auth_error" data-auth-error role="alert"></p>
+
+        <button class="auth_button is-primary" type="submit">Créer mon compte</button>
+      </form>
+
+      <div class="auth_divider">
+        <div class="auth_divider-line"></div>
+        <div class="auth_divider-text">OU</div>
+        <div class="auth_divider-line"></div>
+      </div>
+
+      <div class="auth_social">
+        <button class="auth_button is-social" type="button" data-auth-provider="apple">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+          </svg>
+          <span>Continuer avec Apple</span>
+        </button>
+
+        <button class="auth_button is-social" type="button" data-auth-provider="google">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+          <span>Continuer avec Google</span>
+        </button>
+      </div>
+
+      <div class="auth_switch">
+        <span class="auth_switch-text">Déjà un compte ?</span>
+        <button class="auth_switch-link" type="button" data-auth-goto="login">Se connecter</button>
+      </div>
+
+      <p class="auth_legal">
+        En continuant, vous acceptez nos
+        <a class="auth_legal-link" href="#">conditions d'utilisation</a>
+        et notre politique de confidentialité.
+      </p>
+
+    </div>
+  </section>
+</div>
+
 <script>
   // Bloque le swipe-retour depuis les bords et le zoom au pincement (iOS)
   document.addEventListener('touchstart', function (e) {
@@ -884,5 +1075,6 @@
 <script src="vitesse.js"></script>
 <script src="stats.js"></script>
 <script src="menu.js"></script>
+<script src="auth.js"></script>
 </body>
 </html>
