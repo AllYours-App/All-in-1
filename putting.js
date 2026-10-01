@@ -8,7 +8,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label" id="main-header-back-label">Home</span>
   </a>
   <h1 class="page-header_title" id="main-header-title">Putting</h1>
-  <span class="page-header_menu"></span>
+  <button type="button" class="page-header_menu" aria-label="Menu" onclick="showPage('menu')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="stats">
@@ -17,7 +17,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label">Putting</span>
   </a>
   <h1 class="page-header_title">Performance</h1>
-  <span class="page-header_menu"></span>
+  <button type="button" class="page-header_menu" aria-label="Menu" onclick="showPage('menu')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="exercise-flow">
@@ -340,14 +340,14 @@ function renderPuttingTab() {
 
     <!-- Mes exercices -->
     <div class="exercises-header">
-      <div class="exercises-header_title">Mes exercices</div>
-      <div class="exercises-header_controls">
-        <span class="exercises-sort_label">Trier par</span>
-        <button class="exercises-sort_select" onclick="toggleExerciseSort()">
-          <span id="exercise-sort-label">Récent</span>
-          <svg class="exercises-sort_select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-      </div>
+      <div class="exercises-header_title">MES EXERCICES</div>
+      <button type="button" class="exercise-chip is-active" onclick="openCreativeCombineModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        Créer
+      </button>
+    </div>
+    <div class="exercise-chip-row">
+      <button type="button" class="exercise-chip" onclick="toggleExerciseSort()">Tri : <span id="exercise-sort-label">Récent</span></button>
     </div>
 
     <div class="exercise-list" id="exercise-list-root"></div>
@@ -487,20 +487,9 @@ function renderPuttingTab() {
   </button>
 </div>
 
-<div class="fab-group is-hidden" data-fab="exercices">
-  <button class="fab-button" onclick="openCreativeCombineModal()">
-    <svg class="fab-button_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-    <span class="fab-button_text">Nouvel<br>exercice</span>
-  </button>
-</div>
-
-<!-- Popup bas : apparaît quand un exercice est sélectionné dans la liste -->
-<div class="exercise-select-bar is-hidden" id="exercise-select-bar">
-  <div class="exercise-select-bar_name" id="exercise-select-bar-name"></div>
-  <button class="exercise-select-bar_launch" id="exercise-select-bar-launch">
-    Lancer l'exercice
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-  </button>
+<!-- Bouton de lancement : toujours visible sur l'onglet Exercices (comme wedging) -->
+<div class="exercise-launch is-hidden" id="exercise-select-bar">
+  <button type="button" class="exercise-launch_btn" onclick="startSelectedCombine()">Lancer l'exercice &rarr;</button>
 </div>
 
 <!-- Barre nav basse : uniquement pour l'onglet Parcours -->
@@ -703,8 +692,8 @@ function applyNumericKeypadValue(target, raw) {
       if (isNaN(n2) || n2 < 1) return;
       f[key] = n2;
     }
-    if (key === 'puttMax' && f.puttMax < f.puttMin) f.puttMax = f.puttMin;
-    if (key === 'puttMin' && f.puttMin > f.puttMax) f.puttMax = f.puttMin;
+    if (key === 'puttMax' && f.puttMin != null && f.puttMax < f.puttMin) f.puttMax = f.puttMin;
+    if (key === 'puttMin' && f.puttMax != null && f.puttMin > f.puttMax) f.puttMax = f.puttMin;
     if (['holesCount', 'puttMin', 'puttMax'].indexOf(key) !== -1) regenerateCreativePreview(f);
     renderExerciseModal();
   } else if (kind === 'previewM') {
@@ -1695,13 +1684,19 @@ function combineMakeRate(session) {
 }
 
 // --- Liste "Mes exercices" ---
+const EXERCISE_ICONS = {
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  duplicate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>'
+};
 function renderExerciseList() {
   const listRoot = document.getElementById('exercise-list-root');
   if (!listRoot) return;
 
   const sorted = puttingCombines.filter(function (c) { return !c.isQuick; });
   if (!sorted.length) {
-    listRoot.innerHTML = '';
+    listRoot.innerHTML = '<p class="exercise-empty">Aucun exercice pour le moment.</p>';
     return;
   }
 
@@ -1714,38 +1709,35 @@ function renderExerciseList() {
   listRoot.innerHTML = sorted.map(function (c) {
     const history = combineSessionsHistory(c.id);
     const last = history[history.length - 1];
-    const lastLabel = last ? ('Dernière séance : ' + last.dateLabel) : 'Jamais joué';
     const rate = last ? combineMakeRate(last) : null;
-    const percentLabel = rate && rate.pct !== null ? (rate.pct + '%') : '--';
-    const countLabel = rate ? (rate.made + ' / ' + rate.total + ' putts') : '';
     const isSelected = selectedCombineId === c.id;
+    const inProgress = !!resumableSession && resumableSession.combineId === c.id;
+    const rounds = combineRounds(c);
+    const formatLabel = c.puttMin + 'm → ' + c.puttMax + 'm — ' + c.holesCount + ' trous'
+      + (rounds > 1 ? ' — ' + rounds + ' tours' : '')
+      + ' — ' + c.attempts + (c.attempts > 1 ? ' tentatives' : ' tentative') + '/trou'
+      + (c.slopedGreen === false ? ' — green plat' : '');
+    const lastLine = last
+      ? 'Dernière session : ' + last.dateLabel + (rate && rate.total ? ' — ' + rate.made + '/' + rate.total + ' réussis (' + rate.pct + '%)' : '')
+      : '';
 
     return `
-      <div class="exercise-item ${isSelected ? 'is-selected' : ''}">
-        <div class="exercise-item_thumb"></div>
-        <div class="exercise-item_content" onclick="toggleExerciseSelect(${c.id})">
-          <div class="exercise-item_title">${c.name}</div>
-          <div class="exercise-item_tags">
-            <span class="exercise-item_tag">${c.puttMin}m &rarr; ${c.puttMax}m</span>
-            <span class="exercise-item_tag">${c.holesCount} trous</span>
-          </div>
-          <div class="exercise-item_last">${lastLabel}</div>
+      <div class="exercise-card ${isSelected ? 'is-selected' : ''}" onclick="toggleExerciseSelect(${c.id})">
+        <div class="exercise-card_head">
+          <span class="exercise-card_title-wrap">
+            <b>${escHtml(c.name)}</b>
+            ${inProgress ? `<span class="exercise-card_badge" onclick="event.stopPropagation();resumeSession()">En cours</span>` : ''}
+          </span>
+          ${isSelected ? `
+            <div class="exercise-card_actions">
+              <button type="button" title="Supprimer" onclick="event.stopPropagation();deleteCombine(${c.id})">${EXERCISE_ICONS.close}</button>
+              <button type="button" title="Dupliquer" onclick="event.stopPropagation();duplicateCombine(${c.id})">${EXERCISE_ICONS.duplicate}</button>
+              <button type="button" title="Modifier" onclick="event.stopPropagation();editCombine(${c.id})">${EXERCISE_ICONS.edit}</button>
+              <button type="button" title="Graphe" onclick="event.stopPropagation();reviewCombine(${c.id})">${EXERCISE_ICONS.chart}</button>
+            </div>` : `<span class="exercise-card_date">${last ? last.dateLabel : ''}</span>`}
         </div>
-        <div class="exercise-item_stats" onclick="toggleExerciseSelect(${c.id})">
-          <div class="exercise-item_percent">${percentLabel}</div>
-          <div class="exercise-item_count">${countLabel}</div>
-        </div>
-        <svg class="exercise-item_arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleExerciseSelect(${c.id})"><path d="M9 6l6 6-6 6"/></svg>
-        <button class="exercise-item_menu" aria-label="Options" onclick="event.stopPropagation();toggleExerciseSelect(${c.id})">
-          <svg class="exercise-item_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
-        </button>
-        ${isSelected ? `
-          <div class="exercise-item_actions">
-            <button class="exercise-item_action" onclick="event.stopPropagation();reviewCombine(${c.id})">Revoir</button>
-            <button class="exercise-item_action" onclick="event.stopPropagation();editCombine(${c.id})">Modifier</button>
-            <button class="exercise-item_action is-danger" onclick="event.stopPropagation();deleteCombine(${c.id})">Supprimer</button>
-          </div>
-        ` : ''}
+        <span class="exercise-card_muted">${formatLabel}</span>
+        ${lastLine ? `<div class="exercise-card_muted-sm">${lastLine}</div>` : ''}
       </div>
     `;
   }).join('');
@@ -1759,18 +1751,32 @@ function toggleExerciseSelect(id) {
 
 function updateExerciseSelectBar() {
   const bar = document.getElementById('exercise-select-bar');
-  const fab = document.querySelector('.fab-group[data-fab="exercices"]');
   if (!bar) return;
-  const combine = selectedCombineId ? getCombineById(selectedCombineId) : null;
-  if (combine) {
-    document.getElementById('exercise-select-bar-name').textContent = combine.name;
-    document.getElementById('exercise-select-bar-launch').onclick = function () { exerciseFlowOriginTab = 'exercices'; startCombine(combine.id); };
-    bar.classList.remove('is-hidden');
-    if (fab) fab.classList.add('is-hidden');
-  } else {
-    bar.classList.add('is-hidden');
-    if (fab && document.querySelector('[data-tab="exercices"]').classList.contains('is-active')) fab.classList.remove('is-hidden');
-  }
+  const exoTab = document.querySelector('[data-tab="exercices"]');
+  const wrapper = document.querySelector('.putting_wrapper');
+  // Visible en permanence sur l'onglet Exercices (hors flux exercice / écran stats)
+  const visible = exoTab && exoTab.classList.contains('is-active') && wrapper && !wrapper.classList.contains('is-hidden');
+  bar.classList.toggle('is-hidden', !visible);
+}
+
+// Lance l'exercice sélectionné dans la liste (comme "Lancer l'exercice" de wedging)
+function startSelectedCombine() {
+  if (!selectedCombineId) { showToast("Sélectionne d'abord un exercice dans la liste."); return; }
+  exerciseFlowOriginTab = 'exercices';
+  startCombine(selectedCombineId);
+}
+
+function duplicateCombine(id) {
+  const c = getCombineById(id);
+  if (!c) return;
+  const copy = JSON.parse(JSON.stringify(c));
+  copy.id = Date.now();
+  copy.name = c.name + ' (copie)';
+  puttingCombines.push(copy);
+  selectedCombineId = copy.id;
+  saveStateToLocalStorage();
+  renderExerciseList();
+  updateExerciseSelectBar();
 }
 
 function deleteCombine(id) {
@@ -1795,6 +1801,11 @@ let activeSession = null;      // session en cours (non sauvegardée)
 let activeHoleIndex = 0;
 let reviewChartIndex = 0;
 let viewingSessionId = null;   // session déjà sauvegardée consultée en lecture seule
+
+// Nombre de fois où l'exercice est enchaîné (champ "Tours"), 1 minimum
+function combineRounds(c) {
+  return Math.max(1, parseInt(c && c.rounds, 10) || 1);
+}
 
 function getCombineById(id) {
   return puttingCombines.find(function (c) { return c.id === id; });
@@ -1875,14 +1886,22 @@ function startCombine(id) {
     location: 'Non renseigné',
     greenSpeed: 'Non renseigné',
     notes: '',
-    holes: c.previewRows.map(function (row) {
-      return {
-        hole: row.hole,
-        m: row.m,
-        clock: row.clock,
-        results: [], // 'made' | 'missed', longueur = c.attempts une fois fini
-      };
-    }),
+    // Les trous de l'exercice sont rejoués "Tours" fois, avec les mêmes distances
+    holes: (function () {
+      const out = [];
+      for (let r = 1; r <= combineRounds(c); r++) {
+        c.previewRows.forEach(function (row) {
+          out.push({
+            hole: row.hole,
+            round: r,
+            m: row.m,
+            clock: c.slopedGreen === false ? null : row.clock, // pas de pente si green plat
+            results: [], // 'made' | 'missed', longueur = c.attempts une fois fini
+          });
+        });
+      }
+      return out;
+    })(),
   };
   exerciseFlowScreen = 'session';
   enterExerciseFlow(c.name);
@@ -1942,6 +1961,7 @@ function renderCombineSessionScreen() {
   if (c.isQuick) { renderQuickSessionScreen(); return; }
   const hole = activeSession.holes[activeHoleIndex];
   const totalAttempts = c.attempts;
+  const totalRounds = combineRounds(c);
   const doneHoles = activeSession.holes.filter(function (h) { return h.results.length >= totalAttempts; }).length;
   const allDone = doneHoles === activeSession.holes.length;
   const isHoleDone = hole.results.length >= totalAttempts;
@@ -1958,10 +1978,10 @@ function renderCombineSessionScreen() {
 
     <div class="session-hole-card">
       <div class="session-hole-head">
-        <span>Trou ${hole.hole}</span>
+        <span>${totalRounds > 1 ? 'Tour ' + (hole.round || 1) + '/' + totalRounds + ' · ' : ''}Trou ${hole.hole}</span>
         <span>${hole.m} m</span>
       </div>
-      ${slopeArrowSvg(hole.clock)}
+      ${c.slopedGreen === false ? '' : slopeArrowSvg(hole.clock)}
       ${totalAttempts > 1 ? `<div class="session-attempts">${combineAttemptsHtml(hole, totalAttempts)}</div>` : ''}
       <div class="session-result-buttons">
         <button class="session-result-btn is-missed" onclick="setCombineResult('missed')">${currentResult === 'missed' ? checkIcon : ''}Manqué</button>
@@ -1973,7 +1993,9 @@ function renderCombineSessionScreen() {
       ${activeSession.holes.map(function (h, i) {
         const isDone = h.results.length >= totalAttempts;
         const state = isDone ? (h.results.indexOf('made') === -1 ? 'is-missed' : 'is-done') : (i === activeHoleIndex ? 'is-active' : '');
-        return `<button class="session-holes-nav_item ${state}" onclick="goToCombineHole(${i})">${h.hole}</button>`;
+        const roundLabel = (totalRounds > 1 && (i === 0 || (activeSession.holes[i - 1].round || 1) !== (h.round || 1)))
+          ? `<span class="session-holes-nav_label">Tour ${h.round || 1}</span>` : '';
+        return roundLabel + `<button class="session-holes-nav_item ${state}" onclick="goToCombineHole(${i})">${h.hole}</button>`;
       }).join('')}
     </div>
 
@@ -2346,7 +2368,7 @@ function renderCombineRecapScreen() {
         <div class="recap-table_row recap-table_head"><span>Trou</span><span>Distance</span><span>Résultats</span></div>
         ${session.holes.map(function (h) {
           return `<div class="recap-table_row">
-            <span>${h.hole}</span>
+            <span>${h.hole}${combine && combineRounds(combine) > 1 ? `<small class="recap-table_round">T${h.round || 1}</small>` : ''}</span>
             <span>${h.m} m</span>
             <span class="recap-table_attempts">${h.results.map(function (r) { return `<span class="recap-dot ${r === 'made' ? 'is-made' : 'is-missed'}"></span>`; }).join('')}</span>
           </div>`;
@@ -2611,10 +2633,11 @@ function finishQuickExercise() {
 /* ---------- Modale Nouvel exercice / Modifier ---------- */
 
 function regenerateCreativePreview(f) {
+  const hasRange = f.puttMin != null && f.puttMax != null;
   f.previewRows = Array.from({ length: f.holesCount }, function (_, i) {
     return {
       hole: i + 1,
-      m: Math.round((f.puttMin + Math.random() * (f.puttMax - f.puttMin)) * 10) / 10,
+      m: hasRange ? Math.round((f.puttMin + Math.random() * (f.puttMax - f.puttMin)) * 10) / 10 : null,
       clock: Math.floor(Math.random() * 12) + 1,
     };
   });
@@ -2624,8 +2647,8 @@ function openCreativeCombineModal() {
   puttingCreativeForm = {
     name: '',
     slopedGreen: true,
-    puttMin: 0,
-    puttMax: 0,
+    puttMin: null,
+    puttMax: null,
     holesCount: 0,
     rounds: 0,
     attempts: 0,
@@ -2668,6 +2691,16 @@ function setCreativeField(field, value) {
   renderExerciseModal();
 }
 
+// Stepper +/- (même principe que les balles/distance de wedging)
+function incCreativeField(field, delta) {
+  const f = puttingCreativeForm;
+  const max = { holesCount: 36, rounds: 20, attempts: 30 }[field] || 30;
+  const cur = f[field] || 0;
+  f[field] = Math.max(cur ? 1 : 0, Math.min(max, cur + delta));
+  if (field === 'holesCount') regenerateCreativePreview(f);
+  renderExerciseModal();
+}
+
 function updateCreativeName(value) {
   puttingCreativeForm.name = value;
   const btn = document.getElementById('creative-save-btn');
@@ -2694,6 +2727,10 @@ function saveCreativeCombine() {
   const f = puttingCreativeForm;
   if (!f.name || !f.name.trim()) {
     alert('Donne un nom à cet exercice avant de le sauvegarder.');
+    return;
+  }
+  if (f.puttMin == null || f.puttMax == null) {
+    alert('Renseigne la distance min et la distance max.');
     return;
   }
   if (editingCombineId !== null) {
@@ -2730,6 +2767,18 @@ function renderExerciseModal() {
     return;
   }
   const f = puttingCreativeForm;
+  const sloped = f.slopedGreen !== false;
+  const stepper = function (field, label, promptLabel) {
+    return `
+          <div class="exercise-modal_stepper">
+            <div class="exercise-modal_field-label">${label}</div>
+            <div class="exercise-modal_stepper-controls">
+              <button type="button" onclick="incCreativeField('${field}', -1)" aria-label="Moins">&minus;</button>
+              <span class="exercise-modal_stepper-value" onclick="promptCreativeNumber('${field}','${promptLabel}')">${f[field]}</span>
+              <button type="button" onclick="incCreativeField('${field}', 1)" aria-label="Plus">+</button>
+            </div>
+          </div>`;
+  };
   modalRoot.innerHTML = `
     <div class="exercise-modal_overlay" onclick="closeCreativeCombineModal()">
       <div class="exercise-modal" onclick="event.stopPropagation()">
@@ -2740,53 +2789,51 @@ function renderExerciseModal() {
           </button>
         </div>
 
-        <input type="text" class="exercise-modal_input" id="creative-name-input" placeholder="Nom de l'exercice" value="${f.name}" oninput="updateCreativeName(this.value)">
+        <div class="exercise-modal_fieldset">
+          <label class="exercise-modal_label" for="creative-name-input">Titre</label>
+          <input type="text" class="exercise-modal_input" id="creative-name-input" placeholder="Titre de l'exercice" value="${escHtml(f.name)}" oninput="updateCreativeName(this.value)">
+        </div>
 
-        <div class="exercise-modal_grid exercise-modal_grid-3">
-          <button type="button" class="exercise-modal_field" onclick="setCreativeField('slopedGreen', '${!f.slopedGreen}')">
-            <span class="exercise-modal_field-label">Green en pente</span>
-            <span class="exercise-modal_field-value">${f.slopedGreen ? 'Oui' : 'Non'}</span>
-          </button>
+        <div class="exercise-modal_grid">
           <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('puttMin','Distance min (m)')">
             <span class="exercise-modal_field-label">Distance min</span>
-            <span class="exercise-modal_field-value">${f.puttMin} m</span>
+            <span class="exercise-modal_field-value">${f.puttMin == null ? '--' : f.puttMin + ' m'}</span>
           </button>
           <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('puttMax','Distance max (m)')">
             <span class="exercise-modal_field-label">Distance max</span>
-            <span class="exercise-modal_field-value">${f.puttMax} m</span>
+            <span class="exercise-modal_field-value">${f.puttMax == null ? '--' : f.puttMax + ' m'}</span>
           </button>
+        </div>
+
+        <div class="exercise-modal_toggle">
+          <div class="exercise-modal_field-label">Green en pente</div>
+          <div class="exercise-modal_toggle-pair">
+            <button type="button" class="${sloped ? 'is-active' : ''}" onclick="setCreativeField('slopedGreen', 'true')">Oui</button>
+            <button type="button" class="${sloped ? '' : 'is-active'}" onclick="setCreativeField('slopedGreen', 'false')">Non</button>
+          </div>
         </div>
 
         <div class="exercise-modal_grid exercise-modal_grid-3">
-          <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('holesCount','Nombre de trous')">
-            <span class="exercise-modal_field-label">Trous</span>
-            <span class="exercise-modal_field-value">${f.holesCount}</span>
-          </button>
-          <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('rounds','Nombre de tours')">
-            <span class="exercise-modal_field-label">Tours</span>
-            <span class="exercise-modal_field-value">${f.rounds}</span>
-          </button>
-          <button type="button" class="exercise-modal_field" onclick="promptCreativeNumber('attempts','Tentatives par trou')">
-            <span class="exercise-modal_field-label">Tentatives</span>
-            <span class="exercise-modal_field-value">${f.attempts}</span>
-          </button>
+          ${stepper('holesCount', 'Trous', 'Nombre de trous')}
+          ${stepper('rounds', 'Tours', 'Nombre de tours')}
+          ${stepper('attempts', 'Tentatives', 'Tentatives par trou')}
         </div>
 
         <div class="exercise-modal_preview">
-          <div class="exercise-modal_preview-row exercise-modal_preview-head">
-            <span>Trou</span><span>Distance (m)</span><span>Pente (h)</span>
+          <div class="exercise-modal_preview-row exercise-modal_preview-head ${sloped ? '' : 'exercise-modal_preview-row-2col'}">
+            <span>Trou</span><span>Distance (m)</span>${sloped ? '<span>Pente (h)</span>' : ''}
           </div>
           ${f.previewRows.map(function (r, i) {
             return `
-            <div class="exercise-modal_preview-row">
+            <div class="exercise-modal_preview-row ${sloped ? '' : 'exercise-modal_preview-row-2col'}">
               <span>${r.hole}</span>
-              <button type="button" onclick="openNumericKeypad('Distance trou ${r.hole} (m)', 'previewM:${i}', ${r.m}, true, 'm')">${r.m} m</button>
-              <button type="button" onclick="openNumericKeypad('Pente trou ${r.hole} (h)', 'previewClock:${i}', ${r.clock}, false, 'h')">${r.clock} h</button>
+              <button type="button" onclick="openNumericKeypad('Distance trou ${r.hole} (m)', 'previewM:${i}', ${r.m == null ? 'null' : r.m}, true, 'm')">${r.m == null ? '--' : r.m + ' m'}</button>
+              ${sloped ? `<button type="button" onclick="openNumericKeypad('Pente trou ${r.hole} (h)', 'previewClock:${i}', ${r.clock}, false, 'h')">${r.clock} h</button>` : ''}
             </div>`;
           }).join('')}
         </div>
 
-        <button class="exercise-modal_save" id="creative-save-btn" onclick="saveCreativeCombine()" ${!f.name.trim() ? 'disabled' : ''}>${editingCombineId !== null ? 'Enregistrer les modifications' : 'Créer cet exercice'}</button>
+        <button class="exercise-modal_save" id="creative-save-btn" onclick="saveCreativeCombine()" ${!f.name.trim() ? 'disabled' : ''}>${editingCombineId !== null ? 'Enregistrer les modifications' : 'Enregistrer'}</button>
       </div>
     </div>
   `;

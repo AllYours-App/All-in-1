@@ -51,6 +51,8 @@
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     color:var(--text-primary);
     touch-action:manipulation;
+    min-height:100vh;
+    min-height:100dvh;
 }
 
 #page-putting button,
@@ -385,8 +387,9 @@
 }
 
 #page-putting .exercises-header_title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
+  letter-spacing: 1px;
   color: var(--text-primary);
 }
 
@@ -445,22 +448,6 @@
   gap: 12px;
 }
 
-#page-putting .exercise-item {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  padding: 12px;
-}
-
-#page-putting .exercise-item.is-selected {
-  border-color: var(--accent);
-}
-
 #page-putting .exercise-item_actions {
   flex-basis: 100%;
   display: flex;
@@ -492,94 +479,6 @@
 #page-putting .exercise-item_action.is-danger {
   color: #e0574a;
   border-color: rgba(224, 87, 74, 0.35);
-}
-
-#page-putting .exercise-item_thumb {
-  position: relative;
-  width: 84px;
-  height: 84px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background-color: var(--bg-card-alt);
-}
-
-#page-putting .exercise-item_content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-#page-putting .exercise-item_title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding-right: 24px;
-}
-
-#page-putting .exercise-item_tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-#page-putting .exercise-item_tag {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background-color: rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  padding: 3px 8px;
-}
-
-#page-putting .exercise-item_last {
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-#page-putting .exercise-item_stats {
-  flex-shrink: 0;
-  text-align: right;
-}
-
-#page-putting .exercise-item_percent {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-#page-putting .exercise-item_count {
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-#page-putting .exercise-item_arrow {
-  width: 16px;
-  height: 16px;
-  color: var(--text-tertiary);
-  flex-shrink: 0;
-}
-
-#page-putting .exercise-item_menu {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-#page-putting .exercise-item_menu-icon {
-  width: 16px;
-  height: 16px;
 }
 
 #page-putting .analyse-header {
@@ -1159,67 +1058,6 @@
   bottom: calc(var(--app-nav-h) + var(--app-fab-gap));
 }
 
-#page-putting .exercise-select-bar {
-  position: fixed;
-  bottom: 0;
-  left: var(--app-padding);
-  right: var(--app-padding);
-  max-width: var(--app-max-width);
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background-color: var(--bg-card);
-  border-top: 1px solid var(--border-subtle);
-  padding: 16px var(--app-padding) calc(16px + env(safe-area-inset-bottom));
-  z-index: 20;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
-}
-
-@media (max-width: 360px) {
-  #page-putting .exercise-select-bar {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-    padding: 16px var(--app-padding-small) calc(16px + env(safe-area-inset-bottom));
-  }
-}
-
-#page-putting .exercise-select-bar.is-hidden {
-  display: none;
-}
-
-#page-putting .exercise-select-bar_name {
-  flex: 1;
-  min-width: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#page-putting .exercise-select-bar_launch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  background-color: var(--accent);
-  color: #050505;
-  border: none;
-  border-radius: 14px;
-  padding: 12px 18px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-#page-putting .exercise-select-bar_launch svg {
-  width: 16px;
-  height: 16px;
-}
-
 #page-putting .bottom-nav_sublabel {
   font-size: 9px;
   color: var(--text-tertiary);
@@ -1244,8 +1082,8 @@
   overflow-y: auto;
   background-color: var(--bg-card);
   border-top: 1px solid var(--border-subtle);
-  border-radius: 20px 20px 0 0;
-  padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1254,8 +1092,8 @@
 #page-putting .exercise-modal_head {
   position: sticky;
   top: -20px;
-  margin: -20px -16px 0;
-  padding: 20px 16px 10px;
+  margin: -20px -20px 0;
+  padding: 20px 20px 10px;
   background-color: var(--bg-card);
   z-index: 2;
   display: flex;
@@ -1265,7 +1103,7 @@
 
 #page-putting .exercise-modal_title {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1333,10 +1171,15 @@
   width: 100%;
   background-color: var(--bg-card-alt);
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 14px;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
   color: var(--text-primary);
+  outline: none;
+}
+
+#page-putting .exercise-modal_input:focus {
+  border-color: var(--accent);
 }
 
 #page-putting .exercise-modal_input::placeholder {
@@ -1360,8 +1203,8 @@
   align-items: flex-start;
   background-color: var(--bg-card-alt);
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 8px;
+  padding: 8px 14px;
   cursor: pointer;
 }
 
@@ -2812,3 +2655,284 @@
   background-color: var(--accent);
 }
 #page-putting .cmp-dot.is-b { background-color: #5b9bd5; }
+
+
+/* ---------- Correctif : barres centrées (SG vs Tour) en mode Comparer ---------- */
+/* Les barres centrées sont en position:absolute, leur conteneur doit garder une hauteur fixe */
+#page-putting .bar-chart_bar-wrap-dual .bar-chart_bar-wrap {
+  flex: 0 0 auto;
+}
+
+/* ---------- Modal exercice : champs façon wedging (label, stepper, toggle) ---------- */
+#page-putting .exercise-modal_fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#page-putting .exercise-modal_label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#page-putting .exercise-modal_toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px 14px 10px;
+}
+
+#page-putting .exercise-modal_toggle-pair {
+  display: flex;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#page-putting .exercise-modal_toggle-pair button {
+  flex: 1;
+  background: var(--bg-card-alt);
+  border: none;
+  color: var(--text-secondary);
+  padding: 9px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+#page-putting .exercise-modal_toggle-pair button.is-active {
+  background: var(--accent);
+  color: #0b0f0c;
+  font-weight: 700;
+}
+
+#page-putting .exercise-modal_stepper {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+#page-putting .exercise-modal_stepper-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+#page-putting .exercise-modal_stepper-controls button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+#page-putting .exercise-modal_stepper-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* ---------- Tours : libellé de groupe dans la navigation des trous + tag récap ---------- */
+#page-putting .session-holes-nav_label {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+#page-putting .recap-table_round {
+  margin-left: 4px;
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+
+
+/* ---------- Liste d'exercices : cartes, puces et lancement façon wedging ---------- */
+#page-putting .exercise-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#page-putting .exercise-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+#page-putting .exercise-chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0f0c;
+  font-weight: 700;
+}
+
+#page-putting .exercise-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+#page-putting .exercise-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+#page-putting .exercise-card.is-selected {
+  border-color: var(--accent);
+}
+
+#page-putting .exercise-card_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+#page-putting .exercise-card_title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+#page-putting .exercise-card_title-wrap b {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
+}
+
+#page-putting .exercise-card_badge {
+  flex-shrink: 0;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+#page-putting .exercise-card_date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+#page-putting .exercise-card_actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#page-putting .exercise-card_actions button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+#page-putting .exercise-card_actions button svg {
+  width: 16px;
+  height: 16px;
+}
+
+#page-putting .exercise-card_actions button:hover {
+  color: var(--accent);
+}
+
+#page-putting .exercise-card_muted {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#page-putting .exercise-card_muted-sm {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+#page-putting .exercise-empty {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+#page-putting .exercise-launch {
+  position: fixed;
+  left: var(--app-padding);
+  right: var(--app-padding);
+  bottom: calc(var(--app-safe-bottom) + var(--app-fab-gap));
+  max-width: calc(var(--app-max-width) - 2 * var(--app-padding));
+  margin: 0 auto;
+  z-index: 20;
+}
+
+@media (max-width: 360px) {
+  #page-putting .exercise-launch {
+    left: var(--app-padding-small);
+    right: var(--app-padding-small);
+  }
+}
+
+#page-putting .exercise-launch.is-hidden {
+  display: none;
+}
+
+#page-putting .exercise-launch_btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--accent);
+  color: #0b0f0c;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#page-putting .exercise-launch_btn:active {
+  transform: scale(0.98);
+}
