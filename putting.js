@@ -8,7 +8,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label" id="main-header-back-label">Home</span>
   </a>
   <h1 class="page-header_title" id="main-header-title">Putting</h1>
-  <button type="button" class="page-header_menu" aria-label="Menu" onclick="showPage('menu')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <button type="button" class="page-header_menu" id="headerRightBtn" aria-label="Menu"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="stats">
@@ -17,7 +17,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label">Putting</span>
   </a>
   <h1 class="page-header_title">Performance</h1>
-  <button type="button" class="page-header_menu" aria-label="Menu" onclick="showPage('menu')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <button type="button" class="page-header_menu" aria-label="Menu"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="exercise-flow">
@@ -1799,7 +1799,6 @@ let exerciseFlowFromStats = false; // true si on est entré dans le flux depuis 
 let activeCombineId = null;
 let activeSession = null;      // session en cours (non sauvegardée)
 let activeHoleIndex = 0;
-let reviewChartIndex = 0;
 let viewingSessionId = null;   // session déjà sauvegardée consultée en lecture seule
 
 // Nombre de fois où l'exercice est enchaîné (champ "Tours"), 1 minimum
@@ -2436,7 +2435,6 @@ function deleteViewedSession() {
 
 function reviewCombine(id) {
   activeCombineId = id;
-  reviewChartIndex = 0;
   exerciseFlowScreen = 'review';
   const c = getCombineById(id);
   enterExerciseFlow('Revoir');
@@ -2444,9 +2442,9 @@ function reviewCombine(id) {
 }
 
 const REVIEW_CHARTS = [
-  { key: 'rate', label: 'Taux de réussite' },
+  { key: 'rate', label: 'Taux de réussite', fixedMax: 100, unit: '%' },
   { key: 'pph', label: 'Putts par trou' },
-  { key: 'onePutt', label: 'Nombre de 1 putt' },
+  { key: 'onePutt', label: 'Nombre de 1 putt', integer: true },
 ];
 
 function reviewChartValue(session, combine, key) {
@@ -2456,31 +2454,65 @@ function reviewChartValue(session, combine, key) {
   return stats.onePutts;
 }
 
-function miniLineChartSvg(values, labels) {
+// Échelle "propre" : renvoie un max arrondi et 5 graduations (0 → max)
+function niceAxis(maxVal, integer) {
+  const raw = Math.max(maxVal, integer ? 4 : 1) / 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const steps = integer ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
+  let step = steps[steps.length - 1] * mag;
+  for (let i = 0; i < steps.length; i++) {
+    if (steps[i] * mag >= raw) { step = steps[i] * mag; break; }
+  }
+  if (integer) step = Math.max(1, Math.round(step));
+  const ticks = [];
+  for (let k = 0; k <= 4; k++) ticks.push(Math.round(step * k * 100) / 100);
+  return { max: ticks[4], ticks: ticks };
+}
+
+// opts : { fixedMax, unit, integer }
+function miniLineChartSvg(values, labels, opts) {
+  opts = opts || {};
   if (!values.length) {
     return `<div class="review-chart_empty">Pas encore de séance enregistrée.</div>`;
   }
-  const max = Math.max.apply(null, values.concat([1]));
-  const min = 0;
-  const w = 640, h = 260, padL = 30, padR = 20, padT = 20, padB = 30;
+  const unit = opts.unit || '';
+  const axis = opts.fixedMax
+    ? { max: opts.fixedMax, ticks: [0, 25, 50, 75, 100].map(function (t) { return t * opts.fixedMax / 100; }) }
+    : niceAxis(Math.max.apply(null, values), opts.integer);
+  const w = 640, h = 280, padL = 66, padR = 20, padT = 20, padB = 40;
   const innerW = w - padL - padR, innerH = h - padT - padB;
-  const stepX = values.length > 1 ? innerW / (values.length - 1) : 0;
-  const points = values.map(function (v, i) {
-    const x = padL + i * stepX;
-    const y = padT + innerH - ((v - min) / (max - min || 1)) * innerH;
-    return { x: x, y: y };
-  });
-  const path = points.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p.x + ',' + p.y; }).join(' ');
-  const dots = points.map(function (p) { return `<circle cx="${p.x}" cy="${p.y}" r="5" class="line-chart-point"/>`; }).join('');
-  const labelsSvg = points.map(function (p, i) {
-    return `<text x="${p.x}" y="${h - 8}" text-anchor="middle" class="line-chart-axis-label" font-size="16">${labels[i]}</text>`;
+  const n = values.length;
+  const stepX = n > 1 ? innerW / (n - 1) : 0;
+  const xOf = function (i) { return n > 1 ? padL + i * stepX : padL + innerW / 2; };
+  const yOf = function (v) { return padT + innerH - (v / axis.max) * innerH; };
+  const points = values.map(function (v, i) { return { x: xOf(i), y: yOf(v) }; });
+  const path = points.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+  const dots = points.map(function (p) { return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" class="line-chart-point"/>`; }).join('');
+
+  // Graduations de l'axe Y (valeurs + lignes de repère)
+  const yTicks = axis.ticks.map(function (t, k) {
+    const y = yOf(t);
+    const grid = k === 0
+      ? `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" class="line-chart-grid-solid"/>`
+      : `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" class="line-chart-grid"/>`;
+    return grid + `<text x="${padL - 10}" y="${(y + 6).toFixed(1)}" text-anchor="end" class="line-chart-ytick">${t}${unit}</text>`;
   }).join('');
+
+  // Libellés de l'axe X : au plus ~6, répartis
+  const every = Math.max(1, Math.ceil(n / 6));
+  const xTicks = labels.map(function (lab, i) {
+    const isLast = i === n - 1;
+    const show = i % every === 0 || (isLast && ((n - 1) % every) >= Math.ceil(every / 2));
+    if (!show) return '';
+    return `<text x="${xOf(i).toFixed(1)}" y="${h - 10}" text-anchor="middle" class="line-chart-xtick">${lab}</text>`;
+  }).join('');
+
   return `
     <svg class="line-chart" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-      <line x1="${padL}" y1="${padT + innerH}" x2="${w - padR}" y2="${padT + innerH}" class="line-chart-grid-solid"/>
+      ${yTicks}
       <path d="${path}" class="line-chart-line"/>
       ${dots}
-      ${labelsSvg}
+      ${xTicks}
     </svg>
   `;
 }
@@ -2489,8 +2521,6 @@ function renderCombineReviewScreen() {
   const flowRoot = document.getElementById('exercise-flow-root');
   const combine = getCombineById(activeCombineId);
   const history = combineSessionsHistory(activeCombineId);
-  const chart = REVIEW_CHARTS[reviewChartIndex];
-  const values = history.map(function (s) { return reviewChartValue(s, combine, chart.key); });
   const labels = history.map(function (s) { return s.dateLabel; });
 
   flowRoot.innerHTML = `
@@ -2498,13 +2528,13 @@ function renderCombineReviewScreen() {
       <div class="chart-card_header">
         <div class="chart-card_title">${combine ? combine.name : ''}</div>
       </div>
-      <div class="review-chart_title">${chart.label}</div>
-      ${miniLineChartSvg(values, labels)}
-      <div class="review-chart_dots">
-        ${REVIEW_CHARTS.map(function (rc, i) {
-          return `<button class="review-chart_dot ${i === reviewChartIndex ? 'is-active' : ''}" onclick="setReviewChart(${i})"></button>`;
-        }).join('')}
-      </div>
+      ${REVIEW_CHARTS.map(function (chart) {
+        const values = history.map(function (s) { return reviewChartValue(s, combine, chart.key); });
+        return `<div class="review-chart">
+          <div class="review-chart_title">${chart.label}</div>
+          ${miniLineChartSvg(values, labels, chart)}
+        </div>`;
+      }).join('')}
     </div>
 
     <div class="history-card">
@@ -2525,11 +2555,6 @@ function renderCombineReviewScreen() {
       </div>
     </div>
   `;
-}
-
-function setReviewChart(i) {
-  reviewChartIndex = i;
-  renderCombineReviewScreen();
 }
 
 function viewCombineSession(sessionId) {
@@ -2768,6 +2793,11 @@ function renderExerciseModal() {
   }
   const f = puttingCreativeForm;
   const sloped = f.slopedGreen !== false;
+  // Position de défilement conservée d'un rendu à l'autre (le innerHTML la remettrait à 0)
+  const prevModal = modalRoot.querySelector('.exercise-modal');
+  const prevPreview = modalRoot.querySelector('.exercise-modal_preview');
+  const savedModalScroll = prevModal ? prevModal.scrollTop : 0;
+  const savedPreviewScroll = prevPreview ? prevPreview.scrollTop : 0;
   const stepper = function (field, label, promptLabel) {
     return `
           <div class="exercise-modal_stepper">
@@ -2831,12 +2861,17 @@ function renderExerciseModal() {
               ${sloped ? `<button type="button" onclick="openNumericKeypad('Pente trou ${r.hole} (h)', 'previewClock:${i}', ${r.clock}, false, 'h')">${r.clock} h</button>` : ''}
             </div>`;
           }).join('')}
+          ${f.previewRows.length ? '' : '<div class="exercise-modal_preview-empty">Ajoute des trous pour générer le tableau.</div>'}
         </div>
 
         <button class="exercise-modal_save" id="creative-save-btn" onclick="saveCreativeCombine()" ${!f.name.trim() ? 'disabled' : ''}>${editingCombineId !== null ? 'Enregistrer les modifications' : 'Enregistrer'}</button>
       </div>
     </div>
   `;
+  const newModal = modalRoot.querySelector('.exercise-modal');
+  const newPreview = modalRoot.querySelector('.exercise-modal_preview');
+  if (newModal) newModal.scrollTop = savedModalScroll;
+  if (newPreview) newPreview.scrollTop = savedPreviewScroll;
 }
 
 /* ============================================================

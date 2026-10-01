@@ -1231,8 +1231,18 @@
 #page-putting .exercise-modal_preview {
   border: 1px solid var(--border-subtle);
   border-radius: 10px;
-  overflow: hidden;
+  /* Hauteur fixe : ajouter des trous défile à l'intérieur du tableau sans agrandir le modal */
+  height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
   flex-shrink: 0;
+}
+
+#page-putting .exercise-modal_preview-empty {
+  padding: 24px 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
 }
 
 #page-putting .exercise-modal_preview-row {
@@ -1291,6 +1301,9 @@
 }
 
 #page-putting .exercise-modal_preview-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   font-size: 11px;
   color: var(--text-secondary);
   background-color: var(--bg-card-alt);
@@ -2088,23 +2101,10 @@
   color: var(--text-secondary);
 }
 
-#page-putting .review-chart_dots {
+#page-putting .review-chart {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-#page-putting .review-chart_dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--border-subtle);
-  cursor: pointer;
-}
-
-#page-putting .review-chart_dot.is-active {
-  background-color: var(--accent);
+  flex-direction: column;
+  gap: 6px;
 }
 
 #page-putting .review-chart_empty {
