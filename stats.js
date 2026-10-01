@@ -94,6 +94,52 @@
     lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
 
+  // API: GET /api/courses · GET /api/me (index) — listes et valeurs par défaut du popup "Nouveau parcours"
+  const newRoundOptions = {
+    course: [
+      { value: 'golf-national', label: 'Golf National', city: 'Saint-Quentin-en-Yvelines' },
+      { value: 'chantilly', label: 'Golf de Chantilly', city: 'Vineuil-Saint-Firmin' },
+      { value: 'fontainebleau', label: 'Golf de Fontainebleau', city: 'Fontainebleau' },
+    ],
+    tee: [
+      { value: 'white', label: 'Blanc', color: '#FFFFFF' },
+      { value: 'yellow', label: 'Jaune', color: '#FFE600' },
+      { value: 'blue', label: 'Bleu', color: '#0A6EF0' },
+      { value: 'red', label: 'Rouge', color: '#E0141E' },
+      { value: 'black', label: 'Noir', color: '#05070A', edge: 'rgba(255,255,255,0.7)' },
+    ],
+    nine: [
+      { value: 'front', label: '1 → 9' },
+      { value: 'back', label: '10 → 18' },
+    ],
+    weather: [
+      { value: 'current', label: 'Conditions actuelles' },
+      { value: 'sunny', label: 'Ensoleillé' },
+      { value: 'cloudy', label: 'Nuageux' },
+      { value: 'rain', label: 'Pluie' },
+    ],
+    wind: [
+      { value: 'low', label: 'Faible' },
+      { value: 'medium', label: 'Modéré' },
+      { value: 'strong', label: 'Fort' },
+    ],
+    flags: [
+      { value: 'standard', label: 'Standard' },
+      { value: 'easy', label: 'Faciles' },
+      { value: 'hard', label: 'Difficiles' },
+    ],
+    holes: [
+      { value: '18', label: '18 trous' },
+      { value: '9', label: '9 trous' },
+    ],
+    defaults: {
+      mode: 'saisie-rapide', // ou 'saisie-detaillee'
+      course: 'golf-national', tee: 'yellow', nine: 'back',
+      weather: 'current', wind: 'low', flags: 'standard', holes: '18',
+      handicap: 12.4,
+    },
+  };
+
   /* ========================================================================
      2) ICÔNES SVG INLINE
      ======================================================================== */
@@ -120,6 +166,12 @@
     info: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg>`,
     search: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
     sort: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l3-3M17 20l-3-3"/></svg>`,
+    close: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+    arrowRight: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`,
+    weather: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 20h8.5a3.5 3.5 0 00.3-7A5 5 0 006.4 14.3 3.1 3.1 0 007 20z"/><circle cx="17" cy="6.5" r="2.4"/><path d="M17 2v1M21.5 6.5h-1M12.5 6.5h1M20.2 3.3l-.7.7M13.8 3.3l.7.7"/></svg>`,
+    wind: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M3 8h10a2.5 2.5 0 10-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 11-2.5 2.5"/><path d="M3 16h7a2 2 0 11-2 2"/></svg>`,
+    hole: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M12 4v13"/><path d="M12 4l5 2-5 2"/><ellipse cx="12" cy="18.5" rx="7" ry="2.5"/></svg>`,
+    user: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>`,
   };
   function icon(name) { return ICONS[name] || ''; }
 
@@ -950,6 +1002,182 @@
     initZonePickers(root);
   }
 
+  /* ========================================================================
+     COMPOSANT — Popup "Nouveau parcours"
+     Paramètres de la partie + choix du mode de saisie (rapide / détaillée),
+     puis bascule vers l'écran de saisie choisi.
+     ======================================================================== */
+
+  // Paramètres en cours d'édition (remis aux valeurs par défaut à chaque ouverture)
+  const newRound = {};
+  // Paramètres validés de la partie en cours — à lire depuis les écrans de saisie
+  let currentRound = null;
+  let newRoundEl = null;
+  let newRoundTrigger = null;
+
+  const fmtHandicap = (n) => n.toFixed(1).replace('.', ',');
+  const optionLabel = (key, value) => (newRoundOptions[key].find((o) => o.value === value) || {}).label || '';
+
+  // Texte affiché (ligne haute / ligne basse) pour chaque champ à liste déroulante
+  const NEW_ROUND_VIEW = {
+    course: (s) => { const c = newRoundOptions.course.find((o) => o.value === s.course); return [c.label, c.city]; },
+    weather: (s) => ['Météo', optionLabel('weather', s.weather)],
+    wind: (s) => ['Vent', optionLabel('wind', s.wind)],
+    flags: (s) => ['Drapeaux', optionLabel('flags', s.flags)],
+    holes: (s) => [optionLabel('holes', s.holes), ''],
+  };
+
+  function newRoundGroup(label, content) {
+    return `<div class="new-round_group"><div class="new-round_label">${label}</div>${content}</div>`;
+  }
+
+  // Champ cliquable : le <select> natif est posé en transparent par-dessus la ligne,
+  // ce qui ouvre directement le sélecteur du système (mobile compris)
+  function newRoundField(name, ic, label, chevron, combo) {
+    const [top, bottom] = NEW_ROUND_VIEW[name](newRound);
+    return `
+      <label class="new-round_field${combo || ''}">
+        <span class="new-round_field-icon">${icon(ic)}</span>
+        <span class="new-round_field-text">
+          <span class="new-round_field-top" data-top="${name}">${top}</span>
+          <span class="new-round_field-bottom" data-bottom="${name}">${bottom}</span>
+        </span>
+        <span class="new-round_field-chevron">${icon(chevron || 'chevronRight')}</span>
+        <select class="new-round_field-select" name="${name}" aria-label="${label}">
+          ${newRoundOptions[name].map((o) => `<option value="${o.value}"${o.value === newRound[name] ? ' selected' : ''}>${o.label}</option>`).join('')}
+        </select>
+      </label>`;
+  }
+
+  function renderNewRound() {
+    const o = newRoundOptions;
+    const modal = newRoundEl.querySelector('.new-round_modal');
+
+    const tees = o.tee.map((t) => `
+      <button type="button" role="radio" class="new-round_tee" data-tee="${t.value}" aria-checked="${t.value === newRound.tee}">
+        <span class="new-round_tee-ring"><span class="new-round_tee-dot" style="--tee-color:${t.color};--tee-edge:${t.edge || 'transparent'}"></span></span>
+        ${t.label}
+      </button>`).join('');
+
+    const nines = o.nine.map((n) => `
+      <button type="button" role="radio" class="new-round_pill" data-nine="${n.value}" aria-checked="${n.value === newRound.nine}">${n.label}</button>`).join('');
+
+    const handicap = `
+      <label class="new-round_field is-handicap">
+        <span class="new-round_field-icon">${icon('user')}</span>
+        <span class="new-round_field-text">
+          <span class="new-round_field-top">Index joueur</span>
+          <input class="new-round_field-input" name="handicap" type="text" inputmode="decimal" autocomplete="off" maxlength="5" value="${fmtHandicap(newRound.handicap)}" aria-label="Index joueur">
+        </span>
+        <span class="new-round_field-chevron">${icon('chevronRight')}</span>
+      </label>`;
+
+    modal.innerHTML = `
+      <div class="new-round_header">
+        <span class="new-round_icon">${icon('flag')}</span>
+        <div class="new-round_heading">
+          <h2 class="new-round_title" id="nr-title">Nouvelle partie</h2>
+          <p class="new-round_subtitle">Réglez les paramètres de votre partie</p>
+        </div>
+        <button type="button" class="new-round_close" data-nr-close aria-label="Fermer">${icon('close')}</button>
+      </div>
+      <div class="new-round_form">
+        ${newRoundGroup('Mode de saisie', '<div class="segmented" id="nr-mode"></div>')}
+        ${newRoundGroup('Parcours', newRoundField('course', 'search', 'Parcours', 'chevronDown', ' is-course'))}
+        ${newRoundGroup('Départ', `<div class="new-round_tee-list" role="radiogroup" aria-label="Départ">${tees}</div>`)}
+        <div class="new-round_grid">
+          ${newRoundGroup('Trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Trous">${nines}</div>`)}
+          ${newRoundGroup('Météo', newRoundField('weather', 'weather', 'Météo'))}
+          ${newRoundGroup('Vent', newRoundField('wind', 'wind', 'Vent'))}
+          ${newRoundGroup('Drapeaux', newRoundField('flags', 'flag', 'Drapeaux'))}
+          ${newRoundGroup('Nombre de trous', newRoundField('holes', 'hole', 'Nombre de trous'))}
+          ${newRoundGroup('Handicap', handicap)}
+        </div>
+      </div>
+      <button type="button" class="new-round_cta" data-nr-submit>Commencer la partie ${icon('arrowRight')}</button>
+    `;
+
+    initSegmentedControl(
+      modal.querySelector('#nr-mode'),
+      ['Rapide', 'Détaillée'],
+      newRound.mode === 'saisie-detaillee' ? 1 : 0,
+      (i) => { newRound.mode = i === 0 ? 'saisie-rapide' : 'saisie-detaillee'; }
+    );
+  }
+
+  function ensureNewRound() {
+    if (newRoundEl) return;
+    newRoundEl = document.createElement('div');
+    newRoundEl.className = 'new-round_overlay';
+    newRoundEl.innerHTML = '<div class="new-round_modal" role="dialog" aria-modal="true" aria-labelledby="nr-title"></div>';
+    getStatsRoot().appendChild(newRoundEl);
+
+    // Un seul écouteur de clic pour tout le popup (le contenu est re-rendu à chaque ouverture)
+    newRoundEl.addEventListener('click', (e) => {
+      if (e.target === newRoundEl || e.target.closest('[data-nr-close]')) { closeNewRound(); return; }
+
+      const tee = e.target.closest('[data-tee]');
+      if (tee) {
+        newRound.tee = tee.dataset.tee;
+        newRoundEl.querySelectorAll('[data-tee]').forEach((b) => b.setAttribute('aria-checked', String(b === tee)));
+        return;
+      }
+
+      const nine = e.target.closest('[data-nine]');
+      if (nine) {
+        newRound.nine = nine.dataset.nine;
+        newRoundEl.querySelectorAll('[data-nine]').forEach((b) => b.setAttribute('aria-checked', String(b === nine)));
+        return;
+      }
+
+      if (e.target.closest('[data-nr-submit]')) startNewRound();
+    });
+
+    newRoundEl.addEventListener('change', (e) => {
+      const field = e.target;
+      if (field.name === 'handicap') {
+        const value = parseFloat(field.value.replace(',', '.'));
+        // Valeur invalide : on conserve le dernier index valide
+        if (!Number.isNaN(value)) newRound.handicap = Math.min(54, Math.max(-10, Math.round(value * 10) / 10));
+        field.value = fmtHandicap(newRound.handicap);
+      } else if (field.matches('select')) {
+        newRound[field.name] = field.value;
+        const [top, bottom] = NEW_ROUND_VIEW[field.name](newRound);
+        newRoundEl.querySelector(`[data-top="${field.name}"]`).textContent = top;
+        newRoundEl.querySelector(`[data-bottom="${field.name}"]`).textContent = bottom;
+      }
+    });
+  }
+
+  function onNewRoundKeydown(e) {
+    if (e.key === 'Escape') closeNewRound();
+  }
+
+  function openNewRound(trigger) {
+    ensureNewRound();
+    Object.assign(newRound, newRoundOptions.defaults);
+    renderNewRound();
+    newRoundTrigger = trigger || null;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onNewRoundKeydown);
+    newRoundEl.classList.add('is-open');
+    newRoundEl.querySelector('[data-nr-close]').focus();
+  }
+
+  function closeNewRound() {
+    newRoundEl.classList.remove('is-open');
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onNewRoundKeydown);
+    if (newRoundTrigger) newRoundTrigger.focus();
+  }
+
+  function startNewRound() {
+    // À brancher : POST /api/rounds avec currentRound pour créer la partie
+    currentRound = { ...newRound };
+    closeNewRound();
+    showScreen(currentRound.mode);
+  }
+
   const SCREEN_INIT = {
     dashboard: initDashboard,
     'par-distance': initParDistance,
@@ -989,6 +1217,8 @@
     document.addEventListener('click', (e) => {
       const root = getStatsRoot();
       if (!root || !root.contains(e.target)) return;
+      const openBtn = e.target.closest('[data-new-round]');
+      if (openBtn) { openNewRound(openBtn); return; }
       const btn = e.target.closest('[data-goto]');
       if (btn) showScreen(btn.dataset.goto);
     });

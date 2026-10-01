@@ -1368,3 +1368,304 @@ html {
   cursor: pointer;
 }
 #page-stats .qr-submit:active { background: var(--color-accent-dim); }
+
+/* ==========================================================================
+   NOUVEAU PARCOURS — popup de paramétrage avant saisie (Client-First)
+   ========================================================================== */
+
+#page-stats .new-round_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: rgba(5, 7, 10, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-base) var(--ease-out),
+              visibility 0s linear var(--duration-base);
+}
+#page-stats .new-round_overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+#page-stats .new-round_modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 2 * var(--space-md));
+  max-height: calc(100dvh - 2 * var(--space-md));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-hover);
+  color-scheme: dark; /* sélecteurs natifs en thème sombre */
+  transform: translateY(12px) scale(0.98);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+#page-stats .new-round_overlay.is-open .new-round_modal { transform: none; }
+
+/* ---------- En-tête ---------- */
+#page-stats .new-round_header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+#page-stats .new-round_icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+}
+#page-stats .new-round_icon svg { width: 20px; height: 20px; }
+#page-stats .new-round_heading { flex: 1; min-width: 0; }
+#page-stats .new-round_title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+#page-stats .new-round_subtitle {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_close {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_close:hover { color: var(--color-text-primary); }
+#page-stats .new-round_close svg { width: 22px; height: 22px; }
+
+/* ---------- Formulaire ---------- */
+#page-stats .new-round_form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+#page-stats .new-round_group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+#page-stats .new-round_label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg) var(--space-md);
+}
+#page-stats .new-round_modal .segmented { background: var(--color-bg-elevated); }
+
+/* ---------- Champ (ligne cliquable avec sélecteur natif) ---------- */
+#page-stats .new-round_field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_field:focus-within { border-color: var(--color-border-accent); }
+#page-stats .new-round_field-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  color: var(--color-text-primary);
+}
+#page-stats .new-round_field-icon svg { width: 100%; height: 100%; }
+#page-stats .new-round_field-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-stats .new-round_field-top,
+#page-stats .new-round_field-bottom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#page-stats .new-round_field-top {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+#page-stats .new-round_field-bottom {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_field-bottom:empty { display: none; }
+#page-stats .new-round_field-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_field-chevron svg { width: 100%; height: 100%; display: block; }
+#page-stats .new-round_field-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px; /* évite le zoom auto d'iOS */
+}
+#page-stats .new-round_field-select:focus-visible { outline: none; }
+
+/* Combo : parcours (pleine largeur) */
+#page-stats .new-round_field.is-course .new-round_field-top { font-size: var(--fs-base); }
+#page-stats .new-round_field.is-course .new-round_field-bottom { font-size: var(--fs-sm); }
+
+/* Combo : handicap (libellé discret, valeur en avant, champ éditable) */
+#page-stats .new-round_field.is-handicap .new-round_field-top {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_field-input {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+
+/* ---------- Départ (pastilles de couleur) ---------- */
+#page-stats .new-round_tee-list {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+#page-stats .new-round_tee {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_tee-ring {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_tee-dot {
+  width: 22px;
+  height: 22px;
+  background: var(--tee-color);
+  border: 2px solid var(--tee-edge, transparent);
+  border-radius: var(--radius-full);
+}
+#page-stats .new-round_tee[aria-checked="true"] { color: var(--color-text-primary); }
+#page-stats .new-round_tee[aria-checked="true"] .new-round_tee-ring {
+  border: 2px solid var(--color-accent);
+}
+
+/* ---------- Trous (1 → 9 / 10 → 18) ---------- */
+#page-stats .new-round_pill-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+}
+#page-stats .new-round_pill {
+  min-height: 40px;
+  padding: var(--space-xs);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_pill[aria-checked="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+/* ---------- Bouton principal ---------- */
+#page-stats .new-round_cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+#page-stats .new-round_cta:active { background: var(--color-accent-dim); }
+#page-stats .new-round_cta svg { width: 20px; height: 20px; }
+
+/* Petits écrans : colonnes étroites, on retire les chevrons de la grille */
+@media (max-width: 400px) {
+  #page-stats .new-round_grid .new-round_field-chevron { display: none; }
+}
