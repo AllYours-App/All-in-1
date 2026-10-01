@@ -376,6 +376,7 @@ function courseKeypadHtml() {
 function renderCourseModals() {
   const root = document.getElementById("course-modal-root");
   if (!root) return;
+  const previousCount = root.querySelectorAll(".modal-overlay").length;
   root.innerHTML = [
     windCalcOpen ? windCalcHtml() : "",
     windInfoOpen ? windInfoHtml() : "",
@@ -387,6 +388,11 @@ function renderCourseModals() {
     tendanceEditState ? tendanceEditHtml() : "",
     courseKeypadPopup ? courseKeypadHtml() : ""
   ].join("");
+  // Les modales déjà affichées sont recréées à chaque rendu : on coupe leur
+  // animation d'entrée, sinon l'overlay repart de opacity 0 et fait clignoter la page derrière
+  root.querySelectorAll(".modal-overlay").forEach((el, i) => {
+    if (i < previousCount) el.classList.add("no-anim");
+  });
 }
 
 function openTrackInfo() { trackInfoOpen = true; renderCourseModals(); }

@@ -1472,6 +1472,11 @@ input[type="range"]::-moz-range-thumb {
   to { transform: translateY(0); opacity: 1; }
 }
 
+.modal-overlay.no-anim,
+.modal-overlay.no-anim .modal-sheet {
+  animation: none;
+}
+
 .modal-head {
   display: flex;
   align-items: center;

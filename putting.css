@@ -2357,17 +2357,21 @@
 }
 
 #page-putting .quick-session_metrics {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 12px 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
 }
 
+/* Encadré fixe : icône + libellé sur la 1re ligne, valeur dessous, note dessous (texte entier, jamais tronqué) */
 #page-putting .quick-session_metric {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-content: start;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 2px;
+  min-width: 0;
 }
 
 #page-putting .quick-session_metric.is-editable {
@@ -2381,38 +2385,47 @@
 }
 
 #page-putting .quick-session_metric.is-editable .quick-session_metric-value {
-  align-self: flex-start;
+  justify-self: start;
   border-bottom: 1px dashed var(--text-tertiary);
 }
 
 #page-putting .quick-session_metric-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
+  grid-column: 1;
+  grid-row: 1;
+  width: 16px;
+  height: 16px;
   color: var(--text-secondary);
-  margin-top: 1px;
 }
 
+/* Les 3 textes deviennent directement des éléments de la grille de l'encadré */
 #page-putting .quick-session_metric-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  display: contents;
 }
 
 #page-putting .quick-session_metric-label {
+  grid-column: 2;
+  grid-row: 1;
   font-size: 11px;
   color: var(--text-secondary);
 }
 
 #page-putting .quick-session_metric-value {
+  grid-column: 1 / -1;
+  grid-row: 2;
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
+/* Hauteur réservée pour 2 lignes : la note peut passer à la ligne sans pousser le reste de la page */
 #page-putting .quick-session_metric-note {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: block;
   font-size: 11px;
+  line-height: 1.25;
+  min-height: 2.5em;
   color: var(--text-secondary);
 }
 
@@ -2935,4 +2948,11 @@
 
 #page-putting .exercise-launch_btn:active {
   transform: scale(0.98);
+}
+
+
+@media (max-width: 360px) {
+  #page-putting .quick-session_metric-value {
+    font-size: 15px;
+  }
 }
