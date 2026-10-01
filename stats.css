@@ -1556,24 +1556,6 @@ html {
 #page-stats .new-round_field.is-course .new-round_field-top { font-size: var(--fs-base); }
 #page-stats .new-round_field.is-course .new-round_field-bottom { font-size: var(--fs-sm); }
 
-/* Combo : handicap (libellé discret, valeur en avant, champ éditable) */
-#page-stats .new-round_field.is-handicap .new-round_field-top {
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-regular);
-  color: var(--color-text-secondary);
-}
-#page-stats .new-round_field-input {
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  outline: none;
-  font-family: inherit;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-primary);
-}
-
 /* ---------- Départ (pastilles de couleur) ---------- */
 #page-stats .new-round_tee-list {
   display: flex;
@@ -1619,10 +1601,10 @@ html {
   border: 2px solid var(--color-accent);
 }
 
-/* ---------- Trous (1 → 9 / 10 → 18) ---------- */
+/* ---------- Trous (1* / 10* / 18) ---------- */
 #page-stats .new-round_pill-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-xs);
 }
 #page-stats .new-round_pill {

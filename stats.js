@@ -94,7 +94,7 @@
     lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
 
-  // API: GET /api/courses · GET /api/me (index) — listes et valeurs par défaut du popup "Nouveau parcours"
+  // API: GET /api/courses — listes et valeurs par défaut du popup "Nouveau parcours"
   const newRoundOptions = {
     course: [
       { value: 'golf-national', label: 'Golf National', city: 'Saint-Quentin-en-Yvelines' },
@@ -102,15 +102,17 @@
       { value: 'fontainebleau', label: 'Golf de Fontainebleau', city: 'Fontainebleau' },
     ],
     tee: [
+      { value: 'black', label: 'Noir', color: '#05070A', edge: 'rgba(255,255,255,0.7)' },
       { value: 'white', label: 'Blanc', color: '#FFFFFF' },
       { value: 'yellow', label: 'Jaune', color: '#FFE600' },
       { value: 'blue', label: 'Bleu', color: '#0A6EF0' },
       { value: 'red', label: 'Rouge', color: '#E0141E' },
-      { value: 'black', label: 'Noir', color: '#05070A', edge: 'rgba(255,255,255,0.7)' },
     ],
-    nine: [
-      { value: 'front', label: '1 → 9' },
-      { value: 'back', label: '10 → 18' },
+    // 1* et 10* = 9 trous à partir de ce trou ; 18 = parcours complet
+    holes: [
+      { value: '1', label: '1*', aria: '9 trous à partir du trou 1', count: 9, start: 1 },
+      { value: '10', label: '10*', aria: '9 trous à partir du trou 10', count: 9, start: 10 },
+      { value: '18', label: '18', aria: '18 trous', count: 18, start: 1 },
     ],
     weather: [
       { value: 'current', label: 'Conditions actuelles' },
@@ -123,20 +125,9 @@
       { value: 'medium', label: 'Modéré' },
       { value: 'strong', label: 'Fort' },
     ],
-    flags: [
-      { value: 'standard', label: 'Standard' },
-      { value: 'easy', label: 'Faciles' },
-      { value: 'hard', label: 'Difficiles' },
-    ],
-    holes: [
-      { value: '18', label: '18 trous' },
-      { value: '9', label: '9 trous' },
-    ],
     defaults: {
       mode: 'saisie-rapide', // ou 'saisie-detaillee'
-      course: 'golf-national', tee: 'yellow', nine: 'back',
-      weather: 'current', wind: 'low', flags: 'standard', holes: '18',
-      handicap: 12.4,
+      course: 'golf-national', tee: 'yellow', holes: '18', weather: 'current', wind: 'low',
     },
   };
 
@@ -170,8 +161,6 @@
     arrowRight: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`,
     weather: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 20h8.5a3.5 3.5 0 00.3-7A5 5 0 006.4 14.3 3.1 3.1 0 007 20z"/><circle cx="17" cy="6.5" r="2.4"/><path d="M17 2v1M21.5 6.5h-1M12.5 6.5h1M20.2 3.3l-.7.7M13.8 3.3l.7.7"/></svg>`,
     wind: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M3 8h10a2.5 2.5 0 10-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 11-2.5 2.5"/><path d="M3 16h7a2 2 0 11-2 2"/></svg>`,
-    hole: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M12 4v13"/><path d="M12 4l5 2-5 2"/><ellipse cx="12" cy="18.5" rx="7" ry="2.5"/></svg>`,
-    user: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>`,
   };
   function icon(name) { return ICONS[name] || ''; }
 
@@ -783,6 +772,12 @@
     animateCounters(document.getElementById('screen-dashboard'), 800);
 
     mountKpiCharts(kpiGrid, kpiCards);
+
+    // Bouton flottant unique : ouvre le popup de paramétrage (voir openNewRound)
+    const fabRow = document.createElement('div');
+    fabRow.className = 'fab-row';
+    fabRow.innerHTML = `<button class="fab" type="button" data-new-round>${icon('flag')} Nouveau parcours</button>`;
+    document.getElementById('screen-dashboard').appendChild(fabRow);
   }
 
   function initParDistance() {
@@ -1015,7 +1010,6 @@
   let newRoundEl = null;
   let newRoundTrigger = null;
 
-  const fmtHandicap = (n) => n.toFixed(1).replace('.', ',');
   const optionLabel = (key, value) => (newRoundOptions[key].find((o) => o.value === value) || {}).label || '';
 
   // Texte affiché (ligne haute / ligne basse) pour chaque champ à liste déroulante
@@ -1023,8 +1017,6 @@
     course: (s) => { const c = newRoundOptions.course.find((o) => o.value === s.course); return [c.label, c.city]; },
     weather: (s) => ['Météo', optionLabel('weather', s.weather)],
     wind: (s) => ['Vent', optionLabel('wind', s.wind)],
-    flags: (s) => ['Drapeaux', optionLabel('flags', s.flags)],
-    holes: (s) => [optionLabel('holes', s.holes), ''],
   };
 
   function newRoundGroup(label, content) {
@@ -1059,18 +1051,8 @@
         ${t.label}
       </button>`).join('');
 
-    const nines = o.nine.map((n) => `
-      <button type="button" role="radio" class="new-round_pill" data-nine="${n.value}" aria-checked="${n.value === newRound.nine}">${n.label}</button>`).join('');
-
-    const handicap = `
-      <label class="new-round_field is-handicap">
-        <span class="new-round_field-icon">${icon('user')}</span>
-        <span class="new-round_field-text">
-          <span class="new-round_field-top">Index joueur</span>
-          <input class="new-round_field-input" name="handicap" type="text" inputmode="decimal" autocomplete="off" maxlength="5" value="${fmtHandicap(newRound.handicap)}" aria-label="Index joueur">
-        </span>
-        <span class="new-round_field-chevron">${icon('chevronRight')}</span>
-      </label>`;
+    const holes = o.holes.map((h) => `
+      <button type="button" role="radio" class="new-round_pill" data-holes="${h.value}" aria-label="${h.aria}" aria-checked="${h.value === newRound.holes}">${h.label}</button>`).join('');
 
     modal.innerHTML = `
       <div class="new-round_header">
@@ -1085,13 +1067,10 @@
         ${newRoundGroup('Mode de saisie', '<div class="segmented" id="nr-mode"></div>')}
         ${newRoundGroup('Parcours', newRoundField('course', 'search', 'Parcours', 'chevronDown', ' is-course'))}
         ${newRoundGroup('Départ', `<div class="new-round_tee-list" role="radiogroup" aria-label="Départ">${tees}</div>`)}
+        ${newRoundGroup('Trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Trous">${holes}</div>`)}
         <div class="new-round_grid">
-          ${newRoundGroup('Trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Trous">${nines}</div>`)}
           ${newRoundGroup('Météo', newRoundField('weather', 'weather', 'Météo'))}
           ${newRoundGroup('Vent', newRoundField('wind', 'wind', 'Vent'))}
-          ${newRoundGroup('Drapeaux', newRoundField('flags', 'flag', 'Drapeaux'))}
-          ${newRoundGroup('Nombre de trous', newRoundField('holes', 'hole', 'Nombre de trous'))}
-          ${newRoundGroup('Handicap', handicap)}
         </div>
       </div>
       <button type="button" class="new-round_cta" data-nr-submit>Commencer la partie ${icon('arrowRight')}</button>
@@ -1123,10 +1102,10 @@
         return;
       }
 
-      const nine = e.target.closest('[data-nine]');
-      if (nine) {
-        newRound.nine = nine.dataset.nine;
-        newRoundEl.querySelectorAll('[data-nine]').forEach((b) => b.setAttribute('aria-checked', String(b === nine)));
+      const holes = e.target.closest('[data-holes]');
+      if (holes) {
+        newRound.holes = holes.dataset.holes;
+        newRoundEl.querySelectorAll('[data-holes]').forEach((b) => b.setAttribute('aria-checked', String(b === holes)));
         return;
       }
 
@@ -1135,12 +1114,7 @@
 
     newRoundEl.addEventListener('change', (e) => {
       const field = e.target;
-      if (field.name === 'handicap') {
-        const value = parseFloat(field.value.replace(',', '.'));
-        // Valeur invalide : on conserve le dernier index valide
-        if (!Number.isNaN(value)) newRound.handicap = Math.min(54, Math.max(-10, Math.round(value * 10) / 10));
-        field.value = fmtHandicap(newRound.handicap);
-      } else if (field.matches('select')) {
+      if (field.matches('select')) {
         newRound[field.name] = field.value;
         const [top, bottom] = NEW_ROUND_VIEW[field.name](newRound);
         newRoundEl.querySelector(`[data-top="${field.name}"]`).textContent = top;
@@ -1173,7 +1147,9 @@
 
   function startNewRound() {
     // À brancher : POST /api/rounds avec currentRound pour créer la partie
-    currentRound = { ...newRound };
+    // 1* / 10* : 9 trous à partir du trou choisi ; 18 : parcours complet depuis le trou 1
+    const h = newRoundOptions.holes.find((o) => o.value === newRound.holes);
+    currentRound = { ...newRound, holeCount: h.count, startHole: h.start };
     closeNewRound();
     showScreen(currentRound.mode);
   }

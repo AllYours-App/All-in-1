@@ -761,43 +761,15 @@ const filterState = {
 };
 
 /* ============================================================
-   SG (Strokes Gained) — moteur de calcul
-   Table de référence : nombre moyen de putts sur le PGA Tour selon
-   la distance (benchmark Broadie), convertie en mètres.
-   Interpolation linéaire entre les points connus, extrapolation au-delà.
+   SG (Strokes Gained) — putting
+   Le moteur (tables + interpolation) vit dans sg-data.js et strokes-gained.js.
+   Ici : uniquement le lie "green".
    ============================================================ */
-const SG_BENCHMARK_TABLE = [
-  { d: 0.3, ep: 1.00 }, { d: 0.6, ep: 1.01 }, { d: 0.9, ep: 1.04 }, { d: 1.2, ep: 1.14 },
-  { d: 1.5, ep: 1.24 }, { d: 1.8, ep: 1.32 }, { d: 2.1, ep: 1.40 }, { d: 2.4, ep: 1.47 },
-  { d: 2.7, ep: 1.53 }, { d: 3.0, ep: 1.59 }, { d: 4.6, ep: 1.80 }, { d: 6.1, ep: 1.92 },
-  { d: 7.6, ep: 2.01 }, { d: 9.1, ep: 2.09 }, { d: 12.2, ep: 2.19 }, { d: 15.2, ep: 2.28 },
-  { d: 18.3, ep: 2.36 }, { d: 27.4, ep: 2.56 },
-];
 
-// Nombre de putts attendu (référence Tour) pour une distance donnée en mètres, par interpolation
-function expectedPutts(distanceM) {
-  const t = SG_BENCHMARK_TABLE;
-  if (distanceM <= t[0].d) return t[0].ep;
-  const last = t[t.length - 1];
-  if (distanceM >= last.d) {
-    const prev = t[t.length - 2];
-    const slope = (last.ep - prev.ep) / (last.d - prev.d);
-    return last.ep + slope * (distanceM - last.d);
-  }
-  for (let i = 0; i < t.length - 1; i++) {
-    const a = t[i], b = t[i + 1];
-    if (distanceM >= a.d && distanceM <= b.d) {
-      const ratio = (distanceM - a.d) / (b.d - a.d);
-      return a.ep + ratio * (b.ep - a.ep);
-    }
-  }
-  return last.ep;
-}
-
-// SG d'un trou = putts attendus (référence Tour) - putts réellement pris (positif = mieux que le Tour)
+// SG d'un trou = putts attendus (référence Tour, green) - putts réellement pris (positif = mieux que le Tour)
 function puttSG(distanceM, puttsTaken) {
   if (distanceM == null || puttsTaken == null || isNaN(distanceM) || isNaN(puttsTaken) || distanceM <= 0) return null;
-  return expectedPutts(distanceM) - puttsTaken;
+  return sgShot('green', distanceM, null, 0, puttsTaken);
 }
 
 function fmtSG(v) {
