@@ -6,7 +6,9 @@
   'use strict';
 
   // Extension des fonds d'écran : FondEcranHomePageMatin.<extension>
-  var BACKGROUND_EXTENSION = 'jpg';
+  var BACKGROUND_EXTENSION = 'png';
+  // Dossier des fonds d'écran (relatif à index.html)
+  var BACKGROUND_FOLDER = 'images/';
   var SESSION_KEY = 'golfSession';
 
   var root = document.getElementById('page-login');
@@ -69,7 +71,7 @@
   var backgrounds = document.querySelectorAll('[data-auth-background]');
 
   function updateBackgrounds() {
-    var src = 'FondEcranHomePage' + getTimeSlot(new Date()) + '.' + BACKGROUND_EXTENSION;
+    var src = BACKGROUND_FOLDER + 'FondEcranHomePage' + getTimeSlot(new Date()) + '.' + BACKGROUND_EXTENSION;
     backgrounds.forEach(function (img) {
       if (img.getAttribute('src') !== src) {
         img.hidden = false;
@@ -152,7 +154,6 @@
       if (!validators[type](form)) return;
 
       // TODO : appel backend (connexion ou création de compte) avant d'enregistrer la session
-      // TODO : brancher Apple et Google sur les boutons [data-auth-provider]
       saveSession(form.elements['email'].value.trim());
       form.reset();
       if (typeof showPage === 'function') showPage('home');

@@ -213,49 +213,6 @@
   opacity: 0.85;
 }
 
-.auth_button.is-social {
-  justify-content: flex-start;
-  height: 3.75rem;
-  padding: 0 1.5rem;
-  background-color: var(--auth-field);
-  border: 1px solid var(--auth-border);
-  border-radius: var(--auth-radius-field);
-  color: var(--auth-text);
-  font-size: 1.125rem;
-  font-weight: 500;
-}
-
-.auth_button.is-social:active {
-  border-color: var(--auth-lime);
-}
-
-/* ---------- Séparateur "OU" ---------- */
-
-.auth_divider {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-.auth_divider-line {
-  flex: 1;
-  height: 1px;
-  background-color: var(--auth-border);
-}
-
-.auth_divider-text {
-  color: var(--auth-text-muted);
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-}
-
-.auth_social {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
-
 /* ---------- Pied de page ---------- */
 
 .auth_switch {
@@ -318,4 +275,35 @@
 
 .has-session #page-login.active {
   display: none !important;
+}
+
+/* ---------- Page connexion : tient sur un écran, sans défilement ---------- */
+
+#page-login .auth_content {
+  height: 100%;
+  min-height: 0;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+}
+
+/* Logo en haut, titre + formulaire poussés vers le bas */
+#page-login .auth_header.is-login {
+  margin-top: auto;
+  margin-bottom: 1.25rem;
+}
+
+#page-login .auth_field {
+  height: clamp(3.25rem, 7.5svh, 4rem);
+}
+
+#page-login .auth_button.is-primary {
+  height: clamp(3.5rem, 8svh, 4.25rem);
+}
+
+#page-login .auth_switch {
+  margin-top: 1.25rem;
+}
+
+#page-login .auth_legal {
+  margin-top: 1rem;
 }
