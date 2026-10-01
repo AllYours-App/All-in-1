@@ -1512,24 +1512,31 @@ let tendanceEditState = null; // { key: "fw" | "gr" }
 function fwTendanceDisplay() { return fwTendanceOverride !== null ? fwTendanceOverride : fwTendance(); }
 function grTendanceDisplay() { return grTendanceOverride !== null ? grTendanceOverride : grTendance(); }
 
+// Choix possibles : fairway = gauche / droite, green = les 8 secteurs calculés par grTendance()
+const TENDANCE_OPTIONS = {
+  fw: ["left", "right"],
+  gr: ["left", "right", "short", "long", "short_left", "short_right", "long_left", "long_right"]
+};
+
 function openTendanceEdit(key) {
-  tendanceEditState = { key: key, value: key === "fw" ? (fwTendanceDisplay() || "") : (grTendanceDisplay() || "") };
+  tendanceEditState = { key: key };
   renderCourseModals();
 }
 function closeTendanceEdit() { tendanceEditState = null; renderCourseModals(); }
-function confirmTendanceEdit() {
+// Un tap sur un choix l'applique et ferme la modale
+function selectTendanceOption(optionKey) {
   const t = tendanceEditState;
-  if (!t) return;
-  const input = document.getElementById("tendance-edit-input");
-  const val = input ? input.value.trim() : "";
-  if (t.key === "fw") fwTendanceOverride = val === "" ? null : val;
-  else grTendanceOverride = val === "" ? null : val;
+  if (!t || !TENDANCE_OPTIONS[t.key].includes(optionKey)) return;
+  const label = TENDANCE_LABELS[optionKey];
+  if (t.key === "fw") fwTendanceOverride = label;
+  else grTendanceOverride = label;
   tendanceEditState = null;
   renderCourseModals();
 }
 function tendanceEditHtml() {
   const t = tendanceEditState;
   const title = t.key === "fw" ? "Tendance fairway" : "Tendance green";
+  const current = t.key === "fw" ? fwTendanceDisplay() : grTendanceDisplay();
   return `
     <div class="modal-overlay" onclick="closeTendanceEdit()">
       <div class="modal-sheet keypad-sheet" onclick="event.stopPropagation()">
@@ -1537,8 +1544,13 @@ function tendanceEditHtml() {
           <h3>${title}</h3>
           <button class="icon-btn" aria-label="Fermer" onclick="closeTendanceEdit()">✕</button>
         </div>
-        <input type="text" id="tendance-edit-input" class="tendance-edit-input" value="${t.value.replace(/"/g, "&quot;")}" placeholder="Ex : Gauche, Court…" autofocus>
-        <button type="button" class="btn btn-primary keypad-confirm-btn" onclick="confirmTendanceEdit()">Valider</button>
+        <div class="select-grid cols-2">
+          ${TENDANCE_OPTIONS[t.key].map((k) => `
+            <button type="button" class="select-card ${TENDANCE_LABELS[k] === current ? "selected" : ""}" onclick="selectTendanceOption('${k}')">
+              <span>${TENDANCE_LABELS[k]}</span>
+            </button>
+          `).join("")}
+        </div>
       </div>
     </div>
   `;

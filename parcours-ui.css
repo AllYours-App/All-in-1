@@ -1604,24 +1604,6 @@ input[type="range"]::-moz-range-thumb {
   opacity: 0.75;
 }
 
-.tendance-edit-input {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--card-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-size: 16px;
-  font-family: inherit;
-  padding: 10px 12px;
-  margin: 4px 0 10px;
-}
-
-.tendance-edit-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
 .compass-wrap {
   display: flex;
   justify-content: center;
