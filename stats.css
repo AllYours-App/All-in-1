@@ -1552,9 +1552,50 @@ html {
 }
 #page-stats .new-round_field-select:focus-visible { outline: none; }
 
-/* Combo : parcours (pleine largeur) */
-#page-stats .new-round_field.is-course .new-round_field-top { font-size: var(--fs-base); }
+/* Champ de recherche (parcours) */
+#page-stats .new-round_search { position: relative; }
+#page-stats .new-round_field-input {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 16px; /* évite le zoom automatique d'iOS au focus */
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+#page-stats .new-round_field-input::placeholder { color: var(--color-text-tertiary); }
 #page-stats .new-round_field.is-course .new-round_field-bottom { font-size: var(--fs-sm); }
+
+/* Suggestions de parcours */
+#page-stats .new-round_results {
+  list-style: none;
+  margin: var(--space-xs) 0 0;
+  padding: var(--space-2xs);
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+#page-stats .new-round_result {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+#page-stats .new-round_result:hover,
+#page-stats .new-round_result:focus-visible { background: var(--color-bg-card-hover); }
+#page-stats .new-round_result-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+#page-stats .new-round_result-city { font-size: var(--fs-xs); color: var(--color-text-secondary); }
 
 /* ---------- Départ (pastilles de couleur) ---------- */
 #page-stats .new-round_tee-list {
@@ -1596,6 +1637,7 @@ html {
   border: 2px solid var(--tee-edge, transparent);
   border-radius: var(--radius-full);
 }
+#page-stats .new-round_tee:disabled { opacity: 0.3; cursor: not-allowed; }
 #page-stats .new-round_tee[aria-checked="true"] { color: var(--color-text-primary); }
 #page-stats .new-round_tee[aria-checked="true"] .new-round_tee-ring {
   border: 2px solid var(--color-accent);

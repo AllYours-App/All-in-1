@@ -94,13 +94,8 @@
     lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
 
-  // API: GET /api/courses — listes et valeurs par défaut du popup "Nouveau parcours"
+  // Listes et valeurs par défaut du popup "Nouveau parcours" (les parcours viennent de l'API, voir loadNearbyCourses)
   const newRoundOptions = {
-    course: [
-      { value: 'golf-national', label: 'Golf National', city: 'Saint-Quentin-en-Yvelines' },
-      { value: 'chantilly', label: 'Golf de Chantilly', city: 'Vineuil-Saint-Firmin' },
-      { value: 'fontainebleau', label: 'Golf de Fontainebleau', city: 'Fontainebleau' },
-    ],
     tee: [
       { value: 'black', label: 'Noir', color: '#05070A', edge: 'rgba(255,255,255,0.7)' },
       { value: 'white', label: 'Blanc', color: '#FFFFFF' },
@@ -127,7 +122,7 @@
     ],
     defaults: {
       mode: 'saisie-rapide', // ou 'saisie-detaillee'
-      course: 'golf-national', tee: 'yellow', holes: '18', weather: 'current', wind: 'low',
+      tee: 'yellow', holes: '18', weather: 'current', wind: 'low',
     },
   };
 
@@ -1014,10 +1009,183 @@
 
   // Texte affiché (ligne haute / ligne basse) pour chaque champ à liste déroulante
   const NEW_ROUND_VIEW = {
-    course: (s) => { const c = newRoundOptions.course.find((o) => o.value === s.course); return [c.label, c.city]; },
     weather: (s) => ['Météo', optionLabel('weather', s.weather)],
     wind: (s) => ['Vent', optionLabel('wind', s.wind)],
   };
+
+  /* --- Recherche de parcours (API FlyAway Golf, comme dans l'ancienne version) ---
+     GET /golfs n'accepte pas de recherche texte (lat / long / limit / skip seulement) :
+     1) on charge une fois les parcours proches de la position de l'utilisateur,
+     2) on filtre cette liste localement à chaque frappe,
+     3) au choix d'un parcours, on charge son profil (par, handicap, distances par départ). */
+  const COURSE_API = 'https://api.flyawaygolf.com/v2';
+  let nearbyCourses = [];
+  let nearbyStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
+  let nearbyError = '';
+  let courseLoading = false;
+  let courseError = '';
+  let courseToken = 0; // invalide la réponse d'un chargement devenu obsolète
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Comparaison sans accents ni majuscules ("evian" trouve "Évian")
+  const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  // Libellé de départ renvoyé par l'API → clé de newRoundOptions.tee
+  function normalizeTeeKey(raw) {
+    const s = fold(raw);
+    if (s.includes('black') || s.includes('noir')) return 'black';
+    if (s.includes('white') || s.includes('blanc')) return 'white';
+    if (s.includes('yellow') || s.includes('jaune')) return 'yellow';
+    if (s.includes('blue') || s.includes('bleu')) return 'blue';
+    if (s.includes('red') || s.includes('rouge')) return 'red';
+    return null;
+  }
+
+  // Profil FlyAway → { name, holes: [{ par, hcp }] x18, tees: { couleur: [distance x18] } }
+  // On prend la carte 18 trous si elle existe, sinon la première disponible.
+  function mapCourseProfile(data) {
+    const cards = data.scorecards || [];
+    const card = cards.find((s) => s.holesCount === 18) || cards[0];
+    const grid = card ? (card.grid || [])[0] : null;
+    const pick = (arr, i) => (arr && arr[i] !== undefined ? arr[i] : null);
+
+    const holes = Array.from({ length: 18 }, (_, i) => ({ par: pick(grid && grid.par, i), hcp: pick(grid && grid.handicap, i) }));
+    const tees = {};
+    ((grid && grid.teeboxes) || []).forEach((t) => {
+      const key = normalizeTeeKey((t.color && t.color.name) || t.name);
+      if (key) tees[key] = Array.from({ length: 18 }, (_, i) => pick(t.distances, i));
+    });
+    return { name: data.name || '', city: data.city || '', holes, tees };
+  }
+
+  function loadNearbyCourses() {
+    if (nearbyStatus === 'loading' || nearbyStatus === 'ready') return;
+    if (!navigator.geolocation) {
+      nearbyStatus = 'error';
+      nearbyError = 'Géolocalisation indisponible, saisissez le parcours manuellement.';
+      refreshCourseStatus();
+      return;
+    }
+    nearbyStatus = 'loading';
+    refreshCourseStatus();
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`${COURSE_API}/golfs?lat=${latitude}&long=${longitude}&limit=100`);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const json = await res.json();
+          nearbyCourses = (json.data && json.data.golfs && json.data.golfs.items) || [];
+          nearbyStatus = 'ready';
+        } catch (err) {
+          nearbyStatus = 'error';
+          nearbyError = 'Recherche indisponible, saisissez le parcours manuellement.';
+        }
+        renderCourseResults();
+        refreshCourseStatus();
+      },
+      () => {
+        nearbyStatus = 'error';
+        nearbyError = 'Position refusée, saisissez le parcours manuellement.';
+        refreshCourseStatus();
+      },
+      { timeout: 10000 }
+    );
+  }
+
+  // Parcours proches correspondant au texte saisi (nom ou ville, 2 caractères minimum)
+  function findCourses() {
+    const q = fold(newRound.courseQuery).trim();
+    if (q.length < 2 || nearbyStatus !== 'ready' || newRound.course) return [];
+    return nearbyCourses.filter((c) => fold(c.name).includes(q) || fold(c.city).includes(q)).slice(0, 8);
+  }
+
+  function renderCourseResults() {
+    const list = newRoundEl && newRoundEl.querySelector('.new-round_results');
+    if (!list) return;
+    const matches = findCourses();
+    list.innerHTML = matches.map((c) => `
+      <li><button type="button" class="new-round_result" data-course-slug="${esc(c.slug)}">
+        <span class="new-round_result-name">${esc(c.name)}</span>
+        ${c.city ? `<span class="new-round_result-city">${esc(c.city)}</span>` : ''}
+      </button></li>`).join('');
+    list.hidden = !matches.length;
+    refreshCourseStatus();
+  }
+
+  // Ligne basse du champ : ville du parcours choisi, ou état de la recherche
+  function refreshCourseStatus() {
+    const el = newRoundEl && newRoundEl.querySelector('[data-course-status]');
+    if (!el) return;
+    const typed = fold(newRound.courseQuery).trim().length >= 2;
+    let text = '';
+    if (courseLoading) text = 'Chargement du parcours…';
+    else if (newRound.course) text = newRound.course.city;
+    else if (courseError) text = courseError;
+    else if (nearbyStatus === 'loading') text = 'Recherche des parcours proches…';
+    else if (nearbyStatus === 'error') text = nearbyError;
+    else if (nearbyStatus === 'ready' && typed && !findCourses().length) text = 'Aucun parcours trouvé près de vous';
+    el.textContent = text;
+  }
+
+  // Seuls les départs existant sur le parcours choisi restent cliquables
+  function applyCourseTees() {
+    const available = newRound.course ? Object.keys(newRound.course.tees) : [];
+    const restricted = available.length > 0;
+    if (restricted && !available.includes(newRound.tee)) {
+      newRound.tee = newRoundOptions.tee.find((t) => available.includes(t.value)).value;
+    }
+    newRoundEl.querySelectorAll('[data-tee]').forEach((b) => {
+      b.disabled = restricted && !available.includes(b.dataset.tee);
+      b.setAttribute('aria-checked', String(b.dataset.tee === newRound.tee));
+    });
+  }
+
+  async function pickCourse(slug) {
+    const picked = nearbyCourses.find((c) => c.slug === slug);
+    if (!picked) return;
+    const token = ++courseToken;
+    const input = newRoundEl.querySelector('input[name="course"]');
+    input.value = picked.name;
+    newRound.courseQuery = picked.name;
+    newRound.course = null;
+    courseError = '';
+    courseLoading = true;
+    renderCourseResults(); // liste masquée : le parcours choisi n'est plus une suggestion
+
+    try {
+      const res = await fetch(`${COURSE_API}/golfs/profile/${encodeURIComponent(slug)}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      if (token !== courseToken) return; // l'utilisateur a modifié le champ entre-temps
+      const mapped = mapCourseProfile(json.data);
+      newRound.course = { ...mapped, name: mapped.name || picked.name, city: picked.city || mapped.city };
+    } catch (err) {
+      if (token !== courseToken) return;
+      courseError = 'Impossible de charger ce parcours, saisissez-le manuellement.';
+    }
+    courseLoading = false;
+    applyCourseTees();
+    refreshCourseStatus();
+  }
+
+  // Remplit la carte du trou (écran Saisie rapide) avec le 1er trou de la partie
+  function renderHoleCard() {
+    const card = document.querySelector('#screen-saisie-rapide .hole-card');
+    if (!card || !currentRound) return;
+    const hole = currentRound.holes[0];
+    const show = (el, visible) => { el.style.display = visible ? '' : 'none'; };
+
+    card.querySelector('.num-badge').textContent = hole.number;
+    card.querySelector('.hole-card__par').textContent = hole.par != null ? `Par ${hole.par}` : 'Par —';
+    const hcp = card.querySelector('.hole-card__hcp');
+    hcp.textContent = hole.hcp != null ? `Hcp ${hole.hcp}` : '';
+    show(hcp, hole.hcp != null);
+    const distance = card.querySelector('.hole-card__distance');
+    distance.querySelector('span').textContent = hole.distance != null ? `${hole.distance} m` : '';
+    show(distance, hole.distance != null);
+    show(card.querySelector('.hole-card__divider'), hole.distance != null);
+  }
 
   function newRoundGroup(label, content) {
     return `<div class="new-round_group"><div class="new-round_label">${label}</div>${content}</div>`;
@@ -1065,7 +1233,18 @@
       </div>
       <div class="new-round_form">
         ${newRoundGroup('Mode de saisie', '<div class="segmented" id="nr-mode"></div>')}
-        ${newRoundGroup('Parcours', newRoundField('course', 'search', 'Parcours', 'chevronDown', ' is-course'))}
+        ${newRoundGroup('Parcours', `
+          <div class="new-round_search">
+            <label class="new-round_field is-course">
+              <span class="new-round_field-icon">${icon('search')}</span>
+              <span class="new-round_field-text">
+                <input class="new-round_field-input" name="course" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Rechercher un parcours" aria-label="Rechercher un parcours" value="${esc(newRound.courseQuery)}">
+                <span class="new-round_field-bottom" data-course-status></span>
+              </span>
+              <span class="new-round_field-chevron">${icon('chevronDown')}</span>
+            </label>
+            <ul class="new-round_results" hidden></ul>
+          </div>`)}
         ${newRoundGroup('Départ', `<div class="new-round_tee-list" role="radiogroup" aria-label="Départ">${tees}</div>`)}
         ${newRoundGroup('Trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Trous">${holes}</div>`)}
         <div class="new-round_grid">
@@ -1082,6 +1261,8 @@
       newRound.mode === 'saisie-detaillee' ? 1 : 0,
       (i) => { newRound.mode = i === 0 ? 'saisie-rapide' : 'saisie-detaillee'; }
     );
+    applyCourseTees();
+    refreshCourseStatus();
   }
 
   function ensureNewRound() {
@@ -1094,6 +1275,10 @@
     // Un seul écouteur de clic pour tout le popup (le contenu est re-rendu à chaque ouverture)
     newRoundEl.addEventListener('click', (e) => {
       if (e.target === newRoundEl || e.target.closest('[data-nr-close]')) { closeNewRound(); return; }
+
+      const result = e.target.closest('[data-course-slug]');
+      if (result) { pickCourse(result.dataset.courseSlug); return; }
+      if (!e.target.closest('.new-round_search')) newRoundEl.querySelector('.new-round_results').hidden = true;
 
       const tee = e.target.closest('[data-tee]');
       if (tee) {
@@ -1110,6 +1295,28 @@
       }
 
       if (e.target.closest('[data-nr-submit]')) startNewRound();
+    });
+
+    // Recherche de parcours : la géolocalisation ne se demande qu'au premier focus du champ
+    newRoundEl.addEventListener('focusin', (e) => {
+      if (e.target.name === 'course') loadNearbyCourses();
+    });
+
+    newRoundEl.addEventListener('input', (e) => {
+      if (e.target.name !== 'course') return;
+      courseToken++; // annule un chargement de parcours en cours
+      courseLoading = false;
+      courseError = '';
+      newRound.courseQuery = e.target.value;
+      if (newRound.course) { newRound.course = null; applyCourseTees(); } // texte modifié : le parcours chargé n'est plus valable
+      renderCourseResults();
+    });
+
+    // Échap referme d'abord la liste de suggestions, puis seulement le popup
+    newRoundEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || e.target.name !== 'course') return;
+      const list = newRoundEl.querySelector('.new-round_results');
+      if (!list.hidden) { list.hidden = true; e.stopPropagation(); }
     });
 
     newRoundEl.addEventListener('change', (e) => {
@@ -1129,7 +1336,11 @@
 
   function openNewRound(trigger) {
     ensureNewRound();
-    Object.assign(newRound, newRoundOptions.defaults);
+    Object.assign(newRound, newRoundOptions.defaults, { course: null, courseQuery: '' });
+    courseToken++;
+    courseLoading = false;
+    courseError = '';
+    if (nearbyStatus === 'error') nearbyStatus = 'idle'; // la réouverture retente la recherche
     renderNewRound();
     newRoundTrigger = trigger || null;
     document.body.style.overflow = 'hidden';
@@ -1149,9 +1360,23 @@
     // À brancher : POST /api/rounds avec currentRound pour créer la partie
     // 1* / 10* : 9 trous à partir du trou choisi ; 18 : parcours complet depuis le trou 1
     const h = newRoundOptions.holes.find((o) => o.value === newRound.holes);
-    currentRound = { ...newRound, holeCount: h.count, startHole: h.start };
+    const course = newRound.course;
+    // Un trou par entrée : numéro réel sur le parcours (le 18 enchaîne sur le 1), par, handicap, distance du départ choisi
+    const holes = Array.from({ length: h.count }, (_, i) => {
+      const idx = (h.start - 1 + i) % 18;
+      return {
+        number: idx + 1,
+        par: course ? course.holes[idx].par : null,
+        hcp: course ? course.holes[idx].hcp : null,
+        distance: course && course.tees[newRound.tee] ? course.tees[newRound.tee][idx] : null,
+      };
+    });
+    // Sans parcours choisi dans la liste, on garde le nom saisi à la main
+    const courseName = course ? course.name : (newRound.courseQuery.trim() || null);
+    currentRound = { ...newRound, courseName, holeCount: h.count, startHole: h.start, holes };
     closeNewRound();
     showScreen(currentRound.mode);
+    if (currentRound.mode === 'saisie-rapide') renderHoleCard();
   }
 
   const SCREEN_INIT = {
