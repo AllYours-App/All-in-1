@@ -1781,13 +1781,13 @@
       headerToggle.setAttribute('aria-expanded', String(open));
     }
 
-    // Lie : un appui = lie suivant (Fairway → Rough → Arbres → Bunker → Green → vide)
-    const LIES = ['Fairway', 'Rough', 'Arbres', 'Bunker', 'Green'];
-    const LIE_CLASS = { Fairway: 'is-fairway', Rough: 'is-rough', Arbres: 'is-trees', Bunker: 'is-bunker', Green: 'is-green' };
+    // Lie : un appui = lie suivant (Tee → Fairway → Rough → Bunker → Green → vide)
+    const LIES = ['Tee', 'Fairway', 'Rough', 'Bunker', 'Green'];
+    const LIE_CLASS = { Fairway: 'is-fairway', Rough: 'is-rough', Tee: 'is-tee', Bunker: 'is-bunker', Green: 'is-green' };
     const LIE_ICON = {
       Fairway: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4.5 20c.5-4 .5-7-.5-10"/><path d="M8.5 20c0-3-.5-5-1.5-7"/><path d="M12 20V6"/><path d="M15.5 20c0-3 .5-5 1.5-7"/><path d="M19.5 20c-.5-4-.5-7 .5-10"/></svg>`,
       Rough: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 20l1-10"/><path d="M8 20l1-15"/><path d="M12 20V8"/><path d="M16 20l-1-13"/><path d="M20 20l-1-9"/></svg>`,
-      Arbres: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M12 3l-5 7h3l-4 6h12l-4-6h3z"/><path d="M12 16v5"/></svg>`,
+      Tee: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 5h12c0 2.2-2 4-5 4v9l-1 2.5-1-2.5V9C8 9 6 7.2 6 5z"/></svg>`,
       Bunker: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M3 18c0-3 2-4.5 4.5-4.5 1-2.2 3-3.5 5.5-3 2 .4 3 1.6 3.5 3 2.5 0 4.5 1.5 4.5 4.5z"/></svg>`,
       Green: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M9 18V4"/><path d="M9 4l7 2.6-7 2.6"/><ellipse cx="9" cy="19" rx="5" ry="1.8"/></svg>`,
     };
@@ -1801,7 +1801,7 @@
     let idx = 0;        // trou affiché
     let sel = 0;        // coup sélectionné dans le trou
 
-    const blankShot = () => ({ club: null, lie: null, distance: null, penalty: 0, fairway: null, green: null });
+    const blankShot = (first = false) => ({ club: null, lie: first ? 'Tee' : null, distance: null, penalty: 0, fairway: null, green: null });
     const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.fairway === null && s.green === null;
     const shots = () => holes[idx];
     const shot = () => holes[idx][sel];
@@ -1820,7 +1820,7 @@
 
     function load() {
       round = ensureRound();
-      holes = round.holes.map(() => [blankShot()]);
+      holes = round.holes.map(() => [blankShot(true)]);
       idx = 0;
       sel = 0;
       setHeader(false);
@@ -1894,10 +1894,14 @@
       const holedAt = list.findIndex((s) => s.distance === 0);
       const holed = holedAt !== -1;
       const played = holed ? list.slice(0, holedAt + 1) : list;
-      let before = 0, gir = false;
+      let before = 0, gir = false, greenInfo = false;
+      // Sans par connu, atteindre le green suffit (comme dans la saisie rapide)
+      const limit = par !== null ? par - 2 : Infinity;
       played.forEach((s, k) => {
+        if (s.green !== null || s.lie === 'Green') greenInfo = true;
         // GIR : green atteint en par − 2 coups (pénalités comprises)
-        if (par !== null && (s.lie === 'Green' || isOnGreen(s.green)) && k + 1 + before <= par - 2) gir = true;
+        if (isOnGreen(s.green) && k + 1 + before <= limit) gir = true;   // balle sur le green après ce coup
+        if (s.lie === 'Green' && k + before <= limit) gir = true;        // coup joué depuis le green
         before += s.penalty;
       });
       return {
@@ -1905,7 +1909,7 @@
         score: holed ? played.length + before : null,
         putts: holed ? played.filter((s) => s.club === 'Putter').length : null,
         fairway: list[0].fairway,
-        gir: holed && par !== null ? gir : null,
+        gir: holed || greenInfo ? gir : null,
         shots: list,
       };
     }
@@ -2014,8 +2018,10 @@
     /* ---------- Saisie ---------- */
     function deleteShot() {
       const list = shots();
-      if (list.length > 1) list.splice(sel, 1);
-      else list[0] = blankShot();
+      if (list.length > 1) {
+        list.splice(sel, 1);
+        if (sel === 0 && list[0].lie === null) list[0].lie = 'Tee';
+      } else list[0] = blankShot(true);
       afterChange();
     }
 
@@ -2034,6 +2040,7 @@
       if (t.closest('[data-sd-lie-cycle]')) {
         const s = shot();
         s.lie = LIES[LIES.indexOf(s.lie) + 1] || null;
+        if (s.lie === 'Green') s.club = 'Putter'; // lie green → putter
         afterChange();
         return;
       }
@@ -2055,7 +2062,13 @@
 
     clubSelect.innerHTML = '<option value="">Choisir un club</option>'
       + SD_CLUBS.map((c) => `<option value="${c.name}">${c.name}</option>`).join('');
-    clubSelect.addEventListener('change', () => { if (round) { shot().club = clubSelect.value || null; afterChange(); } });
+    clubSelect.addEventListener('change', () => {
+      if (!round) return;
+      const s = shot();
+      s.club = clubSelect.value || null;
+      if (s.club === 'Putter') s.lie = 'Green'; // putter → lie green
+      afterChange();
+    });
 
     // Distance saisie au clavier (virgule ou point)
     distInput.addEventListener('change', () => {
