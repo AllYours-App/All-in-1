@@ -1543,7 +1543,7 @@
     }
 
     // Fonds d'image posés en CSS. Green : sur la même zone que la roue → même centre, même taille.
-    findImage(GREEN_BG_BASE).then((url) => { if (url && greenRoot) greenRoot.style.backgroundImage = `url("${url}")`; });
+    findImage(GREEN_BG_BASE).then((url) => { if (url && greenRoot) greenRoot.style.setProperty('--qr-green-bg', `url("${url}")`); });
     findImage(FAIRWAY_BG_BASE).then((url) => { if (url && fairwayRoot) fairwayRoot.style.backgroundImage = `url("${url}")`; });
 
     /* ---------- Navigation entre les trous ---------- */
