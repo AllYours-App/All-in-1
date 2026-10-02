@@ -1704,14 +1704,19 @@ html {
   --qr-blue: #86A9E8;
 
   box-sizing: border-box;
-  max-width: var(--container-max);
+  width: 100%;
+  max-width: none; /* plein écran : plus de plafond --container-max */
   height: 100vh;
   height: 100dvh;
-  margin: 0 auto;
-  padding: calc(56px + env(safe-area-inset-top) + var(--space-xs)) var(--space-md) calc(env(safe-area-inset-bottom) + var(--space-sm));
+  margin: 0;
+  padding:
+    calc(56px + env(safe-area-inset-top) + var(--space-xs))
+    calc(var(--space-xs) + env(safe-area-inset-right))
+    calc(env(safe-area-inset-bottom) + var(--space-sm))
+    calc(var(--space-xs) + env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   overflow: hidden;
 }
 
@@ -1720,8 +1725,8 @@ html {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  padding: var(--space-sm);
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   background: var(--color-bg-elevated);
   border: 1px solid var(--qr-border);
   border-radius: var(--radius-lg);
@@ -1777,7 +1782,14 @@ html {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-xs);
+  margin: calc(var(--space-2xs) * -1);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--duration-fast) var(--ease-out);
 }
+#page-stats .saisie-rapide_hole-score:active { background: var(--color-accent-15); }
 #page-stats .saisie-rapide_hole-score-label {
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
@@ -1796,6 +1808,14 @@ html {
   color: var(--color-bg-base);
   font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+/* Pas encore de score : pastille vide en pointillés */
+#page-stats .saisie-rapide_score-badge.is-empty {
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px dashed var(--color-accent);
+  color: var(--color-accent);
 }
 
 /* ---------- Zones fairway / green ---------- */
@@ -1822,6 +1842,7 @@ html {
   max-height: 100%;
   display: block;
 }
+#page-stats .saisie-rapide_wheel-bg { pointer-events: none; }
 #page-stats .saisie-rapide_wheel-sector {
   fill: rgba(255, 255, 255, 0.09);
   stroke: rgba(255, 255, 255, 0.35);
@@ -1889,14 +1910,14 @@ html {
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 #page-stats .saisie-rapide_split > .saisie-rapide_card { min-height: 0; }
 #page-stats .saisie-rapide_side {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 #page-stats .saisie-rapide_side > .is-live { flex: 1; min-height: 0; }
 
@@ -2004,3 +2025,139 @@ html {
   color: var(--color-bg-base);
 }
 #page-stats .saisie-rapide_nav-button.is-primary:active { background: var(--color-accent-dim); }
+#page-stats .saisie-rapide_nav-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---------- Pavé numérique du score (feuille en bas d'écran) ---------- */
+#page-stats .saisie-rapide_pad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(5, 7, 10, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-base) var(--ease-out),
+              visibility 0s linear var(--duration-base);
+}
+#page-stats .saisie-rapide_pad-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+#page-stats .saisie-rapide_pad {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-strong);
+  border-bottom: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(24px);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+#page-stats .saisie-rapide_pad-overlay.is-open .saisie-rapide_pad { transform: none; }
+
+#page-stats .saisie-rapide_pad-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+#page-stats .saisie-rapide_pad-heading { min-width: 0; }
+#page-stats .saisie-rapide_pad-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_pad-sub {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--qr-blue, #86A9E8);
+}
+#page-stats .saisie-rapide_pad-close {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_pad-close svg { width: 22px; height: 22px; }
+
+#page-stats .saisie-rapide_pad-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-height: 92px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-accent);
+  border-radius: var(--radius-lg);
+}
+#page-stats .saisie-rapide_pad-value {
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  color: var(--color-accent);
+}
+#page-stats .saisie-rapide_pad-result {
+  min-height: 1.2em;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+#page-stats .saisie-rapide_pad-keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+#page-stats .saisie-rapide_pad-key {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card-hover);
+  color: var(--color-text-primary);
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_pad-key:active { background: var(--color-accent-25); }
+#page-stats .saisie-rapide_pad-key svg { width: 26px; height: 26px; }
+#page-stats .saisie-rapide_pad-key.is-secondary { color: var(--color-text-secondary); }
+#page-stats .saisie-rapide_pad-key.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg-base);
+}
+#page-stats .saisie-rapide_pad-key.is-primary:active { background: var(--color-accent-dim); }
