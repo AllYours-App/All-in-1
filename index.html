@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="gym.css">
 <link rel="stylesheet" href="putting.css">
 <link rel="stylesheet" href="vitesse.css">
-<link rel="stylesheet" href="stats.css?v=2">
+<link rel="stylesheet" href="stats.css?v=3">
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="auth.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
@@ -802,6 +802,231 @@
   </main>
 </section>
 
+<!-- ======================================================================
+     ÉCRAN 8 — SAISIE DÉTAILLÉE (Client-First)
+     L'encadré image du trou (data-sd="hole-image") est volontairement vide.
+     Les encadrés Green / Fairway reprennent ceux de la saisie rapide (classes saisie-rapide_*).
+     ====================================================================== -->
+<section id="screen-saisie-detaillee" class="screen">
+  <main class="saisie-detaillee_component">
+
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">SAISIE DÉTAILLÉE</h1>
+      <button class="page-header__menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </button>
+    </header>
+
+    <!-- STATS DU TROU -->
+    <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_stats">
+      <div class="saisie-detaillee_stats-image" data-sd="hole-image"></div>
+      <div class="saisie-detaillee_stats-body">
+        <h2 class="saisie-rapide_card-title">Stats du trou</h2>
+        <div class="saisie-detaillee_stat-list">
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg>
+              <span class="saisie-detaillee_stat-label">FIR</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="fir">--</span>
+          </div>
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>
+              <span class="saisie-detaillee_stat-label">GIR</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="gir">--</span>
+          </div>
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21l6-17"/><path d="M14 4l3 1-.8 2.6L13 6.6"/><path d="M5.5 20.5h5"/></svg>
+              <span class="saisie-detaillee_stat-label">Putts</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="putts">--</span>
+          </div>
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11"/><path d="M12 20V6"/><path d="M19 20v-7"/></svg>
+              <span class="saisie-detaillee_stat-label">SG</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="sg">--</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUPS DU TROU | COUP SÉLECTIONNÉ -->
+    <div class="saisie-detaillee_split">
+
+      <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_shots">
+        <div class="saisie-rapide_card-head">
+          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21l7-16"/><path d="M13 5l4 1.2-1 3.2-4.2-1.1"/></svg></span>
+          <h2 class="saisie-rapide_card-title" data-sd="shots-title">Coups du trou</h2>
+        </div>
+        <ol class="saisie-detaillee_shot-list" data-sd="shot-list"></ol>
+      </section>
+
+      <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_detail">
+
+        <div class="saisie-detaillee_detail-head">
+          <span class="saisie-detaillee_icon is-lg" data-sd="detail-icon"></span>
+          <div class="saisie-detaillee_detail-heading">
+            <span class="saisie-detaillee_detail-kicker" data-sd="detail-kicker">Coup 1</span>
+            <h2 class="saisie-detaillee_detail-title" data-sd="detail-title">–</h2>
+          </div>
+          <button class="saisie-detaillee_delete" type="button" data-sd-delete aria-label="Supprimer le coup">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Club utilisé</span>
+          <label class="saisie-detaillee_field">
+            <span class="saisie-detaillee_icon" data-sd="club-icon"></span>
+            <span class="saisie-detaillee_field-text" data-sd="club-text"></span>
+            <svg class="saisie-detaillee_field-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            <select class="saisie-detaillee_field-select" data-sd="club-select" aria-label="Club utilisé"></select>
+          </label>
+        </div>
+
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Lie</span>
+          <div class="saisie-detaillee_lie-list" role="radiogroup" aria-label="Lie">
+            <button class="saisie-detaillee_lie is-fairway" type="button" role="radio" aria-checked="false" data-sd-lie="Fairway">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 20c.5-4 .5-7-.5-10"/><path d="M8.5 20c0-3-.5-5-1.5-7"/><path d="M12 20V6"/><path d="M15.5 20c0-3 .5-5 1.5-7"/><path d="M19.5 20c-.5-4-.5-7 .5-10"/></svg>
+              <span>Fairway</span>
+            </button>
+            <button class="saisie-detaillee_lie is-rough" type="button" role="radio" aria-checked="false" data-sd-lie="Rough">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-10"/><path d="M8 20l1-15"/><path d="M12 20V8"/><path d="M16 20l-1-13"/><path d="M20 20l-1-9"/></svg>
+              <span>Rough</span>
+            </button>
+            <button class="saisie-detaillee_lie is-trees" type="button" role="radio" aria-checked="false" data-sd-lie="Arbres">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l-5 7h3l-4 6h12l-4-6h3z"/><path d="M12 16v5"/></svg>
+              <span>Arbres</span>
+            </button>
+            <button class="saisie-detaillee_lie is-bunker" type="button" role="radio" aria-checked="false" data-sd-lie="Bunker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c0-3 2-4.5 4.5-4.5 1-2.2 3-3.5 5.5-3 2 .4 3 1.6 3.5 3 2.5 0 4.5 1.5 4.5 4.5z"/></svg>
+              <span>Bunker</span>
+            </button>
+            <button class="saisie-detaillee_lie is-green" type="button" role="radio" aria-checked="false" data-sd-lie="Green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V4"/><path d="M9 4l7 2.6-7 2.6"/><ellipse cx="9" cy="19" rx="5" ry="1.8"/></svg>
+              <span>Green</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Distance restante</span>
+          <div class="saisie-detaillee_stepper">
+            <button class="saisie-detaillee_stepper-button" type="button" data-sd-dist="-1" aria-label="Moins">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>
+            </button>
+            <label class="saisie-detaillee_stepper-value">
+              <input class="saisie-detaillee_input" data-sd="distance" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="--" aria-label="Distance restante en mètres">
+              <span class="saisie-detaillee_unit">m</span>
+            </label>
+            <button class="saisie-detaillee_stepper-button" type="button" data-sd-dist="1" aria-label="Plus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Pénalité</span>
+          <div class="saisie-detaillee_stepper">
+            <span class="saisie-detaillee_icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21l7-16"/><path d="M13 5l4 1.2-1 3.2-4.2-1.1"/></svg></span>
+            <span class="saisie-detaillee_stepper-value is-start" data-sd="penalty" aria-live="polite">0</span>
+            <button class="saisie-detaillee_stepper-button" type="button" data-sd-penalty="-1" aria-label="Moins une pénalité">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>
+            </button>
+            <button class="saisie-detaillee_stepper-button" type="button" data-sd-penalty="1" aria-label="Plus une pénalité">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ATTAQUE GREEN | ATTAQUE FAIRWAY (mêmes encadrés que la saisie rapide) -->
+    <div class="saisie-detaillee_maps">
+
+      <section class="saisie-rapide_card saisie-detaillee_map-card">
+        <div class="saisie-rapide_card-head">
+          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg></span>
+          <h2 class="saisie-rapide_card-title">Attaque green</h2>
+        </div>
+        <div class="saisie-rapide_map is-green" data-sd="green-root"></div>
+      </section>
+
+      <section class="saisie-rapide_card saisie-detaillee_map-card">
+        <div class="saisie-rapide_card-head">
+          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4L5 20"/><path d="M14.5 4L19 20"/><path d="M12 7v2.5"/><path d="M12 12v2.5"/><path d="M12 17v3"/></svg></span>
+          <h2 class="saisie-rapide_card-title">Attaque fairway</h2>
+        </div>
+        <div class="saisie-rapide_map is-fairway" data-sd="fairway-root"></div>
+        <div class="saisie-rapide_choice-list is-divided" role="radiogroup" aria-label="Attaque fairway">
+          <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Gauche">
+            <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></span>
+            <span class="saisie-rapide_choice-label">Gauche</span>
+          </button>
+          <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Centre">
+            <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg></span>
+            <span class="saisie-rapide_choice-label">Centre</span>
+          </button>
+          <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Droite">
+            <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
+            <span class="saisie-rapide_choice-label">Droite</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- STROKES GAINED (valeurs à brancher : data-sd="sg-*") -->
+    <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_sg">
+      <div class="saisie-detaillee_sg-head">
+        <span class="saisie-detaillee_icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11"/><path d="M12 20V6"/><path d="M19 20v-7"/></svg></span>
+        <h2 class="saisie-rapide_card-title">Strokes gained</h2>
+      </div>
+      <div class="saisie-detaillee_sg-list">
+        <div class="saisie-detaillee_sg-item">
+          <span class="saisie-detaillee_icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21l7-16"/><path d="M13 5l4 1.2-1 3.2-4.2-1.1"/></svg></span>
+          <span class="saisie-detaillee_sg-text"><span class="saisie-detaillee_sg-label">Driving</span><span class="saisie-detaillee_sg-value" data-sd="sg-driving">--</span></span>
+        </div>
+        <div class="saisie-detaillee_sg-item">
+          <span class="saisie-detaillee_icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg></span>
+          <span class="saisie-detaillee_sg-text"><span class="saisie-detaillee_sg-label">Attaques de green</span><span class="saisie-detaillee_sg-value" data-sd="sg-green">--</span></span>
+        </div>
+        <div class="saisie-detaillee_sg-item">
+          <span class="saisie-detaillee_icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21l7-16"/><path d="M13 5l4 1.2-1 3.2-4.2-1.1"/></svg></span>
+          <span class="saisie-detaillee_sg-text"><span class="saisie-detaillee_sg-label">Approches</span><span class="saisie-detaillee_sg-value" data-sd="sg-approach">--</span></span>
+        </div>
+        <div class="saisie-detaillee_sg-item">
+          <span class="saisie-detaillee_icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21l6-17"/><path d="M14 4l3 1-.8 2.6L13 6.6"/><path d="M5.5 20.5h5"/></svg></span>
+          <span class="saisie-detaillee_sg-text"><span class="saisie-detaillee_sg-label">Putts</span><span class="saisie-detaillee_sg-value" data-sd="sg-putting">--</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAVIGATION ENTRE LES TROUS -->
+    <div class="saisie-rapide_nav">
+      <button class="saisie-rapide_nav-button is-primary" type="button" data-sd-nav="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+        Trou précédent
+      </button>
+      <button class="saisie-rapide_nav-button is-primary" type="button" data-sd-nav="1">
+        <span data-sd="next-label">Trou suivant</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+  </main>
+</section>
+
 </div>
 
 <!-- =========================== PARTIE : WEDGING ============================ -->
@@ -1056,7 +1281,7 @@
 <script src="gym.js"></script>
 <script src="putting.js"></script>
 <script src="vitesse.js"></script>
-<script src="stats.js?v=2"></script>
+<script src="stats.js?v=3"></script>
 <script src="menu.js"></script>
 <script src="auth.js"></script>
 </body>

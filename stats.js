@@ -1304,12 +1304,12 @@
     const courseName = course ? course.name : (newRound.courseQuery.trim() || null);
     currentRound = { ...newRound, courseName, holeCount, startHole, holes };
     closeNewRound();
-    // Mode rapide : ouvre l'écran de saisie par trou (le mode détaillé n'a pas encore d'écran)
-    if (newRound.mode === 'saisie-rapide') {
-      const firstOpen = !initialized.has('saisie-rapide'); // 1ʳᵉ ouverture : l'init charge déjà currentRound
-      showScreen('saisie-rapide');
-      if (!firstOpen && saisieRapide) saisieRapide.load(); // sinon on repart de la nouvelle partie
-    }
+    // Ouvre l'écran de saisie du mode choisi (rapide ou détaillé)
+    const screenName = newRound.mode === 'saisie-detaillee' ? 'saisie-detaillee' : 'saisie-rapide';
+    const firstOpen = !initialized.has(screenName); // 1ʳᵉ ouverture : l'init charge déjà currentRound
+    showScreen(screenName);
+    const api = screenName === 'saisie-detaillee' ? saisieDetaillee : saisieRapide;
+    if (!firstOpen && api) api.load(); // sinon on repart de la nouvelle partie
   }
 
   /* ========================================================================
@@ -1732,12 +1732,377 @@
     load();
   }
 
+  /* ========================================================================
+     SAISIE DÉTAILLÉE — écran de saisie coup par coup
+     Chaque trou a sa liste de coups { club, lie, distance, penalty, fairway, green }.
+     Un coup avec distance restante > 0 ajoute automatiquement le coup suivant ;
+     une distance de 0 = balle rentrée (fin du trou).
+     Les encadrés Green / Fairway fonctionnent comme dans la saisie rapide.
+     ======================================================================== */
+
+  // Sac du joueur (à remplacer par le vrai sac) — type : wood | iron | putter
+  const SD_CLUBS = [
+    { name: 'Driver', type: 'wood' }, { name: 'Bois 3', type: 'wood' }, { name: 'Bois 5', type: 'wood' }, { name: 'Hybride', type: 'wood' },
+    ...[3, 4, 5, 6, 7, 8, 9].map((n) => ({ name: `Fer ${n}`, type: 'iron' })),
+    { name: 'PW', type: 'iron' }, { name: 'GW', type: 'iron' }, { name: 'SW', type: 'iron' }, { name: 'LW', type: 'iron' },
+    { name: 'Putter', type: 'putter' },
+  ];
+  const SD_MAX_SHOTS = 15;
+
+  // API de l'écran (renseignée par initSaisieDetaillee) : load() recharge currentRound
+  let saisieDetaillee = null;
+
+  function initSaisieDetaillee() {
+    const screen = document.getElementById('screen-saisie-detaillee');
+    const d = (name) => screen.querySelector(`[data-sd="${name}"]`);
+    const setText = (el, text) => { if (el) el.textContent = text; };
+
+    const shotsTitle = d('shots-title');
+    const shotList = d('shot-list');
+    const detailIcon = d('detail-icon');
+    const detailKicker = d('detail-kicker');
+    const detailTitle = d('detail-title');
+    const clubIcon = d('club-icon');
+    const clubText = d('club-text');
+    const clubSelect = d('club-select');
+    const distInput = d('distance');
+    const penaltyEl = d('penalty');
+    const greenRoot = d('green-root');
+    const fairwayRoot = d('fairway-root');
+    const fairwayCard = fairwayRoot.closest('.saisie-rapide_card');
+    const lieOptions = [...screen.querySelectorAll('[data-sd-lie]')];
+    const fairwayOptions = [...screen.querySelectorAll('[data-sd-fairway]')];
+    const [prevBtn, nextBtn] = screen.querySelectorAll('[data-sd-nav]');
+
+    const FAIRWAY_HIT = 'Centre'; // Gauche / Centre / Droite : Centre = fairway touché
+    const ICON_OF = { wood: icon('club'), iron: icon('club'), putter: icon('putter') };
+
+    /* ---------- État ---------- */
+    let round = null;   // partie en cours (currentRound)
+    let holes = [];     // holes[i] = liste des coups du trou i
+    let idx = 0;        // trou affiché
+    let sel = 0;        // coup sélectionné dans le trou
+
+    const blankShot = () => ({ club: null, lie: null, distance: null, penalty: 0, fairway: null, green: null });
+    const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.fairway === null && s.green === null;
+    const shots = () => holes[idx];
+    const shot = () => holes[idx][sel];
+    const clubType = (s) => { const c = SD_CLUBS.find((x) => x.name === s.club); return c ? c.type : 'wood'; };
+
+    function ensureRound() {
+      // Écran ouvert sans passer par le popup : partie vierge de 18 trous
+      if (!currentRound) {
+        currentRound = {
+          courseName: null, tee: newRoundOptions.defaults.tee, holeCount: 18, startHole: 1,
+          holes: Array.from({ length: 18 }, (_, i) => ({ number: i + 1, par: null, hcp: null, distance: null })),
+        };
+      }
+      return currentRound;
+    }
+
+    function load() {
+      round = ensureRound();
+      holes = round.holes.map(() => [blankShot()]);
+      idx = 0;
+      sel = 0;
+      renderAll();
+    }
+
+    /* ---------- Formats ---------- */
+    const num = (v) => String(v).replace('.', ',');                 // 0.8 → "0,8"
+    const round1 = (v) => Math.round(v * 10) / 10;
+    const shotName = (s, i) => (s.club === 'Driver' ? 'Drive' : s.club === 'Putter' ? 'Putt' : s.club || `Coup ${i + 1}`);
+    function remaining(s) {
+      if (s.distance === null) return '--';
+      if (s.distance === 0) return 'Rentré';
+      return clubType(s) === 'putter' ? `${num(s.distance)} m` : `${num(s.distance)} m restant`;
+    }
+
+    /* ---------- Roue du green (même principe que la saisie rapide) ----------
+       9 zones sur le green (le trou + 8 secteurs) et 8 zones hors green jusqu'au bord de l'image */
+    const DIRECTIONS = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
+    const GREEN_SIZE = 0.6;   // diamètre du green cliquable, part de l'image
+    const HOLE_SIZE = 0.07;   // diamètre du trou, part de l'image
+    let greenRatio = 1;       // largeur / hauteur de l'image (mis à jour au chargement)
+    const isOnGreen = (zone) => zone === 'Centre' || String(zone).startsWith('Green-');
+
+    // Tracé d'un secteur d'anneau entre deux angles (0° = haut, sens horaire)
+    function sectorPath(cx, cy, rIn, rOut, a0, a1) {
+      const rad = (deg) => (deg - 90) * Math.PI / 180;
+      const pt = (r, deg) => `${(cx + r * Math.cos(rad(deg))).toFixed(2)} ${(cy + r * Math.sin(rad(deg))).toFixed(2)}`;
+      return `M ${pt(rOut, a0)} A ${rOut} ${rOut} 0 0 1 ${pt(rOut, a1)} L ${pt(rIn, a1)} A ${rIn} ${rIn} 0 0 0 ${pt(rIn, a0)} Z`;
+    }
+
+    // Distance du centre au bord de l'image dans la direction deg (0° = haut)
+    function edgeDistance(deg, halfW, halfH) {
+      const s = Math.abs(Math.sin(deg * Math.PI / 180)), c = Math.abs(Math.cos(deg * Math.PI / 180));
+      return Math.min(s > 1e-9 ? halfW / s : Infinity, c > 1e-9 ? halfH / c : Infinity);
+    }
+
+    function renderGreenWheel() {
+      const zone = shot().green;
+      const vw = 200, vh = vw / greenRatio, cx = vw / 2, cy = vh / 2;
+      const base = Math.min(vw, vh);
+      const rGreen = base * GREEN_SIZE / 2;
+      const rHole = base * HOLE_SIZE / 2;
+      const rFar = Math.hypot(vw, vh);
+      let sectors = '';
+      let ball = '';
+      const ballAt = (r, deg) => {
+        const a = (deg - 90) * Math.PI / 180;
+        return `<circle cx="${(cx + r * Math.cos(a)).toFixed(2)}" cy="${(cy + r * Math.sin(a)).toFixed(2)}" r="7" class="saisie-rapide_wheel-ball"/>`;
+      };
+      DIRECTIONS.forEach((dir, i) => {
+        const mid = i * 45, a0 = mid - 22.5, a1 = a0 + 45;
+        const inKey = `Green-${dir}`, outKey = `Hors-${dir}`;
+        sectors += `<path d="${sectorPath(cx, cy, rGreen, rFar, a0, a1)}" class="saisie-rapide_wheel-sector is-outer${zone === outKey ? ' is-selected' : ''}" data-zone="${outKey}"/>`;
+        sectors += `<path d="${sectorPath(cx, cy, rHole, rGreen, a0, a1)}" class="saisie-rapide_wheel-sector${zone === inKey ? ' is-selected' : ''}" data-zone="${inKey}"/>`;
+        if (zone === inKey) ball = ballAt((rHole + rGreen) / 2, mid);
+        if (zone === outKey) ball = ballAt((rGreen + edgeDistance(mid, cx, cy)) / 2, mid);
+      });
+      const centerSel = zone === 'Centre';
+      if (centerSel) ball = `<circle cx="${cx}" cy="${cy}" r="7" class="saisie-rapide_wheel-ball"/>`;
+      greenRoot.innerHTML = `<svg viewBox="0 0 ${vw} ${vh.toFixed(2)}" class="saisie-rapide_wheel" role="group" aria-label="Attaque green">
+        ${sectors}
+        <circle cx="${cx}" cy="${cy}" r="${rHole}" class="saisie-rapide_wheel-center${centerSel ? ' is-selected' : ''}" data-zone="Centre"/>
+        ${ball}
+      </svg>`;
+    }
+
+    /* ---------- Résumé d'un trou (sert aux stats et à l'enregistrement) ---------- */
+    function holeSummary(i) {
+      const list = holes[i];
+      const par = round.holes[i].par;
+      const holedAt = list.findIndex((s) => s.distance === 0);
+      const holed = holedAt !== -1;
+      const played = holed ? list.slice(0, holedAt + 1) : list;
+      let before = 0, gir = false;
+      played.forEach((s, k) => {
+        // GIR : green atteint en par − 2 coups (pénalités comprises)
+        if (par !== null && (s.lie === 'Green' || isOnGreen(s.green)) && k + 1 + before <= par - 2) gir = true;
+        before += s.penalty;
+      });
+      return {
+        holed,
+        score: holed ? played.length + before : null,
+        putts: holed ? played.filter((s) => s.club === 'Putter').length : null,
+        fairway: list[0].fairway,
+        gir: holed && par !== null ? gir : null,
+        shots: list,
+      };
+    }
+
+    /* ---------- Affichage ---------- */
+    function renderShots() {
+      shotList.innerHTML = shots().map((s, i) => {
+        const type = clubType(s);
+        return `
+          <li class="saisie-detaillee_shot">
+            <span class="saisie-detaillee_shot-number${i === sel ? ' is-selected' : ''}">${i + 1}</span>
+            <button type="button" class="saisie-detaillee_shot-button" data-sd-shot="${i}"${i === sel ? ' aria-current="true"' : ''}>
+              <span class="saisie-detaillee_icon is-${type}">${ICON_OF[type]}</span>
+              <span class="saisie-detaillee_shot-text">
+                <span class="saisie-detaillee_shot-title">${shotName(s, i)}</span>
+                <span class="saisie-detaillee_shot-sub">${remaining(s)}</span>
+              </span>
+              <span class="saisie-detaillee_shot-chevron">${icon('chevronRight')}</span>
+            </button>
+          </li>`;
+      }).join('');
+      // Garde le coup sélectionné visible dans la liste
+      const el = shotList.children[sel];
+      if (el) {
+        if (el.offsetTop < shotList.scrollTop) shotList.scrollTop = el.offsetTop;
+        else if (el.offsetTop + el.offsetHeight > shotList.scrollTop + shotList.clientHeight) {
+          shotList.scrollTop = el.offsetTop + el.offsetHeight - shotList.clientHeight;
+        }
+      }
+    }
+
+    function renderDetail() {
+      const s = shot();
+      const type = clubType(s);
+      setText(detailKicker, `Coup ${sel + 1}`);
+      setText(detailTitle, s.club ? shotName(s, sel) : '–');
+      detailIcon.className = `saisie-detaillee_icon is-lg is-${type}`;
+      detailIcon.innerHTML = ICON_OF[type];
+      clubIcon.className = `saisie-detaillee_icon is-${type}`;
+      clubIcon.innerHTML = ICON_OF[type];
+      setText(clubText, s.club || 'Choisir un club');
+      clubText.classList.toggle('is-empty', !s.club);
+      clubSelect.value = s.club || '';
+      lieOptions.forEach((o) => o.setAttribute('aria-checked', String(o.dataset.sdLie === s.lie)));
+      distInput.value = s.distance === null ? '' : num(s.distance);
+      setText(penaltyEl, s.penalty);
+    }
+
+    function renderFairway() {
+      const s = shot();
+      // Pas de fairway au départ d'un par 3
+      const noFairway = round.holes[idx].par === 3 && sel === 0;
+      fairwayCard.classList.toggle('is-na', noFairway);
+      fairwayOptions.forEach((o) => {
+        o.disabled = noFairway;
+        o.setAttribute('aria-checked', String(!noFairway && o.dataset.sdFairway === s.fairway));
+      });
+    }
+
+    function renderStats() {
+      let fir = 0, firHoles = 0, gir = 0, girHoles = 0, putts = 0, puttsHoles = 0;
+      holes.forEach((_, i) => {
+        const h = holeSummary(i);
+        if (round.holes[i].par !== 3 && h.fairway !== null) { firHoles++; if (h.fairway === FAIRWAY_HIT) fir++; }
+        if (h.gir !== null) { girHoles++; if (h.gir) gir++; }
+        if (h.putts !== null) { putts += h.putts; puttsHoles++; }
+      });
+      const pct = (n, total) => (total ? `${Math.round((n / total) * 100)}%` : '--');
+      setText(d('fir'), pct(fir, firHoles));
+      setText(d('gir'), pct(gir, girHoles));
+      setText(d('putts'), puttsHoles ? num((putts / puttsHoles).toFixed(1)) : '--');
+      // Strokes gained (d('sg'), d('sg-driving'), d('sg-green'), d('sg-approach'), d('sg-putting')) :
+      // à brancher, aucun barème de référence n'est encore disponible
+    }
+
+    const isLastHole = () => idx === round.holes.length - 1;
+    const allHoled = () => holes.every((_, i) => holeSummary(i).holed);
+
+    function renderNav() {
+      prevBtn.disabled = idx === 0;
+      // Dernier trou : "Enregistrer" n'apparaît que si tous les trous sont rentrés
+      nextBtn.classList.toggle('is-hidden', isLastHole() && !allHoled());
+      setText(d('next-label'), isLastHole() ? 'Enregistrer' : 'Trou suivant');
+    }
+
+    function renderAll() {
+      setText(shotsTitle, `Coups du trou ${round.holes[idx].number}`);
+      renderShots();
+      renderDetail();
+      renderFairway();
+      renderGreenWheel();
+      renderStats();
+      renderNav();
+    }
+
+    // Après toute modification : balle rentrée → retire les coups vides en trop ;
+    // sinon, si le dernier coup a une distance restante, ajoute le coup suivant
+    function afterChange() {
+      const list = shots();
+      const holedAt = list.findIndex((s) => s.distance === 0);
+      if (holedAt !== -1) {
+        while (list.length - 1 > holedAt && isBlank(list[list.length - 1])) list.pop();
+      } else if (list[list.length - 1].distance > 0 && list.length < SD_MAX_SHOTS) {
+        list.push(blankShot());
+      }
+      sel = Math.min(sel, list.length - 1);
+      renderAll();
+    }
+
+    /* ---------- Saisie ---------- */
+    function stepDistance(dir) {
+      const s = shot();
+      if (s.distance === null && dir < 0) return;
+      const step = clubType(s) === 'putter' ? 0.1 : 1;   // putts au dixième de mètre
+      s.distance = Math.max(0, round1((s.distance === null ? 0 : s.distance) + dir * step));
+      afterChange();
+    }
+
+    function deleteShot() {
+      const list = shots();
+      if (list.length > 1) list.splice(sel, 1);
+      else list[0] = blankShot();
+      afterChange();
+    }
+
+    screen.addEventListener('click', (e) => {
+      if (!round) return;
+      const t = e.target;
+      let el;
+      if ((el = t.closest('[data-sd-shot]'))) { sel = Number(el.dataset.sdShot); renderAll(); return; }
+      if ((el = t.closest('[data-sd-lie]'))) { const s = shot(); s.lie = s.lie === el.dataset.sdLie ? null : el.dataset.sdLie; afterChange(); return; }
+      if ((el = t.closest('[data-sd-dist]'))) { stepDistance(Number(el.dataset.sdDist)); return; }
+      if ((el = t.closest('[data-sd-penalty]'))) {
+        const s = shot();
+        s.penalty = Math.min(9, Math.max(0, s.penalty + Number(el.dataset.sdPenalty)));
+        afterChange();
+        return;
+      }
+      if (t.closest('[data-sd-delete]')) { deleteShot(); return; }
+      // Fairway : sélection unique ; un second clic désélectionne
+      if ((el = t.closest('[data-sd-fairway]')) && !el.disabled) {
+        const s = shot();
+        s.fairway = s.fairway === el.dataset.sdFairway ? null : el.dataset.sdFairway;
+        afterChange();
+        return;
+      }
+      // Green : un second clic sur la même zone désélectionne
+      if ((el = t.closest('[data-zone]'))) {
+        const s = shot();
+        s.green = s.green === el.dataset.zone ? null : el.dataset.zone;
+        afterChange();
+      }
+    });
+
+    clubSelect.innerHTML = '<option value="">Choisir un club</option>'
+      + SD_CLUBS.map((c) => `<option value="${c.name}">${c.name}</option>`).join('');
+    clubSelect.addEventListener('change', () => { if (round) { shot().club = clubSelect.value || null; afterChange(); } });
+
+    // Distance saisie au clavier (virgule ou point)
+    distInput.addEventListener('change', () => {
+      if (!round) return;
+      const raw = distInput.value.trim().replace(',', '.');
+      const v = parseFloat(raw);
+      shot().distance = raw === '' || Number.isNaN(v) ? null : Math.max(0, round1(v));
+      afterChange();
+    });
+    distInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') distInput.blur(); });
+
+    /* ---------- Navigation entre les trous ---------- */
+    function go(step) {
+      const next = idx + step;
+      if (next < 0) return;
+      if (next >= round.holes.length) { if (allHoled()) finishRound(); return; }
+      idx = next;
+      sel = 0;
+      renderAll();
+    }
+
+    function finishRound() {
+      // À brancher : POST /api/rounds avec round (round.entries contient la saisie de chaque trou)
+      round.entries = holes.map((_, i) => holeSummary(i));
+      document.dispatchEvent(new CustomEvent('stats:round-finished', { detail: round }));
+      showScreen('dashboard');
+    }
+
+    prevBtn.addEventListener('click', () => go(-1));
+    nextBtn.addEventListener('click', () => go(1));
+
+    // Fonds d'image (mêmes images que la saisie rapide)
+    findImage(GREEN_BG_BASE).then((url) => {
+      if (!url) return;
+      greenRoot.style.setProperty('--qr-green-bg', `url("${url}")`);
+      const probe = new Image();
+      probe.onload = () => {
+        if (probe.naturalWidth > 0 && probe.naturalHeight > 0) {
+          greenRatio = probe.naturalWidth / probe.naturalHeight;
+          greenRoot.style.setProperty('--qr-green-ratio', greenRatio);
+          if (round) renderGreenWheel();
+        }
+      };
+      probe.src = url;
+    });
+    findImage(FAIRWAY_BG_BASE).then((url) => { if (url) fairwayRoot.style.backgroundImage = `url("${url}")`; });
+
+    saisieDetaillee = { load };
+    load();
+  }
+
   const SCREEN_INIT = {
     dashboard: initDashboard,
     'par-distance': initParDistance,
     historique: initHistorique,
     putting: initPutting,
     'saisie-rapide': initSaisieRapide,
+    'saisie-detaillee': initSaisieDetaillee,
   };
 
   /* ========================================================================
