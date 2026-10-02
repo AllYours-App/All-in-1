@@ -1643,10 +1643,10 @@ html {
   border: 2px solid var(--color-accent);
 }
 
-/* ---------- Trous (1* / 10* / 18) ---------- */
+/* ---------- Premier trou (1* / 10*) et nombre de trous (9 / 18) ---------- */
 #page-stats .new-round_pill-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-xs);
 }
 #page-stats .new-round_pill {

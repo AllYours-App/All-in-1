@@ -2787,7 +2787,7 @@ body.gym-home-locked {
 .chart-svg {
   display: block;
   width: 100%;
-  height: 130px;
+  height: auto;
 }
 
 .chart-line {
@@ -2816,6 +2816,64 @@ body.gym-home-locked {
   fill: var(--gym-text-muted);
   font-size: 8px;
   font-weight: 600;
+}
+
+/* ---- Graphe double axe (page Progression) -------------------------------------- */
+
+#view-progression {
+  --chart-a: var(--gym-accent);
+  --chart-b: #f5a524;
+}
+
+.chart-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gym-text-secondary);
+  margin-bottom: 8px;
+  min-height: 18px;
+}
+
+.chart-readout__item--a { color: var(--chart-a); }
+.chart-readout__item--b { color: var(--chart-b); }
+
+.chart-grid {
+  stroke: var(--gym-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-guide {
+  stroke: var(--gym-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-line--a { stroke: var(--chart-a); }
+.chart-line--b { stroke: var(--chart-b); }
+.chart-dot--a { stroke: var(--chart-a); }
+.chart-dot--b { stroke: var(--chart-b); }
+.chart-dot--a.is-selected { fill: var(--chart-a); }
+.chart-dot--b.is-selected { fill: var(--chart-b); }
+.chart-axis-label--a { fill: var(--chart-a); }
+.chart-axis-label--b { fill: var(--chart-b); }
+
+.chart-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.tab.is-active--b {
+  background: var(--chart-b);
+  border-color: var(--chart-b);
+  color: #1a1200;
+}
+
+.tab.is-disabled {
+  opacity: 0.4;
 }
 
 /* ==========================================================================

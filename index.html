@@ -29,7 +29,7 @@
     <!-- HEADER -->
     <header class="home-screen_header">
       <div class="header_text-group">
-        <h1 class="header_title">Bonjour<br><span class="header_title-highlight" data-user-firstname></span></h1>
+        <h1 class="header_title">Bonjour<br><span class="header_title-highlight">Thomas</span></h1>
         <p class="header_subtitle">Quelle partie du jeu souhaitez-vous travailler aujourd'hui ?</p>
       </div>
     </header>
@@ -690,135 +690,6 @@
   </main>
 </section>
 
-<!-- ======================================================================
-     ÉCRAN 7 — SAISIE DÉTAILLÉE (sac de golf, relié au module Menu)
-     ====================================================================== -->
-<section id="screen-saisie-detaillee" class="screen">
-  <main class="app">
-    <header class="page-header">
-      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
-        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
-        Stats
-      </button>
-      <h1 class="page-header__title">SAISIE DÉTAILLÉE</h1>
-      <button class="page-header__menu" aria-label="Menu">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
-      </button>
-    </header>
-
-    <p class="page-header__subtitle text-center">Renseignez la composition de votre sac pour affiner vos statistiques par club.</p>
-
-    <section class="section">
-      <div class="field-list">
-        <h3>Mon sac de golf</h3>
-        <div class="field-row">
-          <span class="label">Clubs enregistrés</span>
-          <span class="val" id="sd-bagCount">0/14</span>
-        </div>
-      </div>
-    </section>
-  </main>
-</section>
-
-<!-- ======================================================================
-     ÉCRAN 8 — SAISIE RAPIDE (score, putts, fairway, green par trou)
-     ====================================================================== -->
-<section id="screen-saisie-rapide" class="screen">
-  <main class="app">
-    <header class="page-header">
-      <button class="page-header__back" data-goto="dashboard" aria-label="Annuler la saisie">
-        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
-        Annuler
-      </button>
-      <h1 class="page-header__title">SAISIE RAPIDE</h1>
-    </header>
-
-    <p class="page-header__subtitle text-center">Ajoutez les données de votre parcours en quelques secondes.</p>
-
-    <section class="section">
-      <div class="card hole-card fade-up">
-        <div class="num-badge">4</div>
-        <div class="hole-card__info">
-          <div class="hole-card__par">Par 4</div>
-          <div class="hole-card__hcp">Hcp 8</div>
-        </div>
-        <div class="hole-card__divider"></div>
-        <div class="hole-card__distance">
-          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="16" height="16"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg>
-          <span>381 m</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="grid-2">
-        <div class="card stepper-card fade-up">
-          <div class="stepper-card__head">
-            <div class="num-badge">1</div>
-            <div>
-              <div class="stepper-card__title">Score</div>
-              <div class="stepper-card__desc">Votre score pour ce trou.</div>
-            </div>
-          </div>
-          <div class="stepper" data-stepper="score" data-min="1" data-max="15">
-            <button type="button" class="stepper__btn" data-action="dec" aria-label="Diminuer le score">−</button>
-            <span class="stepper__value" data-value>4</span>
-            <button type="button" class="stepper__btn" data-action="inc" aria-label="Augmenter le score">+</button>
-          </div>
-        </div>
-
-        <div class="card stepper-card fade-up">
-          <div class="stepper-card__head">
-            <div class="num-badge">4</div>
-            <div>
-              <div class="stepper-card__title">Putts</div>
-              <div class="stepper-card__desc">Nombre de putts sur ce trou.</div>
-            </div>
-          </div>
-          <div class="stepper" data-stepper="putts" data-min="0" data-max="10">
-            <button type="button" class="stepper__btn" data-action="dec" aria-label="Diminuer les putts">−</button>
-            <span class="stepper__value" data-value>2</span>
-            <button type="button" class="stepper__btn" data-action="inc" aria-label="Augmenter les putts">+</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="card zone-card fade-up">
-        <div class="zone-card__head">
-          <div class="icon-badge"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="18" height="18"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg></div>
-          <div>
-            <div class="zone-card__title">Fairway</div>
-            <div class="zone-card__desc">Touchez la zone où votre balle a atterri.</div>
-          </div>
-        </div>
-        <div class="zone-map zone-map--fairway" data-zone="fairway">
-          <div class="zone-map__marker" style="left:50%; top:45%;"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="card zone-card fade-up">
-        <div class="zone-card__head">
-          <div class="icon-badge"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="18" height="18"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg></div>
-          <div>
-            <div class="zone-card__title">Green</div>
-            <div class="zone-card__desc">Touchez la zone où votre balle a atterri.</div>
-          </div>
-        </div>
-        <div class="zone-map zone-map--green" data-zone="green">
-          <div class="zone-map__marker" style="left:50%; top:50%;"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <button type="button" class="qr-submit" data-goto="dashboard">Valider</button>
-    </section>
-  </main>
-</section>
 </div>
 
 <!-- =========================== PARTIE : WEDGING ============================ -->
@@ -874,7 +745,7 @@
           <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
           <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
         </svg>
-        <div class="auth_logo-text">All-in-1 Golf</div>
+        <div class="auth_logo-text">GOLF</div>
       </div>
 
       <div class="auth_header is-login">
@@ -917,6 +788,28 @@
 
         <button class="auth_button is-primary" type="submit">Se connecter</button>
       </form>
+
+      <div class="auth_divider">
+        <div class="auth_divider-line"></div>
+        <div class="auth_divider-text">OU</div>
+        <div class="auth_divider-line"></div>
+      </div>
+
+      <div class="auth_social">
+        <button class="auth_button is-social" type="button" data-auth-provider="apple">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+          </svg>
+          <span>Continuer avec Apple</span>
+        </button>
+
+        <button class="auth_button is-social" type="button" data-auth-provider="google">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+          <span>Continuer avec Google</span>
+        </button>
+      </div>
 
       <div class="auth_switch">
         <span class="auth_switch-text">Pas encore de compte ?</span>
@@ -997,6 +890,28 @@
 
         <button class="auth_button is-primary" type="submit">Créer mon compte</button>
       </form>
+
+      <div class="auth_divider">
+        <div class="auth_divider-line"></div>
+        <div class="auth_divider-text">OU</div>
+        <div class="auth_divider-line"></div>
+      </div>
+
+      <div class="auth_social">
+        <button class="auth_button is-social" type="button" data-auth-provider="apple">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+          </svg>
+          <span>Continuer avec Apple</span>
+        </button>
+
+        <button class="auth_button is-social" type="button" data-auth-provider="google">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+          <span>Continuer avec Google</span>
+        </button>
+      </div>
 
       <div class="auth_switch">
         <span class="auth_switch-text">Déjà un compte ?</span>

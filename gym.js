@@ -588,25 +588,19 @@ document.getElementById("app-root-gym").innerHTML = `
 
           <div class="card session-summary gym-anim-in" id="progression-stats" style="grid-template-columns: repeat(3, 1fr);"></div>
 
-          <div class="card chart-card gym-anim-in">
-            <div class="chart-card__head">
-              <span class="gym-eyebrow">Volume total par séance</span>
-              <span class="chart-card__value" id="progression-volume-value">—</span>
-            </div>
-            <div id="progression-volume-chart"></div>
-          </div>
-
           <section id="progression-exercise-section" style="display:flex; flex-direction:column; gap:14px;">
-            <div class="gym-section-head">
-              <h2 class="gym-section-title">Charge par exercice</h2>
-            </div>
-            <div class="tabs" id="progression-exercise-tabs"></div>
-            <div class="card chart-card">
-              <div class="chart-card__head">
-                <span class="gym-eyebrow" id="progression-exercise-name">—</span>
-                <span class="chart-card__value" id="progression-exercise-value">—</span>
+            <button type="button" class="card card--interactive list-row" id="progression-exo-btn" style="border-color:var(--gym-border-strong);">
+              <div class="list-row__body">
+                <span class="gym-eyebrow">Exercice</span>
+                <span class="list-row__title" id="progression-exo-name">—</span>
+                <span class="list-row__meta" id="progression-exo-meta">—</span>
               </div>
-              <div id="progression-exercise-chart"></div>
+              <span class="list-row__chevron" id="progression-exo-chevron"></span>
+            </button>
+            <div class="tabs" id="progression-metric-tabs"></div>
+            <div class="card chart-card gym-anim-in">
+              <div class="chart-readout" id="progression-readout"></div>
+              <div id="progression-chart"></div>
             </div>
           </section>
 
@@ -761,6 +755,23 @@ document.getElementById("app-root-gym").innerHTML = `
       <button type="button" class="icon-btn" id="launch-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div class="sheet__body" id="launch-sheet-body"></div>
+  </div>
+
+  <!-- Bottom sheet : choix de l'exercice (vue Progression) -->
+  <div class="sheet-overlay" id="exo-sheet-overlay"></div>
+  <div class="sheet" id="exo-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__head">
+      <span class="sheet__title">Choisir un exercice</span>
+      <button type="button" class="icon-btn" id="exo-sheet-close" style="color:var(--gym-text);"></button>
+    </div>
+    <div style="padding:12px 20px 0;">
+      <label class="search-bar">
+        <span id="exo-sheet-search-icon"></span>
+        <input type="search" id="exo-sheet-search" placeholder="Rechercher un exercice" />
+      </label>
+    </div>
+    <div class="sheet__body" id="exo-sheet-body"></div>
   </div>
 
   <!-- Bottom sheet : choix du programme (vue Créer une séance) -->
@@ -2659,6 +2670,7 @@ function gymRecordSessionHistory(program, session, exercisesState, elapsedMs) {
       reps: Number(s.reps) || 0,
       target: s.target,
       valid: !!s.valid,
+      duration: Number(s.duration) || 0, // secondes (exos de gainage / cardio)
     })),
   }));
 
@@ -2704,25 +2716,33 @@ function gymRecordSessionHistory(program, session, exercisesState, elapsedMs) {
 }
 
 /**
- * Pour chaque exercice déjà réalisé (séries validées avec un poids saisi),
- * la liste chronologique de ses points de progression (charge maximale et
- * volume de la séance), utilisée par les courbes de la page Progression.
+ * Liste des exercices déjà réalisés (au moins une série validée), du plus
+ * récent au plus ancien. Chaque exercice porte ses points chronologiques,
+ * un par séance, avec toutes les métriques de la page Progression.
  */
-function gymGetExerciseProgressList() {
+function gymGetDoneExercises() {
   const map = new Map();
-  // L'historique est trié du plus récent au plus ancien (unshift à chaque
-  // séance terminée) : on repart de la fin pour reconstituer l'ordre
-  // chronologique attendu par un graphe.
+  // L'historique est du plus récent au plus ancien : on repart de la fin
+  // pour obtenir l'ordre chronologique attendu par le graphe.
   [...GYM_DATA.history].reverse().forEach((entry) => {
     entry.exercises.forEach((exo) => {
-      const validSets = exo.sets.filter((s) => s.valid && s.weight > 0);
-      if (!validSets.length) return;
-      const maxWeight = Math.max(...validSets.map((s) => s.weight));
-      if (!map.has(exo.exerciseId)) map.set(exo.exerciseId, { exerciseId: exo.exerciseId, name: exo.name, points: [] });
-      map.get(exo.exerciseId).points.push({ date: entry.date, maxWeight });
+      const valid = exo.sets.filter((s) => s.valid);
+      if (!valid.length) return;
+      const point = {
+        date: new Date(entry.date),
+        poids: Math.max(...valid.map((s) => s.weight || 0)),
+        series: valid.length,
+        repetitions: valid.reduce((a, s) => a + (s.reps || 0), 0),
+        volume: Math.round(valid.reduce((a, s) => a + (s.weight || 0) * (s.reps || 0), 0)),
+        // 1RM estimé (Epley) : meilleure série de la séance, 0 sans charge
+        rm: Math.round(Math.max(0, ...valid.map((s) => (s.weight > 0 ? s.weight * (1 + (s.reps || 0) / 30) : 0))) * 10) / 10,
+        duree: valid.reduce((a, s) => a + (s.duration || 0), 0),
+      };
+      if (!map.has(exo.exerciseId)) map.set(exo.exerciseId, { exerciseId: exo.exerciseId, name: exo.name, sessions: [] });
+      map.get(exo.exerciseId).sessions.push(point);
     });
   });
-  return Array.from(map.values());
+  return Array.from(map.values()).sort((a, b) => b.sessions[b.sessions.length - 1].date - a.sessions[a.sessions.length - 1].date);
 }
 
 /* ---- Export global ---------------------------------------------------------------- */
@@ -3337,55 +3357,73 @@ function gymRenderHistoryRow(entry) {
 }
 
 /**
- * Graphe en courbe (SVG inline, sans librairie externe) à partir d'une
- * liste de points {date, value} triée chronologiquement. Utilisé par la
- * page Progression pour tracer le volume total et la charge par exercice.
+ * Graphe en courbes (SVG inline, sans librairie) : axe X = date (échelle
+ * temporelle réelle), axe Y gauche = 1re métrique, axe Y droit = 2e métrique
+ * éventuelle. Chaque courbe partage sa couleur avec son axe.
+ * series : [{ key, unit }] (1 ou 2), selected : index du point mis en avant.
  */
-function gymRenderLineChart(points) {
+function gymRenderDualChart(points, series, selected) {
   if (!points.length) return "";
+  const W = 320, H = 190, top = 20, bottom = 24;
+  const padL = 42, padR = series.length > 1 ? 42 : 12;
+  const innerW = W - padL - padR, innerH = H - top - bottom;
 
-  const width = 300;
-  const height = 130;
-  const padX = 6;
-  const padTop = 14;
-  const padBottom = 22;
-  const innerW = width - padX * 2;
-  const innerH = height - padTop - padBottom;
+  const fmt = (v) => (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(".0", "") + "k" : String(Math.round(v * 10) / 10));
 
-  const values = points.map((p) => p.value);
-  const max = Math.max(...values);
-  const min = Math.min(...values, 0);
-  const range = max - min || 1;
-  const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
+  // Plage Y : ne part pas de zéro (sauf si les valeurs en sont proches) pour
+  // que les petites variations restent visibles ; une courbe plate est centrée.
+  const range = (values) => {
+    const min = Math.min(...values), max = Math.max(...values);
+    const pad = min === max ? Math.max(1, Math.abs(max) * 0.1) : (max - min) * 0.15;
+    let lo = min - pad;
+    if (min >= 0 && lo < 0) lo = 0;
+    return { lo, hi: max + pad };
+  };
 
-  const coords = points.map((p, i) => ({
-    x: padX + (points.length > 1 ? stepX * i : innerW / 2),
-    y: padTop + innerH - ((p.value - min) / range) * innerH,
-    ...p,
-  }));
+  const times = points.map((p) => p.date.getTime());
+  const t0 = Math.min(...times), t1 = Math.max(...times);
+  const xAt = (t) => (t1 > t0 ? padL + ((t - t0) / (t1 - t0)) * innerW : padL + innerW / 2);
 
-  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
-  const areaPath =
-    coords.length > 1
-      ? `${linePath} L${coords[coords.length - 1].x.toFixed(1)},${(padTop + innerH).toFixed(1)} L${coords[0].x.toFixed(1)},${(padTop + innerH).toFixed(1)} Z`
-      : "";
+  let grid = "", axes = "", paths = "", dots = "", guide = "";
+  series.forEach((s, si) => {
+    const cls = si === 0 ? "a" : "b";
+    const r = range(points.map((p) => p[s.key]));
+    const yAt = (v) => top + innerH - ((v - r.lo) / (r.hi - r.lo)) * innerH;
+    const axisX = si === 0 ? padL - 6 : W - padR + 6;
+    const anchor = si === 0 ? "end" : "start";
 
-  const dots = coords.map((c) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3" class="chart-dot"></circle>`).join("");
+    [r.lo, (r.lo + r.hi) / 2, r.hi].forEach((v) => {
+      if (si === 0) grid += `<line x1="${padL}" x2="${W - padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}" class="chart-grid"></line>`;
+      axes += `<text x="${axisX}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="${anchor}" class="chart-axis-label chart-axis-label--${cls}">${fmt(v)}</text>`;
+    });
+    axes += `<text x="${axisX}" y="9" text-anchor="${anchor}" class="chart-axis-label chart-axis-label--${cls}">${s.unit}</text>`;
 
-  const labelEvery = Math.max(1, Math.ceil(coords.length / 4));
-  const labels = coords
-    .filter((_, i) => i === 0 || i === coords.length - 1 || i % labelEvery === 0)
-    .map((c) => `<text x="${c.x.toFixed(1)}" y="${height - 6}" class="chart-axis-label" text-anchor="middle">${gymFormatShortDate(c.date)}</text>`)
+    const coords = points.map((p) => ({ x: xAt(p.date.getTime()), y: yAt(p[s.key]) }));
+    if (coords.length > 1) {
+      paths += `<path d="${coords.map((c, i) => `${i ? "L" : "M"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")}" class="chart-line chart-line--${cls}"></path>`;
+    }
+    coords.forEach((c, i) => {
+      dots += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${i === selected ? 4.5 : 3}" class="chart-dot chart-dot--${cls}${i === selected ? " is-selected" : ""}"></circle>`;
+    });
+  });
+
+  if (selected != null && points[selected]) {
+    const gx = xAt(points[selected].date.getTime()).toFixed(1);
+    guide = `<line x1="${gx}" x2="${gx}" y1="${top}" y2="${top + innerH}" class="chart-guide"></line>`;
+  }
+
+  // Axe X : 4 repères répartis dans le temps (1 seul s'il n'y a qu'une date)
+  const ticks = t1 > t0 ? [0, 1, 2, 3].map((k) => t0 + ((t1 - t0) * k) / 3) : [t0];
+  const xLabels = ticks
+    .map((t, i) => `<text x="${xAt(t).toFixed(1)}" y="${H - 6}" class="chart-axis-label" text-anchor="${ticks.length > 1 ? (i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle") : "middle"}">${gymFormatShortDate(new Date(t))}</text>`)
     .join("");
 
-  return `
-    <svg viewBox="0 0 ${width} ${height}" class="chart-svg" preserveAspectRatio="none">
-      ${areaPath ? `<path d="${areaPath}" class="chart-area"></path>` : ""}
-      <path d="${linePath}" class="chart-line"></path>
-      ${dots}
-      ${labels}
-    </svg>
-  `;
+  // Zones de tap invisibles (une par séance, commune aux deux courbes)
+  const hits = points
+    .map((p, i) => `<circle cx="${xAt(p.date.getTime()).toFixed(1)}" cy="${(top + innerH / 2).toFixed(1)}" r="16" class="chart-hit" data-index="${i}"></circle>`)
+    .join("");
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart-svg">${grid}${guide}${paths}${dots}${axes}${xLabels}${hits}</svg>`;
 }
 
 /* ==========================================================================
@@ -4558,12 +4596,28 @@ function gymRenderLineChart(points) {
    GYM — Vue : Progression
    ========================================================================== */
 (function () {
-  const state = {
-    exerciseId: null,
+  const METRICS = {
+    poids: { label: "Poids", unit: "kg" },
+    series: { label: "Séries", unit: "séries" },
+    repetitions: { label: "Répétitions", unit: "reps" },
+    volume: { label: "Volume", unit: "kg" },
+    rm: { label: "1RM", unit: "kg" },
+    duree: { label: "Durée", unit: "s" },
   };
 
+  const state = {
+    exerciseId: null,
+    metrics: ["poids"], // 1 ou 2 métriques ; la 1re = axe gauche, la 2e = axe droit
+    selectedIndex: null,
+  };
+
+  const $ = (id) => document.getElementById(id);
+
   function fillIcons() {
-    document.getElementById("progression-empty-icon").innerHTML = gymIcon("trendUp");
+    $("progression-empty-icon").innerHTML = gymIcon("trendUp");
+    $("progression-exo-chevron").innerHTML = gymIcon("chevronDown");
+    $("exo-sheet-search-icon").innerHTML = gymIcon("search");
+    $("exo-sheet-close").innerHTML = $("launch-sheet-close").innerHTML;
   }
 
   function renderStats() {
@@ -4571,7 +4625,7 @@ function gymRenderLineChart(points) {
     const totalVolume = history.reduce((sum, h) => sum + h.totalVolume, 0);
     const totalSets = history.reduce((sum, h) => sum + h.validSets, 0);
 
-    document.getElementById("progression-stats").innerHTML = `
+    $("progression-stats").innerHTML = `
       <div class="session-summary__item">
         <span class="session-summary__icon">${gymIcon("calendar")}</span>
         <span class="session-summary__text">
@@ -4596,58 +4650,142 @@ function gymRenderLineChart(points) {
     `;
   }
 
-  function renderVolumeChart() {
-    // GYM_DATA.history est du plus récent au plus ancien : on repart de la
-    // fin pour tracer le graphe dans l'ordre chronologique.
-    const points = [...GYM_DATA.history].reverse().map((h) => ({ date: h.date, value: h.totalVolume }));
-    document.getElementById("progression-volume-chart").innerHTML = gymRenderLineChart(points);
-    document.getElementById("progression-volume-value").textContent = `${points[points.length - 1].value} kg`;
+  function currentExercise() {
+    return gymGetDoneExercises().find((e) => e.exerciseId === state.exerciseId);
   }
 
-  function renderExerciseTabs(list) {
-    document.getElementById("progression-exercise-tabs").innerHTML = list
-      .map((exo) => `<button type="button" class="tab ${exo.exerciseId === state.exerciseId ? "is-active" : ""}" data-value="${exo.exerciseId}">${exo.name}</button>`)
+  function renderExerciseButton(exo) {
+    const last = exo.sessions[exo.sessions.length - 1].date;
+    $("progression-exo-name").textContent = exo.name;
+    $("progression-exo-meta").textContent = `${exo.sessions.length} séance${exo.sessions.length > 1 ? "s" : ""} · dernière le ${gymFormatShortDate(last)}`;
+  }
+
+  function renderMetricTabs() {
+    $("progression-metric-tabs").innerHTML = Object.entries(METRICS)
+      .map(([key, m]) => {
+        const idx = state.metrics.indexOf(key);
+        const cls = idx === 0 ? "is-active" : idx === 1 ? "is-active is-active--b" : state.metrics.length >= 2 ? "is-disabled" : "";
+        return `<button type="button" class="tab ${cls}" data-value="${key}">${m.label}</button>`;
+      })
       .join("");
   }
 
-  function renderExerciseChart(list) {
-    const exo = list.find((e) => e.exerciseId === state.exerciseId) || list[0];
+  function renderChart() {
+    const exo = currentExercise();
     if (!exo) return;
-    state.exerciseId = exo.exerciseId;
+    const points = exo.sessions;
+    if (state.selectedIndex == null || state.selectedIndex >= points.length) state.selectedIndex = points.length - 1;
+    const series = state.metrics.map((k) => ({ key: k, unit: METRICS[k].unit }));
+    $("progression-chart").innerHTML = gymRenderDualChart(points, series, state.selectedIndex);
 
-    const points = exo.points.map((p) => ({ date: p.date, value: p.maxWeight }));
-    document.getElementById("progression-exercise-chart").innerHTML = gymRenderLineChart(points);
-    document.getElementById("progression-exercise-name").textContent = exo.name;
-    document.getElementById("progression-exercise-value").textContent = `${points[points.length - 1].value} kg`;
+    const p = points[state.selectedIndex];
+    $("progression-readout").innerHTML =
+      `<span>${gymFormatShortDate(p.date)}</span>` +
+      state.metrics
+        .map((k, i) => `<span class="chart-readout__item--${i ? "b" : "a"}">${METRICS[k].label} ${Math.round(p[k] * 10) / 10} ${METRICS[k].unit}</span>`)
+        .join("");
   }
 
-  // Liaison unique : le conteneur d'onglets existe dès le chargement du document.
-  gymSetupTabs(document.getElementById("progression-exercise-tabs"), (value) => {
-    state.exerciseId = value;
-    renderExerciseChart(gymGetExerciseProgressList());
+  function renderAll() {
+    const exo = currentExercise();
+    renderExerciseButton(exo);
+    renderMetricTabs();
+    renderChart();
+  }
+
+  /* ---- Sélecteur d'exercice (bottom sheet) : uniquement les exos réalisés ---- */
+
+  function renderExerciseList() {
+    const q = $("exo-sheet-search").value.trim().toLowerCase();
+    const list = gymGetDoneExercises().filter((e) => e.name.toLowerCase().includes(q));
+    $("exo-sheet-body").innerHTML = list.length
+      ? list
+          .map((e) => {
+            const last = e.sessions[e.sessions.length - 1].date;
+            return `<button type="button" class="sheet__row" data-id="${e.exerciseId}">
+              <span class="list-row__body">
+                <span class="list-row__title">${e.name}</span>
+                <span class="list-row__meta">${e.sessions.length} séance${e.sessions.length > 1 ? "s" : ""} · dernière le ${gymFormatShortDate(last)}</span>
+              </span>
+            </button>`;
+          })
+          .join("")
+      : `<p class="list-row__meta" style="text-align:center; padding:20px 0;">Aucun exercice trouvé.</p>`;
+  }
+
+  function openSheet() {
+    $("exo-sheet-search").value = "";
+    renderExerciseList();
+    $("exo-sheet-overlay").classList.add("is-open");
+    $("exo-sheet").classList.add("is-open");
+  }
+
+  function closeSheet() {
+    $("exo-sheet-overlay").classList.remove("is-open");
+    $("exo-sheet").classList.remove("is-open");
+  }
+
+  // Liaisons uniques (les éléments existent dès le chargement du document).
+  $("progression-exo-btn").addEventListener("click", openSheet);
+  $("exo-sheet-close").addEventListener("click", closeSheet);
+  $("exo-sheet-overlay").addEventListener("click", closeSheet);
+  $("exo-sheet-search").addEventListener("input", renderExerciseList);
+
+  $("exo-sheet-body").addEventListener("click", (e) => {
+    const row = e.target.closest(".sheet__row");
+    if (!row) return;
+    state.exerciseId = row.dataset.id;
+    state.selectedIndex = null;
+    closeSheet();
+    renderAll();
+  });
+
+  // Sélection de 2 métriques maximum : il faut en décocher une pour en changer.
+  $("progression-metric-tabs").addEventListener("click", (e) => {
+    const tab = e.target.closest(".tab");
+    if (!tab) return;
+    const key = tab.dataset.value;
+    const idx = state.metrics.indexOf(key);
+    if (idx >= 0) {
+      if (state.metrics.length > 1) state.metrics.splice(idx, 1);
+    } else if (state.metrics.length < 2) {
+      state.metrics.push(key);
+    } else {
+      return;
+    }
+    renderMetricTabs();
+    renderChart();
+  });
+
+  $("progression-chart").addEventListener("click", (e) => {
+    const hit = e.target.closest("[data-index]");
+    if (!hit) return;
+    state.selectedIndex = Number(hit.dataset.index);
+    renderChart();
   });
 
   function render() {
     fillIcons();
 
+    const exercises = gymGetDoneExercises();
     const hasHistory = GYM_DATA.history.length > 0;
-    document.getElementById("progression-empty").style.display = hasHistory ? "none" : "flex";
-    document.getElementById("progression-content").style.display = hasHistory ? "flex" : "none";
+    $("progression-empty").style.display = hasHistory ? "none" : "flex";
+    $("progression-content").style.display = hasHistory ? "flex" : "none";
     if (!hasHistory) return;
 
     renderStats();
-    renderVolumeChart();
 
-    const exerciseList = gymGetExerciseProgressList();
-    const section = document.getElementById("progression-exercise-section");
-    section.style.display = exerciseList.length ? "flex" : "none";
-    if (exerciseList.length) {
-      if (!state.exerciseId || !exerciseList.some((e) => e.exerciseId === state.exerciseId)) {
-        state.exerciseId = exerciseList[0].exerciseId;
-      }
-      renderExerciseTabs(exerciseList);
-      renderExerciseChart(exerciseList);
+    const section = $("progression-exercise-section");
+    section.style.display = exercises.length ? "flex" : "none";
+    if (!exercises.length) return;
+
+    // Par défaut : l'exercice de la dernière séance terminée ; le choix de
+    // l'utilisateur est conservé tant qu'il reste dans l'historique.
+    if (!state.exerciseId || !exercises.some((e) => e.exerciseId === state.exerciseId)) {
+      state.exerciseId = exercises[0].exerciseId;
+      state.selectedIndex = null;
     }
+    renderAll();
   }
 
   GymViews["progression"] = { render };

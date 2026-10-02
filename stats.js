@@ -103,11 +103,14 @@
       { value: 'blue', label: 'Bleu', color: '#0A6EF0' },
       { value: 'red', label: 'Rouge', color: '#E0141E' },
     ],
-    // 1* et 10* = 9 trous à partir de ce trou ; 18 = parcours complet
-    holes: [
-      { value: '1', label: '1*', aria: '9 trous à partir du trou 1', count: 9, start: 1 },
-      { value: '10', label: '10*', aria: '9 trous à partir du trou 10', count: 9, start: 10 },
-      { value: '18', label: '18', aria: '18 trous', count: 18, start: 1 },
+    // Premier trou joué, puis nombre de trous (18 depuis le 10 enchaîne sur le 1)
+    start: [
+      { value: '1', label: '1*', aria: 'Commencer au trou 1' },
+      { value: '10', label: '10*', aria: 'Commencer au trou 10' },
+    ],
+    count: [
+      { value: '9', label: '9', aria: '9 trous' },
+      { value: '18', label: '18', aria: '18 trous' },
     ],
     weather: [
       { value: 'current', label: 'Conditions actuelles' },
@@ -122,7 +125,7 @@
     ],
     defaults: {
       mode: 'saisie-rapide', // ou 'saisie-detaillee'
-      tee: 'yellow', holes: '18', weather: 'current', wind: 'low',
+      tee: 'yellow', start: '1', count: '18', weather: 'current', wind: 'low',
     },
   };
 
@@ -932,75 +935,15 @@
     animateCounters(document.getElementById('screen-putting'), 800);
   }
 
-  // Écran "Saisie détaillée" : affiche le sac de golf géré dans le module Menu
-  // (même clé localStorage "golfAppState"). Relu à chaque affichage (voir showScreen)
-  // car sa valeur peut avoir changé côté Menu depuis le dernier passage ici.
-  function initSaisieDetaillee() {
-    let size = 0;
-    try {
-      const raw = localStorage.getItem('golfAppState');
-      if (raw) size = JSON.parse(raw).golfBag?.size ?? 0;
-    } catch (e) { /* localStorage indisponible ou invalide */ }
-    const el = document.getElementById('sd-bagCount');
-    if (el) el.textContent = `${size}/14`;
-  }
-
-  /* ========================================================================
-     COMPOSANT — Stepper (score / putts)
-     ======================================================================== */
-  function initSteppers(root) {
-    root.querySelectorAll('[data-stepper]').forEach((stepper) => {
-      const valueEl = stepper.querySelector('[data-value]');
-      const min = Number(stepper.dataset.min || 0);
-      const max = Number(stepper.dataset.max || 99);
-      let value = Number(valueEl.textContent);
-      stepper.querySelectorAll('.stepper__btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const delta = btn.dataset.action === 'inc' ? 1 : -1;
-          // On borne la valeur entre min et max pour éviter les scores absurdes
-          value = Math.min(max, Math.max(min, value + delta));
-          valueEl.textContent = value;
-        });
-      });
-    });
-  }
-
-  /* ========================================================================
-     COMPOSANT — Zone picker (placeholder fairway / green)
-     ======================================================================== */
-  function initZonePickers(root) {
-    root.querySelectorAll('.zone-map').forEach((zone) => {
-      const marker = zone.querySelector('.zone-map__marker');
-      zone.addEventListener('click', (e) => {
-        const rect = zone.getBoundingClientRect();
-        // Position du tap convertie en pourcentage de la zone, bornée pour
-        // que le marqueur ne sorte pas du cadre
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        marker.style.left = `${Math.min(96, Math.max(4, x))}%`;
-        marker.style.top = `${Math.min(96, Math.max(4, y))}%`;
-      });
-    });
-  }
-
-  // Écran "Saisie rapide" : saisie du score, des putts et des zones
-  // fairway/green pour le trou en cours.
-  function initSaisieRapide() {
-    const root = document.getElementById('screen-saisie-rapide');
-    if (!root) return;
-    initSteppers(root);
-    initZonePickers(root);
-  }
-
   /* ========================================================================
      COMPOSANT — Popup "Nouveau parcours"
-     Paramètres de la partie + choix du mode de saisie (rapide / détaillée),
-     puis bascule vers l'écran de saisie choisi.
+     Paramètres de la partie + choix du mode de saisie (rapide / détaillée).
+     "Commencer la partie" enregistre les paramètres dans currentRound et ferme le popup.
      ======================================================================== */
 
   // Paramètres en cours d'édition (remis aux valeurs par défaut à chaque ouverture)
   const newRound = {};
-  // Paramètres validés de la partie en cours — à lire depuis les écrans de saisie
+  // Paramètres validés de la partie en cours
   let currentRound = null;
   let newRoundEl = null;
   let newRoundTrigger = null;
@@ -1169,24 +1112,6 @@
     refreshCourseStatus();
   }
 
-  // Remplit la carte du trou (écran Saisie rapide) avec le 1er trou de la partie
-  function renderHoleCard() {
-    const card = document.querySelector('#screen-saisie-rapide .hole-card');
-    if (!card || !currentRound) return;
-    const hole = currentRound.holes[0];
-    const show = (el, visible) => { el.style.display = visible ? '' : 'none'; };
-
-    card.querySelector('.num-badge').textContent = hole.number;
-    card.querySelector('.hole-card__par').textContent = hole.par != null ? `Par ${hole.par}` : 'Par —';
-    const hcp = card.querySelector('.hole-card__hcp');
-    hcp.textContent = hole.hcp != null ? `Hcp ${hole.hcp}` : '';
-    show(hcp, hole.hcp != null);
-    const distance = card.querySelector('.hole-card__distance');
-    distance.querySelector('span').textContent = hole.distance != null ? `${hole.distance} m` : '';
-    show(distance, hole.distance != null);
-    show(card.querySelector('.hole-card__divider'), hole.distance != null);
-  }
-
   function newRoundGroup(label, content) {
     return `<div class="new-round_group"><div class="new-round_label">${label}</div>${content}</div>`;
   }
@@ -1219,8 +1144,8 @@
         ${t.label}
       </button>`).join('');
 
-    const holes = o.holes.map((h) => `
-      <button type="button" role="radio" class="new-round_pill" data-holes="${h.value}" aria-label="${h.aria}" aria-checked="${h.value === newRound.holes}">${h.label}</button>`).join('');
+    const pills = (key) => o[key].map((p) => `
+      <button type="button" role="radio" class="new-round_pill" data-${key}="${p.value}" aria-label="${p.aria}" aria-checked="${p.value === newRound[key]}">${p.label}</button>`).join('');
 
     modal.innerHTML = `
       <div class="new-round_header">
@@ -1246,7 +1171,10 @@
             <ul class="new-round_results" hidden></ul>
           </div>`)}
         ${newRoundGroup('Départ', `<div class="new-round_tee-list" role="radiogroup" aria-label="Départ">${tees}</div>`)}
-        ${newRoundGroup('Trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Trous">${holes}</div>`)}
+        <div class="new-round_grid">
+          ${newRoundGroup('Premier trou', `<div class="new-round_pill-list" role="radiogroup" aria-label="Premier trou">${pills('start')}</div>`)}
+          ${newRoundGroup('Nombre de trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Nombre de trous">${pills('count')}</div>`)}
+        </div>
         <div class="new-round_grid">
           ${newRoundGroup('Météo', newRoundField('weather', 'weather', 'Météo'))}
           ${newRoundGroup('Vent', newRoundField('wind', 'wind', 'Vent'))}
@@ -1287,10 +1215,11 @@
         return;
       }
 
-      const holes = e.target.closest('[data-holes]');
-      if (holes) {
-        newRound.holes = holes.dataset.holes;
-        newRoundEl.querySelectorAll('[data-holes]').forEach((b) => b.setAttribute('aria-checked', String(b === holes)));
+      const pill = e.target.closest('[data-start], [data-count]');
+      if (pill) {
+        const key = pill.hasAttribute('data-start') ? 'start' : 'count';
+        newRound[key] = pill.dataset[key];
+        pill.parentElement.querySelectorAll('.new-round_pill').forEach((b) => b.setAttribute('aria-checked', String(b === pill)));
         return;
       }
 
@@ -1358,12 +1287,12 @@
 
   function startNewRound() {
     // À brancher : POST /api/rounds avec currentRound pour créer la partie
-    // 1* / 10* : 9 trous à partir du trou choisi ; 18 : parcours complet depuis le trou 1
-    const h = newRoundOptions.holes.find((o) => o.value === newRound.holes);
+    const startHole = Number(newRound.start);
+    const holeCount = Number(newRound.count);
     const course = newRound.course;
     // Un trou par entrée : numéro réel sur le parcours (le 18 enchaîne sur le 1), par, handicap, distance du départ choisi
-    const holes = Array.from({ length: h.count }, (_, i) => {
-      const idx = (h.start - 1 + i) % 18;
+    const holes = Array.from({ length: holeCount }, (_, i) => {
+      const idx = (startHole - 1 + i) % 18;
       return {
         number: idx + 1,
         par: course ? course.holes[idx].par : null,
@@ -1373,10 +1302,8 @@
     });
     // Sans parcours choisi dans la liste, on garde le nom saisi à la main
     const courseName = course ? course.name : (newRound.courseQuery.trim() || null);
-    currentRound = { ...newRound, courseName, holeCount: h.count, startHole: h.start, holes };
+    currentRound = { ...newRound, courseName, holeCount, startHole, holes };
     closeNewRound();
-    showScreen(currentRound.mode);
-    if (currentRound.mode === 'saisie-rapide') renderHoleCard();
   }
 
   const SCREEN_INIT = {
@@ -1384,8 +1311,6 @@
     'par-distance': initParDistance,
     historique: initHistorique,
     putting: initPutting,
-    'saisie-detaillee': initSaisieDetaillee,
-    'saisie-rapide': initSaisieRapide,
   };
 
   /* ========================================================================
@@ -1407,7 +1332,7 @@
     if (!root) return;
     root.querySelectorAll('.screen').forEach((el) => el.classList.remove('is-active'));
     root.querySelector(`#screen-${name}`).classList.add('is-active');
-    if (name === 'saisie-detaillee' || !initialized.has(name)) {
+    if (!initialized.has(name)) {
       SCREEN_INIT[name]();
       initialized.add(name);
     }
@@ -1431,7 +1356,6 @@
     showScreen('dashboard');
   });
 
-  // Exposé pour permettre au module Menu de naviguer directement vers un écran
-  // Stats (ex. "Mon sac de golf" → Saisie détaillée) depuis un autre module.
+  // Exposé pour permettre à un autre module de naviguer directement vers un écran Stats.
   window.showStatsScreen = showScreen;
 })();
