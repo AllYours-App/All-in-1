@@ -1310,7 +1310,8 @@
 
   function initSaisieRapide() {
     const screen = document.getElementById('screen-saisie-rapide');
-    // Sélection unique par groupe (fairway, green, putts) ; un second clic désélectionne
+
+    // Fairway : sélection unique par groupe ; un second clic désélectionne
     screen.addEventListener('click', (e) => {
       const option = e.target.closest('[role="radio"]');
       if (!option) return;
@@ -1319,6 +1320,62 @@
         .forEach((el) => el.setAttribute('aria-checked', 'false'));
       option.setAttribute('aria-checked', String(!wasChecked));
     });
+
+    // Putts : un chiffre, flèches pour modifier (0 à 9)
+    const puttsEl = screen.querySelector('[data-qr="putts-value"]');
+    let putts = Number(puttsEl.textContent) || 0;
+    screen.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-qr-putts]');
+      if (!btn) return;
+      putts = Math.min(9, Math.max(0, putts + Number(btn.dataset.qrPutts)));
+      puttsEl.textContent = putts;
+    });
+
+    // Green en régulation : roue à 9 zones (reprise de Wedging)
+    // Centre = green touché, 8 secteurs = direction du raté
+    const DIRECTIONS = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
+    const greenRoot = document.getElementById('qr-green-root');
+    let greenZone = null;
+
+    // Tracé d'un secteur d'anneau entre deux angles (0° = haut, sens horaire)
+    function sectorPath(cx, cy, rIn, rOut, a0, a1) {
+      const rad = (d) => (d - 90) * Math.PI / 180;
+      const pt = (r, d) => `${(cx + r * Math.cos(rad(d))).toFixed(2)} ${(cy + r * Math.sin(rad(d))).toFixed(2)}`;
+      return `M ${pt(rOut, a0)} A ${rOut} ${rOut} 0 0 1 ${pt(rOut, a1)} L ${pt(rIn, a1)} A ${rIn} ${rIn} 0 0 0 ${pt(rIn, a0)} Z`;
+    }
+
+    function renderGreenWheel() {
+      const cx = 100, cy = 100, rHole = 42, rOut = 100;
+      let sectors = '';
+      let ball = '';
+      DIRECTIONS.forEach((dir, i) => {
+        const a0 = i * 45 - 22.5, a1 = a0 + 45;
+        const sel = greenZone === dir;
+        sectors += `<path d="${sectorPath(cx, cy, rHole, rOut, a0, a1)}" class="saisie-rapide_wheel-sector${sel ? ' is-selected' : ''}" data-zone="${dir}"/>`;
+        if (sel) {
+          const rMid = (rHole + rOut) / 2, a = ((a0 + a1) / 2 - 90) * Math.PI / 180;
+          ball = `<circle cx="${(cx + rMid * Math.cos(a)).toFixed(2)}" cy="${(cy + rMid * Math.sin(a)).toFixed(2)}" r="7" class="saisie-rapide_wheel-ball"/>`;
+        }
+      });
+      const centerSel = greenZone === 'Centre';
+      if (centerSel) ball = `<circle cx="${cx}" cy="${cy}" r="7" class="saisie-rapide_wheel-ball"/>`;
+      const poleX = cx - 13, poleTop = cy - 16, poleBottom = cy + 18;
+      greenRoot.innerHTML = `<svg viewBox="0 0 200 200" class="saisie-rapide_wheel" role="group" aria-label="Green en régulation">
+        ${sectors}
+        <circle cx="${cx}" cy="${cy}" r="${rHole}" class="saisie-rapide_wheel-center${centerSel ? ' is-selected' : ''}" data-zone="Centre"/>
+        <line x1="${poleX}" y1="${poleBottom}" x2="${poleX}" y2="${poleTop}" class="saisie-rapide_wheel-pole"/>
+        <polygon points="${poleX},${poleTop} ${cx + 11},${cy - 9} ${poleX},${cy - 2}" class="saisie-rapide_wheel-flag"/>
+        ${ball}
+      </svg>`;
+    }
+
+    greenRoot.addEventListener('click', (e) => {
+      const zone = e.target.closest('[data-zone]');
+      if (!zone) return;
+      greenZone = greenZone === zone.dataset.zone ? null : zone.dataset.zone; // second clic = désélection
+      renderGreenWheel();
+    });
+    renderGreenWheel();
   }
 
   const SCREEN_INIT = {
