@@ -1502,8 +1502,8 @@
        Les traits des 8 secteurs sont prolongés jusqu'au bord de l'image : tout ce qui est hors
        des 9 zones centrales est hors green, découpé en 8 zones → 'Hors-<direction>' */
     const DIRECTIONS = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
-    const GREEN_SIZE = 0.5;   // diamètre du green cliquable, part de l'image
-    const HOLE_SIZE = 0.05;   // diamètre du trou, part de l'image
+    const GREEN_SIZE = 0.6;   // diamètre du green cliquable, part de l'image
+    const HOLE_SIZE = 0.07;   // diamètre du trou, part de l'image
     let greenRatio = 1;       // largeur / hauteur de l'image (mis à jour au chargement de l'image)
 
     // Vrai si la zone est sur le green (trou ou secteur intérieur) : sert au calcul du GIR
