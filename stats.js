@@ -1304,6 +1304,21 @@
     const courseName = course ? course.name : (newRound.courseQuery.trim() || null);
     currentRound = { ...newRound, courseName, holeCount, startHole, holes };
     closeNewRound();
+    // Mode rapide : ouvre l'écran de saisie par trou (le mode détaillé n'a pas encore d'écran)
+    if (newRound.mode === 'saisie-rapide') showScreen('saisie-rapide');
+  }
+
+  function initSaisieRapide() {
+    const screen = document.getElementById('screen-saisie-rapide');
+    // Sélection unique par groupe (fairway, green, putts) ; un second clic désélectionne
+    screen.addEventListener('click', (e) => {
+      const option = e.target.closest('[role="radio"]');
+      if (!option) return;
+      const wasChecked = option.getAttribute('aria-checked') === 'true';
+      option.closest('[role="radiogroup"]').querySelectorAll('[role="radio"]')
+        .forEach((el) => el.setAttribute('aria-checked', 'false'));
+      option.setAttribute('aria-checked', String(!wasChecked));
+    });
   }
 
   const SCREEN_INIT = {
@@ -1311,6 +1326,7 @@
     'par-distance': initParDistance,
     historique: initHistorique,
     putting: initPutting,
+    'saisie-rapide': initSaisieRapide,
   };
 
   /* ========================================================================

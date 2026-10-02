@@ -1693,3 +1693,370 @@ html {
 @media (max-width: 400px) {
   #page-stats .new-round_grid .new-round_field-chevron { display: none; }
 }
+
+/* ==========================================================================
+   SAISIE RAPIDE — écran de saisie par trou (maquette, Client-First)
+   Mise en page adaptée à la largeur du composant (container query) :
+   - étroit : cartes empilées
+   - >= 600px : Green + Putts côte à côte, comme la maquette
+   ========================================================================== */
+
+#page-stats .saisie-rapide_component {
+  --qr-border: rgba(120, 165, 215, 0.3);
+  --qr-blue: #86A9E8;
+
+  container-type: inline-size;
+  max-width: var(--container-max);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- En-tête : score du trou / trou / score total ---------- */
+#page-stats .saisie-rapide_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: calc(env(safe-area-inset-top) + var(--space-md)) var(--space-md) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+#page-stats .saisie-rapide_header-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+#page-stats .saisie-rapide_header-icon {
+  display: none; /* affiché seulement quand la largeur le permet (voir container query) */
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+}
+#page-stats .saisie-rapide_header-icon svg { width: 18px; height: 18px; }
+#page-stats .saisie-rapide_header-label {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_score-badge {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .saisie-rapide_header-divider {
+  width: 1px;
+  height: 32px;
+  flex-shrink: 0;
+  background: var(--color-border-strong);
+}
+#page-stats .saisie-rapide_hole-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_hole-meta {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--qr-blue);
+  white-space: nowrap;
+}
+#page-stats .saisie-rapide_total {
+  flex-shrink: 0;
+  padding: 6px var(--space-md);
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-full);
+  text-align: center;
+}
+#page-stats .saisie-rapide_total-value {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  color: var(--color-accent);
+}
+#page-stats .saisie-rapide_total-label {
+  margin: 3px 0 0;
+  font-size: 0.625rem;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Corps ---------- */
+#page-stats .saisie-rapide_body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-md) calc(var(--space-xl) + env(safe-area-inset-bottom));
+}
+#page-stats .saisie-rapide_split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ---------- Carte ---------- */
+#page-stats .saisie-rapide_card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-lg);
+}
+#page-stats .saisie-rapide_card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+#page-stats .saisie-rapide_card-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+}
+#page-stats .saisie-rapide_card-icon svg { width: 20px; height: 20px; }
+#page-stats .saisie-rapide_card-heading { flex: 1; min-width: 0; }
+#page-stats .saisie-rapide_card-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_card-subtitle {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  line-height: 1.3;
+  color: var(--qr-blue);
+}
+#page-stats .saisie-rapide_card-link {
+  max-width: 42%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-xs);
+  line-height: 1.25;
+  text-align: right;
+  color: var(--qr-blue);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_card-link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+}
+
+/* ---------- Zones vides (fairway / green à brancher) ---------- */
+#page-stats .saisie-rapide_map {
+  width: 100%;
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-md);
+}
+#page-stats .saisie-rapide_map.is-fairway { aspect-ratio: 905 / 160; min-height: 96px; }
+#page-stats .saisie-rapide_map.is-green { aspect-ratio: 620 / 420; }
+
+/* ---------- Choix directionnels (Gauche / Centre / Droite...) ---------- */
+#page-stats .saisie-rapide_choice-list {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+#page-stats .saisie-rapide_choice {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_choice-list.is-divided .saisie-rapide_choice + .saisie-rapide_choice {
+  border-left: 1px solid var(--color-border-strong);
+}
+#page-stats .saisie-rapide_choice-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_choice-icon svg { width: 22px; height: 22px; }
+#page-stats .saisie-rapide_choice-list.is-compact .saisie-rapide_choice { font-size: var(--fs-xs); }
+#page-stats .saisie-rapide_choice-list.is-compact .saisie-rapide_choice-icon { width: 42px; height: 42px; }
+#page-stats .saisie-rapide_choice-list.is-compact .saisie-rapide_choice-icon svg { width: 20px; height: 20px; }
+#page-stats .saisie-rapide_choice[aria-checked="true"] .saisie-rapide_choice-icon {
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
+
+/* ---------- Putts ---------- */
+#page-stats .saisie-rapide_putts-list {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+}
+#page-stats .saisie-rapide_putts-option {
+  flex: 0 1 52px;
+  min-width: 0;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_putts-option[aria-checked="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- Résumé live ---------- */
+#page-stats .saisie-rapide_live-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+#page-stats .saisie-rapide_live-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--color-accent); }
+#page-stats .saisie-rapide_live-title {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_live.is-in-card {
+  display: none; /* doublon du résumé du bas tant que la carte Putts est pleine largeur */
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+#page-stats .saisie-rapide_stat-list { display: flex; }
+#page-stats .saisie-rapide_stat-list.is-stacked { flex-direction: column; }
+#page-stats .saisie-rapide_stat {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) 0;
+}
+#page-stats .saisie-rapide_stat-list.is-stacked .saisie-rapide_stat + .saisie-rapide_stat { border-top: 1px solid var(--color-border); }
+#page-stats .saisie-rapide_stat-list.is-row .saisie-rapide_stat + .saisie-rapide_stat { border-left: 1px solid var(--color-border); }
+#page-stats .saisie-rapide_stat-label {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--qr-blue);
+}
+#page-stats .saisie-rapide_stat-value {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+#page-stats .saisie-rapide_stat-value.is-accent { color: var(--color-accent); }
+
+/* ---------- Navigation entre les trous ---------- */
+#page-stats .saisie-rapide_nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+#page-stats .saisie-rapide_nav-button {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_nav-button svg { width: 18px; height: 18px; flex-shrink: 0; }
+#page-stats .saisie-rapide_nav-button.is-primary {
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
+#page-stats .saisie-rapide_nav-button.is-primary:active { background: var(--color-accent-dim); }
+
+/* ---------- Largeur suffisante : icônes d'en-tête ---------- */
+@container (min-width: 520px) {
+  .saisie-rapide_header-icon { display: flex; }
+  .saisie-rapide_header-label { font-size: var(--fs-xs); }
+}
+
+/* ---------- Largeur suffisante : Green + Putts côte à côte ---------- */
+@container (min-width: 600px) {
+  .saisie-rapide_split {
+    display: grid;
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .saisie-rapide_live.is-in-card { display: flex; }
+  .saisie-rapide_hole-title { font-size: var(--fs-xl); }
+}
