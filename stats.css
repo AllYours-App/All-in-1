@@ -2190,10 +2190,47 @@ html {
 
 /* ==========================================================================
    SAISIE DÉTAILLÉE — saisie coup par coup (Client-First)
-   Tout tient sur un écran : header fixe, hauteur 100dvh, pas de défilement.
+   Tout tient sur un écran : hauteur 100dvh, pas de défilement.
    Les encadrés Green / Fairway réutilisent les classes saisie-rapide_*.
    ========================================================================== */
 
+#page-stats #screen-saisie-detaillee { --sd-handle: 20px; }
+
+/* ---------- En-tête masqué : un appui en haut de l'écran l'affiche ----------
+   `translate` (et non `transform`) pour ne pas écraser un éventuel transform de commun.css */
+#page-stats .saisie-detaillee_header-toggle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: calc(var(--z-header) - 1);
+  height: calc(env(safe-area-inset-top) + var(--sd-handle));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 2px;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  opacity: 0.7;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_header-toggle svg { width: 18px; height: 18px; }
+
+#page-stats #screen-saisie-detaillee .page-header {
+  translate: 0 -100%;
+  visibility: hidden;
+  transition: translate var(--duration-base) var(--ease-out),
+              visibility 0s linear var(--duration-base);
+}
+#page-stats #screen-saisie-detaillee.is-header-open .page-header {
+  translate: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* ---------- Composant ---------- */
 #page-stats .saisie-detaillee_component {
   --qr-border: rgba(120, 165, 215, 0.3);
   --qr-blue: #86A9E8;
@@ -2205,12 +2242,13 @@ html {
   height: 100vh;
   height: 100dvh;
   margin: 0;
-  /* 8 px de marge latérale : index.html ignore les touches à moins de 16 px du bord */
+  /* Marges latérales minimales (4 px) : le contenu interactif reste à ≥ 16 px du bord
+     grâce au padding des cartes (index.html ignore les touches à moins de 16 px) */
   padding:
-    calc(56px + env(safe-area-inset-top) + var(--space-xs))
-    calc(var(--space-xs) + env(safe-area-inset-right))
+    calc(env(safe-area-inset-top) + var(--sd-handle))
+    calc(var(--space-2xs) + env(safe-area-inset-right))
     calc(env(safe-area-inset-bottom) + var(--space-sm))
-    calc(var(--space-xs) + env(safe-area-inset-left));
+    calc(var(--space-2xs) + env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -2238,8 +2276,6 @@ html {
 }
 #page-stats .saisie-detaillee_icon svg { width: 14px; height: 14px; }
 #page-stats .saisie-detaillee_icon.is-iron { border-color: var(--color-text-primary); color: var(--color-text-primary); }
-#page-stats .saisie-detaillee_icon.is-lg { width: 36px; height: 36px; }
-#page-stats .saisie-detaillee_icon.is-lg svg { width: 18px; height: 18px; }
 
 /* ---------- Stats du trou ---------- */
 #page-stats .saisie-detaillee_stats {
@@ -2248,7 +2284,6 @@ html {
   padding: 0;
   overflow: hidden;
 }
-/* Encadré image : volontairement vide */
 #page-stats .saisie-detaillee_stats-image {
   width: 28%;
   flex-shrink: 0;
@@ -2260,8 +2295,8 @@ html {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
+  justify-content: center;
+  padding: var(--space-2xs) var(--space-sm);
 }
 #page-stats .saisie-detaillee_stat-list {
   display: grid;
@@ -2271,7 +2306,7 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 0;
 }
 #page-stats .saisie-detaillee_stat + .saisie-detaillee_stat { border-left: 1px solid var(--color-border-strong); }
 #page-stats .saisie-detaillee_stat-head {
@@ -2280,24 +2315,24 @@ html {
   gap: 3px;
   color: var(--color-accent);
 }
-#page-stats .saisie-detaillee_stat-head svg { width: 14px; height: 14px; flex-shrink: 0; }
+#page-stats .saisie-detaillee_stat-head svg { width: 12px; height: 12px; flex-shrink: 0; }
 #page-stats .saisie-detaillee_stat-label {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-2xs);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
   color: var(--color-text-primary);
 }
 #page-stats .saisie-detaillee_stat-value {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   line-height: 1.1;
 }
 
-/* ---------- Ligne Coups du trou | Coup sélectionné ---------- */
+/* ---------- Ligne Coups | Détail du coup ---------- */
 #page-stats .saisie-detaillee_split {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
   gap: var(--space-xs);
 }
 
@@ -2306,11 +2341,14 @@ html {
 #page-stats .saisie-detaillee_shots {
   contain: size;
   min-height: 0;
+  gap: 6px;
 }
+#page-stats .saisie-detaillee_shots .saisie-rapide_card-icon { width: 22px; height: 22px; }
+#page-stats .saisie-detaillee_shots .saisie-rapide_card-icon svg { width: 12px; height: 12px; }
 #page-stats .saisie-detaillee_shot-list {
-  --sd-row: 36px;
-  --sd-badge: 22px;
-  --sd-gap: 5px;
+  --sd-row: 30px;
+  --sd-badge: 18px;
+  --sd-gap: 4px;
   position: relative;
   flex: 1;
   min-height: 0;
@@ -2355,7 +2393,7 @@ html {
   border: 1px solid var(--qr-blue);
   border-radius: var(--radius-full);
   background: var(--color-bg-elevated);
-  font-size: var(--fs-2xs);
+  font-size: 0.625rem;
   font-weight: var(--fw-bold);
 }
 #page-stats .saisie-detaillee_shot-number.is-selected {
@@ -2370,7 +2408,7 @@ html {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 0 6px 0 4px;
+  padding: 0 6px;
   border: 1px solid var(--qr-border);
   border-radius: var(--radius-md);
   background: none;
@@ -2380,7 +2418,6 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 #page-stats .saisie-detaillee_shot-button[aria-current="true"] { border-color: var(--color-accent); }
-#page-stats .saisie-detaillee_shot-button .saisie-detaillee_icon { width: 24px; height: 24px; }
 #page-stats .saisie-detaillee_shot-text {
   flex: 1;
   min-width: 0;
@@ -2409,28 +2446,18 @@ html {
 #page-stats .saisie-detaillee_shot-chevron { width: 10px; height: 10px; flex-shrink: 0; color: var(--color-text-secondary); }
 #page-stats .saisie-detaillee_shot-chevron svg { width: 100%; height: 100%; display: block; }
 
-/* ---------- Panneau du coup sélectionné ---------- */
-#page-stats .saisie-detaillee_detail { gap: 6px; }
+/* ---------- Panneau du coup sélectionné : chaque ligne = titre + contrôle ---------- */
+#page-stats .saisie-detaillee_detail { gap: 5px; }
 #page-stats .saisie-detaillee_detail-head {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding-bottom: 6px;
+  padding-bottom: 5px;
   border-bottom: 1px solid var(--color-border);
 }
-#page-stats .saisie-detaillee_detail-heading {
+#page-stats .saisie-detaillee_detail-title {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-#page-stats .saisie-detaillee_detail-kicker {
-  font-size: var(--fs-2xs);
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-  color: var(--qr-blue);
-}
-#page-stats .saisie-detaillee_detail-title {
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2446,7 +2473,6 @@ html {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  align-self: flex-start;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2461,28 +2487,33 @@ html {
 
 #page-stats .saisie-detaillee_group {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+  min-height: 30px;
 }
 #page-stats .saisie-detaillee_label {
+  flex: 0 0 64px; /* largeur fixe : les contrôles restent alignés d'une ligne à l'autre */
   font-size: var(--fs-2xs);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
   color: var(--qr-blue);
 }
 
-/* Club : ligne cliquable avec sélecteur natif par-dessus */
+/* Champ (club / distance / pénalité) */
 #page-stats .saisie-detaillee_field {
   position: relative;
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 32px;
+  min-height: 30px;
   padding: 0 8px 0 3px;
   border: 1px solid var(--qr-border);
   border-radius: var(--radius-md);
 }
+#page-stats .saisie-detaillee_field.is-input { padding: 0 10px; gap: 4px; }
 #page-stats .saisie-detaillee_field .saisie-detaillee_icon { width: 24px; height: 24px; }
 #page-stats .saisie-detaillee_field-text {
   flex: 1;
@@ -2503,96 +2534,53 @@ html {
   cursor: pointer;
   font-size: 16px; /* évite le zoom auto d'iOS */
 }
-
-/* Lie : 3 + 2 pastilles */
-#page-stats .saisie-detaillee_lie-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-}
-#page-stats .saisie-detaillee_lie {
-  min-width: 0;
-  min-height: 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 3px 2px;
-  border: 1px solid var(--qr-border);
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--color-text-primary);
-  font-size: var(--fs-2xs);
-  font-weight: var(--fw-medium);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-#page-stats .saisie-detaillee_lie svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-accent); }
-#page-stats .saisie-detaillee_lie.is-rough svg { color: var(--qr-blue); }
-#page-stats .saisie-detaillee_lie.is-trees svg { color: var(--color-text-primary); }
-#page-stats .saisie-detaillee_lie.is-bunker svg { color: var(--sd-sand); }
-#page-stats .saisie-detaillee_lie[aria-checked="true"] { border-color: var(--color-accent); }
-
-/* Distance restante / pénalité */
-#page-stats .saisie-detaillee_stepper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 6px 0 3px;
-  border: 1px solid var(--qr-border);
-  border-radius: var(--radius-md);
-}
-#page-stats .saisie-detaillee_stepper .saisie-detaillee_icon { width: 24px; height: 24px; }
-#page-stats .saisie-detaillee_stepper-button {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--qr-border);
-  border-radius: var(--radius-full);
-  background: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-#page-stats .saisie-detaillee_stepper-button svg { width: 12px; height: 12px; }
-#page-stats .saisie-detaillee_stepper-button::after { content: ''; position: absolute; inset: -6px; } /* zone de toucher élargie */
-#page-stats .saisie-detaillee_stepper-button:active { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg-base); }
-#page-stats .saisie-detaillee_stepper-value {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 3px;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-bold);
-}
-#page-stats .saisie-detaillee_stepper-value.is-start { justify-content: flex-start; padding-left: 2px; }
 #page-stats .saisie-detaillee_input {
-  width: 4.2ch;
+  flex: 1;
+  width: 100%;
   min-width: 0;
   padding: 0;
   border: none;
   outline: none;
   background: none;
-  color: inherit;
-  font: inherit;
-  text-align: right;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  text-align: left;
 }
 #page-stats .saisie-detaillee_input::placeholder { color: var(--color-text-tertiary); }
 #page-stats .saisie-detaillee_unit {
-  font-weight: var(--fw-regular);
+  font-size: var(--fs-md);
   color: var(--color-text-secondary);
 }
 
-/* ---------- Attaque green | Attaque fairway ---------- */
+/* Lie : un seul bouton (icône + nom), chaque appui passe au lie suivant */
+#page-stats .saisie-detaillee_lie {
+  flex: 0 0 auto;
+  width: 96px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-primary);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_lie-icon { display: flex; flex-shrink: 0; }
+#page-stats .saisie-detaillee_lie-icon:empty { display: none; }
+#page-stats .saisie-detaillee_lie svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-accent); }
+#page-stats .saisie-detaillee_lie.is-rough svg { color: var(--qr-blue); }
+#page-stats .saisie-detaillee_lie.is-trees svg { color: var(--color-text-primary); }
+#page-stats .saisie-detaillee_lie.is-bunker svg { color: var(--sd-sand); }
+#page-stats .saisie-detaillee_lie:active { background: var(--color-accent-10); }
+
+/* ---------- Green | Fairway ---------- */
 #page-stats .saisie-detaillee_maps {
   flex: 1 1 0;
   min-height: 0;
@@ -2618,36 +2606,22 @@ html {
 #page-stats .saisie-detaillee_map-card .saisie-rapide_choice-icon svg { width: 15px; height: 15px; }
 
 /* ---------- Strokes gained ---------- */
-#page-stats .saisie-detaillee_sg-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
+#page-stats .saisie-detaillee_sg { padding-block: 6px; }
 #page-stats .saisie-detaillee_sg-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding-top: 6px;
-  border-top: 1px solid var(--color-border);
 }
 #page-stats .saisie-detaillee_sg-item {
   min-width: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
+  gap: 1px;
   padding: 0 2px;
 }
 #page-stats .saisie-detaillee_sg-item + .saisie-detaillee_sg-item { border-left: 1px solid var(--color-border-strong); }
-#page-stats .saisie-detaillee_sg-item .saisie-detaillee_icon { width: 22px; height: 22px; }
-#page-stats .saisie-detaillee_sg-item .saisie-detaillee_icon svg { width: 12px; height: 12px; }
-#page-stats .saisie-detaillee_sg-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
 #page-stats .saisie-detaillee_sg-label {
-  font-size: 0.5625rem;
+  font-size: var(--fs-2xs);
   letter-spacing: var(--ls-wide);
   line-height: 1.15;
   text-transform: uppercase;
