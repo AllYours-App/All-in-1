@@ -1320,16 +1320,27 @@
      (score, putts, fairway, green) ; elle est retrouvée en naviguant.
      ======================================================================== */
 
-  // Image de fond de l'encadré Green : dossier "images", fichier "FondGreenRond".
-  // L'extension est détectée automatiquement parmi GREEN_BG_EXT.
+  // Images de fond (dossier "images") : Green = FondGreenRond, Fairway = FondFairwaySaisieRapide.
+  // L'extension est détectée automatiquement parmi IMAGE_EXT.
   const GREEN_BG_BASE = 'images/FondGreenRond';
-  const GREEN_BG_EXT = ['png', 'webp', 'jpg', 'jpeg', 'svg'];
+  const FAIRWAY_BG_BASE = 'images/FondFairwaySaisieRapide';
+  const IMAGE_EXT = ['png', 'webp', 'jpg', 'jpeg', 'svg', 'PNG', 'WEBP', 'JPG', 'JPEG', 'SVG'];
 
-  // Icônes du pavé numérique
-  const PAD_ICONS = {
-    backspace: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M9 5h10a2 2 0 012 2v10a2 2 0 01-2 2H9l-6-7z"/><path d="M12 10l4 4M16 10l-4 4"/></svg>`,
-    check: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
-  };
+  // Renvoie (en promesse) l'URL de la première image existante, ou null
+  function findImage(base) {
+    return new Promise((resolve) => {
+      let i = 0;
+      const tryNext = () => {
+        if (i >= IMAGE_EXT.length) { console.warn(`Image introuvable : ${base}.(${IMAGE_EXT.join('|')})`); resolve(null); return; }
+        const url = `${base}.${IMAGE_EXT[i++]}`;
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = tryNext;
+        img.src = url;
+      };
+      tryNext();
+    });
+  }
 
   // API de l'écran (renseignée par initSaisieRapide) : load() recharge currentRound
   let saisieRapide = null;
@@ -1346,8 +1357,9 @@
     const badgeEl = q('.saisie-rapide_score-badge');
     const puttsEl = q('[data-qr="putts-value"]');
     const statList = q('.saisie-rapide_stat-list');
-    const subtitleEl = q('.page-header__subtitle');
     const greenRoot = document.getElementById('qr-green-root');
+    const fairwayRoot = document.getElementById('qr-fairway-root');
+    const fairwayCard = fairwayRoot && fairwayRoot.closest('.saisie-rapide_card');
     const fairwayOptions = [...screen.querySelectorAll('[role="radio"]')];
     const [prevBtn, nextBtn] = screen.querySelectorAll('.saisie-rapide_nav-button');
 
@@ -1375,16 +1387,10 @@
       entries = round.holes.map(blankEntry);
       round.entries = entries; // lu à la fin de la partie
       idx = 0;
-      renderHeader();
       renderHole();
     }
 
     /* ---------- Affichage ---------- */
-    function renderHeader() {
-      const parts = [round.courseName, optionLabel('tee', round.tee), `${round.holes.length} trous`];
-      setText(subtitleEl, parts.filter(Boolean).join(' · '));
-    }
-
     function renderBadge() {
       if (!badgeEl) return;
       const score = entry().score;
@@ -1394,40 +1400,47 @@
 
     function renderStats() {
       if (!statList) return;
-      let total = 0, scored = 0, vsPar = 0, vsParHoles = 0, putts = 0, puttsHoles = 0, gir = 0, girHoles = 0;
+      let vsPar = 0, vsParHoles = 0, fir = 0, firHoles = 0, gir = 0, girHoles = 0, putts = 0, puttsHoles = 0;
       entries.forEach((e, i) => {
         const par = round.holes[i].par;
-        if (e.score !== null) {
-          total += e.score; scored++;
-          if (par !== null) { vsPar += e.score - par; vsParHoles++; }
-        }
-        if (e.putts !== null) { putts += e.putts; puttsHoles++; }
+        if (e.score !== null && par !== null) { vsPar += e.score - par; vsParHoles++; }
+        if (e.fairway !== null && par !== 3) { firHoles++; if (e.fairway === FAIRWAY_HIT) fir++; }
         if (e.green !== null) { girHoles++; if (e.green === 'Centre') gir++; }
+        if (e.putts !== null) { putts += e.putts; puttsHoles++; }
       });
+      const pct = (n, total) => (total ? `${Math.round((n / total) * 100)}%` : '--');
       const rows = [
-        ['Score', scored ? total : '--', true],
-        ['Vs par', vsParHoles ? (vsPar > 0 ? `+${vsPar}` : String(vsPar)) : '--'],
-        ['Putts', puttsHoles ? putts : '--'],
-        ['Greens', girHoles ? `${gir}/${girHoles}` : '--'],
+        ['Score', vsParHoles ? (vsPar > 0 ? `+${vsPar}` : vsPar === 0 ? 'E' : String(vsPar)) : '--', true],
+        ['FIR', pct(fir, firHoles)],
+        ['GIR', pct(gir, girHoles)],
+        ['Putts', puttsHoles ? (putts / puttsHoles).toFixed(1) : '--'],
       ];
       statList.innerHTML = rows.map(([label, value, accent]) => `
-        <div class="saisie-rapide_stat">
-          <span class="saisie-rapide_stat-label">${label}</span>
-          <span class="saisie-rapide_stat-value${accent ? ' is-accent' : ''}">${value}</span>
-        </div>`).join('');
+        <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">${label}</span><span class="saisie-rapide_stat-value${accent ? ' is-accent' : ''}">${value}</span></div>`).join('');
     }
+
+    // Remplace uniquement le texte d'un bouton (les icônes SVG du HTML sont conservées)
+    function setLabel(btn, text) {
+      const node = [...btn.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      if (node) node.textContent = `\n        ${text}\n        `;
+      else btn.insertBefore(document.createTextNode(text), btn.querySelector('svg:last-child'));
+    }
+
+    // Un trou est complet quand score, putts, fairway et green sont renseignés (pas de fairway sur un par 3)
+    const isComplete = (e, par) => e.score !== null && e.putts !== null && e.green !== null && (par === 3 || e.fairway !== null);
+    const allComplete = () => entries.every((e, i) => isComplete(e, round.holes[i].par));
 
     function renderNav() {
       const last = idx === round.holes.length - 1;
-      [prevBtn, nextBtn].forEach((b) => { if (b) { b.type = 'button'; b.removeAttribute('data-goto'); } });
-      if (prevBtn) {
-        prevBtn.innerHTML = `${icon('back')}<span>Trou précédent</span>`;
-        prevBtn.disabled = idx === 0;
-      }
-      if (nextBtn) {
-        nextBtn.innerHTML = `<span>${last ? 'Terminer' : 'Trou suivant'}</span>${icon('arrowRight')}`;
-      }
+      if (prevBtn) prevBtn.disabled = idx === 0;
+      if (!nextBtn) return;
+      // Dernier trou : "Enregistrer" n'apparaît que si tous les trous sont complets
+      nextBtn.classList.toggle('is-hidden', last && !allComplete());
+      setLabel(nextBtn, last ? 'Enregistrer' : 'Trou suivant');
     }
+
+    // Met à jour résumé + bouton après chaque saisie
+    function refresh() { renderStats(); renderNav(); }
 
     function renderHole() {
       const hole = round.holes[idx];
@@ -1441,7 +1454,13 @@
       setText(metaEl, meta.length ? meta.join(' · ') : `Trou ${idx + 1} sur ${round.holes.length}`);
 
       renderBadge();
-      fairwayOptions.forEach((o) => o.setAttribute('aria-checked', String(optionKey(o) === e.fairway)));
+      // Par 3 : pas de fairway → carte grisée et choix désactivés
+      const noFairway = hole.par === 3;
+      if (fairwayCard) fairwayCard.classList.toggle('is-na', noFairway);
+      fairwayOptions.forEach((o) => {
+        o.disabled = noFairway;
+        o.setAttribute('aria-checked', String(!noFairway && optionKey(o) === e.fairway));
+      });
       setText(puttsEl, e.putts === null ? '–' : e.putts);
       renderGreenWheel();
       renderStats();
@@ -1449,6 +1468,7 @@
     }
 
     // Libellé d'un choix de fairway (sert de valeur enregistrée)
+    const FAIRWAY_HIT = 'Centre'; // choix Gauche / Centre / Droite : Centre = fairway touché
     const optionKey = (el) => (el.textContent || el.getAttribute('aria-label') || '').trim();
 
     /* ---------- Fairway : sélection unique ; un second clic désélectionne ---------- */
@@ -1460,6 +1480,7 @@
         .forEach((el) => el.setAttribute('aria-checked', 'false'));
       option.setAttribute('aria-checked', String(!wasChecked));
       entry().fairway = wasChecked ? null : optionKey(option);
+      refresh();
     });
 
     /* ---------- Putts : flèches, de 0 à 9 ---------- */
@@ -1469,13 +1490,12 @@
       const e0 = entry();
       e0.putts = Math.min(9, Math.max(0, (e0.putts === null ? 0 : e0.putts) + Number(btn.dataset.qrPutts)));
       setText(puttsEl, e0.putts);
-      renderStats();
+      refresh();
     });
 
     /* ---------- Roue du green (reprise de Wedging) ----------
        Centre = green touché, 8 secteurs = direction du raté */
     const DIRECTIONS = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
-    let greenBgUrl = null;
 
     // Tracé d'un secteur d'anneau entre deux angles (0° = haut, sens horaire)
     function sectorPath(cx, cy, rIn, rOut, a0, a1) {
@@ -1502,10 +1522,7 @@
       const centerSel = greenZone === 'Centre';
       if (centerSel) ball = `<circle cx="${cx}" cy="${cy}" r="7" class="saisie-rapide_wheel-ball"/>`;
       const poleX = cx - 13, poleTop = cy - 16, poleBottom = cy + 18;
-      // L'image de fond est dans le SVG : elle reste alignée sur les secteurs à toute taille d'écran
-      const bg = greenBgUrl ? `<image href="${greenBgUrl}" x="0" y="0" width="200" height="200" preserveAspectRatio="xMidYMid slice" class="saisie-rapide_wheel-bg"/>` : '';
       greenRoot.innerHTML = `<svg viewBox="0 0 200 200" class="saisie-rapide_wheel" role="group" aria-label="Green en régulation">
-        ${bg}
         ${sectors}
         <circle cx="${cx}" cy="${cy}" r="${rHole}" class="saisie-rapide_wheel-center${centerSel ? ' is-selected' : ''}" data-zone="Centre"/>
         <line x1="${poleX}" y1="${poleBottom}" x2="${poleX}" y2="${poleTop}" class="saisie-rapide_wheel-pole"/>
@@ -1521,29 +1538,19 @@
         const e0 = entry();
         e0.green = e0.green === zone.dataset.zone ? null : zone.dataset.zone; // second clic = désélection
         renderGreenWheel();
-        renderStats();
+        refresh();
       });
     }
 
-    // Cherche images/FondGreenRond.<ext> puis redessine la roue quand elle est trouvée
-    (function loadGreenBackground() {
-      let i = 0;
-      const tryNext = () => {
-        if (i >= GREEN_BG_EXT.length) { console.warn(`Image du green introuvable : ${GREEN_BG_BASE}.(${GREEN_BG_EXT.join('|')})`); return; }
-        const url = `${GREEN_BG_BASE}.${GREEN_BG_EXT[i++]}`;
-        const img = new Image();
-        img.onload = () => { greenBgUrl = url; renderGreenWheel(); };
-        img.onerror = tryNext;
-        img.src = url;
-      };
-      tryNext();
-    })();
+    // Fonds d'image posés en CSS. Green : sur la même zone que la roue → même centre, même taille.
+    findImage(GREEN_BG_BASE).then((url) => { if (url && greenRoot) greenRoot.style.backgroundImage = `url("${url}")`; });
+    findImage(FAIRWAY_BG_BASE).then((url) => { if (url && fairwayRoot) fairwayRoot.style.backgroundImage = `url("${url}")`; });
 
     /* ---------- Navigation entre les trous ---------- */
     function go(step) {
       const next = idx + step;
       if (next < 0) return;
-      if (next >= round.holes.length) { finishRound(); return; }
+      if (next >= round.holes.length) { if (allComplete()) finishRound(); return; }
       idx = next;
       renderHole();
     }
@@ -1576,6 +1583,7 @@
       pad.el.querySelector('[data-pad-result]').textContent = padLabel(n);
     }
 
+    // Touches du pavé commun (appKeypad) : leurs onclick appellent des fonctions globales, exposées dans ensurePad
     function padDigit(d) {
       if (pad.fresh) { pad.value = ''; pad.fresh = false; } // premier chiffre : remplace le score existant
       const next = pad.value + d;
@@ -1590,11 +1598,17 @@
       renderPad();
     }
 
+    function padClear() {
+      pad.fresh = false;
+      pad.value = '';
+      renderPad();
+    }
+
     function padConfirm() {
       entry().score = pad.value ? Number(pad.value) : null;
       closePad();
       renderBadge();
-      renderStats();
+      refresh();
     }
 
     function onPadKeydown(e) {
@@ -1606,6 +1620,11 @@
 
     function ensurePad() {
       if (pad.el) return;
+      if (typeof appKeypad !== 'function') console.error('appKeypad (commun.js) introuvable : pavé numérique indisponible');
+      window.qrPadPress = padDigit;
+      window.qrPadBackspace = padBackspace;
+      window.qrPadClear = padClear;
+
       pad.el = document.createElement('div');
       pad.el.className = 'saisie-rapide_pad-overlay';
       pad.el.innerHTML = `
@@ -1618,23 +1637,16 @@
             <button type="button" class="saisie-rapide_pad-close" data-pad-close aria-label="Fermer">${icon('close')}</button>
           </div>
           <div class="saisie-rapide_pad-display" aria-live="polite">
-            <span class="saisie-rapide_pad-value" data-pad-value></span>
+            <div class="app-keypad-value" data-pad-value></div>
             <span class="saisie-rapide_pad-result" data-pad-result></span>
           </div>
-          <div class="saisie-rapide_pad-keys">
-            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button type="button" class="saisie-rapide_pad-key" data-pad-digit="${n}">${n}</button>`).join('')}
-            <button type="button" class="saisie-rapide_pad-key is-secondary" data-pad-back aria-label="Effacer">${PAD_ICONS.backspace}</button>
-            <button type="button" class="saisie-rapide_pad-key" data-pad-digit="0">0</button>
-            <button type="button" class="saisie-rapide_pad-key is-primary" data-pad-ok aria-label="Valider le score">${PAD_ICONS.check}</button>
-          </div>
+          ${typeof appKeypad === 'function' ? appKeypad('qrPadPress', 'qrPadBackspace', 'qrPadClear') : ''}
+          <button type="button" class="qr-submit" data-pad-ok>Valider</button>
         </div>`;
       getStatsRoot().appendChild(pad.el);
 
       pad.el.addEventListener('click', (e) => {
         if (e.target === pad.el || e.target.closest('[data-pad-close]')) { closePad(); return; }
-        const digit = e.target.closest('[data-pad-digit]');
-        if (digit) { padDigit(digit.dataset.padDigit); return; }
-        if (e.target.closest('[data-pad-back]')) { padBackspace(); return; }
         if (e.target.closest('[data-pad-ok]')) padConfirm();
       });
     }

@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="gym.css">
 <link rel="stylesheet" href="putting.css">
 <link rel="stylesheet" href="vitesse.css">
-<link rel="stylesheet" href="stats.css">
+<link rel="stylesheet" href="stats.css?v=2">
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="auth.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
@@ -711,12 +711,12 @@
     <!-- TROU + SCORE -->
     <section class="saisie-rapide_card saisie-rapide_hole-card">
       <div class="saisie-rapide_hole">
-        <h2 class="saisie-rapide_hole-title" data-qr="hole-number">Trou 7</h2>
-        <p class="saisie-rapide_hole-meta" data-qr="hole-meta">Par 4 &bull; 362 m</p>
+        <h2 class="saisie-rapide_hole-title" data-qr="hole-number">Trou 1</h2>
+        <p class="saisie-rapide_hole-meta" data-qr="hole-meta"></p>
       </div>
       <div class="saisie-rapide_hole-score">
         <span class="saisie-rapide_hole-score-label">Score</span>
-        <span class="saisie-rapide_score-badge" data-qr="hole-score">4</span>
+        <span class="saisie-rapide_score-badge is-empty" data-qr="hole-score">–</span>
       </div>
     </section>
 
@@ -764,7 +764,7 @@
             <button class="saisie-rapide_stepper-button" type="button" data-qr-putts="-1" aria-label="Moins un putt">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
-            <span class="saisie-rapide_stepper-value" data-qr="putts-value" aria-live="polite">1</span>
+            <span class="saisie-rapide_stepper-value" data-qr="putts-value" aria-live="polite">–</span>
             <button class="saisie-rapide_stepper-button" type="button" data-qr-putts="1" aria-label="Plus un putt">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
             </button>
@@ -777,10 +777,10 @@
             <h2 class="saisie-rapide_live-title">Résumé live</h2>
           </div>
           <div class="saisie-rapide_stat-list">
-            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">Score</span><span class="saisie-rapide_stat-value is-accent">+3</span></div>
-            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">FIR</span><span class="saisie-rapide_stat-value">71%</span></div>
-            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">GIR</span><span class="saisie-rapide_stat-value">50%</span></div>
-            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">Putts</span><span class="saisie-rapide_stat-value">1.8</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">Score</span><span class="saisie-rapide_stat-value is-accent">--</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">FIR</span><span class="saisie-rapide_stat-value">--</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">GIR</span><span class="saisie-rapide_stat-value">--</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">Putts</span><span class="saisie-rapide_stat-value">--</span></div>
           </div>
         </section>
 
@@ -1056,7 +1056,7 @@
 <script src="gym.js"></script>
 <script src="putting.js"></script>
 <script src="vitesse.js"></script>
-<script src="stats.js"></script>
+<script src="stats.js?v=2"></script>
 <script src="menu.js"></script>
 <script src="auth.js"></script>
 </body>

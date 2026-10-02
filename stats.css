@@ -1821,19 +1821,34 @@ html {
 /* ---------- Zones fairway / green ---------- */
 #page-stats .saisie-rapide_map { width: 100%; }
 #page-stats .saisie-rapide_map.is-fairway {
+  overflow: hidden;
+  background: center / cover no-repeat; /* l'image (FondFairwaySaisieRapide) est posée par stats.js */
   aspect-ratio: 905 / 160;
   min-height: 64px;
   max-height: 84px;
   border: 1px solid var(--qr-border);
   border-radius: var(--radius-md);
 }
+/* Encadré du green : l'image de fond (posée par stats.js) est dessinée sur la MÊME zone que la roue
+   (.is-green) : même centre et même diamètre, quelle que soit la taille de l'écran.
+   Réglages : --qr-green-bg-size (taille de l'image, contain = diamètre de la roue)
+              --qr-green-bottom (marge basse ; 44px recentre la roue sur le milieu exact de la carte,
+              au prix d'une roue plus petite). */
 #page-stats .saisie-rapide_map.is-green {
   flex: 1;
   min-height: 0;
+  margin-bottom: var(--qr-green-bottom, 0px);
   display: flex;
   align-items: center;
   justify-content: center;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: var(--qr-green-bg-size, contain);
 }
+
+/* Par 3 : pas de fairway */
+#page-stats .saisie-rapide_card.is-na { opacity: 0.4; }
+#page-stats .saisie-rapide_card.is-na .saisie-rapide_choice { cursor: default; }
 
 /* ---------- Roue du green (reprise de Wedging) ---------- */
 #page-stats .saisie-rapide_wheel {
@@ -1842,7 +1857,6 @@ html {
   max-height: 100%;
   display: block;
 }
-#page-stats .saisie-rapide_wheel-bg { pointer-events: none; }
 #page-stats .saisie-rapide_wheel-sector {
   fill: rgba(255, 255, 255, 0.09);
   stroke: rgba(255, 255, 255, 0.35);
@@ -1999,6 +2013,10 @@ html {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* minmax(0,…) : colonnes égales, indépendantes du texte */
   gap: var(--space-sm);
   width: 100%;
+  /* index.html ignore les touches à moins de 16 px du bord (anti swipe-retour iOS) :
+     les boutons doivent démarrer au-delà, soit 8 px de marge d'écran + 12 px ici */
+  padding-inline: var(--space-sm);
+  box-sizing: border-box;
 }
 #page-stats .saisie-rapide_nav-button {
   min-width: 0;
@@ -2025,6 +2043,12 @@ html {
   color: var(--color-bg-base);
 }
 #page-stats .saisie-rapide_nav-button.is-primary:active { background: var(--color-accent-dim); }
+#page-stats .saisie-rapide_nav-button { -webkit-tap-highlight-color: transparent; }
+/* "Enregistrer" : masqué tant que tous les trous ne sont pas complets (la place reste réservée) */
+#page-stats .saisie-rapide_nav-button.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
 #page-stats .saisie-rapide_nav-button:disabled {
   opacity: 0.35;
   cursor: default;
@@ -2108,19 +2132,7 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: var(--space-2xs);
-  min-height: 92px;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-accent);
-  border-radius: var(--radius-lg);
-}
-#page-stats .saisie-rapide_pad-value {
-  font-size: var(--fs-4xl);
-  font-weight: var(--fw-bold);
-  line-height: 1;
-  color: var(--color-accent);
 }
 #page-stats .saisie-rapide_pad-result {
   min-height: 1.2em;
@@ -2128,36 +2140,5 @@ html {
   font-weight: var(--fw-semibold);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-accent);
 }
-
-#page-stats .saisie-rapide_pad-keys {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-sm);
-}
-#page-stats .saisie-rapide_pad-key {
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-card-hover);
-  color: var(--color-text-primary);
-  font-size: var(--fs-xl);
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
-}
-#page-stats .saisie-rapide_pad-key:active { background: var(--color-accent-25); }
-#page-stats .saisie-rapide_pad-key svg { width: 26px; height: 26px; }
-#page-stats .saisie-rapide_pad-key.is-secondary { color: var(--color-text-secondary); }
-#page-stats .saisie-rapide_pad-key.is-primary {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-bg-base);
-}
-#page-stats .saisie-rapide_pad-key.is-primary:active { background: var(--color-accent-dim); }
