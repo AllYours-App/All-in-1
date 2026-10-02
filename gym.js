@@ -2486,8 +2486,41 @@ function gymGetActiveProgram() {
   return GYM_DATA.programs.find((p) => (p.sessions || []).some((s) => s.status === "en-cours")) || null;
 }
 
+/**
+ * Nombre de séances réellement réalisées dans ce programme (tous tours
+ * confondus). Repli pour les anciens programmes sans compteur : séances
+ * terminées de la liste.
+ */
+function gymGetDoneCount(program) {
+  if (typeof program.doneCount === "number") return program.doneCount;
+  return program.sessions.filter((s) => s.status === "terminee").length;
+}
+
 function gymIsProgramFinished(program) {
-  return program.sessions.length > 0 && program.sessions.every((s) => s.status === "terminee");
+  return (
+    program.sessions.length > 0 &&
+    program.sessions.every((s) => s.status === "terminee") &&
+    gymGetDoneCount(program) >= (program.sessionsCount || 0)
+  );
+}
+
+/**
+ * Le programme ne contient souvent que quelques séances types, à refaire
+ * plusieurs fois (séances/semaine × semaines). Quand toute la liste est
+ * terminée mais que l'objectif n'est pas atteint, on repart sur un nouveau
+ * tour : première séance disponible, les autres verrouillées.
+ */
+function gymAdvanceProgramCycle(program) {
+  const sessions = program.sessions || [];
+  if (!sessions.length || !sessions.every((s) => s.status === "terminee")) return false;
+  const done = gymGetDoneCount(program);
+  if (done >= (program.sessionsCount || 0)) return false;
+  program.doneCount = done;
+  sessions.forEach((s, i) => {
+    s.status = i === 0 ? "en-cours" : "verrouillee";
+  });
+  program.currentIndex = 1;
+  return true;
 }
 
 function gymHasMeaningfulProgress(program) {
@@ -2499,6 +2532,7 @@ function gymResetProgramProgress(program) {
     s.status = i === 0 ? "en-cours" : "verrouillee";
   });
   program.currentIndex = 1;
+  program.doneCount = 0;
 }
 
 /**
@@ -3065,6 +3099,7 @@ function gymRenderHomeNextSession() {
   if (!box) return;
 
   const program = gymGetActiveProgram();
+  if (program) gymAdvanceProgramCycle(program);
   const session = program ? (program.sessions || []).find((s) => s.status === "en-cours") : null;
 
   if (!program || !session) {
@@ -3174,7 +3209,7 @@ function gymDelta(value) {
  */
 function gymRenderProgramCard(program) {
   const total = program.sessionsCount;
-  const done = program.sessions.filter((s) => s.status === "terminee").length;
+  const done = Math.min(gymGetDoneCount(program), total || Infinity);
   const percent = total ? Math.round((done / total) * 100) : 0;
   const progressBlock = total
     ? `<div class="progress-track"><div class="progress-fill" data-progress="${percent}" style="width:0%"></div></div>
@@ -3558,6 +3593,7 @@ function gymRenderDualChart(points, series, selected) {
       renderEmptyState();
       return;
     }
+    gymAdvanceProgramCycle(program);
     renderHero(program);
     renderInfoRow(program);
     renderActions(program);
@@ -3573,6 +3609,7 @@ function gymRenderDualChart(points, series, selected) {
 
 (function () {
   const state = {
+    editId: null, // id du programme modifié (null = création)
     titre: "",
     goal: "force",
     seances: null,
@@ -3621,6 +3658,25 @@ function gymRenderDualChart(points, series, selected) {
     }
     const goal = GYM_DATA.trainingGoals.find((g) => g.id === state.goal);
     const customTitle = state.titre.trim();
+
+    // Mode modification : on met à jour le programme existant, sans en créer un autre.
+    const existing = state.editId ? gymGetProgram(state.editId) : null;
+    if (existing) {
+      existing.name = customTitle || existing.name;
+      existing.goal = state.goal;
+      existing.objectiveLabel = goal ? goal.label : existing.objectiveLabel;
+      existing.icon = goal ? goal.icon : existing.icon;
+      existing.frequencyPerWeek = state.seances;
+      existing.sessionsCount = state.seances * state.duree;
+      // Si le programme a déjà été enregistré, on met aussi à jour la copie sauvegardée.
+      const saved = gymReadSavedPrograms();
+      if (saved.some((p) => p.id === existing.id)) {
+        gymWriteSavedPrograms(saved.map((p) => (p.id === existing.id ? existing : p)));
+      }
+      gymNavigate("programme-detail", { id: existing.id });
+      return;
+    }
+
     const newProgram = {
       id: `prog-${Date.now()}`,
       name: customTitle || `Programme ${goal ? goal.label : ""}`.trim(),
@@ -3663,13 +3719,16 @@ function gymRenderDualChart(points, series, selected) {
   document.getElementById("btn-generer").addEventListener("click", onGenerate);
 
   function render(params) {
-    state.titre = "";
-    state.goal = (params && params.objectif) || "force";
-    state.seances = null;
-    state.duree = null;
-    document.getElementById("input-titre").value = "";
-    document.getElementById("input-seances").value = "";
-    document.getElementById("input-duree").value = "";
+    const editing = params && params.id ? gymGetProgram(params.id) : null;
+    state.editId = editing ? editing.id : null;
+    state.titre = editing ? editing.name : "";
+    state.goal = editing ? editing.goal : (params && params.objectif) || "force";
+    state.seances = editing ? editing.frequencyPerWeek : null;
+    state.duree = editing ? Math.max(1, Math.round(editing.sessionsCount / (editing.frequencyPerWeek || 1))) : null;
+    document.getElementById("input-titre").value = state.titre;
+    document.getElementById("input-seances").value = state.seances || "";
+    document.getElementById("input-duree").value = state.duree || "";
+    document.getElementById("btn-generer").textContent = editing ? "Enregistrer les modifications" : "Générer mon programme";
 
     fillIcons();
     renderGoalGrid();
@@ -4507,15 +4566,33 @@ function gymRenderDualChart(points, series, selected) {
    */
   function finalizeSession() {
     if (!state.session || !state.program) return;
+    const program = state.program;
+    const session = state.session;
     const elapsedMs = state.elapsedMs + (state.timerStart ? Date.now() - state.timerStart : 0);
     stopTimerInterval();
-    state.session.status = "terminee";
-    const next = state.program.sessions.find((s) => s.index === state.session.index + 1);
+
+    // Compteur de séances réalisées (migration des anciens programmes incluse).
+    if (typeof program.doneCount !== "number") program.doneCount = program.sessions.filter((s) => s.status === "terminee").length;
+    program.doneCount += 1;
+
+    session.status = "terminee";
+    const next = program.sessions.find((s) => s.index === session.index + 1);
     if (next && next.status === "verrouillee") {
       next.status = "en-cours";
-      state.program.currentIndex = next.index;
+      program.currentIndex = next.index;
     }
-    const entry = gymRecordSessionHistory(state.program, state.session, state.exercises, elapsedMs);
+    const entry = gymRecordSessionHistory(program, session, state.exercises, elapsedMs);
+
+    // Dernière séance de la liste mais objectif non atteint : nouveau tour.
+    gymAdvanceProgramCycle(program);
+
+    // Oublie la séance terminée : la relancer repart d'un état vierge au lieu
+    // de réafficher les séries déjà saisies.
+    state.session = null;
+    state.exercises = [];
+    state.exerciseIndex = 0;
+    resetTimer();
+
     gymNavigate("seance-recap", { history: entry.id, from: "session" });
   }
 
