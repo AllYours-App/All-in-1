@@ -2762,15 +2762,16 @@ function gymGetDoneExercises() {
     entry.exercises.forEach((exo) => {
       const valid = exo.sets.filter((s) => s.valid);
       if (!valid.length) return;
+      const toHalf = (v) => Math.round(v * 2) / 2; // arrondi à 0,5 kg
       const point = {
         date: new Date(entry.date),
-        poids: Math.max(...valid.map((s) => s.weight || 0)),
+        poids: toHalf(Math.max(...valid.map((s) => s.weight || 0))),
         series: valid.length,
-        repetitions: valid.reduce((a, s) => a + (s.reps || 0), 0),
-        volume: Math.round(valid.reduce((a, s) => a + (s.weight || 0) * (s.reps || 0), 0)),
+        repetitions: Math.round(valid.reduce((a, s) => a + (s.reps || 0), 0)),
+        volume: toHalf(valid.reduce((a, s) => a + (s.weight || 0) * (s.reps || 0), 0)),
         // 1RM estimé (Epley) : meilleure série de la séance, 0 sans charge
-        rm: Math.round(Math.max(0, ...valid.map((s) => (s.weight > 0 ? s.weight * (1 + (s.reps || 0) / 30) : 0))) * 10) / 10,
-        duree: valid.reduce((a, s) => a + (s.duration || 0), 0),
+        rm: toHalf(Math.max(0, ...valid.map((s) => (s.weight > 0 ? s.weight * (1 + (s.reps || 0) / 30) : 0)))),
+        duree: Math.round(valid.reduce((a, s) => a + (s.duration || 0), 0)),
       };
       if (!map.has(exo.exerciseId)) map.set(exo.exerciseId, { exerciseId: exo.exerciseId, name: exo.name, sessions: [] });
       map.get(exo.exerciseId).sessions.push(point);
@@ -3403,7 +3404,11 @@ function gymRenderDualChart(points, series, selected) {
   const padL = 42, padR = series.length > 1 ? 42 : 12;
   const innerW = W - padL - padR, innerH = H - top - bottom;
 
-  const fmt = (v) => (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(".0", "") + "k" : String(Math.round(v * 10) / 10));
+  // Graduations arrondies au pas de la métrique (0,5 kg, 1 rep, 1 s...)
+  const fmt = (v, step) => {
+    const r = Math.round(v / step) * step;
+    return Math.abs(r) >= 1000 ? (r / 1000).toFixed(1).replace(".0", "") + "k" : String(r);
+  };
 
   // Plage Y : ne part pas de zéro (sauf si les valeurs en sont proches) pour
   // que les petites variations restent visibles ; une courbe plate est centrée.
@@ -3429,7 +3434,7 @@ function gymRenderDualChart(points, series, selected) {
 
     [r.lo, (r.lo + r.hi) / 2, r.hi].forEach((v) => {
       if (si === 0) grid += `<line x1="${padL}" x2="${W - padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}" class="chart-grid"></line>`;
-      axes += `<text x="${axisX}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="${anchor}" class="chart-axis-label chart-axis-label--${cls}">${fmt(v)}</text>`;
+      axes += `<text x="${axisX}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="${anchor}" class="chart-axis-label chart-axis-label--${cls}">${fmt(v, s.step)}</text>`;
     });
     axes += `<text x="${axisX}" y="9" text-anchor="${anchor}" class="chart-axis-label chart-axis-label--${cls}">${s.unit}</text>`;
 
@@ -4674,12 +4679,12 @@ function gymRenderDualChart(points, series, selected) {
    ========================================================================== */
 (function () {
   const METRICS = {
-    poids: { label: "Poids", unit: "kg" },
-    series: { label: "Séries", unit: "séries" },
-    repetitions: { label: "Répétitions", unit: "reps" },
-    volume: { label: "Volume", unit: "kg" },
-    rm: { label: "1RM", unit: "kg" },
-    duree: { label: "Durée", unit: "s" },
+    poids: { label: "Poids", unit: "kg", step: 0.5 },
+    series: { label: "Séries", unit: "séries", step: 1 },
+    repetitions: { label: "Répétitions", unit: "reps", step: 1 },
+    volume: { label: "Volume", unit: "kg", step: 0.5 },
+    rm: { label: "1RM", unit: "kg", step: 0.5 },
+    duree: { label: "Durée", unit: "s", step: 1 },
   };
 
   const state = {
@@ -4752,14 +4757,14 @@ function gymRenderDualChart(points, series, selected) {
     if (!exo) return;
     const points = exo.sessions;
     if (state.selectedIndex == null || state.selectedIndex >= points.length) state.selectedIndex = points.length - 1;
-    const series = state.metrics.map((k) => ({ key: k, unit: METRICS[k].unit }));
+    const series = state.metrics.map((k) => ({ key: k, unit: METRICS[k].unit, step: METRICS[k].step }));
     $("progression-chart").innerHTML = gymRenderDualChart(points, series, state.selectedIndex);
 
     const p = points[state.selectedIndex];
     $("progression-readout").innerHTML =
       `<span>${gymFormatShortDate(p.date)}</span>` +
       state.metrics
-        .map((k, i) => `<span class="chart-readout__item--${i ? "b" : "a"}">${METRICS[k].label} ${Math.round(p[k] * 10) / 10} ${METRICS[k].unit}</span>`)
+        .map((k, i) => `<span class="chart-readout__item--${i ? "b" : "a"}">${METRICS[k].label} ${p[k]} ${METRICS[k].unit}</span>`)
         .join("");
   }
 
