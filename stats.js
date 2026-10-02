@@ -1357,6 +1357,8 @@
     const badgeEl = q('.saisie-rapide_score-badge');
     const puttsEl = q('[data-qr="putts-value"]');
     const statList = q('.saisie-rapide_stat-list');
+    const liveTitle = q('.saisie-rapide_live-title');
+    if (liveTitle) liveTitle.textContent = liveTitle.textContent.replace(/\s*live\s*$/i, '').trim();
     const greenRoot = document.getElementById('qr-green-root');
     const fairwayRoot = document.getElementById('qr-fairway-root');
     const fairwayCard = fairwayRoot && fairwayRoot.closest('.saisie-rapide_card');
@@ -1405,7 +1407,7 @@
         const par = round.holes[i].par;
         if (e.score !== null && par !== null) { vsPar += e.score - par; vsParHoles++; }
         if (e.fairway !== null && par !== 3) { firHoles++; if (e.fairway === FAIRWAY_HIT) fir++; }
-        if (e.green !== null) { girHoles++; if (e.green === 'Centre') gir++; }
+        if (e.green !== null) { girHoles++; if (isOnGreen(e.green)) gir++; }
         if (e.putts !== null) { putts += e.putts; puttsHoles++; }
       });
       const pct = (n, total) => (total ? `${Math.round((n / total) * 100)}%` : '--');
@@ -1493,9 +1495,19 @@
       refresh();
     });
 
-    /* ---------- Roue du green (reprise de Wedging) ----------
-       Centre = green touché, 8 secteurs = direction du raté */
+    /* ---------- Roue du green ----------
+       Le SVG recouvre toute l'image. Au centre, 9 zones = sur le green :
+         - le trou (5 % de l'image) → 'Centre'
+         - 8 secteurs autour du trou, jusqu'à 50 % de l'image → 'Green-<direction>'
+       Les traits des 8 secteurs sont prolongés jusqu'au bord de l'image : tout ce qui est hors
+       des 9 zones centrales est hors green, découpé en 8 zones → 'Hors-<direction>' */
     const DIRECTIONS = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
+    const GREEN_SIZE = 0.5;   // diamètre du green cliquable, part de l'image
+    const HOLE_SIZE = 0.05;   // diamètre du trou, part de l'image
+    let greenRatio = 1;       // largeur / hauteur de l'image (mis à jour au chargement de l'image)
+
+    // Vrai si la zone est sur le green (trou ou secteur intérieur) : sert au calcul du GIR
+    const isOnGreen = (zone) => zone === 'Centre' || String(zone).startsWith('Green-');
 
     // Tracé d'un secteur d'anneau entre deux angles (0° = haut, sens horaire)
     function sectorPath(cx, cy, rIn, rOut, a0, a1) {
@@ -1504,29 +1516,39 @@
       return `M ${pt(rOut, a0)} A ${rOut} ${rOut} 0 0 1 ${pt(rOut, a1)} L ${pt(rIn, a1)} A ${rIn} ${rIn} 0 0 0 ${pt(rIn, a0)} Z`;
     }
 
+    // Distance du centre au bord de l'image dans la direction deg (0° = haut)
+    function edgeDistance(deg, halfW, halfH) {
+      const s = Math.abs(Math.sin(deg * Math.PI / 180)), c = Math.abs(Math.cos(deg * Math.PI / 180));
+      return Math.min(s > 1e-9 ? halfW / s : Infinity, c > 1e-9 ? halfH / c : Infinity);
+    }
+
     function renderGreenWheel() {
       if (!greenRoot || !round) return;
       const greenZone = entry().green;
-      const cx = 100, cy = 100, rHole = 42, rOut = 100;
+      const vw = 200, vh = vw / greenRatio, cx = vw / 2, cy = vh / 2;
+      const base = Math.min(vw, vh);
+      const rGreen = base * GREEN_SIZE / 2;
+      const rHole = base * HOLE_SIZE / 2;
+      const rFar = Math.hypot(vw, vh); // assez grand pour atteindre les coins de l'image
       let sectors = '';
       let ball = '';
+      const ballAt = (r, deg) => {
+        const a = (deg - 90) * Math.PI / 180;
+        return `<circle cx="${(cx + r * Math.cos(a)).toFixed(2)}" cy="${(cy + r * Math.sin(a)).toFixed(2)}" r="7" class="saisie-rapide_wheel-ball"/>`;
+      };
       DIRECTIONS.forEach((dir, i) => {
-        const a0 = i * 45 - 22.5, a1 = a0 + 45;
-        const sel = greenZone === dir;
-        sectors += `<path d="${sectorPath(cx, cy, rHole, rOut, a0, a1)}" class="saisie-rapide_wheel-sector${sel ? ' is-selected' : ''}" data-zone="${dir}"/>`;
-        if (sel) {
-          const rMid = (rHole + rOut) / 2, a = ((a0 + a1) / 2 - 90) * Math.PI / 180;
-          ball = `<circle cx="${(cx + rMid * Math.cos(a)).toFixed(2)}" cy="${(cy + rMid * Math.sin(a)).toFixed(2)}" r="7" class="saisie-rapide_wheel-ball"/>`;
-        }
+        const mid = i * 45, a0 = mid - 22.5, a1 = a0 + 45;
+        const inKey = `Green-${dir}`, outKey = `Hors-${dir}`;
+        sectors += `<path d="${sectorPath(cx, cy, rGreen, rFar, a0, a1)}" class="saisie-rapide_wheel-sector is-outer${greenZone === outKey ? ' is-selected' : ''}" data-zone="${outKey}"/>`;
+        sectors += `<path d="${sectorPath(cx, cy, rHole, rGreen, a0, a1)}" class="saisie-rapide_wheel-sector${greenZone === inKey ? ' is-selected' : ''}" data-zone="${inKey}"/>`;
+        if (greenZone === inKey) ball = ballAt((rHole + rGreen) / 2, mid);
+        if (greenZone === outKey) ball = ballAt((rGreen + edgeDistance(mid, cx, cy)) / 2, mid);
       });
       const centerSel = greenZone === 'Centre';
       if (centerSel) ball = `<circle cx="${cx}" cy="${cy}" r="7" class="saisie-rapide_wheel-ball"/>`;
-      const poleX = cx - 13, poleTop = cy - 16, poleBottom = cy + 18;
-      greenRoot.innerHTML = `<svg viewBox="0 0 200 200" class="saisie-rapide_wheel" role="group" aria-label="Green en régulation">
+      greenRoot.innerHTML = `<svg viewBox="0 0 ${vw} ${vh.toFixed(2)}" class="saisie-rapide_wheel" role="group" aria-label="Green en régulation">
         ${sectors}
         <circle cx="${cx}" cy="${cy}" r="${rHole}" class="saisie-rapide_wheel-center${centerSel ? ' is-selected' : ''}" data-zone="Centre"/>
-        <line x1="${poleX}" y1="${poleBottom}" x2="${poleX}" y2="${poleTop}" class="saisie-rapide_wheel-pole"/>
-        <polygon points="${poleX},${poleTop} ${cx + 11},${cy - 9} ${poleX},${cy - 2}" class="saisie-rapide_wheel-flag"/>
         ${ball}
       </svg>`;
     }
@@ -1543,7 +1565,20 @@
     }
 
     // Fonds d'image posés en CSS. Green : sur la même zone que la roue → même centre, même taille.
-    findImage(GREEN_BG_BASE).then((url) => { if (url && greenRoot) greenRoot.style.setProperty('--qr-green-bg', `url("${url}")`); });
+    findImage(GREEN_BG_BASE).then((url) => {
+      if (!url || !greenRoot) return;
+      greenRoot.style.setProperty('--qr-green-bg', `url("${url}")`);
+      // Proportions réelles de l'image : le SVG la recouvre exactement (green = 50 %, trou = 5 %)
+      const probe = new Image();
+      probe.onload = () => {
+        if (probe.naturalWidth > 0 && probe.naturalHeight > 0) {
+          greenRatio = probe.naturalWidth / probe.naturalHeight;
+          greenRoot.style.setProperty('--qr-green-ratio', greenRatio);
+          renderGreenWheel();
+        }
+      };
+      probe.src = url;
+    });
     findImage(FAIRWAY_BG_BASE).then((url) => { if (url && fairwayRoot) fairwayRoot.style.backgroundImage = `url("${url}")`; });
 
     /* ---------- Navigation entre les trous ---------- */
@@ -1583,7 +1618,7 @@
       pad.el.querySelector('[data-pad-result]').textContent = padLabel(n);
     }
 
-    // Touches du pavé commun (appKeypad) : leurs onclick appellent des fonctions globales, exposées dans ensurePad
+    // Touches du pavé (data-pad-key / data-pad-back / data-pad-clear), gérées par délégation dans ensurePad
     function padDigit(d) {
       if (pad.fresh) { pad.value = ''; pad.fresh = false; } // premier chiffre : remplace le score existant
       const next = pad.value + d;
@@ -1620,10 +1655,9 @@
 
     function ensurePad() {
       if (pad.el) return;
-      if (typeof appKeypad !== 'function') console.error('appKeypad (commun.js) introuvable : pavé numérique indisponible');
-      window.qrPadPress = padDigit;
-      window.qrPadBackspace = padBackspace;
-      window.qrPadClear = padClear;
+      const digitKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        .map((d) => `<button type="button" class="saisie-rapide_pad-key" data-pad-key="${d}">${d}</button>`).join('');
+      const backIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-5 6M12 9l5 6"/></svg>';
 
       pad.el = document.createElement('div');
       pad.el.className = 'saisie-rapide_pad-overlay';
@@ -1637,16 +1671,25 @@
             <button type="button" class="saisie-rapide_pad-close" data-pad-close aria-label="Fermer">${icon('close')}</button>
           </div>
           <div class="saisie-rapide_pad-display" aria-live="polite">
-            <div class="app-keypad-value" data-pad-value></div>
+            <div class="saisie-rapide_pad-value" data-pad-value></div>
             <span class="saisie-rapide_pad-result" data-pad-result></span>
           </div>
-          ${typeof appKeypad === 'function' ? appKeypad('qrPadPress', 'qrPadBackspace', 'qrPadClear') : ''}
+          <div class="saisie-rapide_pad-keys" role="group" aria-label="Pavé numérique">
+            ${digitKeys}
+            <button type="button" class="saisie-rapide_pad-key" data-pad-clear aria-label="Tout effacer">C</button>
+            <button type="button" class="saisie-rapide_pad-key" data-pad-key="0">0</button>
+            <button type="button" class="saisie-rapide_pad-key" data-pad-back aria-label="Effacer le dernier chiffre">${backIcon}</button>
+          </div>
           <button type="button" class="qr-submit" data-pad-ok>Valider</button>
         </div>`;
       getStatsRoot().appendChild(pad.el);
 
       pad.el.addEventListener('click', (e) => {
         if (e.target === pad.el || e.target.closest('[data-pad-close]')) { closePad(); return; }
+        const key = e.target.closest('[data-pad-key]');
+        if (key) { padDigit(key.dataset.padKey); return; }
+        if (e.target.closest('[data-pad-back]')) { padBackspace(); return; }
+        if (e.target.closest('[data-pad-clear]')) { padClear(); return; }
         if (e.target.closest('[data-pad-ok]')) padConfirm();
       });
     }
