@@ -909,12 +909,21 @@
           </label>
         </div>
 
-        <!-- Pénalité : clavier numérique natif -->
-        <div class="saisie-detaillee_group">
+        <!-- Pénalité : clavier numérique natif (masquée quand le lie est Green) -->
+        <div class="saisie-detaillee_group" data-sd="penalty-group">
           <span class="saisie-detaillee_label">Pénalité</span>
           <label class="saisie-detaillee_field is-input">
             <input class="saisie-detaillee_input" data-sd="penalty" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="0" aria-label="Pénalité">
           </label>
+        </div>
+
+        <!-- Résultat : remplace la pénalité quand le lie est Green, ouvre le popup 3x3 -->
+        <div class="saisie-detaillee_group" data-sd="result-group" hidden>
+          <span class="saisie-detaillee_label">Résultat</span>
+          <button class="saisie-detaillee_field" type="button" data-sd-result-open aria-haspopup="dialog" aria-label="Résultat du coup">
+            <span class="saisie-detaillee_field-text" data-sd="result-text">Choisir</span>
+            <svg class="saisie-detaillee_field-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>
 
         <!-- Actions : supprimer le coup (gauche) | trou terminé (droite) -->
@@ -987,6 +996,9 @@
     </div>
 
   </main>
+
+  <!-- Popup résultat du coup -->
+  <div data-sd="popup-root"></div>
 </section>
 
 </div>

@@ -2675,3 +2675,92 @@ html {
   font-weight: var(--fw-bold);
   line-height: 1.1;
 }
+
+/* Groupe masqué (Pénalité / Résultat selon le lie) : display:flex du groupe l'emporterait sur [hidden] */
+#page-stats .saisie-detaillee_group[hidden] { display: none; }
+#page-stats button.saisie-detaillee_field {
+  background: none;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Popup résultat (grille 3x3) ---------- */
+#page-stats .saisie-detaillee_popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(4, 8, 6, 0.72);
+}
+#page-stats .saisie-detaillee_popup {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+}
+#page-stats .saisie-detaillee_popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+#page-stats .saisie-detaillee_popup-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+#page-stats .saisie-detaillee_popup-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#page-stats .saisie-detaillee_popup-close svg { width: 14px; height: 14px; }
+#page-stats .saisie-detaillee_result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+}
+#page-stats .saisie-detaillee_result-btn {
+  padding: 14px 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_result-btn.is-center {
+  border-color: var(--color-accent);
+  background: var(--color-accent-10);
+  color: var(--color-accent);
+  font-weight: var(--fw-bold);
+}
+#page-stats .saisie-detaillee_result-btn.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}

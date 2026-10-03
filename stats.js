@@ -1711,7 +1711,8 @@
 
   /* ========================================================================
      SAISIE DÉTAILLÉE — écran de saisie coup par coup
-     Chaque trou a sa liste de coups { club, lie, distance, penalty, fairway, green }.
+     Chaque trou a sa liste de coups { club, lie, distance, penalty, result, fairway, green }.
+     Le fairway ne concerne que le coup de départ (1er coup) ; le résultat ne concerne que les coups joués du green.
      Un coup avec distance restante > 0 ajoute automatiquement le coup suivant ;
      une distance de 0 = balle rentrée (fin du trou).
      Les encadrés Green / Fairway fonctionnent comme dans la saisie rapide.
@@ -1746,6 +1747,10 @@
     const lieText = d('lie-text');
     const distInput = d('distance');
     const penaltyInput = d('penalty');
+    const penaltyGroup = d('penalty-group');
+    const resultGroup = d('result-group');
+    const resultText = d('result-text');
+    const popupRoot = d('popup-root');
     const greenRoot = d('green-root');
     const fairwayRoot = d('fairway-root');
     const fairwayCard = fairwayRoot.closest('.saisie-rapide_card');
@@ -1771,6 +1776,14 @@
     };
 
     const FAIRWAY_HIT = 'Centre'; // Gauche / Centre / Droite : Centre = fairway touché
+
+    // Résultat d'un coup joué du green : grille 3x3, "Rentré" au centre (mêmes valeurs que la saisie putting)
+    const RESULTS = [
+      { value: 'long_gauche', label: 'Long gauche' }, { value: 'long', label: 'Long' }, { value: 'long_droite', label: 'Long droite' },
+      { value: 'gauche', label: 'Gauche' }, { value: 'made', label: 'Rentré' }, { value: 'droite', label: 'Droite' },
+      { value: 'court_gauche', label: 'Court gauche' }, { value: 'court', label: 'Court' }, { value: 'court_droite', label: 'Court droite' },
+    ];
+    const resultLabel = (v) => (RESULTS.find((r) => r.value === v) || {}).label || '--';
     const ICON_OF = { wood: icon('club'), iron: icon('club'), putter: icon('putter') };
 
     /* ---------- État ---------- */
@@ -1779,8 +1792,8 @@
     let idx = 0;        // trou affiché
     let sel = 0;        // coup sélectionné dans le trou
 
-    const blankShot = (first = false) => ({ club: null, lie: first ? 'Tee' : null, distance: null, penalty: 0, fairway: null, green: null });
-    const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.fairway === null && s.green === null;
+    const blankShot = (first = false) => ({ club: null, lie: first ? 'Tee' : null, distance: null, penalty: 0, result: null, fairway: null, green: null });
+    const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.result === null && s.fairway === null && s.green === null;
     const shots = () => holes[idx];
     const shot = () => holes[idx][sel];
     const clubType = (s) => { const c = SD_CLUBS.find((x) => x.name === s.club); return c ? c.type : 'wood'; };
@@ -1802,6 +1815,7 @@
       idx = 0;
       sel = 0;
       setHeader(false);
+      popupRoot.innerHTML = '';
       renderAll();
     }
 
@@ -1928,17 +1942,24 @@
       setText(lieText, s.lie || '--');
       distInput.value = s.distance === null ? '' : num(s.distance);
       penaltyInput.value = s.penalty;
+      // Lie Green : la ligne "Pénalité" laisse place à "Résultat"
+      const onGreen = s.lie === 'Green';
+      penaltyGroup.hidden = onGreen;
+      resultGroup.hidden = !onGreen;
+      setText(resultText, s.result ? resultLabel(s.result) : 'Choisir');
+      resultText.classList.toggle('is-empty', !s.result);
       holedBtn.setAttribute('aria-pressed', String(s.distance === 0));
     }
 
     function renderFairway() {
-      const s = shot();
-      // Pas de fairway au départ d'un par 3
-      const noFairway = round.holes[idx].par === 3 && sel === 0;
+      // Le fairway est celui du coup de départ (c'est lui que compte le FIR), quel que soit le coup affiché ;
+      // actif uniquement sur le 1er coup, et jamais sur un par 3
+      const s = shots()[0];
+      const noFairway = round.holes[idx].par === 3 || sel !== 0;
       fairwayCard.classList.toggle('is-na', noFairway);
       fairwayOptions.forEach((o) => {
         o.disabled = noFairway;
-        o.setAttribute('aria-checked', String(!noFairway && o.dataset.sdFairway === s.fairway));
+        o.setAttribute('aria-checked', String(round.holes[idx].par !== 3 && o.dataset.sdFairway === s.fairway));
       });
     }
 
@@ -2000,7 +2021,38 @@
         list.push(blankShot());
       }
       sel = Math.min(sel, list.length - 1);
+      reconcile(list[sel]);
       renderAll();
+    }
+
+    // Cohérence du coup affiché : pénalité et résultat s'excluent selon le lie,
+    // et "Rentré" = distance restante 0 (bouton Holed)
+    function reconcile(s) {
+      if (s.lie === 'Green') {
+        s.penalty = 0; // la ligne pénalité est masquée : on n'en garde pas de valeur cachée
+        if (s.distance === 0) s.result = 'made';
+        else if (s.result === 'made') s.result = null;
+      } else s.result = null;
+    }
+
+    /* ---------- Popup résultat (grille 3x3) ---------- */
+    function renderResultPopup(open) {
+      if (!open) { popupRoot.innerHTML = ''; return; }
+      const current = shot().result;
+      popupRoot.innerHTML = `
+        <div class="saisie-detaillee_popup-overlay">
+          <div class="saisie-detaillee_popup" role="dialog" aria-modal="true" aria-label="Résultat du coup">
+            <div class="saisie-detaillee_popup-head">
+              <h3 class="saisie-detaillee_popup-title">Résultat du coup</h3>
+              <button type="button" class="saisie-detaillee_popup-close" data-sd-popup-close aria-label="Fermer">
+                <svg viewBox="0 0 24 24" ${STROKE}><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            </div>
+            <div class="saisie-detaillee_result-grid">
+              ${RESULTS.map((r) => `<button type="button" class="saisie-detaillee_result-btn${r.value === 'made' ? ' is-center' : ''}${current === r.value ? ' is-active' : ''}" data-sd-result-pick="${r.value}">${r.label}</button>`).join('')}
+            </div>
+          </div>
+        </div>`;
     }
 
     /* ---------- Saisie ---------- */
@@ -2008,7 +2060,7 @@
       const list = shots();
       if (list.length > 1) {
         list.splice(sel, 1);
-        if (sel === 0 && list[0].lie === null) list[0].lie = 'Tee';
+        if (sel === 0) list[0].lie = 'Tee'; // le coup suivant devient le coup de départ
       } else list[0] = blankShot(true);
       afterChange();
     }
@@ -2033,6 +2085,19 @@
         return;
       }
       if (t.closest('[data-sd-delete]')) { deleteShot(); return; }
+      // Popup résultat
+      if (t.closest('[data-sd-result-open]')) { renderResultPopup(true); return; }
+      if ((el = t.closest('[data-sd-result-pick]'))) {
+        const s = shot();
+        s.result = s.result === el.dataset.sdResultPick ? null : el.dataset.sdResultPick; // second appui = désélection
+        // "Rentré" = balle au fond du trou ; tout autre résultat annule un Holed
+        if (s.result === 'made') s.distance = 0;
+        else if (s.distance === 0) s.distance = null;
+        renderResultPopup(false);
+        afterChange();
+        return;
+      }
+      if (t.closest('[data-sd-popup-close]') || t === popupRoot.firstElementChild) { renderResultPopup(false); return; }
       // Holed : distance 0 = trou terminé, plus aucun coup n'est ajouté ; un second appui annule
       if (t.closest('[data-sd-holed]')) {
         const s = shot();
@@ -2042,7 +2107,7 @@
       }
       // Fairway : sélection unique ; un second clic désélectionne
       if ((el = t.closest('[data-sd-fairway]')) && !el.disabled) {
-        const s = shot();
+        const s = shots()[0];
         s.fairway = s.fairway === el.dataset.sdFairway ? null : el.dataset.sdFairway;
         afterChange();
         return;
