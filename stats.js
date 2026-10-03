@@ -1757,6 +1757,8 @@
     const d = (name) => screen.querySelector(`[data-sd="${name}"]`);
     const setText = (el, text) => { if (el) el.textContent = text; };
 
+    const holeTitle = d('hole-number');
+    const holeMeta = d('hole-meta');
     const shotList = d('shot-list');
     const holedBtn = screen.querySelector('[data-sd-holed]');
     const clubIcon = d('club-icon');
@@ -1989,7 +1991,21 @@
       setText(d('next-label'), isLastHole() ? 'Enregistrer' : 'Trou suivant');
     }
 
+    // Numéro du trou, par, distance, hcp (comme la saisie rapide)
+    function renderHole() {
+      const hole = round.holes[idx];
+      setText(holeTitle, `Trou ${hole.number}`);
+      const meta = [];
+      if (hole.par !== null) meta.push(`Par ${hole.par}`);
+      if (hole.distance !== null) meta.push(`${hole.distance} m`);
+      if (hole.hcp !== null) meta.push(`Hcp ${hole.hcp}`);
+      holeMeta.innerHTML = meta.length
+        ? meta.map((m) => `<span>${m}</span>`).join('')
+        : `Trou ${idx + 1} sur ${round.holes.length}`;
+    }
+
     function renderAll() {
+      renderHole();
       renderShots();
       renderDetail();
       renderFairway();

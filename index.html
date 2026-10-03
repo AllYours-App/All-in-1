@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="gym.css">
 <link rel="stylesheet" href="putting.css">
 <link rel="stylesheet" href="vitesse.css">
-<link rel="stylesheet" href="stats.css?v=6">
+<link rel="stylesheet" href="stats.css?v=7">
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="auth.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
@@ -804,7 +804,7 @@
 
 <!-- ======================================================================
      ÉCRAN 8 — SAISIE DÉTAILLÉE (Client-First)
-     L'encadré image du trou (data-sd="hole-image") est volontairement vide.
+     L'encadré de gauche du bandeau du haut affiche le trou (numéro, par, distance, hcp).
      Les encadrés Green / Fairway reprennent ceux de la saisie rapide (classes saisie-rapide_*).
      ====================================================================== -->
 <section id="screen-saisie-detaillee" class="screen">
@@ -829,7 +829,10 @@
 
     <!-- STATS DU TROU -->
     <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_stats" aria-label="Stats du trou">
-      <div class="saisie-detaillee_stats-image" data-sd="hole-image"></div>
+      <div class="saisie-detaillee_hole">
+        <h2 class="saisie-detaillee_hole-title" data-sd="hole-number">Trou 1</h2>
+        <p class="saisie-detaillee_hole-meta" data-sd="hole-meta"></p>
+      </div>
       <div class="saisie-detaillee_stats-body">
         <div class="saisie-detaillee_stat-list">
           <div class="saisie-detaillee_stat">
@@ -1240,7 +1243,7 @@
 <script src="gym.js"></script>
 <script src="putting.js"></script>
 <script src="vitesse.js"></script>
-<script src="stats.js?v=6"></script>
+<script src="stats.js?v=7"></script>
 <script src="menu.js"></script>
 <script src="auth.js"></script>
 </body>
