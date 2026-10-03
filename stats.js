@@ -1999,9 +1999,7 @@
       if (hole.par !== null) meta.push(`Par ${hole.par}`);
       if (hole.distance !== null) meta.push(`${hole.distance} m`);
       if (hole.hcp !== null) meta.push(`Hcp ${hole.hcp}`);
-      holeMeta.innerHTML = meta.length
-        ? meta.map((m) => `<span>${m}</span>`).join('')
-        : `Trou ${idx + 1} sur ${round.holes.length}`;
+      setText(holeMeta, meta.length ? meta.join(' · ') : `Trou ${idx + 1} sur ${round.holes.length}`);
     }
 
     function renderAll() {
