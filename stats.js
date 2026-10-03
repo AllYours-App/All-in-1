@@ -25,7 +25,7 @@
   // API: GET /api/stats/kpis?period=30d
   const kpiCards = [
     { key: 'fairways', title: 'Fairways touchés', value: null, unit: '%', icon: 'flag' },
-    { key: 'gir', title: 'Greens en régulation', value: null, unit: '%', icon: 'target' },
+    { key: 'gir', title: 'Green touchés', value: null, unit: '%', icon: 'target' },
     { key: 'putts', title: 'Putts par tour', value: null, unit: '', icon: 'putter' },
     { key: 'birdies', title: 'Birdies par tour', value: null, unit: '', icon: 'bird' },
   ];
@@ -503,7 +503,7 @@
       <${tag} ${attrs} style="--fade-index:${index};">
         <div class="analysis-card__top">
           <div class="analysis-card__icon">${icon(item.icon)}</div>
-          <span class="analysis-card__info" tabindex="0" aria-label="${item.description}" onclick="event.stopPropagation(); this.classList.toggle('is-open')">i</span>
+          <span class="analysis-card__info" role="button" aria-label="${item.description}" onclick="event.stopPropagation(); var o = this.classList.contains('is-open'); document.querySelectorAll('.analysis-card__info.is-open').forEach(function (el) { el.classList.remove('is-open'); }); if (!o) this.classList.add('is-open');">i</span>
         </div>
         <div class="analysis-card__title">${item.title}</div>
         <div class="analysis-card__arrow">${icon('chevronRight')}</div>
@@ -714,22 +714,26 @@
   function initDashboard() {
     const hasTotal = strokesGained.total !== null && strokesGained.total !== undefined;
     const totalValueHtml = hasTotal
-      ? `<div class="sg-item__value" data-count-to="${strokesGained.total}" data-count-prefix="${strokesGained.total > 0 ? '+' : ''}">+0.0</div>`
-      : `<div class="sg-item__value">--</div>`;
+      ? `<div class="sg-card__value" data-count-to="${strokesGained.total}" data-count-prefix="${strokesGained.total > 0 ? '+' : ''}">+0.0</div>`
+      : `<div class="sg-card__value">--</div>`;
 
     document.getElementById('dash-strokesGained').innerHTML = `
-      <div class="sg-item sg-item--total">
-        <div class="sg-item__label">SG total</div>
-        <div class="sg-item__icon">${icon('trendUp')}</div>
-        ${totalValueHtml}
-      </div>
-      ${strokesGained.categories.map((c) => `
-        <div class="sg-item">
-          <div class="sg-item__label">${c.label}</div>
-          <div class="sg-item__icon">${icon(c.icon)}</div>
-          <div class="sg-item__value">${fmtSigned(c.value)}</div>
+      <div class="sg-card__main">
+        <div class="icon-badge">${icon('trendUp')}</div>
+        <div class="sg-card__total">
+          <div class="sg-card__label">SG total</div>
+          ${totalValueHtml}
         </div>
-      `).join('')}
+      </div>
+      <div class="sg-card__breakdown">
+        ${strokesGained.categories.map((c) => `
+          <div class="sg-item">
+            <div class="sg-item__label">${c.label}</div>
+            <div class="sg-item__icon">${icon(c.icon)}</div>
+            <div class="sg-item__value">${fmtSigned(c.value)}</div>
+          </div>
+        `).join('')}
+      </div>
     `;
 
     // Tout le HTML (y compris les 3 cartes "Analyses détaillées") est injecté

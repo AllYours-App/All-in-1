@@ -167,16 +167,13 @@ html {
 #page-stats .app {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: calc(56px + env(safe-area-inset-top) + var(--space-lg)) var(--app-padding) var(--bottom-safe);
+  /* Marges calquées sur wedging : 20px sur les côtés, 16px sous le header fixe (56px) */
+  padding: calc(56px + env(safe-area-inset-top) + 16px) 20px var(--bottom-safe);
   position: relative;
 }
 
-@media (max-width: 360px) {
-  #page-stats .app {
-    padding-left: var(--app-padding-small);
-    padding-right: var(--app-padding-small);
-  }
-}
+/* Accueil Stats : le premier bloc suit directement l'espacement ci-dessus (pas de marge en plus) */
+#page-stats #screen-dashboard .app > .section:first-of-type { margin-top: 0; }
 
 #page-stats {
   --app-header-bg: var(--color-bg-base);
@@ -314,17 +311,53 @@ html {
 
 /* ==========================================================================
    STROKES GAINED — carte hero du dashboard
-   6 colonnes : SG total (à peine plus grand) + 5 catégories, espaces égaux
+   Ligne 1 : SG total en grand · Ligne 2 : 5 catégories en colonnes égales
    ========================================================================== */
 
 #page-stats .sg-card {
-  min-height: 132px;
-  padding: var(--space-xl) var(--space-sm);
+  padding: var(--space-md);
   border-left: 3px solid var(--color-accent);
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-md);
+}
+
+#page-stats .sg-card__main {
+  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-xs);
+  justify-content: center;
+  gap: var(--space-md);
+}
+#page-stats .sg-card__main .icon-badge { width: 44px; height: 44px; }
+#page-stats .sg-card__main .icon-badge svg { width: 20px; height: 20px; }
+
+#page-stats .sg-card__total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-stats .sg-card__label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+#page-stats .sg-card__value {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+}
+
+#page-stats .sg-card__breakdown {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
 }
 
 #page-stats .sg-item {
@@ -335,7 +368,6 @@ html {
   min-width: 0;
   text-align: center;
 }
-
 #page-stats .sg-item__label {
   font-size: 0.625rem;
   font-weight: var(--fw-semibold);
@@ -357,16 +389,11 @@ html {
   white-space: nowrap;
 }
 
-/* SG total : à peine plus grand */
-#page-stats .sg-item--total .sg-item__label { font-size: 0.6875rem; color: var(--color-text-primary); }
-#page-stats .sg-item--total .sg-item__icon { width: 24px; height: 24px; }
-#page-stats .sg-item--total .sg-item__value { font-size: 1.1875rem; }
-
 /* ==========================================================================
    KPI CARD — grille 2 colonnes, symbole + titre + valeur, dimensions identiques
    ========================================================================== */
 
-#page-stats #dash-kpiGrid { grid-auto-rows: 1fr; }
+#page-stats #dash-kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
 
 #page-stats .kpi-card {
   min-height: 96px;
@@ -424,7 +451,7 @@ html {
    Ligne 1 : symbole + "i" · Ligne 2 : titre · Ligne 3 : flèche
    ========================================================================== */
 
-#page-stats #dash-analysesGrid { grid-auto-rows: 1fr; }
+#page-stats #dash-analysesGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
 
 #page-stats .analysis-card {
   position: relative;
@@ -442,9 +469,7 @@ html {
   text-align: left;
 }
 /* La carte dont l'infobulle est ouverte passe au-dessus de ses voisines */
-#page-stats .analysis-card:has(.analysis-card__info.is-open),
-#page-stats .analysis-card:has(.analysis-card__info:hover),
-#page-stats .analysis-card:has(.analysis-card__info:focus-visible) { z-index: 10; }
+#page-stats .analysis-card:has(.analysis-card__info.is-open) { z-index: 10; }
 
 #page-stats .analysis-card__top {
   display: flex;
@@ -496,9 +521,7 @@ html {
   justify-content: center;
   cursor: pointer;
 }
-/* Infobulle ancrée à la carte (et non au "i") : reste dans l'écran pour les 3 boutons */
-#page-stats .analysis-card__info:hover::after,
-#page-stats .analysis-card__info:focus-visible::after,
+/* Infobulle ancrée à la carte : affichée uniquement après un clic sur le "i" (classe .is-open) */
 #page-stats .analysis-card__info.is-open::after {
   content: attr(aria-label);
   position: absolute;
@@ -518,14 +541,10 @@ html {
   text-align: left;
   z-index: 5;
 }
-#page-stats .analysis-card:nth-child(2) .analysis-card__info:hover::after,
-#page-stats .analysis-card:nth-child(2) .analysis-card__info:focus-visible::after,
 #page-stats .analysis-card:nth-child(2) .analysis-card__info.is-open::after {
   left: 50%;
   transform: translateX(-50%);
 }
-#page-stats .analysis-card:nth-child(3) .analysis-card__info:hover::after,
-#page-stats .analysis-card:nth-child(3) .analysis-card__info:focus-visible::after,
 #page-stats .analysis-card:nth-child(3) .analysis-card__info.is-open::after {
   left: auto;
   right: 0;
