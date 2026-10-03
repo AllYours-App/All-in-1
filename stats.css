@@ -314,128 +314,86 @@ html {
 
 /* ==========================================================================
    STROKES GAINED — carte hero du dashboard
+   6 colonnes : SG total (à peine plus grand) + 5 catégories, espaces égaux
    ========================================================================== */
 
 #page-stats .sg-card {
-  padding: var(--space-sm) var(--space-md);
+  min-height: 132px;
+  padding: var(--space-xl) var(--space-sm);
   border-left: 3px solid var(--color-accent);
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-#page-stats .sg-card::-webkit-scrollbar { display: none; }
-
-#page-stats .sg-card__main {
-  display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: var(--space-xs);
-  flex-shrink: 0;
-  padding-right: var(--space-md);
-  border-right: 1px solid var(--color-border);
-  white-space: nowrap;
-}
-#page-stats .sg-card__main .icon-badge { width: 30px; height: 30px; }
-#page-stats .sg-card__main .icon-badge svg { width: 14px; height: 14px; }
-
-#page-stats .sg-card__label {
-  font-size: 0.6875rem;
-  font-weight: var(--fw-semibold);
-  color: var(--color-text-primary);
-}
-#page-stats .sg-card__sublabel {
-  font-size: 0.575rem;
-  color: var(--color-text-tertiary);
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-}
-#page-stats .sg-card__value {
-  font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
-  color: var(--color-accent);
-  letter-spacing: var(--ls-tight);
-  line-height: var(--lh-tight);
-  margin-top: 1px;
-}
-#page-stats .sg-card__caption {
-  font-size: 0.575rem;
-  color: var(--color-text-tertiary);
-  white-space: normal;
-  max-width: 76px;
-  line-height: 1.25;
-}
-
-#page-stats .sg-card__breakdown {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  flex-shrink: 0;
 }
 
 #page-stats .sg-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  text-align: center;
-  border-left: 1px solid var(--color-border);
-  padding-left: var(--space-xs);
-  flex-shrink: 0;
-  width: 36px;
-}
-#page-stats .sg-item:first-child { border-left: none; padding-left: 0; }
-
-#page-stats .sg-item__label {
-  font-size: 0.55rem;
-  font-weight: var(--fw-semibold);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  line-height: 1.2;
-}
-#page-stats .sg-item__icon { color: var(--color-accent); width: 18px; height: 18px; }
-#page-stats .sg-item__value {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-  color: var(--color-accent);
-}
-
-/* ==========================================================================
-   KPI CARD — grille 2 colonnes avec sparkline
-   ========================================================================== */
-
-#page-stats .kpi-card {
-  padding: var(--space-sm) var(--space-md);
-  display: flex;
-  flex-direction: column;
   gap: var(--space-xs);
   min-width: 0;
+  text-align: center;
 }
 
-#page-stats .kpi-card__head {
+#page-stats .sg-item__label {
+  font-size: 0.625rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+#page-stats .sg-item__icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-accent);
+}
+#page-stats .sg-item__icon svg { width: 100%; height: 100%; display: block; }
+#page-stats .sg-item__value {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+}
+
+/* SG total : à peine plus grand */
+#page-stats .sg-item--total .sg-item__label { font-size: 0.6875rem; color: var(--color-text-primary); }
+#page-stats .sg-item--total .sg-item__icon { width: 24px; height: 24px; }
+#page-stats .sg-item--total .sg-item__value { font-size: 1.1875rem; }
+
+/* ==========================================================================
+   KPI CARD — grille 2 colonnes, symbole + titre + valeur, dimensions identiques
+   ========================================================================== */
+
+#page-stats #dash-kpiGrid { grid-auto-rows: 1fr; }
+
+#page-stats .kpi-card {
+  min-height: 96px;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+#page-stats .kpi-card__top {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  justify-content: space-between;
+  gap: var(--space-xs);
 }
-#page-stats .kpi-card__head .icon-badge { width: 28px; height: 28px; }
-#page-stats .kpi-card__head .icon-badge svg { width: 13px; height: 13px; }
+#page-stats .kpi-card__top .icon-badge { width: 32px; height: 32px; }
+#page-stats .kpi-card__top .icon-badge svg { width: 15px; height: 15px; }
 
-#page-stats .kpi-card__titles {
-  min-width: 0;
-  overflow: hidden;
-}
 #page-stats .kpi-card__title {
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   white-space: nowrap;
-}
-#page-stats .kpi-card__subtitle {
-  font-size: 0.6875rem;
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #page-stats .kpi-card__value {
@@ -461,29 +419,37 @@ html {
 #page-stats .kpi-card__trend--bad { color: var(--color-negative); }
 #page-stats .kpi-card__trend svg { width: 12px; height: 12px; }
 
-#page-stats .kpi-card__compare {
-  font-size: var(--fs-xs);
-  color: var(--color-text-tertiary);
-  font-weight: var(--fw-regular);
-}
-
-#page-stats .kpi-card__sparkline {
-  height: 28px;
-  margin-top: auto;
-}
-#page-stats .kpi-card__sparkline canvas { width: 100% !important; height: 100% !important; }
-
 /* ==========================================================================
-   ANALYSES DÉTAILLÉES — cartes lien
+   ANALYSES DÉTAILLÉES — cartes lien, dimensions identiques
+   Ligne 1 : symbole + "i" · Ligne 2 : titre · Ligne 3 : flèche
    ========================================================================== */
+
+#page-stats #dash-analysesGrid { grid-auto-rows: 1fr; }
 
 #page-stats .analysis-card {
   position: relative;
-  padding: var(--space-md) var(--space-sm);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 104px;
+  padding: var(--space-sm) 10px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: var(--space-xs);
-  min-height: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+/* La carte dont l'infobulle est ouverte passe au-dessus de ses voisines */
+#page-stats .analysis-card:has(.analysis-card__info.is-open),
+#page-stats .analysis-card:has(.analysis-card__info:hover),
+#page-stats .analysis-card:has(.analysis-card__info:focus-visible) { z-index: 10; }
+
+#page-stats .analysis-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
 #page-stats .analysis-card__icon {
@@ -494,10 +460,11 @@ html {
 #page-stats .analysis-card__icon svg { width: 100%; height: 100%; }
 
 #page-stats .analysis-card__title {
-  font-size: var(--fs-xs);
+  font-size: 0.625rem;
   font-weight: var(--fw-bold);
-  letter-spacing: var(--ls-wide);
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 #page-stats .analysis-card__arrow {
@@ -513,16 +480,14 @@ html {
 }
 #page-stats .analysis-card__arrow svg { width: 12px; height: 12px; }
 
-/* Bulle d'info "i" — remplace la description, en haut à droite de la carte */
+/* Bulle d'info "i" — dans le flux, toujours visible dans la carte */
 #page-stats .analysis-card__info {
-  position: absolute;
-  top: var(--space-xs);
-  right: var(--space-xs);
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border-accent);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   font-size: 0.6rem;
   font-style: italic;
   font-weight: var(--fw-semibold);
@@ -530,15 +495,15 @@ html {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 2;
 }
+/* Infobulle ancrée à la carte (et non au "i") : reste dans l'écran pour les 3 boutons */
 #page-stats .analysis-card__info:hover::after,
 #page-stats .analysis-card__info:focus-visible::after,
 #page-stats .analysis-card__info.is-open::after {
   content: attr(aria-label);
   position: absolute;
-  top: 20px;
-  right: 0;
+  top: 40px;
+  left: 0;
   width: 140px;
   padding: var(--space-xs) var(--space-sm);
   background: var(--color-bg-card);
@@ -552,6 +517,18 @@ html {
   line-height: var(--lh-relaxed);
   text-align: left;
   z-index: 5;
+}
+#page-stats .analysis-card:nth-child(2) .analysis-card__info:hover::after,
+#page-stats .analysis-card:nth-child(2) .analysis-card__info:focus-visible::after,
+#page-stats .analysis-card:nth-child(2) .analysis-card__info.is-open::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+#page-stats .analysis-card:nth-child(3) .analysis-card__info:hover::after,
+#page-stats .analysis-card:nth-child(3) .analysis-card__info:focus-visible::after,
+#page-stats .analysis-card:nth-child(3) .analysis-card__info.is-open::after {
+  left: auto;
+  right: 0;
 }
 
 /* ==========================================================================

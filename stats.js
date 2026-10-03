@@ -13,25 +13,21 @@
   // API: GET /api/stats/strokes-gained?period=30d
   const strokesGained = {
     total: null,
-    comparisonLabel: '',
     categories: [
       { key: 'driving', label: 'Driving', value: null, icon: 'club' },
-      { key: 'approach', label: 'Approche', value: null, icon: 'flag' },
-      { key: 'shortgame', label: 'Petit jeu', value: null, icon: 'bowl' },
+      { key: 'green', label: 'A.G.', value: null, icon: 'arc' },
+      { key: 'wedging', label: 'Wedging', value: null, icon: 'wedge' },
+      { key: 'approches', label: 'Approches', value: null, icon: 'bowl' },
       { key: 'putting', label: 'Putting', value: null, icon: 'putter' },
     ],
   };
 
   // API: GET /api/stats/kpis?period=30d
   const kpiCards = [
-    { key: 'fairways', title: 'Fairways', subtitle: 'Touchés', value: null, unit: '%', delta: null, goodWhen: 'up',
-      compareLabel: 'vs période précédente', sparkline: [], icon: 'flag' },
-    { key: 'gir', title: 'Greens en', subtitle: 'Régulation', value: null, unit: '%', delta: null, goodWhen: 'up',
-      compareLabel: 'vs période précédente', sparkline: [], icon: 'target' },
-    { key: 'putts', title: 'Putts', subtitle: 'Par tour', value: null, unit: '', delta: null, goodWhen: 'down',
-      compareLabel: 'vs période précédente', sparkline: [], icon: 'putter' },
-    { key: 'birdies', title: 'Birdies', subtitle: 'Par tour', value: null, unit: '', delta: null, goodWhen: 'up',
-      compareLabel: 'vs période précédente', sparkline: [], icon: 'bird' },
+    { key: 'fairways', title: 'Fairways touchés', value: null, unit: '%', icon: 'flag' },
+    { key: 'gir', title: 'Greens en régulation', value: null, unit: '%', icon: 'target' },
+    { key: 'putts', title: 'Putts par tour', value: null, unit: '', icon: 'putter' },
+    { key: 'birdies', title: 'Birdies par tour', value: null, unit: '', icon: 'bird' },
   ];
 
   // API: GET /api/stats/analyses
@@ -144,6 +140,7 @@
     club: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 21l7-16"/><path d="M13 5l4 1.2-1 3.2-4.2-1.1"/></svg>`,
     flag: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg>`,
     bowl: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 12h16a8 6 0 01-16 0z"/><path d="M9 8c0-1.7 1.3-3 3-3s3 1.3 3 3"/></svg>`,
+    wedge: `<svg viewBox="0 0 24 24" ${STROKE}><line x1="18" y1="3" x2="9" y2="17"/><path d="M9 17l-4 4.2"/><path d="M5 21.2c1.6.5 3.4-.2 4-1.6"/></svg>`,
     putter: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M8 21l6-17"/><path d="M14 4l3 1-.8 2.6L13 6.6"/><path d="M5.5 20.5h5"/></svg>`,
     target: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>`,
     bird: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 13c2-4 6-6 10-5-1-2 0-3 2-3 0 2 1 3 3 3-1 3-3 5-6 5-1 3-4 5-9 5 2-1 3-2 3-4-1 0-2-.4-3-1z"/></svg>`,
@@ -172,6 +169,12 @@
   function fmt(value, suffix) {
     if (value === null || value === undefined || Number.isNaN(value)) return '--';
     return `${value}${suffix || ''}`;
+  }
+
+  // Valeur signée pour les Strokes Gained (+0.4 / -0.2 / --).
+  function fmtSigned(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return '--';
+    return `${value > 0 ? '+' : ''}${value}`;
   }
 
   function hexToRgba(hex, alpha) {
@@ -264,40 +267,16 @@
      ======================================================================== */
 
   function renderKpiCard(kpi, index) {
-    const hasDelta = kpi.delta !== null && kpi.delta !== undefined;
-    const isUp = hasDelta && kpi.delta > 0;
-    const trendIcon = isUp ? icon('trendUp') : icon('trendDown');
-    const isGood = kpi.goodWhen === 'down' ? !isUp : isUp;
-    const trendClass = hasDelta ? (isGood ? 'kpi-card__trend--good' : 'kpi-card__trend--bad') : '';
-    const sign = hasDelta && kpi.delta > 0 ? '+' : '';
-    // Carte non interactive : les maquettes ne montrent aucune navigation
-    // déclenchée par les cartes KPI de l'écran Dashboard.
+    // Carte non interactive : symbole, titre, valeur (dimensions identiques via CSS).
     return `
       <article class="card kpi-card fade-up" style="--fade-index:${index}" data-kpi="${kpi.key}">
-        <div class="kpi-card__head">
+        <div class="kpi-card__top">
           <div class="icon-badge">${icon(kpi.icon)}</div>
-          <div class="kpi-card__titles">
-            <div class="kpi-card__title">${kpi.title}</div>
-            <div class="kpi-card__subtitle">${kpi.subtitle}</div>
-          </div>
+          <div class="kpi-card__value">${fmt(kpi.value)}<sup>${kpi.unit}</sup></div>
         </div>
-        <div class="kpi-card__value">${fmt(kpi.value)}<sup>${kpi.unit}</sup></div>
-        <div class="kpi-card__trend ${trendClass}">
-          ${hasDelta ? `${trendIcon} ${sign}${kpi.delta}${kpi.unit}` : ''}
-          <span class="kpi-card__compare">${kpi.compareLabel}</span>
-        </div>
-        <div class="kpi-card__sparkline"><canvas aria-hidden="true" data-sparkline="${kpi.key}"></canvas></div>
+        <div class="kpi-card__title">${kpi.title}</div>
       </article>
     `;
-  }
-
-  function mountKpiCharts(container, kpis) {
-    kpis.forEach((kpi) => {
-      if (!kpi.sparkline || !kpi.sparkline.length) return;
-      const canvas = container.querySelector(`canvas[data-sparkline="${kpi.key}"]`);
-      const isGood = kpi.goodWhen === 'down' ? kpi.delta < 0 : kpi.delta > 0;
-      if (canvas) createSparkline(canvas, kpi.sparkline, isGood);
-    });
   }
 
   /* ========================================================================
@@ -521,9 +500,11 @@
       ? 'class="card analysis-card analysis-card--disabled fade-up"'
       : `type="button" data-goto="${item.goto}" class="card card--interactive analysis-card fade-up"`;
     return `
-      <${tag} ${attrs} style="--fade-index:${index}; text-align:left;">
-        <span class="analysis-card__info" tabindex="0" aria-label="${item.description}" onclick="event.stopPropagation(); this.classList.toggle('is-open')">i</span>
-        <div class="analysis-card__icon">${icon(item.icon)}</div>
+      <${tag} ${attrs} style="--fade-index:${index};">
+        <div class="analysis-card__top">
+          <div class="analysis-card__icon">${icon(item.icon)}</div>
+          <span class="analysis-card__info" tabindex="0" aria-label="${item.description}" onclick="event.stopPropagation(); this.classList.toggle('is-open')">i</span>
+        </div>
         <div class="analysis-card__title">${item.title}</div>
         <div class="analysis-card__arrow">${icon('chevronRight')}</div>
       </${tag}>
@@ -732,29 +713,23 @@
 
   function initDashboard() {
     const hasTotal = strokesGained.total !== null && strokesGained.total !== undefined;
-    const sgValueHtml = hasTotal
-      ? `<div class="sg-card__value" data-count-to="${strokesGained.total}" data-count-prefix="+">+0.0</div>`
-      : `<div class="sg-card__value">--</div>`;
+    const totalValueHtml = hasTotal
+      ? `<div class="sg-item__value" data-count-to="${strokesGained.total}" data-count-prefix="${strokesGained.total > 0 ? '+' : ''}">+0.0</div>`
+      : `<div class="sg-item__value">--</div>`;
 
     document.getElementById('dash-strokesGained').innerHTML = `
-      <div class="sg-card__main">
-        <div class="icon-badge">${icon('trendUp')}</div>
-        <div>
-          <div class="sg-card__label">Strokes Gained</div>
-          <div class="sg-card__sublabel">Total</div>
-          ${sgValueHtml}
-          <div class="sg-card__caption">${strokesGained.comparisonLabel}</div>
+      <div class="sg-item sg-item--total">
+        <div class="sg-item__label">SG total</div>
+        <div class="sg-item__icon">${icon('trendUp')}</div>
+        ${totalValueHtml}
+      </div>
+      ${strokesGained.categories.map((c) => `
+        <div class="sg-item">
+          <div class="sg-item__label">${c.label}</div>
+          <div class="sg-item__icon">${icon(c.icon)}</div>
+          <div class="sg-item__value">${fmtSigned(c.value)}</div>
         </div>
-      </div>
-      <div class="sg-card__breakdown">
-        ${strokesGained.categories.map((c) => `
-          <div class="sg-item">
-            <div class="sg-item__label">${c.label}</div>
-            <div class="sg-item__icon">${icon(c.icon)}</div>
-            <div class="sg-item__value">${c.value !== null && c.value !== undefined ? '+' + c.value : '--'}</div>
-          </div>
-        `).join('')}
-      </div>
+      `).join('')}
     `;
 
     // Tout le HTML (y compris les 3 cartes "Analyses détaillées") est injecté
@@ -768,8 +743,6 @@
     renderRoundList(document.getElementById('dash-historyList'), roundsHistory, () => showScreen('historique'));
 
     animateCounters(document.getElementById('screen-dashboard'), 800);
-
-    mountKpiCharts(kpiGrid, kpiCards);
 
     // Bouton flottant unique : ouvre le popup de paramétrage (voir openNewRound)
     const fabRow = document.createElement('div');
