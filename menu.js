@@ -83,6 +83,13 @@ function updateFirstName(value) {
   window[currentScreenRenderFn]();
 }
 
+// Enregistre le prénom pendant la saisie, sans re-render du menu (le champ garde le focus)
+function updateFirstNameLive(value) {
+  userProfile.firstName = value.trim().slice(0, 20);
+  saveStateToLocalStorage();
+  if (window.renderHomeGreeting) window.renderHomeGreeting();
+}
+
 /* ==========================================================================
    Pavé numérique générique — remplace les inputs type="number" natifs pour
    toute saisie manuelle de chiffres (température, altitude, index, driver,
@@ -198,7 +205,7 @@ function topRowHtml(showLogout = false) {
           </div>
         </div>
         <div class="profile_info">
-          <h2 class="profile_name"><input type="text" class="profile_name-input" value="${escapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ajouter mon prénom" aria-label="Prénom" onchange="updateFirstName(this.value)"></h2>
+          <h2 class="profile_name"><input type="text" class="profile_name-input" value="${escapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ajouter mon prénom" aria-label="Prénom" oninput="updateFirstNameLive(this.value)" onchange="updateFirstName(this.value)"></h2>
           <p class="profile_index" id="profileIndex" onclick="openMenuKeypad('Index','profileIndex','${userProfile.index ?? ''}', true, true, '')">${indexLabel()}</p>
         </div>
       </div>

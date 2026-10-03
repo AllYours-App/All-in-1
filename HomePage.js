@@ -29,7 +29,7 @@ function applyBackground() {
 
 // Affiche le prénom enregistré dans le menu (localStorage) dans le titre d'accueil
 function renderHomeGreeting() {
-  const el = document.querySelector("[data-user-firstname]");
+  const el = document.querySelector("[data-user-firstname], .header_title-highlight");
   if (!el) return;
   let firstName = "";
   try {
