@@ -2239,19 +2239,20 @@ html {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   margin: 0;
   /* Marges latérales minimales (4 px) : le contenu interactif reste à ≥ 16 px du bord
      grâce au padding des cartes (index.html ignore les touches à moins de 16 px) */
   padding:
     calc(env(safe-area-inset-top) + var(--sd-handle))
     calc(var(--space-2xs) + env(safe-area-inset-right))
-    calc(env(safe-area-inset-bottom) + var(--space-sm))
+    var(--app-safe-bottom)
     calc(var(--space-2xs) + env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  overflow: hidden;
 }
 #page-stats .saisie-detaillee_component > * { flex-shrink: 0; }
 
@@ -2448,42 +2449,50 @@ html {
 
 /* ---------- Panneau du coup sélectionné : chaque ligne = titre + contrôle ---------- */
 #page-stats .saisie-detaillee_detail { gap: 5px; }
-#page-stats .saisie-detaillee_detail-head {
+/* Actions en bas du panneau : poubelle à gauche, Holed à droite */
+#page-stats .saisie-detaillee_actions {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--color-border);
-}
-#page-stats .saisie-detaillee_detail-title {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--fs-base);
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--ls-wide);
-  line-height: 1.1;
-  text-transform: uppercase;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
 }
 #page-stats .saisie-detaillee_delete {
-  position: relative;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
+  width: 34px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: none;
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-md);
   background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 #page-stats .saisie-detaillee_delete svg { width: 18px; height: 18px; }
-#page-stats .saisie-detaillee_delete::after { content: ''; position: absolute; inset: -8px; } /* zone de toucher élargie */
+#page-stats .saisie-detaillee_holed {
+  min-width: 84px;
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-accent);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_holed[aria-pressed="true"] {
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
 
 #page-stats .saisie-detaillee_group {
   display: flex;
@@ -2580,42 +2589,63 @@ html {
 #page-stats .saisie-detaillee_lie.is-bunker svg { color: var(--sd-sand); }
 #page-stats .saisie-detaillee_lie:active { background: var(--color-accent-10); }
 
-/* ---------- Fairway (haut) puis Green (bas), empilés ---------- */
-#page-stats .saisie-detaillee_maps {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
+/* ---------- Fairway : boutons posés sur l'image ---------- */
 #page-stats .saisie-detaillee_map-card {
+  min-height: 0;
   gap: 6px;
   padding: var(--space-xs) var(--space-sm);
 }
 #page-stats .saisie-detaillee_map-card .saisie-rapide_card-icon { width: 28px; height: 28px; }
-#page-stats .saisie-detaillee_map-card .saisie-rapide_choice-icon { width: 28px; height: 28px; }
-#page-stats .saisie-detaillee_map-card .saisie-rapide_choice-icon svg { width: 15px; height: 15px; }
-/* Green : hauteur donnée par les proportions de l'image (--qr-green-ratio posé par stats.js) */
-#page-stats .saisie-detaillee_map-card .saisie-rapide_map.is-green {
-  flex: none;
-  width: min(100%, 340px);
-  aspect-ratio: var(--qr-green-ratio);
-  margin-inline: auto;
+#page-stats .saisie-detaillee_fairway-stage { position: relative; }
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice-list {
+  position: absolute;
+  inset: 0;
+  align-items: stretch;
+}
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice {
+  justify-content: center;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice-icon {
+  width: 26px;
+  height: 26px;
+  background: rgba(5, 7, 10, 0.6);
+}
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice-icon svg { width: 14px; height: 14px; }
+
+/* ---------- Green | Strokes gained (colonne), occupe la place restante ---------- */
+#page-stats .saisie-detaillee_maps {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-xs);
 }
 
-/* ---------- Strokes gained ---------- */
-#page-stats .saisie-detaillee_sg { padding-block: 6px; }
+/* ---------- Strokes gained : colonne ---------- */
+#page-stats .saisie-detaillee_sg {
+  min-height: 0;
+  padding: var(--space-xs) 6px;
+}
 #page-stats .saisie-detaillee_sg-list {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 #page-stats .saisie-detaillee_sg-item {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1px;
-  padding: 0 2px;
 }
-#page-stats .saisie-detaillee_sg-item + .saisie-detaillee_sg-item { border-left: 1px solid var(--color-border-strong); }
+#page-stats .saisie-detaillee_sg-item + .saisie-detaillee_sg-item { border-top: 1px solid var(--color-border-strong); }
 #page-stats .saisie-detaillee_sg-label {
   font-size: var(--fs-2xs);
   letter-spacing: var(--ls-wide);

@@ -1758,8 +1758,7 @@
     const setText = (el, text) => { if (el) el.textContent = text; };
 
     const shotList = d('shot-list');
-    const detailIcon = d('detail-icon');
-    const detailTitle = d('detail-title');
+    const holedBtn = screen.querySelector('[data-sd-holed]');
     const clubIcon = d('club-icon');
     const clubText = d('club-text');
     const clubSelect = d('club-select');
@@ -1940,9 +1939,6 @@
     function renderDetail() {
       const s = shot();
       const type = clubType(s);
-      setText(detailTitle, `Coup ${sel + 1}`);
-      detailIcon.className = `saisie-detaillee_icon is-${type}`;
-      detailIcon.innerHTML = ICON_OF[type];
       clubIcon.className = `saisie-detaillee_icon is-${type}`;
       clubIcon.innerHTML = ICON_OF[type];
       setText(clubText, s.club || 'Choisir un club');
@@ -1953,6 +1949,7 @@
       setText(lieText, s.lie || '--');
       distInput.value = s.distance === null ? '' : num(s.distance);
       penaltyInput.value = s.penalty;
+      holedBtn.setAttribute('aria-pressed', String(s.distance === 0));
     }
 
     function renderFairway() {
@@ -2045,6 +2042,13 @@
         return;
       }
       if (t.closest('[data-sd-delete]')) { deleteShot(); return; }
+      // Holed : distance 0 = trou terminé, plus aucun coup n'est ajouté ; un second appui annule
+      if (t.closest('[data-sd-holed]')) {
+        const s = shot();
+        s.distance = s.distance === 0 ? null : 0;
+        afterChange();
+        return;
+      }
       // Fairway : sélection unique ; un second clic désélectionne
       if ((el = t.closest('[data-sd-fairway]')) && !el.disabled) {
         const s = shot();

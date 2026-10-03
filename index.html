@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="gym.css">
 <link rel="stylesheet" href="putting.css">
 <link rel="stylesheet" href="vitesse.css">
-<link rel="stylesheet" href="stats.css?v=5">
+<link rel="stylesheet" href="stats.css?v=6">
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="auth.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
@@ -877,14 +877,6 @@
 
       <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_detail">
 
-        <div class="saisie-detaillee_detail-head">
-          <span class="saisie-detaillee_icon" data-sd="detail-icon"></span>
-          <h2 class="saisie-detaillee_detail-title" data-sd="detail-title">Coup 1</h2>
-          <button class="saisie-detaillee_delete" type="button" data-sd-delete aria-label="Supprimer le coup">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/></svg>
-          </button>
-        </div>
-
         <!-- Club -->
         <div class="saisie-detaillee_group">
           <span class="saisie-detaillee_label">Club</span>
@@ -922,19 +914,26 @@
           </label>
         </div>
 
+        <!-- Actions : supprimer le coup (gauche) | trou terminé (droite) -->
+        <div class="saisie-detaillee_actions">
+          <button class="saisie-detaillee_delete" type="button" data-sd-delete aria-label="Supprimer le coup">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <button class="saisie-detaillee_holed" type="button" data-sd-holed aria-pressed="false">Holed</button>
+        </div>
+
       </section>
     </div>
 
-    <!-- FAIRWAY puis GREEN -->
-    <div class="saisie-detaillee_maps">
-
-      <section class="saisie-rapide_card saisie-detaillee_map-card">
-        <div class="saisie-rapide_card-head">
-          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4L5 20"/><path d="M14.5 4L19 20"/><path d="M12 7v2.5"/><path d="M12 12v2.5"/><path d="M12 17v3"/></svg></span>
-          <h2 class="saisie-rapide_card-title">Fairway</h2>
-        </div>
+    <!-- FAIRWAY : les boutons sont posés sur l'image -->
+    <section class="saisie-rapide_card saisie-detaillee_map-card saisie-detaillee_fairway">
+      <div class="saisie-rapide_card-head">
+        <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4L5 20"/><path d="M14.5 4L19 20"/><path d="M12 7v2.5"/><path d="M12 12v2.5"/><path d="M12 17v3"/></svg></span>
+        <h2 class="saisie-rapide_card-title">Fairway</h2>
+      </div>
+      <div class="saisie-detaillee_fairway-stage">
         <div class="saisie-rapide_map is-fairway" data-sd="fairway-root"></div>
-        <div class="saisie-rapide_choice-list is-divided" role="radiogroup" aria-label="Attaque fairway">
+        <div class="saisie-rapide_choice-list" role="radiogroup" aria-label="Attaque fairway">
           <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Gauche">
             <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></span>
             <span class="saisie-rapide_choice-label">Gauche</span>
@@ -948,7 +947,11 @@
             <span class="saisie-rapide_choice-label">Droite</span>
           </button>
         </div>
-      </section>
+      </div>
+    </section>
+
+    <!-- GREEN | STROKES GAINED (colonne à droite) -->
+    <div class="saisie-detaillee_maps">
 
       <section class="saisie-rapide_card saisie-detaillee_map-card">
         <div class="saisie-rapide_card-head">
@@ -957,17 +960,16 @@
         </div>
         <div class="saisie-rapide_map is-green" data-sd="green-root"></div>
       </section>
-    </div>
 
-    <!-- STROKES GAINED -->
-    <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_sg" aria-label="Strokes gained">
-      <div class="saisie-detaillee_sg-list">
-        <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">Driving</span><span class="saisie-detaillee_sg-value" data-sd="sg-driving">--</span></div>
-        <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">A.G</span><span class="saisie-detaillee_sg-value" data-sd="sg-green">--</span></div>
-        <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">App.</span><span class="saisie-detaillee_sg-value" data-sd="sg-approach">--</span></div>
-        <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">Putts</span><span class="saisie-detaillee_sg-value" data-sd="sg-putting">--</span></div>
-      </div>
-    </section>
+      <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_sg" aria-label="Strokes gained">
+        <div class="saisie-detaillee_sg-list">
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">Driving</span><span class="saisie-detaillee_sg-value" data-sd="sg-driving">--</span></div>
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">A.G</span><span class="saisie-detaillee_sg-value" data-sd="sg-green">--</span></div>
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">App.</span><span class="saisie-detaillee_sg-value" data-sd="sg-approach">--</span></div>
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">Putts</span><span class="saisie-detaillee_sg-value" data-sd="sg-putting">--</span></div>
+        </div>
+      </section>
+    </div>
 
     <!-- NAVIGATION ENTRE LES TROUS (calquée sur la saisie rapide) -->
     <div class="saisie-rapide_nav">
@@ -1238,7 +1240,7 @@
 <script src="gym.js"></script>
 <script src="putting.js"></script>
 <script src="vitesse.js"></script>
-<script src="stats.js?v=5"></script>
+<script src="stats.js?v=6"></script>
 <script src="menu.js"></script>
 <script src="auth.js"></script>
 </body>
