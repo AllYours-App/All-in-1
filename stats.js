@@ -1718,13 +1718,10 @@
      Les encadrés Green / Fairway fonctionnent comme dans la saisie rapide.
      ======================================================================== */
 
-  // Sac du joueur (à remplacer par le vrai sac) — type : wood | iron | putter
-  const SD_CLUBS = [
-    { name: 'Driver', type: 'wood' }, { name: 'Bois 3', type: 'wood' }, { name: 'Bois 5', type: 'wood' }, { name: 'Hybride', type: 'wood' },
-    ...[3, 4, 5, 6, 7, 8, 9].map((n) => ({ name: `Fer ${n}`, type: 'iron' })),
-    { name: 'PW', type: 'iron' }, { name: 'GW', type: 'iron' }, { name: 'SW', type: 'iron' }, { name: 'LW', type: 'iron' },
-    { name: 'Putter', type: 'putter' },
-  ];
+  // Sac du joueur = clubs cochés dans Menu > Mon sac de golf (golfBag / golfClubCatalog de menu.js)
+  // type : wood | iron | putter
+  const sdClubType = (id) => (id === 'putter' ? 'putter' : /^(fer|wedge)/.test(id) ? 'iron' : 'wood');
+  const getSdClubs = () => (typeof golfBag === 'undefined' || typeof golfClubCatalog === 'undefined' ? [] : golfClubCatalog.filter((c) => golfBag.clubs.includes(c.id)));
   const SD_MAX_SHOTS = 15;
 
   // API de l'écran (renseignée par initSaisieDetaillee) : load() recharge currentRound
@@ -1797,7 +1794,12 @@
     const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.result === null && s.green === null;
     const shots = () => holes[idx];
     const shot = () => holes[idx][sel];
-    const clubType = (s) => { const c = SD_CLUBS.find((x) => x.name === s.club); return c ? c.type : 'wood'; };
+    const clubType = (s) => { const c = golfClubCatalog.find((x) => x.name === s.club); return c ? sdClubType(c.id) : 'wood'; };
+    // Options du select = clubs cochés dans Menu > Mon sac de golf
+    function fillClubOptions() {
+      clubSelect.innerHTML = '<option value="">Choisir un club</option>'
+        + getSdClubs().map((c) => `<option value="${c.name}">${c.name}</option>`).join('');
+    }
 
     function ensureRound() {
       // Écran ouvert sans passer par le popup : partie vierge de 18 trous
@@ -1953,6 +1955,8 @@
       clubIcon.innerHTML = ICON_OF[type];
       setText(clubText, s.club || 'Choisir un club');
       clubText.classList.toggle('is-empty', !s.club);
+      fillClubOptions(); // sac relu à chaque rendu
+      if (s.club && ![...clubSelect.options].some((o) => o.value === s.club)) clubSelect.add(new Option(s.club, s.club)); // club hors sac (ex. putter auto)
       clubSelect.value = s.club || '';
       lieBtn.className = `saisie-detaillee_lie${s.lie ? ` ${LIE_CLASS[s.lie]}` : ''}`;
       lieIcon.innerHTML = s.lie ? LIE_ICON[s.lie] : '';
@@ -2134,8 +2138,6 @@
       }
     });
 
-    clubSelect.innerHTML = '<option value="">Choisir un club</option>'
-      + SD_CLUBS.map((c) => `<option value="${c.name}">${c.name}</option>`).join('');
     clubSelect.addEventListener('change', () => {
       if (!round) return;
       const s = shot();

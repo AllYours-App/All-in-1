@@ -1,6 +1,6 @@
 /* ==========================================================================
    PARCOURS — UI interactions (front-end only, aucune logique métier)
-   Les écrans mockés (Distances, Ajouter un coup, Détail, Dashboard)
+   Les écrans mockés (Distances, Ajouter un coup, Détail)
    utilisent des valeurs statiques écrites directement dans le HTML —
    à remplacer par le moteur de calcul réel de l'application.
    ========================================================================== */
