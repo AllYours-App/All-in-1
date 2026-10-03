@@ -1823,9 +1823,13 @@
     const num = (v) => String(v).replace('.', ',');                 // 0.8 → "0,8"
     const round1 = (v) => Math.round(v * 10) / 10;
     const shotName = (s, i) => (s.club === 'Driver' ? 'Drive' : s.club === 'Putter' ? 'Putt' : s.club || `Coup ${i + 1}`);
-    function remaining(s) {
-      if (s.distance === null) return '--';
-      return s.distance === 0 ? 'Rentré' : `${num(s.distance)} m`;
+    // Distance approximativement parcourue par le coup i : distance avant le coup − distance restante après.
+    // Avant le coup 1 = distance du trou (départ → drapeau) ; avant les suivants = distance restante du coup précédent.
+    function traveled(list, i) {
+      const before = i === 0 ? round.holes[idx].distance : list[i - 1].distance;
+      const after = list[i].distance;
+      if (before === null || before === undefined || after === null) return '--';
+      return `${num(Math.max(0, round1(before - after)))} m`; // jamais négatif (balle plus loin du drapeau après le coup)
     }
 
     /* ---------- Roue du green (même principe que la saisie rapide) ----------
@@ -1914,7 +1918,7 @@
           <button type="button" class="saisie-detaillee_shot-button" data-sd-shot="${i}"${i === sel ? ' aria-current="true"' : ''}>
             <span class="saisie-detaillee_shot-text">
               <span class="saisie-detaillee_shot-title">${shotName(s, i)}</span>
-              <span class="saisie-detaillee_shot-sub">${remaining(s)}</span>
+              <span class="saisie-detaillee_shot-sub">${traveled(shots(), i)}</span>
             </span>
             <span class="saisie-detaillee_shot-chevron">${icon('chevronRight')}</span>
           </button>
@@ -1964,17 +1968,18 @@
     }
 
     function renderStats() {
-      let fir = 0, firHoles = 0, gir = 0, girHoles = 0, putts = 0, puttsHoles = 0;
+      let fir = 0, gir = 0, putts = 0, puttsHoles = 0;
       holes.forEach((_, i) => {
         const h = holeSummary(i);
-        if (round.holes[i].par !== 3 && h.fairway !== null) { firHoles++; if (h.fairway === FAIRWAY_HIT) fir++; }
-        if (h.gir !== null) { girHoles++; if (h.gir) gir++; }
+        if (round.holes[i].par !== 3 && h.fairway === FAIRWAY_HIT) fir++;
+        if (h.gir) gir++;
         if (h.putts !== null) { putts += h.putts; puttsHoles++; }
       });
-      const pct = (n, total) => (total ? `${Math.round((n / total) * 100)}%` : '--');
-      setText(d('fir'), pct(fir, firHoles));
-      setText(d('gir'), pct(gir, girHoles));
-      setText(d('putts'), puttsHoles ? num((putts / puttsHoles).toFixed(1)) : '--');
+      // FIR sur les trous hors par 3 (par inconnu = compté), GIR sur tous les trous, putts = total de la partie
+      const firTotal = round.holes.filter((h) => h.par !== 3).length;
+      setText(d('fir'), `${fir}/${firTotal}`);
+      setText(d('gir'), `${gir}/${round.holes.length}`);
+      setText(d('putts'), puttsHoles ? String(putts) : '--');
       // Strokes gained (d('sg'), d('sg-driving'), d('sg-green'), d('sg-approach'), d('sg-putting')) :
       // à brancher, aucun barème de référence n'est encore disponible
     }

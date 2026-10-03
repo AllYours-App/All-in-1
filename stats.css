@@ -2520,6 +2520,7 @@ html {
 }
 #page-stats .saisie-detaillee_label {
   flex: 0 0 64px; /* largeur fixe : les contrôles restent alignés d'une ligne à l'autre */
+  line-height: 1.1; /* "Distance restante" passe sur 2 lignes */
   font-size: var(--fs-2xs);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
