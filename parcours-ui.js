@@ -411,7 +411,7 @@ function trackInfoHtml() {
           <strong>−</strong> : touche un point pour le retirer<br>
           <strong>Modifier</strong> : touche un point pour changer son numéro de trou<br>
           <strong>Reset</strong> : efface le parcours et repart du trou 1<br>
-          <strong>Par 3</strong> (fairway) : passe le trou en cours<br>
+          <strong>Skip</strong> : passe au trou suivant<br>
           <strong>Hors green</strong> : le prochain point posé compte hors green<br>
           <strong>m / yd</strong> : change l'unité des distances
         </p>
@@ -964,7 +964,7 @@ const FW_STORAGE_KEY = "parcours-fairway-round";
 const MARK_HIT_RADIUS_PX = 22; // tolérance de tap pour sélectionner un point déjà placé
 
 function fwDefaultHoles() {
-  return Array.from({ length: 18 }, () => ({ shots: [], par3: false }));
+  return Array.from({ length: 18 }, () => ({ shots: [], skipped: false }));
 }
 
 let fwHoles = fwLoad();
@@ -989,7 +989,7 @@ function fwSave() {
 
 function fwCurrentHoleIndex() {
   for (let i = 0; i < 18; i++) {
-    if (!fwHoles[i].par3 && fwHoles[i].shots.length === 0) return i;
+    if (!fwHoles[i].skipped && fwHoles[i].shots.length === 0) return i;
   }
   return 18; // les 18 trous sont renseignés
 }
@@ -1121,17 +1121,17 @@ function fwZoneTap(event) {
   renderFairway();
 }
 
-function fwPar3Tap() {
+function fwSkipHole() {
   const idx = fwCurrentHoleIndex();
   if (idx >= 18) return;
-  fwHoles[idx].par3 = true;
+  fwHoles[idx].skipped = true;
   fwSave();
-  fwShowToast(idx, "Par 3");
+  fwShowToast(idx, "passé");
   renderFairway();
 }
 
 function resetFairwayRound() {
-  const hasData = fwHoles.some((h) => h.shots.length > 0 || h.par3);
+  const hasData = fwHoles.some((h) => h.shots.length > 0 || h.skipped);
   if (hasData && !confirm("Effacer le parcours en cours et recommencer à zéro ?")) return;
   fwHoles = fwDefaultHoles();
   fwMode = "plus";
@@ -1172,9 +1172,7 @@ function fwVisualHtml() {
       </div>
 
       <span class="hole-counter track-hole-badge">${holeNum}<em>/18</em></span>
-      <div class="track-corner-bl">
-        <button type="button" class="mode-btn mode-btn-offgreen" onclick="event.stopPropagation(); fwPar3Tap();">Par 3</button>
-      </div>
+      <button type="button" class="track-reset-btn track-reset-corner" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
 
       <div class="track-rail track-rail-right">
         <div class="track-rail-row">
@@ -1182,7 +1180,10 @@ function fwVisualHtml() {
           <button type="button" class="mode-btn mode-btn-minus ${fwMode === "minus" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('minus');" aria-label="Retirer un coup">−</button>
         </div>
         <button type="button" class="mode-btn mode-btn-edit ${fwMode === "edit" ? "active" : ""}" onclick="event.stopPropagation(); fwSetMode('edit');" aria-label="Renuméroter un coup">${TRACK_PENCIL_ICON}</button>
-        <button type="button" class="track-reset-btn track-reset-inline" aria-label="Nouveau parcours fairway" onclick="event.stopPropagation(); resetFairwayRound();">${TRACK_RESET_ICON}</button>
+      </div>
+
+      <div class="track-corner-br">
+        <button type="button" class="mode-btn track-skip-btn" onclick="event.stopPropagation(); fwSkipHole();" aria-label="Passer au trou suivant">Skip</button>
       </div>
 
       ${fwLastLogged ? `<div class="fw-toast">Trou ${fwLastLogged.hole + 1} — ${fwLastLogged.label}</div>` : ""}
@@ -1203,7 +1204,7 @@ function renderFairway() {
 const GR_STORAGE_KEY = "parcours-green-round";
 
 function grDefaultHoles() {
-  return Array.from({ length: 18 }, () => ({ marks: [] }));
+  return Array.from({ length: 18 }, () => ({ marks: [], skipped: false }));
 }
 
 let grHoles = grLoad();
@@ -1240,7 +1241,7 @@ function grSave() {
 
 function grCurrentHoleIndex() {
   for (let i = 0; i < 18; i++) {
-    if (grHoles[i].marks.length === 0) return i;
+    if (grHoles[i].marks.length === 0 && !grHoles[i].skipped) return i;
   }
   return 18;
 }
@@ -1359,8 +1360,17 @@ function grZoneTap(event) {
   renderGreen();
 }
 
+function grSkipHole() {
+  const idx = grCurrentHoleIndex();
+  if (idx >= 18) return;
+  grHoles[idx].skipped = true;
+  grSave();
+  grShowToast(idx, "passé");
+  renderGreen();
+}
+
 function resetGreenRound() {
-  const hasData = grHoles.some((h) => h.marks.length > 0);
+  const hasData = grHoles.some((h) => h.marks.length > 0 || h.skipped);
   if (hasData && !confirm("Effacer les greens enregistrés et recommencer à zéro ?")) return;
   grHoles = grDefaultHoles();
   grMode = "plus";
@@ -1414,7 +1424,10 @@ function grVisualHtml() {
         <button type="button" class="mode-btn mode-btn-offgreen ${grOffNext ? "active" : ""}" onclick="event.stopPropagation(); grToggleOffNext();" aria-label="Prochain point hors green">Hors green</button>
       </div>
 
-      <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
+      <div class="track-corner-br">
+        <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
+        <button type="button" class="mode-btn track-skip-btn" onclick="event.stopPropagation(); grSkipHole();" aria-label="Passer au trou suivant">Skip</button>
+      </div>
 
       ${grLastLogged !== null ? `<div class="fw-toast">Trou ${grLastLogged.hole + 1} — ${grLastLogged.label}</div>` : ""}
     </div>
@@ -1439,7 +1452,7 @@ function closeHistoryModal() { historyOpen = false; renderCourseModals(); }
 function fwHitPercent() {
   let eligible = 0, hit = 0;
   fwHoles.forEach((h) => {
-    if (h.par3 || h.shots.length === 0) return;
+    if (h.skipped || h.shots.length === 0) return;
     eligible++;
     if (h.shots[0].zone === "fairway") hit++;
   });

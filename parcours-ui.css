@@ -400,10 +400,7 @@ body.no-scroll .screen-view.active .screen {
 }
 
 .track-info-corner {
-  top: auto;
-  bottom: 4px;
-  right: 4px;
-  z-index: 4;
+  position: static;
 }
 
 .track-block #green-root,
@@ -438,11 +435,6 @@ body.no-scroll .screen-view.active .screen {
 .track-reset-corner {
   top: 52px;
   left: 4px;
-}
-
-/* Reset du fairway : dans le rail, sous le crayon */
-.track-reset-inline {
-  position: static;
 }
 
 .track-reset-btn svg {
@@ -510,7 +502,8 @@ body.no-scroll .screen-view.active .screen {
 }
 
 .mode-btn.mode-btn-offgreen,
-.mode-btn.track-unit-btn {
+.mode-btn.track-unit-btn,
+.mode-btn.track-skip-btn {
   width: auto;
   height: auto;
   border-radius: var(--radius-pill);
@@ -521,7 +514,8 @@ body.no-scroll .screen-view.active .screen {
   white-space: nowrap;
 }
 
-.mode-btn.mode-btn-offgreen {
+.mode-btn.mode-btn-offgreen,
+.mode-btn.track-skip-btn {
   text-transform: uppercase;
 }
 
@@ -539,6 +533,23 @@ body.no-scroll .screen-view.active .screen {
 }
 
 .track-corner-bl > * {
+  pointer-events: auto;
+}
+
+/* Coin bas-droit : "i" (green uniquement) au-dessus du bouton Skip */
+.track-corner-br {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.track-corner-br > * {
   pointer-events: auto;
 }
 
