@@ -1711,8 +1711,8 @@
 
   /* ========================================================================
      SAISIE DÉTAILLÉE — écran de saisie coup par coup
-     Chaque trou a sa liste de coups { club, lie, distance, penalty, result, fairway, green }.
-     Le fairway ne concerne que le coup de départ (1er coup) ; le résultat ne concerne que les coups joués du green.
+     Chaque trou a sa liste de coups { club, lie, distance, penalty, result, green } et un fairway (celui du coup de départ).
+     Le résultat ne concerne que les coups joués du green.
      Un coup avec distance restante > 0 ajoute automatiquement le coup suivant ;
      une distance de 0 = balle rentrée (fin du trou).
      Les encadrés Green / Fairway fonctionnent comme dans la saisie rapide.
@@ -1789,11 +1789,12 @@
     /* ---------- État ---------- */
     let round = null;   // partie en cours (currentRound)
     let holes = [];     // holes[i] = liste des coups du trou i
+    let fairways = [];  // fairways[i] = fairway du trou i (Gauche / Centre / Droite), saisi depuis n'importe quel coup
     let idx = 0;        // trou affiché
     let sel = 0;        // coup sélectionné dans le trou
 
-    const blankShot = (first = false) => ({ club: null, lie: first ? 'Tee' : null, distance: null, penalty: 0, result: null, fairway: null, green: null });
-    const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.result === null && s.fairway === null && s.green === null;
+    const blankShot = (first = false) => ({ club: null, lie: first ? 'Tee' : null, distance: null, penalty: 0, result: null, green: null });
+    const isBlank = (s) => s.club === null && s.lie === null && s.distance === null && s.penalty === 0 && s.result === null && s.green === null;
     const shots = () => holes[idx];
     const shot = () => holes[idx][sel];
     const clubType = (s) => { const c = SD_CLUBS.find((x) => x.name === s.club); return c ? c.type : 'wood'; };
@@ -1812,6 +1813,7 @@
     function load() {
       round = ensureRound();
       holes = round.holes.map(() => [blankShot(true)]);
+      fairways = round.holes.map(() => null);
       idx = 0;
       sel = 0;
       setHeader(false);
@@ -1823,13 +1825,21 @@
     const num = (v) => String(v).replace('.', ',');                 // 0.8 → "0,8"
     const round1 = (v) => Math.round(v * 10) / 10;
     const shotName = (s, i) => (s.club === 'Driver' ? 'Drive' : s.club === 'Putter' ? 'Putt' : s.club || `Coup ${i + 1}`);
-    // Distance approximativement parcourue par le coup i : distance avant le coup − distance restante après.
-    // Avant le coup 1 = distance du trou (départ → drapeau) ; avant les suivants = distance restante du coup précédent.
+    // Distance approximativement parcourue par le coup i.
+    // before = distance au drapeau avant le coup (distance du trou pour le coup 1, sinon distance restante du coup précédent) ;
+    // after = distance restante après le coup. Sans direction connue : before − after (jamais négatif).
+    // Avec une direction (roue du green, relative à la ligne départ → drapeau), la balle n'est plus sur la ligne :
+    // loi des cosinus, θ = angle du secteur (0° = Long, 90° = Droite, 180° = Court). Ex. : 100 m, finit à 5 m
+    // sur le côté → ≈ 100 m ; à 5 m derrière → 105 m ; à 5 m devant → 95 m.
     function traveled(list, i) {
       const before = i === 0 ? round.holes[idx].distance : list[i - 1].distance;
       const after = list[i].distance;
       if (before === null || before === undefined || after === null) return '--';
-      return `${num(Math.max(0, round1(before - after)))} m`; // jamais négatif (balle plus loin du drapeau après le coup)
+      const dir = DIRECTIONS.indexOf(String(list[i].green).replace(/^(Green|Hors)-/, ''));
+      const dist = dir === -1
+        ? Math.max(0, before - after)
+        : Math.sqrt(before ** 2 + after ** 2 + 2 * before * after * Math.cos(dir * Math.PI / 4));
+      return `${num(round1(dist))} m`;
     }
 
     /* ---------- Roue du green (même principe que la saisie rapide) ----------
@@ -1890,22 +1900,25 @@
       const holedAt = list.findIndex((s) => s.distance === 0);
       const holed = holedAt !== -1;
       const played = holed ? list.slice(0, holedAt + 1) : list;
-      let before = 0, gir = false, greenInfo = false;
-      // Sans par connu, atteindre le green suffit (comme dans la saisie rapide)
+      // GIR : le coup numéro par − 2 (pénalités comprises) doit finir sur le green, sinon le green est raté.
+      // Surégulation : la balle y était déjà plus tôt (zone sur un coup antérieur, coup joué depuis le green
+      // ou balle rentrée) → GIR aussi. Les autres attaques de green (balle perdue, par 4 en 1…) restent libres :
+      // la zone saisie ne compte pour le GIR que sur les coups numérotés ≤ par − 2.
+      // Sans par connu, atteindre le green suffit (comme dans la saisie rapide).
       const limit = par !== null ? par - 2 : Infinity;
+      let before = 0, gir = false, known = holed;
       played.forEach((s, k) => {
-        if (s.green !== null || s.lie === 'Green') greenInfo = true;
-        // GIR : green atteint en par − 2 coups (pénalités comprises)
-        if (isOnGreen(s.green) && k + 1 + before <= limit) gir = true;   // balle sur le green après ce coup
-        if (s.lie === 'Green' && k + before <= limit) gir = true;        // coup joué depuis le green
+        const n = k + 1 + before; // numéro du coup, pénalités comprises
+        if (n <= limit && (isOnGreen(s.green) || s.distance === 0 || s.lie === 'Green')) gir = true;
+        if (n >= limit && (s.distance !== null || s.green !== null)) known = true; // coup par − 2 joué : réussi ou raté
         before += s.penalty;
       });
       return {
         holed,
         score: holed ? played.length + before : null,
         putts: holed ? played.filter((s) => s.club === 'Putter').length : null,
-        fairway: list[0].fairway,
-        gir: holed || greenInfo ? gir : null,
+        fairway: fairways[i],
+        gir: gir || known ? gir : null,
         shots: list,
       };
     }
@@ -1956,14 +1969,11 @@
     }
 
     function renderFairway() {
-      // Le fairway est celui du coup de départ (c'est lui que compte le FIR), quel que soit le coup affiché ;
-      // actif uniquement sur le 1er coup, et jamais sur un par 3
-      const s = shots()[0];
-      const noFairway = round.holes[idx].par === 3 || sel !== 0;
+      const noFairway = round.holes[idx].par === 3; // pas de fairway sur un par 3
       fairwayCard.classList.toggle('is-na', noFairway);
       fairwayOptions.forEach((o) => {
         o.disabled = noFairway;
-        o.setAttribute('aria-checked', String(round.holes[idx].par !== 3 && o.dataset.sdFairway === s.fairway));
+        o.setAttribute('aria-checked', String(!noFairway && o.dataset.sdFairway === fairways[idx]));
       });
     }
 
@@ -2112,8 +2122,7 @@
       }
       // Fairway : sélection unique ; un second clic désélectionne
       if ((el = t.closest('[data-sd-fairway]')) && !el.disabled) {
-        const s = shots()[0];
-        s.fairway = s.fairway === el.dataset.sdFairway ? null : el.dataset.sdFairway;
+        fairways[idx] = fairways[idx] === el.dataset.sdFairway ? null : el.dataset.sdFairway;
         afterChange();
         return;
       }
