@@ -2803,7 +2803,6 @@ html {
 }
 
 /* ---------- Carte de graphe ---------- */
-#page-stats .insights_chart .chart-card__title { font-size: var(--fs-base); }
 
 #page-stats .insights_bar-chart {
   --insights-label-w: 76px;
@@ -2870,14 +2869,7 @@ html {
 #page-stats .insights_bar-value.is-empty { color: var(--color-text-disabled); }
 
 /* ---------- Sous-titres et états vides ---------- */
-#page-stats .insights_subtitle {
-  font-size: var(--fs-2xs);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--ls-wider);
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
-  margin-top: var(--space-xs);
-}
+#page-stats .insights_subtitle { margin-top: var(--space-xs); }
 #page-stats .insights_empty {
   font-size: var(--fs-sm);
   color: var(--color-text-tertiary);
@@ -2928,3 +2920,102 @@ html {
 }
 #screen-statistiques .stat-block__title::before { box-shadow: none; }
 #screen-statistiques .period-tab[aria-selected="true"]::after { box-shadow: none; }
+
+
+/* ==========================================================================
+   ÉCHELLE TYPOGRAPHIQUE — Par club, Par distance, Statistiques
+   Titre 15px · légende d'unité et sous-titre 12px · en-tête de tableau 11px · texte 13px.
+   Chaque titre, légende et sous-titre tient sur UNE ligne (ellipse en dernier recours).
+   ========================================================================== */
+
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) {
+  --type-title: var(--fs-base);
+  --type-caption: var(--fs-xs);
+  --type-label: var(--fs-2xs);
+  --type-body: var(--fs-sm);
+}
+
+/* Sous-titre de page */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .page-header__subtitle {
+  font-size: var(--type-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Titre de bloc (Statistiques > Multi) : icône, texte, chevron, puis menu "Toutes distances" */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__header { min-width: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--space-xs);
+  font-size: var(--type-title);
+  line-height: var(--lh-tight);
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title svg,
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title__chevron,
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title::before { flex-shrink: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__dropdown {
+  flex: 0 0 auto;
+  font-size: var(--type-caption);
+  white-space: nowrap;
+}
+
+/* Titre de carte de graphe + légende d'unité */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__head,
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__head > div { min-width: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__title {
+  font-size: var(--type-title);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__unit {
+  font-size: var(--type-caption);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sous-titre dans un bloc : phrase courte, sans majuscules ni espacement */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .insights_subtitle {
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tuiles de métriques : marges réduites pour gagner de la place, valeur sur une ligne */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__metrics { gap: var(--space-xs); }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric { padding: var(--space-xs); min-width: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric__label {
+  font-size: var(--type-label);
+  overflow-wrap: anywhere;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric__value { white-space: nowrap; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric__sub {
+  font-size: var(--type-label);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+/* Tableaux : en-têtes sur une ligne, texte au même corps partout */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .data-table th {
+  font-size: var(--type-label);
+  white-space: nowrap;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .data-table td { font-size: var(--type-body); }
+
+/* Petits écrans (≤ 380px) : le chevron décoratif après le titre de bloc cède sa place au menu "Toutes distances" */
+@media (max-width: 380px) {
+  :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title__chevron { display: none; }
+}
