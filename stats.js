@@ -563,20 +563,44 @@
     `;
   }
 
+  // Multi réutilise les images de la saisie (FondFairwaySaisieRapide, FondGreenRond) via findImage()
+  const multiImages = { fairway: null, green: { url: null, ratio: 1 } };
+  let multiImagesPromise = null;
+  function loadMultiImages() {
+    if (!multiImagesPromise) {
+      multiImagesPromise = Promise.all([findImage(FAIRWAY_BG_BASE), findImage(GREEN_BG_BASE)]).then(([fairwayUrl, greenUrl]) => {
+        multiImages.fairway = fairwayUrl;
+        multiImages.green.url = greenUrl;
+        if (!greenUrl) return null;
+        return new Promise((resolve) => {
+          const probe = new Image();
+          probe.onload = () => {
+            if (probe.naturalWidth > 0 && probe.naturalHeight > 0) multiImages.green.ratio = probe.naturalWidth / probe.naturalHeight;
+            resolve();
+          };
+          probe.onerror = resolve;
+          probe.src = greenUrl;
+        });
+      });
+    }
+    return multiImagesPromise;
+  }
+
+  // Variables CSS lues par .saisie-rapide_map.is-green (image + proportions)
+  const greenMapStyle = () => `style="--qr-green-ratio:${multiImages.green.ratio};${multiImages.green.url ? ` --qr-green-bg:url('${multiImages.green.url}');` : ''}"`;
+
   function renderFairwayMap(data) {
+    const fairwayStyle = multiImages.fairway ? ` style="background-image:url('${multiImages.fairway}')"` : '';
+    const item = (value, caption) => `<div class="multi-fairway_item"><span class="multi-fairway_value">${value}</span><span class="multi-fairway_caption">${caption}</span></div>`;
     return `
       <div class="field-map-layout">
-        <div class="field-map">
-          <svg viewBox="0 0 300 200" preserveAspectRatio="none">
-            <polygon points="120,0 180,0 210,200 90,200" fill="rgba(199,241,31,0.22)" stroke="var(--color-accent)" stroke-width="1.5" stroke-dasharray="4 4"/>
-            <polygon points="0,0 120,0 90,200 0,200" fill="rgba(255,255,255,0.04)"/>
-            <polygon points="180,0 300,0 300,200 210,200" fill="rgba(255,255,255,0.04)"/>
-            <line x1="150" y1="0" x2="150" y2="200" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3 5"/>
-            <circle cx="150" cy="14" r="5" fill="#fff" stroke="rgba(0,0,0,0.3)"/>
-          </svg>
-          <div class="field-map__label" style="top:44%; left:18%;"><span class="field-map__label-value">${fmt(data.leftPct, '%')}</span><span class="field-map__label-caption">Gauche</span></div>
-          <div class="field-map__label" style="top:20%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(data.hitPct, '%')}</span><span class="field-map__label-caption">Touchés</span></div>
-          <div class="field-map__label" style="top:44%; right:16%;"><span class="field-map__label-value">${fmt(data.rightPct, '%')}</span><span class="field-map__label-caption">Droite</span></div>
+        <div class="saisie-detaillee_fairway-stage">
+          <div class="saisie-rapide_map is-fairway"${fairwayStyle}></div>
+          <div class="multi-fairway_labels">
+            ${item(fmt(data.leftPct, '%'), 'Gauche')}
+            ${item(fmt(data.hitPct, '%'), 'Touchés')}
+            ${item(fmt(data.rightPct, '%'), 'Droite')}
+          </div>
         </div>
         <div class="field-map__side-table">
           <div class="field-map__row"><span class="field-map__row-label">Fairways touchés</span><span class="field-map__row-value">${fmt(data.hitPct, '%')}</span></div>
@@ -592,20 +616,17 @@
 
   function renderApproachMap(data) {
     const z = data.zones;
+    const label = (pos, value, caption) => `<div class="field-map__label" style="${pos}"><span class="field-map__label-value">${value}</span><span class="field-map__label-caption">${caption}</span></div>`;
     return `
       <div class="field-map-layout">
-        <div class="field-map">
-          <svg viewBox="0 0 300 200">
-            <ellipse cx="150" cy="100" rx="140" ry="92" fill="rgba(255,255,255,0.03)"/>
-            <ellipse cx="150" cy="100" rx="95" ry="62" fill="rgba(199,241,31,0.10)"/>
-            <ellipse cx="150" cy="100" rx="55" ry="36" fill="rgba(199,241,31,0.22)" stroke="var(--color-accent)" stroke-width="1.5"/>
-            <path d="M150 64 L150 84 M150 64 L162 70 L150 76" stroke="#fff" stroke-width="2" fill="none"/>
-          </svg>
-          <div class="field-map__label" style="top:10%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(z.top, '%')}</span><span class="field-map__label-caption">Long</span></div>
-          <div class="field-map__label" style="top:46%; left:12%;"><span class="field-map__label-value">${fmt(z.left, '%')}</span><span class="field-map__label-caption">Gauche</span></div>
-          <div class="field-map__label" style="top:44%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(z.center, '%')}</span><span class="field-map__label-caption">GIR</span></div>
-          <div class="field-map__label" style="top:46%; right:10%;"><span class="field-map__label-value">${fmt(z.right, '%')}</span><span class="field-map__label-caption">Droite</span></div>
-          <div class="field-map__label" style="bottom:6%; left:50%; transform:translateX(-50%);"><span class="field-map__label-value">${fmt(z.bottom, '%')}</span><span class="field-map__label-caption">Court</span></div>
+        <div class="saisie-rapide_map is-green" ${greenMapStyle()}>
+          <div class="multi-green_overlay">
+            ${label('top:10%; left:50%; transform:translateX(-50%);', fmt(z.top, '%'), 'Long')}
+            ${label('top:46%; left:12%;', fmt(z.left, '%'), 'Gauche')}
+            ${label('top:44%; left:50%; transform:translateX(-50%);', fmt(z.center, '%'), 'GIR')}
+            ${label('top:46%; right:10%;', fmt(z.right, '%'), 'Droite')}
+            ${label('bottom:6%; left:50%; transform:translateX(-50%);', fmt(z.bottom, '%'), 'Court')}
+          </div>
         </div>
         <div class="field-map__side-table">
           <div class="field-map__row"><span class="field-map__row-label">Greens en régulation</span><span class="field-map__row-value">${fmt(data.girPct, '%')}</span></div>
@@ -615,6 +636,67 @@
           <div class="field-map__row"><span class="field-map__row-label">Approches &gt; 50 m</span><span class="field-map__row-value">${fmt(data.over50, '%')}</span></div>
         </div>
       </div>
+    `;
+  }
+
+  /**
+   * Roue de dispersion de Multi : mêmes image et même découpage que la roue de la saisie
+   * (trou 7 %, green 60 % de l'image, 8 secteurs prolongés jusqu'au bord), avec des pourcentages au lieu d'une sélection.
+   * mode 'green17' : Centre + Green-<dir> + Hors-<dir> ; mode 'nine' : Centre + 8 directions.
+   */
+  function renderGreenWheelMap(counts, mode) {
+    counts = counts || {};
+    const nine = mode === 'nine';
+    const keys = nine
+      ? ['Centre', ...WHEEL_DIRECTIONS]
+      : ['Centre', ...WHEEL_DIRECTIONS.map((d) => `Green-${d}`), ...WHEEL_DIRECTIONS.map((d) => `Hors-${d}`)];
+    const nd = nine ? 0 : (counts.ND || 0);
+    const total = keys.reduce((sum, k) => sum + (counts[k] || 0), 0) + nd;
+    const pctOf = (k) => (total ? Math.round(((counts[k] || 0) / total) * 100) : null);
+    const opacity = (pct) => (pct === null ? 0 : Math.min(0.75, 0.08 + pct / 100 * 0.9)).toFixed(2);
+
+    const vw = 200, vh = vw / multiImages.green.ratio, cx = vw / 2, cy = vh / 2;
+    const base = Math.min(vw, vh);
+    const rGreen = base * 0.6 / 2, rHole = base * 0.07 / 2, rFar = Math.hypot(vw, vh);
+    const rad = (d) => (d - 90) * Math.PI / 180;
+    const pt = (r, d) => `${(cx + r * Math.cos(rad(d))).toFixed(2)} ${(cy + r * Math.sin(rad(d))).toFixed(2)}`;
+    const sector = (rIn, rOut, a0, a1) => `M ${pt(rOut, a0)} A ${rOut} ${rOut} 0 0 1 ${pt(rOut, a1)} L ${pt(rIn, a1)} A ${rIn} ${rIn} 0 0 0 ${pt(rIn, a0)} Z`;
+    const edge = (deg) => {
+      const s = Math.abs(Math.sin(deg * Math.PI / 180)), c = Math.abs(Math.cos(deg * Math.PI / 180));
+      return Math.min(s > 1e-9 ? cx / s : Infinity, c > 1e-9 ? cy / c : Infinity);
+    };
+    const text = (r, deg, pct, extra) => {
+      const a = rad(deg);
+      return `<text x="${(cx + r * Math.cos(a)).toFixed(2)}" y="${(cy + r * Math.sin(a)).toFixed(2)}" class="multi-wheel_text${pct === null ? ' is-empty' : ''}${extra || ''}" text-anchor="middle" dominant-baseline="central">${pct === null ? '--' : `${pct}%`}</text>`;
+    };
+
+    let paths = '', labels = '';
+    WHEEL_DIRECTIONS.forEach((dir, i) => {
+      const mid = i * 45, a0 = mid - 22.5, a1 = a0 + 45, e = edge(mid);
+      if (nine) {
+        const p = pctOf(dir);
+        paths += `<path d="${sector(rHole, rFar, a0, a1)}" class="multi-wheel_sector" style="fill-opacity:${opacity(p)}"/>`;
+        labels += text((rHole + e) / 2, mid, p);
+      } else {
+        const pOut = pctOf(`Hors-${dir}`), pIn = pctOf(`Green-${dir}`);
+        paths += `<path d="${sector(rGreen, rFar, a0, a1)}" class="multi-wheel_sector" style="fill-opacity:${opacity(pOut)}"/>`;
+        paths += `<path d="${sector(rHole, rGreen, a0, a1)}" class="multi-wheel_sector" style="fill-opacity:${opacity(pIn)}"/>`;
+        labels += text((rGreen + e) / 2, mid, pOut) + text((rHole + rGreen) / 2, mid, pIn);
+      }
+    });
+    const pCenter = pctOf('Centre');
+    const ndPct = total ? Math.round((nd / total) * 100) : null;
+
+    return `
+      <div class="saisie-rapide_map is-green" ${greenMapStyle()}>
+        <svg viewBox="0 0 ${vw} ${vh.toFixed(2)}" class="saisie-rapide_wheel" role="img" aria-label="Dispersion des coups">
+          ${paths}
+          <circle cx="${cx}" cy="${cy}" r="${rHole}" class="multi-wheel_sector" style="fill-opacity:${opacity(pCenter)}"/>
+          ${labels}
+          ${text(0, 0, pCenter, ' is-center')}
+        </svg>
+      </div>
+      ${!nine ? `<div class="multi-wheel_note">Hors green non précisé : ${ndPct === null ? '--' : `${ndPct}%`}</div>` : ''}
     `;
   }
 
@@ -882,18 +964,6 @@
           ${metric('Pire score', data.worst, undefined, undefined, undefined, toParSub(data.worstToPar))}
           ${metric('Parties jouées', data.played)}
         </div>
-        <table class="data-table">
-          <thead><tr><th>Distance (m)</th><th>Moyenne</th><th>Vs par</th><th>Trous</th></tr></thead>
-          <tbody>
-            ${data.byDistance.map((row) => `
-              <tr>
-                <td>${row.label}</td><td>${row.avg.toFixed(1)}</td>
-                <td class="${row.vsPar > 0 ? 'val-neg' : 'val-pos'}">${row.vsPar > 0 ? '+' : ''}${row.vsPar.toFixed(1)}</td>
-                <td>${row.holes}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
         ${subtitle('Moyenne par partie')}
         ${kvTable(['Résultat', 'Trous'], [
           ['Eagle ou mieux', fmtNum(p.eagle, 2)], ['Birdie', fmtNum(p.birdie, 2)], ['Par', fmtNum(p.par, 2)],
@@ -936,7 +1006,7 @@
         ${subtitle('GIR par type de trou')}
         ${kvTable(['Trou', '%'], [['Global', fmt(data.girPct, '%')], ['Par 3', fmt(data.girPar3, '%')], ['Par 4', fmt(data.girPar4, '%')], ['Par 5', fmt(data.girPar5, '%')]])}
         ${subtitle('Dispersion sur le green')}
-        ${renderZoneWheel(data.zoneCounts, 'green17')}
+        ${renderGreenWheelMap(data.zoneCounts, 'green17')}
       </section>
     `;
   }
@@ -955,21 +1025,15 @@
         <div class="stat-block__metrics">
           ${metric('Up & Down', data.upDownPct, undefined, undefined, '%')}
           ${metric('U&D bunker', data.upDownBunker, undefined, undefined, '%')}
-          ${metric('U&D hors bunker', data.upDownNonBunker, undefined, undefined, '%')}
+          ${metric('U&D fairway', data.upDownNonBunker, undefined, undefined, '%')}
         </div>
-        <table class="data-table">
-          <thead><tr><th>Distance (m)</th><th>Proximité</th><th>Réussite</th></tr></thead>
-          <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${row.proximity} m</td><td>${row.success}%</td></tr>`).join('')}</tbody>
-        </table>
-        ${subtitle('Par type d\'approche')}
-        ${kvTable(['Type', 'Up & Down', 'Coups'], data.byType.map((t) => [t.type, fmt(t.upDownPct, '%'), fmt(t.count)]))}
         <div>
           <div class="chart-canvas-wrap chart-canvas-wrap--sm" style="height:180px;"><canvas data-dispersion></canvas></div>
           ${renderDispersionLegend(data.proximityBands)}
         </div>
         ${subtitle('Dispersion après green raté')}
         <div class="insights_chips" data-approches-types>${chipGroupHtml(APPROCHES_TYPES, [approchesType])}</div>
-        <div data-approches-wheel>${renderZoneWheel(data.zoneCounts[approchesType], 'nine')}</div>
+        <div data-approches-wheel>${renderGreenWheelMap(data.zoneCounts[approchesType], 'nine')}</div>
       </section>
     `;
   }
@@ -1252,7 +1316,11 @@
 
   function renderStatistiquesMulti() {
     renderFilterBar(document.getElementById('st-multi-filters'), [DEFAULT_FILTERS.period, DEFAULT_FILTERS.course, DEFAULT_FILTERS.lie]);
+    // Les blocs fairway / green utilisent les images de la saisie : on attend leur chargement (proportions du green)
+    loadMultiImages().then(buildStatistiquesMulti);
+  }
 
+  function buildStatistiquesMulti() {
     const blocksEl = document.getElementById('st-multi-blocks');
     blocksEl.innerHTML =
       renderScoreBlock(statsOverview.score) +
@@ -1271,7 +1339,7 @@
       btn.addEventListener('click', () => {
         approchesType = btn.dataset.value;
         typesEl.querySelectorAll('.insights_chip').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        wheelEl.innerHTML = renderZoneWheel(statsOverview.approches.zoneCounts[approchesType], 'nine');
+        wheelEl.innerHTML = renderGreenWheelMap(statsOverview.approches.zoneCounts[approchesType], 'nine');
       });
     });
 

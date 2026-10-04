@@ -3071,3 +3071,61 @@ html {
 /* Par club : Driving / Approach / Short Game / Putting sur une seule ligne */
 #page-stats #pc-tabs { flex-wrap: nowrap; }
 #page-stats #pc-tabs .insights_chip { flex: 1 1 auto; padding-inline: var(--space-xs); white-space: nowrap; }
+
+/* ==========================================================================
+   MULTI — marges latérales réduites de moitié, textes à gauche,
+   fairway et green repris de la saisie (mêmes images)
+   ========================================================================== */
+#page-stats #screen-statistiques .app { padding-left: 10px; padding-right: 10px; }
+
+/* Textes alignés à gauche */
+#page-stats #st-pane-multi .data-table th,
+#page-stats #st-pane-multi .data-table td,
+#page-stats #st-pane-multi .data-table td:not(:first-child),
+#page-stats #st-pane-multi .data-table th:not(:first-child) { text-align: left; }
+#page-stats #st-pane-multi .field-map__row {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-sm);
+  text-align: left;
+}
+
+/* Fairway : étiquettes posées sur l'image de la saisie */
+#page-stats #st-pane-multi .multi-fairway_labels {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+#page-stats #st-pane-multi .multi-fairway_item { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+#page-stats #st-pane-multi .multi-fairway_value { font-size: var(--fs-md); font-weight: var(--fw-bold); }
+#page-stats #st-pane-multi .multi-fairway_caption { font-size: var(--fs-2xs); opacity: 0.9; }
+
+/* Green : même conteneur que la saisie (image centrée, proportions réelles) */
+#page-stats #st-pane-multi .saisie-rapide_map.is-green { flex: none; height: 240px; margin-bottom: 0; }
+#page-stats #st-pane-multi .multi-green_overlay {
+  position: relative;
+  width: var(--qr-green-img-w);
+  height: calc(var(--qr-green-img-w) / var(--qr-green-ratio));
+}
+#page-stats #st-pane-multi .multi-wheel_sector {
+  fill: var(--color-accent);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 2;
+}
+#page-stats #st-pane-multi .multi-wheel_text {
+  fill: #fff;
+  font-size: 7.5px;
+  font-weight: var(--fw-semibold);
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.7);
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+#page-stats #st-pane-multi .multi-wheel_text.is-center { font-size: 6px; }
+#page-stats #st-pane-multi .multi-wheel_text.is-empty { fill: rgba(255, 255, 255, 0.7); }
+#page-stats #st-pane-multi .multi-wheel_note { font-size: var(--fs-xs); color: var(--color-text-tertiary); text-align: left; }
+
