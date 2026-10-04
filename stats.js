@@ -252,7 +252,7 @@
 
   function applyChartDefaults() {
     if (typeof Chart === 'undefined') return;
-    Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
+    Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
     Chart.defaults.font.size = 11;
     Chart.defaults.color = cssVar('--color-text-secondary') || 'rgba(255,255,255,0.65)';
     Chart.defaults.plugins.legend.display = false;
@@ -483,7 +483,7 @@
       const { ctx } = chart;
       const meta = chart.getDatasetMeta(chart.data.datasets.length - 1);
       ctx.save();
-      ctx.font = '600 11px Inter, sans-serif';
+      ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = cssVar('--color-text-primary') || '#fff';
       ctx.textAlign = 'center';
       meta.data.forEach((point, i) => {
@@ -700,7 +700,7 @@
     `;
   }
 
-  const DISPERSION_COLORS = { under10: '#C7F11F', under20: '#8FD11A', under50: '#5C9E14', over50: 'rgba(255,255,255,0.35)' };
+  const DISPERSION_COLORS = { under10: '#8fd13f', under20: '#6fa82f', under50: '#4c7a22', over50: 'rgba(255,255,255,0.35)' };
 
   function renderDispersionLegend(proximityBands) {
     return `<div class="dot-legend">${proximityBands.map((b) => `

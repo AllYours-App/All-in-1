@@ -847,7 +847,7 @@ document.getElementById("app-root-gym").innerHTML = `
       </label>
       <label class="field">
         <span id="icon-goal-target"></span>
-        <input type="text" id="goal-progress-input" placeholder="Ex. : 3 km / 5 km" />
+        <input type="text" id="goal-progress-input" inputmode="decimal" placeholder="Cible (ex. 12 séances)" />
       </label>
       <button class="btn btn-primary" id="btn-create-goal">Créer l'objectif</button>
     </div>
@@ -970,6 +970,7 @@ const ICONS = {
 
   home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg>`,
 
+  stop: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`,
   pause: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>`,
 
   layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 11v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-5"/></svg>`,
@@ -2424,7 +2425,12 @@ const GYM_STORAGE_KEY = "gym-programs-saved";
 
 function gymReadSavedPrograms() {
   try {
-    return JSON.parse(localStorage.getItem(GYM_STORAGE_KEY)) || [];
+    const raw = JSON.parse(localStorage.getItem(GYM_STORAGE_KEY)) || [];
+    // JSON transforme les dates en chaînes : on les remet en Date.
+    return raw.map((p) => ({
+      ...p,
+      sessions: (p.sessions || []).map((s) => ({ ...s, date: s.date ? new Date(s.date) : s.date })),
+    }));
   } catch (e) {
     return [];
   }
@@ -2440,12 +2446,46 @@ function gymWriteSavedPrograms(programs) {
 
 const PROGRAMS = gymReadSavedPrograms();
 
+/* Persistance automatique : programmes (avec statuts et progression),
+   historique des séances et objectifs sont réécrits à chaque modification,
+   pour que Progression, Historique et Objectifs retrouvent les mêmes données
+   après un rechargement. */
+const GYM_HISTORY_KEY = "gym-history";
+const GYM_GOALS_KEY = "gym-goals";
+
+function gymReadList(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(value) ? value : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function gymWriteList(key, list) {
+  try {
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (e) {
+    // Stockage indisponible : on ignore.
+  }
+}
+
+function gymPersistPrograms() {
+  gymWriteSavedPrograms(PROGRAMS);
+}
+
+function gymPersistHistory() {
+  gymWriteList(GYM_HISTORY_KEY, HISTORY);
+}
+
+function gymPersistGoals() {
+  gymWriteList(GYM_GOALS_KEY, GOALS);
+}
+
 function gymSaveProgram(programId, button) {
   const program = gymGetProgram(programId);
   if (!program) return;
-  const saved = gymReadSavedPrograms().filter((p) => p.id !== programId);
-  saved.push(program);
-  gymWriteSavedPrograms(saved);
+  gymPersistPrograms();
   if (button) button.innerHTML = `${gymIcon("check")} Programme enregistré`;
   // Petite pause pour laisser voir la confirmation avant de revenir à l'accueil.
   setTimeout(() => gymNavigate("gym-home"), 600);
@@ -2520,6 +2560,7 @@ function gymAdvanceProgramCycle(program) {
     s.status = i === 0 ? "en-cours" : "verrouillee";
   });
   program.currentIndex = 1;
+  gymPersistPrograms();
   return true;
 }
 
@@ -2533,6 +2574,7 @@ function gymResetProgramProgress(program) {
   });
   program.currentIndex = 1;
   program.doneCount = 0;
+  gymPersistPrograms();
 }
 
 /**
@@ -2563,7 +2605,7 @@ function gymDeleteProgram(programId) {
   const index = GYM_DATA.programs.findIndex((p) => p.id === programId);
   if (index === -1) return;
   GYM_DATA.programs.splice(index, 1);
-  gymWriteSavedPrograms(gymReadSavedPrograms().filter((p) => p.id !== programId));
+  gymPersistPrograms();
   gymNavigate("programmes");
 }
 
@@ -2585,6 +2627,7 @@ function gymDeleteSession(programId, sessionId) {
     s.status = unlockedAssigned ? "verrouillee" : "en-cours";
     unlockedAssigned = true;
   });
+  gymPersistPrograms();
 
   gymNavigate("programme-detail", { id: programId });
 }
@@ -2604,12 +2647,12 @@ const PROGRAM_LIBRARY = [
    Vide au départ : la personne crée ses propres objectifs via le bouton
    "Créer un nouvel objectif". */
 
-const GOALS = [];
+const GOALS = gymReadList(GYM_GOALS_KEY).map((g) => ({ ...g, deadline: new Date(g.deadline) }));
 
 /* ---- Historique ------------------------------------------------------------------
    Vide au départ : rempli uniquement par les séances réellement effectuées. */
 
-const HISTORY = [];
+const HISTORY = gymReadList(GYM_HISTORY_KEY).map((h) => ({ ...h, date: new Date(h.date) }));
 
 function gymGroupHistoryByMonth(entries) {
   const groups = new Map();
@@ -2650,6 +2693,7 @@ function gymGetSessionDetail(session) {
           ? GYM_DATA.restOptions.find((r) => r.value === item.rest)?.label || item.rest
           : REST_BY_GOAL[session.goal] || "1 min",
         tempo: item.tempo || "",
+        duration: gymCanBeTimed(exo) && Number(item.duration) > 0 ? Number(item.duration) : 0,
         status: index === 0 ? "en-cours" : "a-venir",
       };
     });
@@ -2665,6 +2709,7 @@ function gymGetSessionDetail(session) {
       reps: REPS_BY_GOAL[session.goal] || "10-12",
       rest: REST_BY_GOAL[session.goal] || "1 min",
       tempo: "",
+      duration: 0,
       status: index === 0 ? "en-cours" : "a-venir",
     };
   });
@@ -2699,6 +2744,8 @@ function gymRecordSessionHistory(program, session, exercisesState, elapsedMs) {
     repsLabel: exo.repsLabel,
     restLabel: exo.restLabel,
     tempoLabel: exo.tempoLabel,
+    timed: !!exo.timed,
+    durationTarget: Number(exo.durationTarget) || 0,
     sets: exo.sets.map((s) => ({
       weight: Number(s.weight) || 0,
       reps: Number(s.reps) || 0,
@@ -2746,6 +2793,7 @@ function gymRecordSessionHistory(program, session, exercisesState, elapsedMs) {
   };
 
   GYM_DATA.history.unshift(entry);
+  gymPersistHistory();
   return entry;
 }
 
@@ -3006,6 +3054,17 @@ function gymDebounce(fn, delay = 200) {
  */
 function gymFormatDuration(minutes) {
   return `${minutes} min`;
+}
+
+/** Secondes -> "m:ss" (75 -> "1:15"). */
+function gymFormatSeconds(total) {
+  const t = Math.max(0, Math.round(Number(total) || 0));
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+}
+
+/** Un exercice peut être chronométré s'il fait partie du gainage (ou s'il est personnalisé). */
+function gymCanBeTimed(exo) {
+  return !!exo && (exo.bodyRegion === "gainage" || !!exo.custom);
 }
 
 /**
@@ -3278,9 +3337,22 @@ function gymRenderSessionRow(session, programId) {
  * page (plutôt qu'un onclick inline) pour rester compatible avec la vue en
  * module (fonction de suppression scopée à la page, pas globale).
  */
-function gymRenderEditableExerciseRow(exerciseId, sets, reps, rest, tempo, rowIndex) {
+function gymRenderEditableExerciseRow(exerciseId, sets, reps, rest, tempo, rowIndex, duration) {
   const exo = gymGetExercise(exerciseId);
   if (!exo) return "";
+  const canBeTimed = gymCanBeTimed(exo);
+  const hasDuration = canBeTimed && Number(duration) > 0;
+  // Champ Durée (gainage) : en secondes, saisi au pavé numérique. Une durée remplace les répétitions.
+  const durationField = canBeTimed
+    ? `<div class="exercise-row__stat exercise-row__stat--wide">
+          <label>Durée (optionnel, remplace les répétitions)</label>
+          <div class="select-chip exercise-row__duration">
+            <input type="text" inputmode="none" readonly class="exercise-row__duration-input" data-field="duration" placeholder="—" value="${hasDuration ? Number(duration) : ""}" />
+            <span class="exercise-row__duration-unit">s</span>
+            ${hasDuration ? `<button type="button" class="exercise-row__duration-clear" data-clear-duration aria-label="Retirer la durée">${gymIcon("cross")}</button>` : ""}
+          </div>
+        </div>`
+    : "";
   return `
     <div class="exercise-row" data-row-index="${rowIndex}">
       ${gymThumb(exo.icon, "thumb--sm")}
@@ -3299,7 +3371,7 @@ function gymRenderEditableExerciseRow(exerciseId, sets, reps, rest, tempo, rowIn
         </div>
         <div class="exercise-row__stat">
           <label>Répétitions</label>
-          <select class="select-chip" data-field="reps">
+          <select class="select-chip" data-field="reps" ${hasDuration ? "disabled" : ""}>
             <option value="" ${!reps ? "selected" : ""}>—</option>
             ${["6-8", "8-10", "10-12", "12-15", "15-20"].map((r) => `<option value="${r}" ${r === reps ? "selected" : ""}>${r}</option>`).join("")}
           </select>
@@ -3318,6 +3390,7 @@ function gymRenderEditableExerciseRow(exerciseId, sets, reps, rest, tempo, rowIn
             ${GYM_DATA.tempoOptions.map((t) => `<option value="${t}" ${t === tempo ? "selected" : ""}>${t}</option>`).join("")}
           </select>
         </div>
+        ${durationField}
       </div>
     </div>
   `;
@@ -3673,11 +3746,7 @@ function gymRenderDualChart(points, series, selected) {
       existing.icon = goal ? goal.icon : existing.icon;
       existing.frequencyPerWeek = state.seances;
       existing.sessionsCount = state.seances * state.duree;
-      // Si le programme a déjà été enregistré, on met aussi à jour la copie sauvegardée.
-      const saved = gymReadSavedPrograms();
-      if (saved.some((p) => p.id === existing.id)) {
-        gymWriteSavedPrograms(saved.map((p) => (p.id === existing.id ? existing : p)));
-      }
+      gymPersistPrograms();
       gymNavigate("programme-detail", { id: existing.id });
       return;
     }
@@ -3695,6 +3764,7 @@ function gymRenderDualChart(points, series, selected) {
       sessions: [],
     };
     GYM_DATA.programs.push(newProgram);
+    gymPersistPrograms();
     gymNavigate("programme-detail", { id: newProgram.id });
   }
 
@@ -3881,7 +3951,7 @@ function gymRenderDualChart(points, series, selected) {
     const container = document.getElementById("exercise-list");
     container.innerHTML = state.exercises.length
       ? state.exercises
-          .map((item, index) => gymRenderEditableExerciseRow(item.exerciseId, item.sets, item.reps, item.rest, item.tempo, index))
+          .map((item, index) => gymRenderEditableExerciseRow(item.exerciseId, item.sets, item.reps, item.rest, item.tempo, index, item.duration))
           .join("")
       : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucun exercice ajouté pour l'instant.</div>`;
 
@@ -3899,6 +3969,23 @@ function gymRenderDualChart(points, series, selected) {
       row.querySelector('[data-field="tempo"]').addEventListener("change", (e) => {
         state.exercises[index].tempo = e.target.value;
       });
+      const durationInput = row.querySelector('[data-field="duration"]');
+      if (durationInput) {
+        durationInput.addEventListener("click", () => {
+          gymOpenKeypad({ input: durationInput, title: "Durée (secondes)", min: 5, max: 600 });
+        });
+        durationInput.addEventListener("input", (e) => {
+          state.exercises[index].duration = e.target.value ? Number(e.target.value) : "";
+          renderExerciseList();
+        });
+        const clearBtn = row.querySelector("[data-clear-duration]");
+        if (clearBtn) {
+          clearBtn.addEventListener("click", () => {
+            state.exercises[index].duration = "";
+            renderExerciseList();
+          });
+        }
+      }
       row.querySelector("[data-remove-index]").addEventListener("click", () => {
         state.exercises.splice(index, 1);
         renderExerciseList();
@@ -3923,6 +4010,7 @@ function gymRenderDualChart(points, series, selected) {
       reps: REPS_BY_GOAL[goalId] || "",
       rest: restOption ? restOption.value : "",
       tempo: TEMPO_BY_GOAL[goalId] || "",
+      duration: "",
     };
   }
 
@@ -4019,13 +4107,15 @@ function gymRenderDualChart(points, series, selected) {
     const nextIndex = program.sessions.length + 1;
 
     const newSession = {
-      id: `${program.id}-s${nextIndex}`,
+      // Id unique : l'historique et le delta de volume s'appuient dessus, il ne
+      // doit jamais être réutilisé après la suppression d'une séance.
+      id: `${program.id}-s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`,
       index: nextIndex,
       title: [categoryLabels.join(", "), goalLabels.join(", ")].filter(Boolean).join(" · "),
       date: new Date(),
       duration: 45,
       exerciseIds: state.exercises.map((e) => e.exerciseId),
-      exercises: state.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets, reps: e.reps, rest: e.rest, tempo: e.tempo })),
+      exercises: state.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets, reps: e.reps, rest: e.rest, tempo: e.tempo, duration: Number(e.duration) > 0 ? Number(e.duration) : 0 })),
       status: nextIndex === 1 ? "en-cours" : "verrouillee",
       goal: state.goals[0] || null,
       focusLabel: goalLabels.join(", "),
@@ -4035,6 +4125,7 @@ function gymRenderDualChart(points, series, selected) {
     program.sessions.push(newSession);
     program.sessionsCount = Math.max(program.sessionsCount, program.sessions.length);
     if (newSession.status === "en-cours") program.currentIndex = newSession.index;
+    gymPersistPrograms();
 
     gymNavigate("programme-detail", { id: program.id });
   }
@@ -4278,7 +4369,8 @@ function gymRenderDualChart(points, series, selected) {
    */
   function buildExerciseState(session) {
     return gymGetSessionDetail(session).map((item) => {
-      const target = parseRepsTarget(item.reps);
+      const timed = Number(item.duration) > 0;
+      const target = timed ? 0 : parseRepsTarget(item.reps);
       const setsCount = Math.max(1, Number(item.sets) || 1);
       return {
         exerciseId: item.exerciseId,
@@ -4286,10 +4378,13 @@ function gymRenderDualChart(points, series, selected) {
         repsLabel: item.reps,
         restLabel: item.rest,
         tempoLabel: item.tempo || "—",
+        timed,
+        durationTarget: timed ? Number(item.duration) : 0,
         sets: Array.from({ length: setsCount }, (_, i) => ({
           weight: "",
           reps: 0,
           target,
+          duration: 0, // secondes tenues (exercices chronométrés)
           valid: false,
           status: i === 0 ? "en-cours" : "a-venir",
         })),
@@ -4360,6 +4455,142 @@ function gymRenderDualChart(points, series, selected) {
   document.getElementById("btn-reset-timer").addEventListener("click", resetTimer);
   syncPauseIcon(); // icône présente dès le chargement
 
+  /* ---- Chrono par série (exercices de gainage chronométrés) ---------------------
+     Un seul chrono tourne à la fois : compte à rebours depuis la durée cible.
+     Arrivé à 0, la série est validée avec la durée cible. Arrêté avant, le temps
+     tenu est conservé et la série reste à valider manuellement. */
+
+  const hold = { exoIndex: null, setIndex: null, startedAt: 0, interval: null };
+  let holdAudio = null;
+
+  function holdIsRunning(exoIndex, setIndex) {
+    return hold.setIndex === setIndex && hold.exoIndex === exoIndex;
+  }
+
+  function holdElapsed() {
+    return hold.startedAt ? (Date.now() - hold.startedAt) / 1000 : 0;
+  }
+
+  function cancelHold() {
+    if (hold.interval) clearInterval(hold.interval);
+    hold.interval = null;
+    hold.exoIndex = null;
+    hold.setIndex = null;
+    hold.startedAt = 0;
+  }
+
+  // Le contexte audio doit être créé pendant un geste (le tap sur lecture).
+  function unlockHoldAudio() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      holdAudio = holdAudio || new Ctx();
+      if (holdAudio.state === "suspended") holdAudio.resume();
+    } catch (e) {
+      // Audio indisponible : la vibration et l'affichage suffisent.
+    }
+  }
+
+  function holdSignal() {
+    if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
+    if (!holdAudio) return;
+    try {
+      [0, 0.28].forEach((delay) => {
+        const osc = holdAudio.createOscillator();
+        const gain = holdAudio.createGain();
+        osc.frequency.value = 880;
+        gain.gain.value = 0.15;
+        osc.connect(gain);
+        gain.connect(holdAudio.destination);
+        osc.start(holdAudio.currentTime + delay);
+        osc.stop(holdAudio.currentTime + delay + 0.18);
+      });
+    } catch (e) {
+      // Ignoré.
+    }
+  }
+
+  function updateHoldDisplay(remaining, ratio) {
+    const card = document.querySelector(`#session-sets-list [data-hold-index="${hold.setIndex}"]`);
+    if (!card) return;
+    card.querySelector("[data-hold-value]").textContent = gymFormatSeconds(remaining);
+    card.querySelector("[data-hold-fill]").style.width = `${Math.min(100, ratio * 100).toFixed(1)}%`;
+  }
+
+  function tickHold() {
+    if (hold.setIndex == null) return;
+    const view = document.getElementById("view-seance-active");
+    // Vue quittée ou autre exercice affiché : on abandonne l'essai en cours.
+    if (!view || view.hidden || state.exerciseIndex !== hold.exoIndex) {
+      cancelHold();
+      return;
+    }
+    const exo = state.exercises[hold.exoIndex];
+    const target = exo.durationTarget;
+    const elapsed = holdElapsed();
+    if (elapsed >= target) {
+      completeHold();
+      return;
+    }
+    updateHoldDisplay(Math.ceil(target - elapsed), elapsed / target);
+  }
+
+  function startHold(index) {
+    const exo = currentExercise();
+    const set = exo && exo.sets[index];
+    if (!set || set.status !== "en-cours") return;
+    cancelHold();
+    unlockHoldAudio();
+    set.duration = 0;
+    hold.exoIndex = state.exerciseIndex;
+    hold.setIndex = index;
+    hold.startedAt = Date.now();
+    hold.interval = setInterval(tickHold, 200);
+    renderSetsList();
+  }
+
+  // Arrêt manuel : on garde le temps tenu, la série reste à valider.
+  function stopHold() {
+    if (hold.setIndex == null) return;
+    const exo = state.exercises[hold.exoIndex];
+    exo.sets[hold.setIndex].duration = Math.min(exo.durationTarget, Math.round(holdElapsed()));
+    cancelHold();
+    renderSetsList();
+  }
+
+  // Compte à rebours terminé : série validée avec la durée cible.
+  function completeHold() {
+    const exoIndex = hold.exoIndex;
+    const setIndex = hold.setIndex;
+    const exo = state.exercises[exoIndex];
+    cancelHold();
+    exo.sets[setIndex].duration = exo.durationTarget;
+    holdSignal();
+    const set = exo.sets[setIndex];
+    set.valid = true;
+    set.status = "terminee";
+    const next = exo.sets[setIndex + 1];
+    if (next && next.status === "a-venir") next.status = "en-cours";
+    renderSetsList();
+    renderSummary();
+  }
+
+  function toggleHold(index) {
+    if (holdIsRunning(state.exerciseIndex, index)) stopHold();
+    else startHold(index);
+  }
+
+  // Fige la durée d'une série chronométrée avant de la valider (chrono en cours, ou durée cible par défaut).
+  function settleTimedSet(exo, index) {
+    const set = exo.sets[index];
+    if (holdIsRunning(state.exerciseIndex, index)) {
+      set.duration = Math.min(exo.durationTarget, Math.round(holdElapsed())) || exo.durationTarget;
+      cancelHold();
+    } else if (!set.duration) {
+      set.duration = exo.durationTarget;
+    }
+  }
+
   /* ---- En-tête ---------------------------------------------------------------- */
 
   function renderHead() {
@@ -4391,6 +4622,7 @@ function gymRenderDualChart(points, series, selected) {
 
   function goToExercise(index) {
     if (index < 0 || index >= state.exercises.length) return;
+    cancelHold();
     state.exerciseIndex = index;
     renderExerciseHero();
     renderSummary();
@@ -4405,6 +4637,9 @@ function gymRenderDualChart(points, series, selected) {
   function renderSummary() {
     const exo = currentExercise();
     const validCount = exo.sets.filter((s) => s.valid).length;
+    const repsItem = exo.timed
+      ? { label: "Durée", value: gymFormatSeconds(exo.durationTarget), icon: "timer" }
+      : { label: "Répétitions", value: exo.repsLabel, icon: "dumbbell" };
     document.getElementById("session-info-row").innerHTML = `
       <div class="session-summary__item">
         <span class="session-summary__icon">${gymIcon("layers")}</span>
@@ -4414,10 +4649,10 @@ function gymRenderDualChart(points, series, selected) {
         </span>
       </div>
       <div class="session-summary__item">
-        <span class="session-summary__icon">${gymIcon("dumbbell")}</span>
+        <span class="session-summary__icon">${gymIcon(repsItem.icon)}</span>
         <span class="session-summary__text">
-          <span class="session-summary__label">Répétitions</span>
-          <span class="session-summary__value">${exo.repsLabel}</span>
+          <span class="session-summary__label">${repsItem.label}</span>
+          <span class="session-summary__value">${repsItem.value}</span>
         </span>
       </div>
       <div class="session-summary__item">
@@ -4476,12 +4711,12 @@ function gymRenderDualChart(points, series, selected) {
                 <span class="set-card__valid-dot">${set.valid ? gymIcon("checkCircle") : gymIcon("timer")}</span>
               </div>
             </div>
-            <div class="set-card__field set-card__field--reps">
+            ${exo.timed ? renderTimerField(exo, set, index) : `<div class="set-card__field set-card__field--reps">
               <span class="set-card__field-label">Répétitions</span>
               <div class="set-card__reps-row">
                 <span class="set-card__reps-value">${set.target}</span>
               </div>
-            </div>
+            </div>`}
           </div>
           <button type="button" class="set-card__validate ${set.valid ? "is-valid" : ""}" data-set-index="${index}" aria-label="${set.valid ? "Série réussie" : "Marquer la série en échec"}">
             ${set.valid ? gymIcon("check") : gymIcon("cross")}
@@ -4503,8 +4738,46 @@ function gymRenderDualChart(points, series, selected) {
     list.querySelectorAll(".set-card__validate").forEach((btn) => {
       btn.addEventListener("click", () => toggleSetValid(Number(btn.dataset.setIndex)));
     });
+    list.querySelectorAll("[data-hold-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => toggleHold(Number(btn.dataset.holdToggle)));
+    });
 
     updateNextButtonLabel();
+  }
+
+  /**
+   * Champ chrono d'une série chronométrée : bouton lecture/arrêt + temps
+   * (objectif au repos, temps restant en marche, temps tenu une fois arrêté).
+   */
+  function renderTimerField(exo, set, index) {
+    const running = holdIsRunning(state.exerciseIndex, index);
+    const held = !running && set.duration > 0;
+    let value = exo.durationTarget;
+    let caption = "objectif";
+    let ratio = 0;
+    if (running) {
+      const elapsed = holdElapsed();
+      value = Math.max(0, Math.ceil(exo.durationTarget - elapsed));
+      caption = "restant";
+      ratio = Math.min(1, elapsed / exo.durationTarget);
+    } else if (held) {
+      value = set.duration;
+      caption = "tenu";
+      ratio = set.duration / exo.durationTarget;
+    }
+    const canStart = set.status === "en-cours";
+    const label = running ? "Arrêter le chrono" : "Lancer le chrono";
+    return `
+            <div class="set-card__field set-card__field--timer">
+              <span class="set-card__field-label">Durée · ${caption}</span>
+              <div class="set-card__timer ${running ? "is-running" : ""} ${held ? "is-held" : ""}" data-hold-index="${index}">
+                <button type="button" class="set-card__timer-btn" data-hold-toggle="${index}" aria-label="${label}" ${canStart || running ? "" : "disabled"}>
+                  ${running ? gymIcon("stop") : gymIcon("play")}
+                </button>
+                <span class="set-card__timer-value" data-hold-value>${gymFormatSeconds(value)}</span>
+                <span class="set-card__timer-fill" data-hold-fill style="width:${(ratio * 100).toFixed(1)}%"></span>
+              </div>
+            </div>`;
   }
 
   /**
@@ -4517,10 +4790,12 @@ function gymRenderDualChart(points, series, selected) {
 
     if (set.valid) {
       set.status = "terminee";
-      if (!set.reps) set.reps = set.target;
+      if (exo.timed) settleTimedSet(exo, index);
+      else if (!set.reps) set.reps = set.target;
       const next = exo.sets[index + 1];
       if (next && next.status === "a-venir") next.status = "en-cours";
     } else {
+      if (exo.timed) set.duration = 0; // nouvel essai possible
       set.status = index === 0 || exo.sets[index - 1].valid ? "en-cours" : "a-venir";
       const next = exo.sets[index + 1];
       if (next && !next.valid) next.status = "a-venir";
@@ -4545,7 +4820,8 @@ function gymRenderDualChart(points, series, selected) {
       const index = exo.sets.indexOf(current);
       current.valid = true;
       current.status = "terminee";
-      if (!current.reps) current.reps = current.target;
+      if (exo.timed) settleTimedSet(exo, index);
+      else if (!current.reps) current.reps = current.target;
       const next = exo.sets[index + 1];
       if (next) {
         next.status = "en-cours";
@@ -4575,6 +4851,7 @@ function gymRenderDualChart(points, series, selected) {
     const session = state.session;
     const elapsedMs = state.elapsedMs + (state.timerStart ? Date.now() - state.timerStart : 0);
     stopTimerInterval();
+    cancelHold();
 
     // Compteur de séances réalisées (migration des anciens programmes incluse).
     if (typeof program.doneCount !== "number") program.doneCount = program.sessions.filter((s) => s.status === "terminee").length;
@@ -4590,6 +4867,7 @@ function gymRenderDualChart(points, series, selected) {
 
     // Dernière séance de la liste mais objectif non atteint : nouveau tour.
     gymAdvanceProgramCycle(program);
+    gymPersistPrograms();
 
     // Oublie la séance terminée : la relancer repart d'un état vierge au lieu
     // de réafficher les séries déjà saisies.
@@ -4614,6 +4892,7 @@ function gymRenderDualChart(points, series, selected) {
 
   function renderEmptyState() {
     resetTimer();
+    cancelHold();
     state.program = null;
     state.session = null;
     state.exercises = [];
@@ -4653,6 +4932,7 @@ function gymRenderDualChart(points, series, selected) {
     document.getElementById("session-actions").style.display = "flex";
 
     if (!isSameSession) {
+      cancelHold();
       state.exercises = buildExerciseState(session);
       state.exerciseIndex = 0;
     }
@@ -4734,6 +5014,14 @@ function gymRenderDualChart(points, series, selected) {
 
   function currentExercise() {
     return gymGetDoneExercises().find((e) => e.exerciseId === state.exerciseId);
+  }
+
+  // Un exercice chronométré (durée sans charge) s'ouvre sur la courbe Durée ;
+  // sinon on revient sur Poids si la courbe Durée était restée seule affichée.
+  function autoSelectMetrics(exo) {
+    const isTimed = exo.sessions.every((p) => p.duree > 0 && p.poids === 0);
+    if (isTimed) state.metrics = ["duree"];
+    else if (state.metrics.length === 1 && state.metrics[0] === "duree") state.metrics = ["poids"];
   }
 
   function renderExerciseButton(exo) {
@@ -4818,6 +5106,7 @@ function gymRenderDualChart(points, series, selected) {
     if (!row) return;
     state.exerciseId = row.dataset.id;
     state.selectedIndex = null;
+    autoSelectMetrics(currentExercise());
     closeSheet();
     renderAll();
   });
@@ -4866,6 +5155,7 @@ function gymRenderDualChart(points, series, selected) {
     if (!state.exerciseId || !exercises.some((e) => e.exerciseId === state.exerciseId)) {
       state.exerciseId = exercises[0].exerciseId;
       state.selectedIndex = null;
+      autoSelectMetrics(exercises[0]);
     }
     renderAll();
   }
@@ -5014,7 +5304,7 @@ function gymRenderDualChart(points, series, selected) {
             (s, i) => `
             <span class="recap-set-pill ${s.valid ? "is-valid" : "is-invalid"}">
               <span class="recap-set-pill__index">${i + 1}</span>
-              <span class="recap-set-pill__value">${s.weight || 0} kg × ${s.reps || 0}</span>
+              <span class="recap-set-pill__value">${exo.timed ? `${s.weight > 0 ? `${s.weight} kg · ` : ""}${gymFormatSeconds(s.duration)}` : `${s.weight || 0} kg × ${s.reps || 0}`}</span>
               <span class="recap-set-pill__icon">${gymIcon(s.valid ? "check" : "cross")}</span>
             </span>
           `
@@ -5101,16 +5391,38 @@ function gymRenderDualChart(points, series, selected) {
 
 (function () {
   const GOAL_TYPES = [
-    { id: "poids", label: "Perdre du poids", icon: "dumbbell" },
-    { id: "muscle", label: "Gagner en muscle", icon: "muscle" },
-    { id: "endurance", label: "Endurance", icon: "running" },
-    { id: "sante", label: "Santé", icon: "heart" },
-    { id: "performance", label: "Performance", icon: "barChart" },
-    { id: "bienetre", label: "Bien-être", icon: "star" },
+    { id: "poids", label: "Perdre du poids", icon: "dumbbell", metric: "sessions" },
+    { id: "muscle", label: "Gagner en muscle", icon: "muscle", metric: "volume" },
+    { id: "endurance", label: "Endurance", icon: "running", metric: "minutes" },
+    { id: "sante", label: "Santé", icon: "heart", metric: "sessions" },
+    { id: "performance", label: "Performance", icon: "barChart", metric: "volume" },
+    { id: "bienetre", label: "Bien-être", icon: "star", metric: "minutes" },
   ];
 
+  /* Chaque objectif se mesure sur l'historique, depuis sa date de création :
+     séances terminées, volume soulevé ou minutes d'entraînement. */
+  const GOAL_METRICS = {
+    sessions: { unit: "séances", fallback: 12, value: () => 1 },
+    volume: { unit: "kg", fallback: 10000, value: (h) => h.totalVolume || 0 },
+    minutes: { unit: "min", fallback: 600, value: (h) => h.duration || 0 },
+  };
+
+  function decorateGoal(goal) {
+    const metric = GOAL_METRICS[goal.metric] || GOAL_METRICS.sessions;
+    const since = new Date(goal.createdAt || 0).getTime();
+    const current = GYM_DATA.history
+      .filter((h) => new Date(h.date).getTime() >= since)
+      .reduce((sum, h) => sum + metric.value(h), 0);
+    const target = goal.target > 0 ? goal.target : metric.fallback;
+    return {
+      ...goal,
+      percent: Math.min(100, Math.round((current / target) * 100)),
+      progressLabel: `${Math.round(current)} / ${target} ${metric.unit}`,
+    };
+  }
+
   const state = {
-    goals: [...GYM_DATA.goals],
+    goals: GYM_DATA.goals, // même tableau que GOALS : toute modification est persistée
     newGoalType: GOAL_TYPES[0].id,
   };
 
@@ -5140,7 +5452,7 @@ function gymRenderDualChart(points, series, selected) {
       return;
     }
 
-    grid.innerHTML = state.goals.map((goal) => gymRenderGoalCard(goal)).join("");
+    grid.innerHTML = state.goals.map((goal) => gymRenderGoalCard(decorateGoal(goal))).join("");
 
     // Animation : anneaux, compteurs et barres de progression.
     grid.querySelectorAll(".ring__fill[data-offset]").forEach((circle) => {
@@ -5203,22 +5515,32 @@ function gymRenderDualChart(points, series, selected) {
     document.getElementById("goal-sheet").classList.remove("is-open");
   }
 
+  // Le champ de cible suit l'unité du type d'objectif choisi.
+  function updateTargetPlaceholder() {
+    const type = GOAL_TYPES.find((t) => t.id === state.newGoalType) || GOAL_TYPES[0];
+    const metric = GOAL_METRICS[type.metric];
+    document.getElementById("goal-progress-input").placeholder = `Cible en ${metric.unit} (ex. ${metric.fallback})`;
+  }
+
   function createGoal() {
     const titleInput = document.getElementById("goal-title-input");
     const progressInput = document.getElementById("goal-progress-input");
     const type = GOAL_TYPES.find((t) => t.id === state.newGoalType);
 
     const title = titleInput.value.trim() || type.label;
-    const progressLabel = progressInput.value.trim() || "0%";
+    const target = Number(progressInput.value.replace(",", "."));
 
     state.goals.unshift({
       id: `g-new-${Date.now()}`,
       title,
       icon: type.icon,
-      percent: 5,
-      progressLabel,
+      type: type.id,
+      metric: type.metric,
+      target: Number.isFinite(target) && target > 0 ? target : 0,
+      createdAt: Date.now(),
       deadline: gymAddDays(GYM_DATA.today, 30),
     });
+    gymPersistGoals();
 
     renderGoals();
     closeGoalSheet();
@@ -5229,6 +5551,7 @@ function gymRenderDualChart(points, series, selected) {
   gymSetupChoiceGrid(document.getElementById("goal-type-grid"), {
     onChange: (value) => {
       state.newGoalType = value;
+      updateTargetPlaceholder();
     },
   });
   document.getElementById("btn-new-goal").addEventListener("click", openGoalSheet);
@@ -5241,6 +5564,7 @@ function gymRenderDualChart(points, series, selected) {
     renderGoals();
     renderHowto();
     renderGoalTypeGrid();
+    updateTargetPlaceholder();
   }
 
   GymViews["objectifs"] = { render };

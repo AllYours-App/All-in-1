@@ -3462,3 +3462,158 @@ body.gym-view-fit .gym-app {
     padding-bottom: 8px;
   }
 }
+
+
+/* ---- Durée d'un exercice de gainage (créer séance) --------------------------- */
+
+.exercise-row__stat--wide {
+  grid-column: 1 / -1;
+}
+
+.select-chip:disabled {
+  opacity: 0.4;
+}
+
+.exercise-row__duration {
+  justify-content: flex-start;
+}
+
+.exercise-row__duration-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--gym-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.exercise-row__duration-input::placeholder {
+  color: var(--gym-text-muted);
+}
+
+.exercise-row__duration-unit {
+  font-size: 12px;
+  color: var(--gym-text-secondary);
+}
+
+.exercise-row__duration-clear {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gym-text-muted);
+}
+
+.exercise-row__duration-clear svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---- Chrono par série (séance en cours, exercices chronométrés) -------------- */
+
+.set-card__field--timer {
+  flex: 1.5;
+}
+
+.set-card__timer {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 100%;
+  border: 1.5px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  padding: 6px 12px 6px 6px;
+  transition: border-color var(--gym-speed-fast) var(--gym-ease);
+}
+
+.set-card__timer.is-running,
+.set-card.is-terminee .set-card__timer {
+  border-color: var(--gym-accent-border);
+}
+
+.set-card__timer-btn {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+  border: 1.5px solid var(--gym-accent);
+}
+
+.set-card__timer-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.set-card__timer-btn:disabled {
+  background: transparent;
+  border-color: var(--gym-border-strong);
+  color: var(--gym-text-muted);
+}
+
+.set-card__timer.is-running .set-card__timer-btn {
+  background: transparent;
+  color: var(--gym-accent);
+}
+
+.set-card__timer-value {
+  position: relative;
+  z-index: 1;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--gym-text);
+}
+
+.set-card__timer.is-held .set-card__timer-value {
+  color: var(--gym-text-secondary);
+}
+
+.set-card__timer-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--gym-accent);
+  transition: width 200ms linear;
+}
+
+@media (max-width: 400px) {
+  .set-card__timer {
+    gap: 8px;
+    padding: 5px 8px 5px 5px;
+  }
+
+  .set-card__timer-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .set-card__timer-value {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .set-card__timer-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .set-card__timer-value {
+    font-size: 15px;
+  }
+}
