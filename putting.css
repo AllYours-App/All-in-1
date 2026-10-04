@@ -2303,16 +2303,17 @@
   position: relative;
   margin: 0 -16px;
   height: var(--quick-image-height);
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#page-putting .quick-session_bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, var(--bg-card) 0%, rgba(19, 25, 22, 0) 30%, rgba(19, 25, 22, 0) 70%, var(--bg-card) 100%);
+#page-putting .quick-session_bg-img {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-lg, 16px);
 }
 
 #page-putting .quick-session_main {

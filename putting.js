@@ -2212,7 +2212,7 @@ function renderQuickSessionScreen() {
 
         </div>
 
-        <div class="quick-session_bg" style="background-image:url('${puttImage}')"></div>
+        <div class="quick-session_bg"><img class="quick-session_bg-img" src="${puttImage}" alt=""></div>
 
         <div class="session-result-buttons">
           ${isDetail ? `
@@ -3424,7 +3424,7 @@ function renderNewParcoursModal() {
           </div>
         </div>
 
-        <div class="quick-session_bg" ${puttImage ? `style="background-image:url('${puttImage}')"` : ''}></div>
+        <div class="quick-session_bg"><img class="quick-session_bg-img" src="${puttImage}" alt=""></div>
 
         <div class="session-result-buttons ${isDetail ? '' : 'is-triple'}">
           ${isDetail ? `
