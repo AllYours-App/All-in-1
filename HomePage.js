@@ -1,14 +1,11 @@
-// Recalcule le contour de l'anneau de progression à partir de data-progress (0 à 1)
-function updateProgressRing() {
+// Trace l'anneau de progression de l'objectif pour un ratio compris entre 0 et 1
+function setProgressRing(ratio) {
   const ring = document.querySelector(".progress-ring_progress");
   if (!ring) return;
 
-  const radius = ring.r.baseVal.value;
-  const circumference = 2 * Math.PI * radius;
-  const progress = parseFloat(ring.dataset.progress) || 0;
-
+  const circumference = 2 * Math.PI * ring.r.baseVal.value;
   ring.style.strokeDasharray = `${circumference} ${circumference}`;
-  ring.style.strokeDashoffset = `${circumference * (1 - progress)}`;
+  ring.style.strokeDashoffset = `${circumference * (1 - ratio)}`;
 }
 
 // Retourne le nom du fichier de fond selon l'heure de l'appareil
@@ -33,9 +30,11 @@ function renderHomeGreeting() {
   if (!el) return;
   let firstName = "";
   try {
-    const data = JSON.parse(localStorage.getItem("golfAppState"));
-    firstName = (data && data.userProfile && data.userProfile.firstName) || "";
-  } catch (e) {}
+    // Même clé que STORAGE_KEY dans menu.js
+    firstName = JSON.parse(localStorage.getItem("golfAppState"))?.userProfile?.firstName ?? "";
+  } catch (e) {
+    console.error("Erreur de lecture du localStorage", e);
+  }
   el.textContent = firstName;
 }
 
@@ -46,8 +45,7 @@ window.renderHomeGreeting = renderHomeGreeting;
 function setStat(name, value) {
   const el = document.querySelector(`[data-stat="${name}"]`);
   if (!el) return;
-  const isEmpty = value === null || value === undefined || value === "";
-  el.textContent = isEmpty ? "_" : value;
+  el.textContent = (value == null || value === "") ? "_" : value;
 }
 
 /**
@@ -61,56 +59,52 @@ function setStat(name, value) {
  *   });
  * Tout champ manquant ou vide s'affiche sous forme de "_".
  */
-function renderGolfStats(data = {}) {
-  const goal = data.goal || {};
-  const hasGoal =
-    goal.current !== null && goal.current !== undefined &&
-    goal.target !== null && goal.target !== undefined;
+function renderGolfStats(data) {
+  const { goal, distance, index, lastSession } = data ?? {};
+
+  const hasGoal = goal?.current != null && goal?.target != null;
+  // Borné à [0, 1] : un objectif dépassé (6/5) doit afficher un anneau plein
+  const ratio = hasGoal && goal.target > 0
+    ? Math.min(Math.max(goal.current / goal.target, 0), 1)
+    : 0;
 
   setStat("goal-ring", hasGoal ? `${goal.current}/${goal.target}` : null);
-  setStat("goal-value", hasGoal ? `${goal.current} séances` : null);
+  setStat("goal-value", hasGoal ? `${goal.current} séance${goal.current > 1 ? "s" : ""}` : null);
 
   const fill = document.querySelector('[data-stat="goal-progress-fill"]');
-  const ring = document.querySelector(".progress-ring_progress");
-  const ratio = hasGoal && goal.target > 0 ? goal.current / goal.target : 0;
   if (fill) fill.style.width = `${Math.round(ratio * 100)}%`;
-  if (ring) ring.dataset.progress = String(ratio);
-  updateProgressRing();
+  setProgressRing(ratio);
 
-  const distance = data.distance || {};
-  setStat("distance-value", distance.value);
-  setStat("distance-variation", distance.variation);
+  setStat("distance-value", distance?.value);
+  setStat("distance-variation", distance?.variation);
 
-  const index = data.index || {};
-  setStat("index-value", index.value);
-  setStat("index-variation", index.variation);
+  setStat("index-value", index?.value);
+  setStat("index-variation", index?.variation);
 
-  const lastSession = data.lastSession || {};
-  setStat("last-session-value", lastSession.value);
-  setStat("last-session-secondary", lastSession.type);
+  setStat("last-session-value", lastSession?.value);
+  setStat("last-session-secondary", lastSession?.type);
 }
 
 // Expose la fonction pour un appel depuis un autre fichier / script externe
 window.renderGolfStats = renderGolfStats;
 
 document.addEventListener("DOMContentLoaded", () => {
-
-  updateProgressRing();
   applyBackground();
   renderHomeGreeting();
 
   // Appel réel à brancher sur la source de données
-  renderGolfStats({});
+  renderGolfStats();
 
   // Retour visuel au toucher/clic sur les éléments interactifs
-  const pressables = document.querySelectorAll(
-    ".orbit-button, .profile_button"
-  );
-
-  pressables.forEach((el) => {
+  document.querySelectorAll(".orbit-button, .profile_button").forEach((el) => {
     el.addEventListener("pointerdown", () => el.classList.add("is-pressed"));
-    el.addEventListener("pointerup", () => el.classList.remove("is-pressed"));
-    el.addEventListener("pointerleave", () => el.classList.remove("is-pressed"));
+    ["pointerup", "pointerleave", "pointercancel"].forEach((type) =>
+      el.addEventListener(type, () => el.classList.remove("is-pressed"))
+    );
   });
+});
 
+// Appli restée ouverte en arrière-plan : le fond doit suivre l'heure au retour
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) applyBackground();
 });

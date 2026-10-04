@@ -1,20 +1,20 @@
 /* ============================================================
    AUTH — connexion + création de compte
    Première page affichée tant qu'aucune session n'existe.
+   Pas de serveur pour l'instant : la "session" n'est qu'une clé localStorage.
    ============================================================ */
 (function () {
   'use strict';
 
-  // Extension des fonds d'écran : FondEcranHomePageMatin.<extension>
-  var BACKGROUND_EXTENSION = 'png';
-  // Dossier des fonds d'écran (relatif à index.html)
-  var BACKGROUND_FOLDER = 'images/';
-  var SESSION_KEY = 'golfSession';
+  const SESSION_KEY = 'golfSession';
 
-  var root = document.getElementById('page-login');
-  if (!root) return;
+  if (!document.getElementById('page-login')) return;
 
-  var hasInteracted = false;
+  // Dès que l'utilisateur a cliqué, on ne le renvoie plus de force à la page de départ
+  let hasInteracted = false;
+
+  // showPage() vient de app-shell.js, qui peut se charger après ce fichier
+  const goTo = (page) => { if (typeof showPage === 'function') showPage(page); };
 
   /* ---------- Session (connexion unique) ---------- */
 
@@ -24,55 +24,54 @@
 
   function saveSession(email) {
     try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ email: email, createdAt: Date.now() }));
-    } catch (e) {}
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ email, createdAt: Date.now() }));
+    } catch (e) {
+      console.error('Erreur d\'écriture du localStorage', e);
+    }
   }
 
   function clearSession() {
     try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
   }
 
-  // Home si l'utilisateur est déjà connecté, sinon connexion
+  // Home si l'utilisateur est déjà connecté, sinon connexion.
+  // La classe anti-flash n'est retirée qu'une fois la bonne page affichée.
   function showStartPage() {
+    if (typeof showPage !== 'function') return;
+    showPage(getSession() ? 'home' : 'login');
     document.documentElement.classList.remove('has-session');
-    if (typeof showPage === 'function') showPage(getSession() ? 'home' : 'login');
   }
 
   // Déconnexion : window.authLogout()
   window.authLogout = function () {
     clearSession();
-    document.querySelectorAll('[data-auth-form]').forEach(function (form) { form.reset(); });
-    if (typeof showPage === 'function') showPage('login');
+    document.querySelectorAll('[data-auth-form]').forEach(resetForm);
+    goTo('login');
   };
 
   showStartPage();
 
   // Après "load" : on corrige uniquement si app-shell.js a remis la mauvaise page de départ
-  window.addEventListener('load', function () {
-    var active = document.querySelector('.app-page.active');
-    var current = active ? active.id.replace('page-', '') : '';
-    var wanted = getSession() ? 'home' : 'login';
+  window.addEventListener('load', () => {
+    const active = document.querySelector('.app-page.active');
+    const current = active ? active.id.replace('page-', '') : '';
+    const wanted = getSession() ? 'home' : 'login';
     if (!hasInteracted && (current === 'home' || current === 'login') && current !== wanted) {
       showStartPage();
     }
+    // Filet de sécurité : la page de connexion ne doit jamais rester masquée
+    document.documentElement.classList.remove('has-session');
   });
 
   /* ---------- Fond d'écran selon l'heure ---------- */
 
-  // Matin 6h-11h | Midi 11h-17h | Soir 17h-21h | Nuit 21h-6h
-  function getTimeSlot(date) {
-    var hour = date.getHours();
-    if (hour >= 6 && hour < 11) return 'Matin';
-    if (hour >= 11 && hour < 17) return 'Midi';
-    if (hour >= 17 && hour < 21) return 'Soir';
-    return 'Nuit';
-  }
-
-  var backgrounds = document.querySelectorAll('[data-auth-background]');
+  // Mêmes fonds et mêmes horaires que l'accueil : getBackgroundByHour() est définie
+  // dans HomePage.js (chargé avant ce fichier), pour ne garder qu'une seule source.
+  const backgrounds = document.querySelectorAll('[data-auth-background]');
 
   function updateBackgrounds() {
-    var src = BACKGROUND_FOLDER + 'FondEcranHomePage' + getTimeSlot(new Date()) + '.' + BACKGROUND_EXTENSION;
-    backgrounds.forEach(function (img) {
+    const src = getBackgroundByHour();
+    backgrounds.forEach((img) => {
       if (img.getAttribute('src') !== src) {
         img.hidden = false;
         img.setAttribute('src', src);
@@ -81,24 +80,25 @@
   }
 
   // Si l'image est introuvable, on garde simplement le fond bleu nuit
-  backgrounds.forEach(function (img) {
-    img.addEventListener('error', function () { img.hidden = true; });
-  });
+  backgrounds.forEach((img) => img.addEventListener('error', () => { img.hidden = true; }));
 
   updateBackgrounds();
-  document.addEventListener('visibilitychange', function () {
+  document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateBackgrounds();
   });
 
   /* ---------- Afficher / masquer le mot de passe ---------- */
 
-  document.querySelectorAll('[data-auth-toggle]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      var input = button.closest('.auth_field').querySelector('.auth_input');
-      var isHidden = input.type === 'password';
-      input.type = isHidden ? 'text' : 'password';
-      button.classList.toggle('is-visible', isHidden);
-      button.setAttribute('aria-label', isHidden ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+  function setPasswordVisible(button, visible) {
+    button.closest('.auth_field').querySelector('.auth_input').type = visible ? 'text' : 'password';
+    button.classList.toggle('is-visible', visible);
+    button.setAttribute('aria-label', visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+  }
+
+  document.querySelectorAll('[data-auth-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = button.closest('.auth_field').querySelector('.auth_input');
+      setPasswordVisible(button, input.type === 'password');
     });
   });
 
@@ -106,9 +106,7 @@
 
   function clearError(form) {
     form.querySelector('[data-auth-error]').textContent = '';
-    form.querySelectorAll('.auth_field.is-error').forEach(function (el) {
-      el.classList.remove('is-error');
-    });
+    form.querySelectorAll('.auth_field.is-error').forEach((el) => el.classList.remove('is-error'));
   }
 
   function showError(form, message, input) {
@@ -118,58 +116,65 @@
     input.focus();
   }
 
-  function isEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  // form.reset() ne remet pas le type du champ mot de passe : on le remasque à la main
+  function resetForm(form) {
+    form.reset();
+    clearError(form);
+    form.querySelectorAll('[data-auth-toggle]').forEach((button) => setPasswordVisible(button, false));
   }
 
-  // Retourne true si le formulaire est valide
-  var validators = {
-    login: function (form) {
-      var email = form.elements['email'];
-      var password = form.elements['password'];
-      if (!isEmail(email.value)) { showError(form, 'Adresse e-mail invalide.', email); return false; }
-      if (!password.value) { showError(form, 'Saisissez votre mot de passe.', password); return false; }
-      return true;
-    },
-    signup: function (form) {
-      var email = form.elements['email'];
-      var password = form.elements['password'];
-      var confirm = form.elements['password-confirm'];
-      if (!isEmail(email.value)) { showError(form, 'Adresse e-mail invalide.', email); return false; }
-      if (password.value.length < 8) { showError(form, 'Le mot de passe doit contenir au moins 8 caractères.', password); return false; }
-      if (password.value !== confirm.value) { showError(form, 'Les mots de passe ne correspondent pas.', confirm); return false; }
-      return true;
-    }
+  const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+  // Chaque règle : [champ concerné, condition respectée ?, message]. La première qui échoue s'affiche.
+  const emailRule = (f) => [f.email, isEmail(f.email.value), 'Adresse e-mail invalide.'];
+
+  const RULES = {
+    login: (f) => [
+      emailRule(f),
+      [f.password, f.password.value !== '', 'Saisissez votre mot de passe.'],
+    ],
+    signup: (f) => [
+      emailRule(f),
+      [f.password, f.password.value.length >= 8, 'Le mot de passe doit contenir au moins 8 caractères.'],
+      [f['password-confirm'], f.password.value === f['password-confirm'].value, 'Les mots de passe ne correspondent pas.'],
+    ],
   };
 
-  document.querySelectorAll('[data-auth-form]').forEach(function (form) {
-    var type = form.getAttribute('data-auth-form');
+  // Retourne true si le formulaire est valide (un type inconnu est refusé)
+  function validate(form, type) {
+    const rules = RULES[type] && RULES[type](form.elements);
+    if (!rules) return false;
+    const failed = rules.find(([, ok]) => !ok);
+    if (failed) showError(form, failed[2], failed[0]);
+    return !failed;
+  }
+
+  document.querySelectorAll('[data-auth-form]').forEach((form) => {
+    const type = form.dataset.authForm;
 
     // Efface l'erreur dès que l'utilisateur retape quelque chose
-    form.addEventListener('input', function () { clearError(form); });
+    form.addEventListener('input', () => clearError(form));
 
-    form.addEventListener('submit', function (event) {
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
       hasInteracted = true;
-      if (!validators[type](form)) return;
+      if (!validate(form, type)) return;
 
       // TODO : appel backend (connexion ou création de compte) avant d'enregistrer la session
-      saveSession(form.elements['email'].value.trim());
-      form.reset();
-      if (typeof showPage === 'function') showPage('home');
+      saveSession(form.elements.email.value.trim());
+      resetForm(form);
+      goTo('home');
     });
   });
 
   /* ---------- Navigation entre connexion / inscription ---------- */
 
   // Actif dès que la page cible existe (ex. "forgot-password" pas encore créée)
-  document.querySelectorAll('[data-auth-goto]').forEach(function (button) {
-    button.addEventListener('click', function () {
+  document.querySelectorAll('[data-auth-goto]').forEach((button) => {
+    button.addEventListener('click', () => {
       hasInteracted = true;
-      var target = button.getAttribute('data-auth-goto');
-      if (typeof showPage === 'function' && document.getElementById('page-' + target)) {
-        showPage(target);
-      }
+      const target = button.dataset.authGoto;
+      if (document.getElementById('page-' + target)) goTo(target);
     });
   });
 })();

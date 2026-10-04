@@ -6,7 +6,7 @@
 
 .auth_component {
   --auth-bg: #060d18;
-  --auth-lime: #c6f94a;
+  --auth-lime: var(--color-green); /* même vert que l'accueil (base.css) */
   --auth-text: #ffffff;
   --auth-text-muted: #9aa7b8;
   --auth-border: #1f3a52;
@@ -19,10 +19,8 @@
   inset: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   background-color: var(--auth-bg);
   color: var(--auth-text);
-  font-family: inherit;
 }
 
 /* ---------- Fond : photo + dégradé vertical vers le bleu nuit ---------- */
@@ -64,8 +62,7 @@
   flex-direction: column;
   max-width: 26rem;
   min-height: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  margin-inline: auto;
   padding: calc(env(safe-area-inset-top, 0px) + 2.5rem) 1.5rem calc(env(safe-area-inset-bottom, 0px) + 2rem);
   box-sizing: border-box;
 }
@@ -213,6 +210,11 @@
   opacity: 0.85;
 }
 
+.auth_component button:focus-visible {
+  outline: 2px solid var(--auth-lime);
+  outline-offset: 2px;
+}
+
 /* ---------- Pied de page ---------- */
 
 .auth_switch {
@@ -252,10 +254,6 @@
 }
 
 /* ---------- Page connexion ---------- */
-
-.auth_header.is-login {
-  margin-top: 4rem;
-}
 
 .auth_forgot {
   align-self: flex-end;

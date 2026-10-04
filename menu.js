@@ -1,24 +1,24 @@
 /* ==========================================================================
-   Références DOM globales (utilisées par toutes les fonctions render*)
+   Références DOM globales
    ========================================================================== */
 const menuRoot = document.getElementById("root");
 const backBtn = document.getElementById("backBtn");
 const headerTitle = document.getElementById("headerTitle");
+const backLabel = document.querySelector(".nav_back-label");
 
 /* ==========================================================================
    State global de l'app + persistance localStorage
    ========================================================================== */
-let userProfile = {
-  firstName: "",
-  index: null,
-};
+const STORAGE_KEY = "golfAppState";
+
+let userProfile = { firstName: "", index: null };
 
 let settings = {
   temperatureC: 20,
   altitudeM: 0,
   radarUnit: "mps",
   speedUnit: "mph",
-  distanceUnit: "m",
+  distanceUnit: "m", // "ft" = yards (voir MENU_M_TO_YD)
   defaultRadarId: "radar_default",
 };
 
@@ -34,125 +34,158 @@ let radars = [
 ];
 
 let golfBag = { clubs: [] };
-
-let personalDistances = {}; // { clubId: distanceValue } — un club = une distance
-
-let wedgeDistances = {}; // { clubId: [{ id, label, value }, ...] } — les wedges acceptent plusieurs distances
-
+let personalDistances = {}; // { clubId: distance } — un club = une distance
+let wedgeDistances = {};    // { clubId: [{ id, label, value }, ...] } — un wedge = plusieurs distances
 let driverSettings = { length: null, weight: null };
 
-// Cible appelée par le bouton retour, réassignée par chaque écran qui en a besoin.
-let backTarget = () => showPage('home');
-
-// Nom (string) de la fonction render* de l'écran actuellement affiché, mis à jour
-// par chaque render*() : sert à savoir quoi rafraîchir après une saisie au pavé.
-let currentScreenRenderFn = 'renderMenuTab';
-
 function saveStateToLocalStorage() {
-  const data = { userProfile, settings, radars, golfBag, driverSettings, personalDistances, wedgeDistances };
-  localStorage.setItem("golfAppState", JSON.stringify(data));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      userProfile, settings, radars, golfBag, driverSettings, personalDistances, wedgeDistances,
+    }));
+  } catch (e) {
+    console.error("Erreur d'écriture du localStorage", e);
+  }
 }
 
 function loadStateFromLocalStorage() {
   try {
-    const raw = localStorage.getItem("golfAppState");
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (data.userProfile) Object.assign(userProfile, data.userProfile);
-    if (data.settings) Object.assign(settings, data.settings);
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!data) return;
+    // Object.assign ignore undefined/null : pas besoin de tester chaque clé
+    Object.assign(userProfile, data.userProfile);
+    Object.assign(settings, data.settings);
+    Object.assign(golfBag, data.golfBag);
+    Object.assign(driverSettings, data.driverSettings);
+    Object.assign(personalDistances, data.personalDistances);
+    Object.assign(wedgeDistances, data.wedgeDistances);
     if (Array.isArray(data.radars) && data.radars.length) radars = data.radars;
-    if (data.golfBag) Object.assign(golfBag, data.golfBag);
-    if (data.driverSettings) Object.assign(driverSettings, data.driverSettings);
-    if (data.personalDistances) Object.assign(personalDistances, data.personalDistances);
-    if (data.wedgeDistances) Object.assign(wedgeDistances, data.wedgeDistances);
   } catch (e) {
     console.error("Erreur de lecture du localStorage", e);
   }
 }
 
-// Échappe les caractères HTML d'une saisie libre avant injection dans innerHTML
+// Échappe une saisie libre avant injection dans innerHTML ou dans un attribut
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// Enregistre le prénom et met à jour le titre de la Home Page
-function updateFirstName(value) {
-  userProfile.firstName = value.trim().slice(0, 20);
-  saveStateToLocalStorage();
-  if (window.renderHomeGreeting) window.renderHomeGreeting();
-  window[currentScreenRenderFn]();
+function toNumberOrNull(raw) {
+  const n = parseFloat(raw);
+  return isNaN(n) ? null : n;
 }
 
-// Enregistre le prénom pendant la saisie, sans re-render du menu (le champ garde le focus)
-function updateFirstNameLive(value) {
+/* ==========================================================================
+   Navigation : chaque écran s'enregistre via enterScreen(), ce qui permet
+   de le re-render (ex. pavé numérique) sans connaître son nom.
+   ========================================================================== */
+const backToHome = () => showPage('home');
+const backToMenu = () => { showPage('menu'); renderMenuTab(); };
+
+let backTarget = backToHome;
+let currentRender = renderMenuTab;
+
+function enterScreen(renderFn, title, back = backToMenu) {
+  currentRender = renderFn;
+  backTarget = back;
+  headerTitle.textContent = title;
+  backLabel.textContent = back === backToHome ? "Home" : "Menu";
+  backBtn.classList.remove("is-hidden");
+}
+
+// Écrit l'écran + la popup pavé numérique si elle est ouverte
+function paint(html) {
+  menuRoot.innerHTML = html + (menuKeypadPopup ? menuKeypadHtml() : '');
+}
+
+// Prénom : enregistré à chaque frappe, sans re-render (le champ garde le focus
+// et un re-render au blur ferait perdre le clic sur le bouton tapé ensuite)
+function updateFirstName(value) {
   userProfile.firstName = value.trim().slice(0, 20);
   saveStateToLocalStorage();
   if (window.renderHomeGreeting) window.renderHomeGreeting();
 }
 
 /* ==========================================================================
-   Pavé numérique générique — remplace les inputs type="number" natifs pour
-   toute saisie manuelle de chiffres (température, altitude, index, driver,
-   écarts radar, distances...). Utilise appKeypad() (commun.js). "target"
-   identifie le champ à mettre à jour à la validation (voir applyMenuKeypadValue).
-   Rendu via topRowHtml(), commune à tous les écrans du module.
+   Pavé numérique générique — remplace les <input type="number">.
+   Un bouton déclencheur porte ses paramètres en data-* (échappés, donc sûrs
+   même avec un libellé contenant une apostrophe) et appelle openMenuKeypad(this).
+   "target" ("type:param1:param2") identifie le champ à mettre à jour (voir
+   applyMenuKeypadValue). Utilise appKeypad() de commun.js.
    ========================================================================== */
 let menuKeypadPopup = null; // { title, target, value, decimal, allowSign, unit }
 
-function openMenuKeypad(title, target, currentValue, decimal, allowSign, unit) {
-  const start = (currentValue === null || currentValue === undefined || currentValue === '') ? '' : String(currentValue).replace('.', ',');
-  menuKeypadPopup = { title: title, target: target, value: start, decimal: !!decimal, allowSign: !!allowSign, unit: unit || '' };
-  window[currentScreenRenderFn]();
+function keypadAttrs({ title, target, value, decimal = false, sign = false, unit = '' }) {
+  return `data-title="${escapeHtml(title)}" data-target="${escapeHtml(target)}" data-value="${escapeHtml(value)}" data-unit="${escapeHtml(unit)}"${decimal ? ' data-decimal' : ''}${sign ? ' data-sign' : ''}`;
 }
+
+// Bouton numérique : affiche `text` (par défaut la valeur, ou « — » si vide)
+function numButton(opts, text = opts.value ?? '—', extraClass = '') {
+  return `<button type="button" class="field-num-btn ${extraClass}" ${keypadAttrs(opts)} onclick="openMenuKeypad(this)">${text}</button>`;
+}
+
+function openMenuKeypad(el) {
+  const d = el.dataset;
+  menuKeypadPopup = {
+    title: d.title,
+    target: d.target,
+    value: d.value.replace('.', ','),
+    decimal: 'decimal' in d,
+    allowSign: 'sign' in d,
+    unit: d.unit,
+  };
+  currentRender();
+}
+
 function closeMenuKeypad() {
   menuKeypadPopup = null;
-  window[currentScreenRenderFn]();
+  currentRender();
 }
+
+function editKeypad(fn) {
+  if (!menuKeypadPopup) return;
+  fn(menuKeypadPopup);
+  currentRender();
+}
+
 function menuKeypadPress(d) {
-  if (!menuKeypadPopup || menuKeypadPopup.value.length >= 7) return;
-  menuKeypadPopup.value += d;
-  window[currentScreenRenderFn]();
+  editKeypad(p => { if (p.value.length < 7) p.value += d; });
 }
 function menuKeypadDecimal() {
-  if (!menuKeypadPopup || !menuKeypadPopup.decimal) return;
-  if (menuKeypadPopup.value.indexOf(',') !== -1) return;
-  menuKeypadPopup.value += (menuKeypadPopup.value === '' || menuKeypadPopup.value === '-') ? '0,' : ',';
-  window[currentScreenRenderFn]();
+  editKeypad(p => {
+    if (!p.decimal || p.value.includes(',')) return;
+    p.value += (p.value === '' || p.value === '-') ? '0,' : ',';
+  });
 }
 function menuKeypadSign() {
-  if (!menuKeypadPopup || !menuKeypadPopup.allowSign) return;
-  menuKeypadPopup.value = menuKeypadPopup.value.startsWith('-') ? menuKeypadPopup.value.slice(1) : '-' + menuKeypadPopup.value;
-  window[currentScreenRenderFn]();
+  editKeypad(p => {
+    if (p.allowSign) p.value = p.value.startsWith('-') ? p.value.slice(1) : '-' + p.value;
+  });
 }
 function menuKeypadBackspace() {
-  if (!menuKeypadPopup) return;
-  menuKeypadPopup.value = menuKeypadPopup.value.slice(0, -1);
-  window[currentScreenRenderFn]();
+  editKeypad(p => { p.value = p.value.slice(0, -1); });
 }
 function menuKeypadClear() {
-  if (!menuKeypadPopup) return;
-  menuKeypadPopup.value = '';
-  window[currentScreenRenderFn]();
+  editKeypad(p => { p.value = ''; });
 }
+
 function confirmMenuKeypad() {
   if (!menuKeypadPopup) return;
   applyMenuKeypadValue(menuKeypadPopup.target, menuKeypadPopup.value.replace(',', '.'));
   closeMenuKeypad();
 }
-// Pousse la valeur saisie vers le champ visé par "target" (voir les appels à openMenuKeypad)
+
+// Pousse la valeur saisie vers le champ visé par "target"
 function applyMenuKeypadValue(target, raw) {
-  const parts = target.split(':');
-  const kind = parts[0];
-  if (kind === 'setting') updateMenuSetting(parts[1], raw);
-  else if (kind === 'driver') updateDriverField(parts[1], raw);
-  else if (kind === 'radar') updateRadarField(parts[1], parts[2], raw);
-  else if (kind === 'profileIndex') {
-    const num = parseFloat(raw);
-    userProfile.index = isNaN(num) ? null : num;
-    saveStateToLocalStorage();
-  } else if (kind === 'distance') updateDistance(parts[1], raw);
-  else if (kind === 'wedgeDistance') updateWedgeDistanceValue(parts[1], parts[2], raw);
+  const [kind, a, b] = target.split(':');
+  if (kind === 'setting') updateMenuSetting(a, raw);
+  else if (kind === 'driver') updateDriverField(a, raw);
+  else if (kind === 'radar') updateRadarField(a, b, raw);
+  else if (kind === 'profileIndex') updateProfileIndex(raw);
+  else if (kind === 'distance') updateDistance(a, raw);
+  else if (kind === 'wedgeDistance') updateWedgeDistanceValue(a, b, raw);
 }
+
 function menuKeypadHtml() {
   const p = menuKeypadPopup;
   const displayVal = (p.value === '' || p.value === '-') ? '0' : p.value;
@@ -161,14 +194,14 @@ function menuKeypadHtml() {
     <div class="keypad-overlay" onclick="closeMenuKeypad()">
       <div class="keypad-sheet" onclick="event.stopPropagation()">
         <div class="keypad-head">
-          <h3 class="keypad-title">${p.title}</h3>
+          <h3 class="keypad-title">${escapeHtml(p.title)}</h3>
           <button type="button" class="keypad-close" onclick="closeMenuKeypad()" aria-label="Fermer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
         <div class="app-keypad-value">
           ${p.allowSign ? `<button type="button" class="keypad-sign-btn" onclick="menuKeypadSign()">${p.value.startsWith('-') ? '\u2212' : '+'}</button>` : ''}
-          ${displayVal}${p.unit ? ' ' + p.unit : ''}
+          ${displayVal}${p.unit ? ' ' + escapeHtml(p.unit) : ''}
         </div>
         ${appKeypad('menuKeypadPress', 'menuKeypadBackspace', 'menuKeypadClear', extraKey)}
         <button type="button" class="btn btn-primary" onclick="confirmMenuKeypad()">Valider</button>
@@ -180,13 +213,18 @@ function menuKeypadHtml() {
 /* ==========================================================================
    Carte profil réutilisée en haut de chaque écran
    ========================================================================== */
-// Libellé sous le nom : index saisi, sinon texte de remplacement
 function indexLabel() {
   return userProfile.index === null ? "Index non renseigné" : `Index ${userProfile.index}`;
 }
 
-// showLogout : true uniquement sur l'écran Menu principal (pas sur Mon sac, Mes distances, Aide)
+function updateProfileIndex(raw) {
+  userProfile.index = toNumberOrNull(raw);
+  saveStateToLocalStorage();
+}
+
+// showLogout : true uniquement sur l'écran Menu principal
 function topRowHtml(showLogout = false) {
+  const indexAttrs = keypadAttrs({ title: 'Index', target: 'profileIndex', value: userProfile.index, decimal: true, sign: true });
   return `
     <section class="profile_card">
       <div class="profile_cover"></div>
@@ -205,117 +243,107 @@ function topRowHtml(showLogout = false) {
           </div>
         </div>
         <div class="profile_info">
-          <h2 class="profile_name"><input type="text" class="profile_name-input" value="${escapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ajouter mon prénom" aria-label="Prénom" oninput="updateFirstNameLive(this.value)" onchange="updateFirstName(this.value)"></h2>
-          <p class="profile_index" id="profileIndex" onclick="openMenuKeypad('Index','profileIndex','${userProfile.index ?? ''}', true, true, '')">${indexLabel()}</p>
+          <h2 class="profile_name"><input type="text" class="profile_name-input" value="${escapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ajouter mon prénom" aria-label="Prénom" oninput="updateFirstName(this.value)"></h2>
+          <button type="button" class="profile_index" id="profileIndex" ${indexAttrs} onclick="openMenuKeypad(this)">${indexLabel()}</button>
         </div>
       </div>
     </section>
-    ${menuKeypadPopup ? menuKeypadHtml() : ''}
   `;
 }
+
 /* ==========================================================================
    Écran Menu (paramètres)
    ========================================================================== */
+const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
+const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'KPH']];
+const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'KPH']];
+const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'KPH']];
+
+function optionsHtml(options, current) {
+  return options.map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+function settingSelectRow(label, key, options) {
+  return `
+      <div class="field-row"><span class="label">${label}</span><span class="val">
+        <select aria-label="${label}" onchange="updateMenuSetting('${key}',this.value)">${optionsHtml(options, settings[key])}</select>
+      </span></div>`;
+}
+
+const formatSigned = v => (v > 0 ? '+' + v : String(v));
+
+// key : 'clubOffset' ou 'ballOffset'. Le signe se saisit directement dans le pavé.
+function radarOffsetRowHtml(r, label, key) {
+  const value = r[key + 'Value'];
+  const unit = r[key + 'Unit'];
+  const symbol = unit === 'pct' ? '%' : unit.toUpperCase();
+  return `
+        <div class="field-row"><span class="label">${label}</span><span class="val">
+          ${numButton({ title: label, target: `radar:${r.id}:${key}Value`, value, decimal: true, sign: true, unit: symbol }, formatSigned(value), 'w-70')}
+          <select aria-label="Unité" onchange="updateRadarField('${r.id}','${key}Unit',this.value);renderMenuTab()">${optionsHtml(OFFSET_UNITS, unit)}</select>
+        </span></div>`;
+}
+
+function radarBlockHtml(r) {
+  return `
+        <div class="field-row"><span class="label">
+          <input type="text" class="w-full" value="${escapeHtml(r.label)}" aria-label="Nom du radar" onchange="renameRadar('${r.id}',this)">
+        </span></div>
+        ${radarOffsetRowHtml(r, 'Écart Club Speed', 'clubOffset')}
+        ${radarOffsetRowHtml(r, 'Écart Ball Speed', 'ballOffset')}
+        <div class="field-row"><span class="label">Radar actif</span><span class="val">
+          <label class="radio-select">
+            <input type="radio" name="default-radar" ${settings.defaultRadarId === r.id ? 'checked' : ''} onchange="setDefaultRadar('${r.id}')">
+            <span class="radio-select-dot"></span>
+          </label>
+          ${radars.length > 1 ? `<button type="button" onclick="removeRadar('${r.id}')">Suppr.</button>` : ''}
+        </span></div>`;
+}
+
 function renderMenuTab() {
-  backTarget = () => showPage('home');
-  currentScreenRenderFn = 'renderMenuTab';
-  backBtn.classList.remove("is-hidden");
-  headerTitle.textContent = "Menu";
-  menuRoot.innerHTML = `
+  enterScreen(renderMenuTab, "Menu", backToHome);
+  const nbClubs = golfBag.clubs.length;
+  paint(`
     ${topRowHtml(true)}
     <div class="field-list">
       <h3>Profil</h3>
-      <div class="field-row field-row-link" onclick="goToGolfBag()"><span class="label">Mon sac de golf</span><span class="val">${golfBag.clubs.length} club${golfBag.clubs.length > 1 ? 's' : ''} &#8250;</span></div>
-      <div class="field-row field-row-link" onclick="goToDistances()"><span class="label">Mes distances</span><span class="val">&#8250;</span></div>
+      <div class="field-row field-row-link" onclick="renderGolfBagScreen()"><span class="label">Mon sac de golf</span><span class="val">${nbClubs} club${nbClubs > 1 ? 's' : ''} &#8250;</span></div>
+      <div class="field-row field-row-link" onclick="renderDistancesScreen()"><span class="label">Mes distances</span><span class="val">&#8250;</span></div>
     </div>
     <div class="field-list">
       <h3>Conditions de référence</h3>
       <div class="field-row"><span class="label">Température (°C)</span><span class="val">
-        <button type="button" class="field-num-btn" onclick="openMenuKeypad('Température','setting:temperatureC','${settings.temperatureC}', false, true, '°C')">${settings.temperatureC}°C</button>
+        ${numButton({ title: 'Température', target: 'setting:temperatureC', value: settings.temperatureC, sign: true, unit: '°C' }, `${settings.temperatureC}°C`)}
       </span></div>
       <div class="field-row"><span class="label">Altitude (m)</span><span class="val">
-        <button type="button" class="field-num-btn" onclick="openMenuKeypad('Altitude','setting:altitudeM','${settings.altitudeM}', false, false, 'm')">${settings.altitudeM} m</button>
+        ${numButton({ title: 'Altitude', target: 'setting:altitudeM', value: settings.altitudeM, unit: 'm' }, `${settings.altitudeM} m`)}
       </span></div>
     </div>
     <div class="field-list">
       <h3>Unité de distance</h3>
-      <div class="field-row"><span class="label">Distance</span><span class="val">
-        <select id="set-distance-unit" onchange="updateMenuSetting('distanceUnit',this.value)">
-          <option value="m" ${settings.distanceUnit==='m'?'selected':''}>Mètres (m)</option>
-          <option value="ft" ${settings.distanceUnit==='ft'?'selected':''}>Yards/Feet</option>
-        </select>
-      </span></div>
+      ${settingSelectRow('Distance', 'distanceUnit', DISTANCE_UNITS)}
     </div>
     <div class="field-list">
       <h3>Unités de vitesse</h3>
-      <div class="field-row"><span class="label">Unité du radar</span><span class="val">
-        <select id="set-radar-unit" onchange="updateMenuSetting('radarUnit',this.value)">
-          <option value="mps" ${settings.radarUnit==='mps'?'selected':''}>MPS (m/s)</option>
-          <option value="mph" ${settings.radarUnit==='mph'?'selected':''}>MPH</option>
-          <option value="kph" ${settings.radarUnit==='kph'?'selected':''}>KPH</option>
-        </select>
-      </span></div>
-
-      <div class="field-row"><span class="label">Unité affichée</span><span class="val">
-        <select id="set-speed-unit" onchange="updateMenuSetting('speedUnit',this.value)">
-          <option value="mph" ${settings.speedUnit==='mph'?'selected':''}>MPH</option>
-          <option value="kph" ${settings.speedUnit==='kph'?'selected':''}>KPH</option>
-        </select>
-      </span></div>
+      ${settingSelectRow('Unité du radar', 'radarUnit', RADAR_UNITS)}
+      ${settingSelectRow('Unité affichée', 'speedUnit', SPEED_UNITS)}
     </div>
     <div class="field-list">
       <h3>Radars</h3>
-      ${radars.map(r => `
-        <div class="field-row"><span class="label">
-          <input type="text" value="${r.label}" onchange="updateRadarField('${r.id}','label',this.value)" class="w-full">
-        </span></div>
-        <div class="field-row"><span class="label">Écart Club Speed</span><span class="val">
-          <select onchange="updateRadarSign('${r.id}','clubOffsetValue',this.value)">
-            <option value="1" ${r.clubOffsetValue>=0?'selected':''}>+</option>
-            <option value="-1" ${r.clubOffsetValue<0?'selected':''}>-</option>
-          </select>
-          <button type="button" class="field-num-btn w-70" onclick="openMenuKeypad('Écart Club Speed','radar:${r.id}:clubOffsetValue','${Math.abs(r.clubOffsetValue)}', true, false, '${r.clubOffsetUnit === 'pct' ? '%' : r.clubOffsetUnit.toUpperCase()}')">${Math.abs(r.clubOffsetValue)}</button>
-          <select onchange="updateRadarField('${r.id}','clubOffsetUnit',this.value)">
-            <option value="pct" ${r.clubOffsetUnit==='pct'?'selected':''}>%</option>
-            <option value="mph" ${r.clubOffsetUnit==='mph'?'selected':''}>MPH</option>
-            <option value="mps" ${r.clubOffsetUnit==='mps'?'selected':''}>MPS</option>
-            <option value="kph" ${r.clubOffsetUnit==='kph'?'selected':''}>KPH</option>
-          </select>
-        </span></div>
-        <div class="field-row"><span class="label">Écart Ball Speed</span><span class="val">
-          <select onchange="updateRadarSign('${r.id}','ballOffsetValue',this.value)">
-            <option value="1" ${r.ballOffsetValue>=0?'selected':''}>+</option>
-            <option value="-1" ${r.ballOffsetValue<0?'selected':''}>-</option>
-          </select>
-          <button type="button" class="field-num-btn w-70" onclick="openMenuKeypad('Écart Ball Speed','radar:${r.id}:ballOffsetValue','${Math.abs(r.ballOffsetValue)}', true, false, '${r.ballOffsetUnit === 'pct' ? '%' : r.ballOffsetUnit.toUpperCase()}')">${Math.abs(r.ballOffsetValue)}</button>
-          <select onchange="updateRadarField('${r.id}','ballOffsetUnit',this.value)">
-            <option value="pct" ${r.ballOffsetUnit==='pct'?'selected':''}>%</option>
-            <option value="mph" ${r.ballOffsetUnit==='mph'?'selected':''}>MPH</option>
-            <option value="mps" ${r.ballOffsetUnit==='mps'?'selected':''}>MPS</option>
-            <option value="kph" ${r.ballOffsetUnit==='kph'?'selected':''}>KPH</option>
-          </select>
-        </span></div>
-        <div class="field-row"><span class="label">Radar actif</span><span class="val">
-          <label class="radio-select">
-            <input type="radio" name="default-radar" ${settings.defaultRadarId===r.id?'checked':''} onchange="setDefaultRadar('${r.id}')">
-            <span class="radio-select-dot"></span>
-          </label>
-          ${radars.length > 1 ? `<button onclick="removeRadar('${r.id}')">Suppr.</button>` : ''}
-        </span></div>
-      `).join('')}
-      <div class="resume-row"><button class="add-radar-btn" onclick="addRadar()"><span class="add-radar-plus">+</span>Ajouter un radar</button></div>
+      ${radars.map(radarBlockHtml).join('')}
+      <div class="resume-row"><button type="button" class="add-radar-btn" onclick="addRadar()"><span class="add-radar-plus">+</span>Ajouter un radar</button></div>
     </div>
     <div class="field-list">
       <h3>Driver</h3>
       <div class="field-row"><span class="label">Taille (cm)</span><span class="val">
-        <button type="button" class="field-num-btn" onclick="openMenuKeypad('Taille du driver','driver:length','${driverSettings.length ?? ''}', true, false, 'cm')">${driverSettings.length ?? '—'}</button>
+        ${numButton({ title: 'Taille du driver', target: 'driver:length', value: driverSettings.length, decimal: true, unit: 'cm' })}
       </span></div>
       <div class="field-row"><span class="label">Poids (g)</span><span class="val">
-        <button type="button" class="field-num-btn" onclick="openMenuKeypad('Poids du driver','driver:weight','${driverSettings.weight ?? ''}', false, false, 'g')">${driverSettings.weight ?? '—'}</button>
+        ${numButton({ title: 'Poids du driver', target: 'driver:weight', value: driverSettings.weight, unit: 'g' })}
       </span></div>
     </div>
     <nav class="menu_list">
-      <button class="menu_item" type="button" onclick="goToHelp()">
+      <button class="menu_item" type="button" onclick="renderHelpScreen()">
         <span class="menu_icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.7-2.4 3.4"/><circle cx="12" cy="16.8" r="0.2" fill="currentColor"/></svg></span>
         <span class="menu_content">
           <span class="menu_title">Aide &amp; support</span>
@@ -324,93 +352,83 @@ function renderMenuTab() {
         <svg class="menu_chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </button>
     </nav>
-  `;
+  `);
 }
 
-// 1 mètre en yards (utilisé pour "Yards/Feet" : yards pour les coups pleins,
-// le putter n'ayant plus de distance suivie dans cet écran).
+// 1 mètre en yards ("ft" = yards pour les coups pleins ; le putter n'a pas de distance suivie ici)
 const MENU_M_TO_YD = 1.09361;
 
-function convertMenuDistanceValue(value, fromUnit, toUnit){
-  if(value === null || value === undefined || value === '' || fromUnit === toUnit) return value;
-  const meters = fromUnit === 'ft' ? value / MENU_M_TO_YD : value;
-  const converted = toUnit === 'ft' ? meters * MENU_M_TO_YD : meters;
+function convertMenuDistanceValue(value, fromUnit, toUnit) {
+  if (value == null || fromUnit === toUnit) return value;
+  const converted = toUnit === 'ft' ? value * MENU_M_TO_YD : value / MENU_M_TO_YD;
   return Math.round(converted * 10) / 10;
 }
 
-// Auto-save générique pour les champs simples (température/altitude/unités) : appelé au onchange
-// de chaque input/select, sans re-render (évite d'effacer une saisie en cours dans un autre champ).
-// Cas particulier "distanceUnit" : les distances déjà enregistrées sont converties vers la
-// nouvelle unité pour rester justes (au lieu de garder l'ancien nombre avec un nouveau libellé).
-function updateMenuSetting(key, value){
-  if(key === 'distanceUnit' && value !== settings.distanceUnit){
-    const fromUnit = settings.distanceUnit, toUnit = value;
-    Object.keys(personalDistances).forEach(id => {
-      personalDistances[id] = convertMenuDistanceValue(personalDistances[id], fromUnit, toUnit);
-    });
-    Object.keys(wedgeDistances).forEach(id => {
-      (wedgeDistances[id] || []).forEach(entry => {
-        entry.value = convertMenuDistanceValue(entry.value, fromUnit, toUnit);
-      });
-    });
+// Les distances déjà enregistrées suivent le changement d'unité (au lieu de garder
+// l'ancien nombre avec un nouveau libellé)
+function convertStoredDistances(fromUnit, toUnit) {
+  Object.keys(personalDistances).forEach(id => {
+    personalDistances[id] = convertMenuDistanceValue(personalDistances[id], fromUnit, toUnit);
+  });
+  Object.values(wedgeDistances).forEach(entries => {
+    entries.forEach(entry => { entry.value = convertMenuDistanceValue(entry.value, fromUnit, toUnit); });
+  });
+}
+
+// Auto-save des réglages simples, sans re-render (évite d'effacer une saisie en cours ailleurs)
+function updateMenuSetting(key, value) {
+  if (key === 'distanceUnit' && value !== settings.distanceUnit) {
+    convertStoredDistances(settings.distanceUnit, value);
   }
   settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
   saveStateToLocalStorage();
 }
 
-// Auto-save des champs Driver (taille/poids), même principe que updateMenuSetting.
-function updateDriverField(key, value){
-  const num = parseFloat(value);
-  driverSettings[key] = isNaN(num) ? null : num;
+function updateDriverField(key, value) {
+  driverSettings[key] = toNumberOrNull(value);
   saveStateToLocalStorage();
 }
 
-function updateRadarField(id, field, value){
+/* --- Radars ------------------------------------------------------------- */
+// Les re-renders sont gérés par l'appelant : le pavé re-render à sa fermeture,
+// et le changement d'unité (qui figure dans le pavé) re-render dans son onchange.
+function updateRadarField(id, field, value) {
   const radar = radars.find(r => r.id === id);
-  if(!radar) return;
-  if(field === 'clubOffsetValue' || field === 'ballOffsetValue'){
-    const sign = radar[field] < 0 ? -1 : 1;
-    radar[field] = sign * Math.abs(parseFloat(value) || 0);
-  } else {
-    radar[field] = value;
-  }
+  if (!radar) return;
+  radar[field] = field.endsWith('OffsetValue') ? (parseFloat(value) || 0) : value;
   saveStateToLocalStorage();
-  renderMenuTab();
 }
 
-function updateRadarSign(id, field, signValue){
+function renameRadar(id, input) {
   const radar = radars.find(r => r.id === id);
-  if(!radar) return;
-  const sign = parseInt(signValue, 10);
-  radar[field] = sign * Math.abs(radar[field]);
+  if (!radar) return;
+  radar.label = input.value.trim() || radar.label;
+  input.value = radar.label;
   saveStateToLocalStorage();
-  renderMenuTab();
 }
 
-function setDefaultRadar(id){
+function setDefaultRadar(id) {
   settings.defaultRadarId = id;
   saveStateToLocalStorage();
   renderMenuTab();
 }
 
-function addRadar(){
-  const id = 'radar_' + Date.now();
-  radars.push({ id, label: 'Nouveau radar', clubOffsetValue: 0, clubOffsetUnit: 'pct', ballOffsetValue: 0, ballOffsetUnit: 'pct' });
+function addRadar() {
+  radars.push({ id: 'radar_' + Date.now(), label: 'Nouveau radar', clubOffsetValue: 0, clubOffsetUnit: 'pct', ballOffsetValue: 0, ballOffsetUnit: 'pct' });
   saveStateToLocalStorage();
   renderMenuTab();
 }
 
-function removeRadar(id){
-  if(radars.length <= 1) return;
+function removeRadar(id) {
+  if (radars.length <= 1) return;
   radars = radars.filter(r => r.id !== id);
-  if(settings.defaultRadarId === id) settings.defaultRadarId = radars[0].id;
+  if (settings.defaultRadarId === id) settings.defaultRadarId = radars[0].id;
   saveStateToLocalStorage();
   renderMenuTab();
 }
 
 /* ==========================================================================
    Écran Sac de golf — sélection par case à cocher parmi un catalogue fixe
-   (aucune limite de nombre de clubs)
    ========================================================================== */
 const golfClubCatalog = [
   { id: 'driver', name: 'Driver' },
@@ -451,108 +469,81 @@ const golfClubCatalog = [
   { id: 'putter', name: 'Putter' },
 ];
 
-function goToGolfBag(){
-  renderGolfBagScreen();
-}
-
-function renderGolfBagScreen(){
-  backTarget = () => { showPage('menu'); renderMenuTab(); };
-  currentScreenRenderFn = 'renderGolfBagScreen';
-  backBtn.classList.remove("is-hidden");
-  headerTitle.textContent = "Mon sac";
-  menuRoot.innerHTML = `
+function renderGolfBagScreen() {
+  enterScreen(renderGolfBagScreen, "Mon sac");
+  paint(`
     ${topRowHtml()}
     <div class="field-list">
-      <h3>Clubs (${golfBag.clubs.length})</h3>
-      ${golfClubCatalog.map(c => {
-        const checked = golfBag.clubs.includes(c.id);
-        return `
+      <h3>Clubs (<span id="bag-count">${golfBag.clubs.length}</span>)</h3>
+      ${golfClubCatalog.map(c => `
         <div class="field-row"><span class="label">${c.name}</span><span class="val">
           <label class="radio-select">
-            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleClub('${c.id}',this.checked)">
+            <input type="checkbox" aria-label="${c.name}" ${golfBag.clubs.includes(c.id) ? 'checked' : ''} onchange="toggleClub('${c.id}',this.checked)">
             <span class="radio-select-dot"></span>
           </label>
-        </span></div>`;
-      }).join('')}
+        </span></div>`).join('')}
     </div>
     <button type="button" class="btn btn-primary menu-save-btn" onclick="backTarget()">Enregistrer</button>
-  `;
+  `);
 }
 
-function toggleClub(id, isChecked){
-  if(isChecked){
-    if(golfBag.clubs.includes(id)) return;
-    golfBag.clubs.push(id);
-  } else {
-    golfBag.clubs = golfBag.clubs.filter(cid => cid !== id);
-  }
+// Pas de re-render : la case est déjà dans le bon état, on ne met à jour que le compteur
+function toggleClub(id, isChecked) {
+  const others = golfBag.clubs.filter(cid => cid !== id);
+  golfBag.clubs = isChecked ? [...others, id] : others;
   saveStateToLocalStorage();
-  renderGolfBagScreen();
+  document.getElementById('bag-count').textContent = golfBag.clubs.length;
 }
 
 /* ==========================================================================
-   Écran Mes distances — un champ de distance par club présent dans le sac
-   (source de vérité pour la sélection : golfBag.clubs). Le putter n'a pas
-   de distance suivie ici (jeu au feeling). Les wedges acceptent plusieurs
-   distances nommées (3/4 swing, plein swing...).
+   Écran Mes distances — un champ par club du sac (hors putter) ; les wedges
+   acceptent plusieurs distances nommées (3/4 swing, plein swing...).
    ========================================================================== */
-function goToDistances(){
-  renderDistancesScreen();
-}
+const isWedge = clubId => clubId.startsWith('wedge');
 
-function isWedge(clubId){
-  return clubId.startsWith('wedge');
-}
-
-function renderDistancesScreen(){
-  backTarget = () => { showPage('menu'); renderMenuTab(); };
-  currentScreenRenderFn = 'renderDistancesScreen';
-  backBtn.classList.remove("is-hidden");
-  headerTitle.textContent = "Mes distances";
-  // "Yards/Feet" = yards pour tous les clubs de cet écran (le putter, en feet, n'y figure pas)
-  const unitLabel = settings.distanceUnit === 'ft' ? 'yd' : 'm';
-  const selectedClubs = golfClubCatalog.filter(c => c.id !== 'putter' && golfBag.clubs.includes(c.id));
-  menuRoot.innerHTML = `
+function renderDistancesScreen() {
+  enterScreen(renderDistancesScreen, "Mes distances");
+  const unit = settings.distanceUnit === 'ft' ? 'yd' : 'm';
+  const clubs = golfClubCatalog.filter(c => c.id !== 'putter' && golfBag.clubs.includes(c.id));
+  paint(`
     ${topRowHtml()}
     <div class="field-list">
       <h3>Distances par club</h3>
-      ${selectedClubs.length === 0 ? `
+      ${clubs.length === 0 ? `
         <div class="field-row"><span class="label">Aucun club dans le sac</span></div>
-      ` : selectedClubs.map(c => isWedge(c.id) ? wedgeDistanceRowsHtml(c, unitLabel) : `
+      ` : clubs.map(c => isWedge(c.id) ? wedgeDistanceRowsHtml(c, unit) : `
         <div class="field-row"><span class="label">${c.name}</span><span class="val">
-          <button type="button" class="field-num-btn" onclick="openMenuKeypad('${c.name}','distance:${c.id}','${personalDistances[c.id] ?? ''}', false, false, '${unitLabel}')">${personalDistances[c.id] ?? '—'}</button> ${unitLabel}
+          ${numButton({ title: c.name, target: `distance:${c.id}`, value: personalDistances[c.id], unit })} ${unit}
         </span></div>
       `).join('')}
     </div>
     <button type="button" class="btn btn-primary menu-save-btn" onclick="backTarget()">Enregistrer</button>
-  `;
+  `);
 }
 
-// Auto-save de la distance saisie pour un club donné (hors wedges)
-function updateDistance(clubId, value){
-  const num = parseFloat(value);
-  personalDistances[clubId] = isNaN(num) ? null : num;
+function updateDistance(clubId, value) {
+  personalDistances[clubId] = toNumberOrNull(value);
   saveStateToLocalStorage();
 }
 
 // Garantit au moins une distance ("Distance 1") pour un wedge du sac
-function ensureWedgeEntries(clubId){
-  if(!Array.isArray(wedgeDistances[clubId]) || wedgeDistances[clubId].length === 0){
+function ensureWedgeEntries(clubId) {
+  if (!Array.isArray(wedgeDistances[clubId]) || wedgeDistances[clubId].length === 0) {
     wedgeDistances[clubId] = [{ id: 'd1', label: 'Distance 1', value: null }];
   }
 }
 
 // Bloc "nom du wedge" + une ligne éditable par distance + bouton d'ajout
-function wedgeDistanceRowsHtml(c, unitLabel){
+function wedgeDistanceRowsHtml(c, unit) {
   ensureWedgeEntries(c.id);
   const entries = wedgeDistances[c.id];
   return `
     <div class="field-row"><span class="label">${c.name}</span></div>
     ${entries.map(e => `
       <div class="field-row wedge-distance-row"><span class="label">
-        <input type="text" value="${e.label}" onchange="updateWedgeDistanceLabel('${c.id}','${e.id}',this.value)">
+        <input type="text" value="${escapeHtml(e.label)}" aria-label="Nom de la distance" onchange="updateWedgeDistanceLabel('${c.id}','${e.id}',this)">
       </span><span class="val">
-        <button type="button" class="field-num-btn" onclick="openMenuKeypad('${e.label}','wedgeDistance:${c.id}:${e.id}','${e.value ?? ''}', false, false, '${unitLabel}')">${e.value ?? '—'}</button> ${unitLabel}
+        ${numButton({ title: e.label, target: `wedgeDistance:${c.id}:${e.id}`, value: e.value, unit })} ${unit}
         ${entries.length > 1 ? `<button type="button" onclick="removeWedgeDistance('${c.id}','${e.id}')">Suppr.</button>` : ''}
       </span></div>
     `).join('')}
@@ -560,7 +551,7 @@ function wedgeDistanceRowsHtml(c, unitLabel){
   `;
 }
 
-function addWedgeDistance(clubId){
+function addWedgeDistance(clubId) {
   ensureWedgeEntries(clubId);
   const n = wedgeDistances[clubId].length + 1;
   wedgeDistances[clubId].push({ id: 'd' + Date.now(), label: 'Distance ' + n, value: null });
@@ -568,56 +559,43 @@ function addWedgeDistance(clubId){
   renderDistancesScreen();
 }
 
-function removeWedgeDistance(clubId, entryId){
-  if(!wedgeDistances[clubId] || wedgeDistances[clubId].length <= 1) return;
+function removeWedgeDistance(clubId, entryId) {
+  if (!wedgeDistances[clubId] || wedgeDistances[clubId].length <= 1) return;
   wedgeDistances[clubId] = wedgeDistances[clubId].filter(e => e.id !== entryId);
   saveStateToLocalStorage();
   renderDistancesScreen();
 }
 
-// Le nom de la distance se modifie librement ; pas de re-render pour ne pas perdre le focus
-function updateWedgeDistanceLabel(clubId, entryId, value){
+// Pas de re-render pour ne pas perdre le focus ; un nom vide retombe sur l'ancien
+function updateWedgeDistanceLabel(clubId, entryId, input) {
   const entry = (wedgeDistances[clubId] || []).find(e => e.id === entryId);
-  if(!entry) return;
-  entry.label = value.trim() || entry.label;
+  if (!entry) return;
+  entry.label = input.value.trim() || entry.label;
+  input.value = entry.label;
   saveStateToLocalStorage();
 }
 
-function updateWedgeDistanceValue(clubId, entryId, value){
+function updateWedgeDistanceValue(clubId, entryId, value) {
   const entry = (wedgeDistances[clubId] || []).find(e => e.id === entryId);
-  if(!entry) return;
-  const num = parseFloat(value);
-  entry.value = isNaN(num) ? null : num;
+  if (!entry) return;
+  entry.value = toNumberOrNull(value);
   saveStateToLocalStorage();
 }
 
 /* ==========================================================================
    Écran Aide & support
    ========================================================================== */
-function goToHelp(){
-  renderHelpScreen();
-}
-
-function renderHelpScreen(){
-  backTarget = () => { showPage('menu'); renderMenuTab(); };
-  currentScreenRenderFn = 'renderHelpScreen';
-  backBtn.classList.remove("is-hidden");
-  headerTitle.textContent = "Aide & support";
-  menuRoot.innerHTML = `
+function renderHelpScreen() {
+  enterScreen(renderHelpScreen, "Aide & support");
+  paint(`
     ${topRowHtml()}
-    <div class="field-list">
-      <h3>FAQ</h3>
-    </div>
-    <div class="field-list">
-      <h3>Contact</h3>
-    </div>
-    <div class="field-list">
-      <h3>Conditions d'utilisation</h3>
-    </div>
-  `;
+    <div class="field-list"><h3>FAQ</h3></div>
+    <div class="field-list"><h3>Contact</h3></div>
+    <div class="field-list"><h3>Conditions d'utilisation</h3></div>
+  `);
 }
 
-// Expose renderMenuTab globalement pour être appelée depuis index.html
+// Appelée depuis index.html
 window.renderMenuTab = renderMenuTab;
 
 /* ==========================================================================
@@ -625,8 +603,6 @@ window.renderMenuTab = renderMenuTab;
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   loadStateFromLocalStorage();
-
   backBtn.addEventListener('click', () => backTarget());
-
   renderMenuTab();
 });
