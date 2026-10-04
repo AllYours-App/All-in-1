@@ -122,7 +122,7 @@
 
   // Note : la liste de parcours doit être alimentée dynamiquement (parcours réellement joués par l'utilisateur).
   const DEFAULT_FILTERS = {
-    period: { key: 'period', icon: 'calendar', label: 'Période', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
+    period: { key: 'period', icon: 'calendar', label: '30 derniers jours', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
     course: { key: 'course', icon: 'flag', label: 'Tous parcours', options: ['Tous parcours'] },
     lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
@@ -346,29 +346,34 @@
      7) COMPOSANT — Filter Bar
      ======================================================================== */
 
-  // Titre affiché sur le bouton : sans "Tous/Toutes", et titre unique pour le bouton de date
-  function chipText(label) {
-    if (label === 'Tout') return 'Période';
-    const m = /^Tou(?:s|tes) (.+)$/.exec(label);
-    return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : label;
+  // Boutons de tri (style du putting) : petit titre au-dessus, valeur courante en dessous
+  const FILTER_TITLES = { rounds: 'Période', period: 'Période', range: 'Période', course: 'Parcours', lie: 'Lie', distance: 'Distance' };
+  function chipValue(label) {
+    return String(label)
+      .replace(/^Tous parcours$/, 'Tous')
+      .replace(/^Tous lies$/, 'Tous')
+      .replace(/^Toutes distances$/, 'Toutes')
+      .replace(/^(\d+) derniers (?:parcours|rounds)$/, '$1 derniers')
+      .replace(/^(\d+) derniers jours$/, '$1 jours');
   }
 
   function renderFilterBar(root, filters, onChange) {
     root.innerHTML = filters.map((f) => `
       <div class="filter-chip-wrap" style="position:relative; flex:1 1 0; min-width:0;">
-        <button type="button" class="filter-chip" data-key="${f.key}" aria-haspopup="listbox" aria-expanded="false">
-          ${icon(f.icon)}<span data-label>${chipText(f.label)}</span>${icon('chevronDown')}
+        <button type="button" class="analyse-filter${FILTER_TITLES[f.key] === 'Période' ? ' is-active' : ''}" data-key="${f.key}" aria-haspopup="listbox" aria-expanded="false">
+          <span class="analyse-filter_label">${FILTER_TITLES[f.key] || f.key}</span>
+          <span class="analyse-filter_value"><span class="filter-value-text" data-label>${chipValue(f.label)}</span>${icon('chevronDown')}</span>
         </button>
       </div>
     `).join('');
 
     function closeAll() {
       root.querySelectorAll('.filter-dropdown').forEach((d) => d.remove());
-      root.querySelectorAll('.filter-chip').forEach((c) => c.setAttribute('aria-expanded', 'false'));
+      root.querySelectorAll('.analyse-filter').forEach((c) => c.setAttribute('aria-expanded', 'false'));
     }
 
     filters.forEach((f) => {
-      const chip = root.querySelector(`.filter-chip[data-key="${f.key}"]`);
+      const chip = root.querySelector(`.analyse-filter[data-key="${f.key}"]`);
       const wrap = chip.parentElement;
       chip.addEventListener('click', () => {
         const existing = wrap.querySelector('.filter-dropdown');
@@ -392,7 +397,7 @@
           btn.addEventListener('mouseenter', () => btn.style.background = 'var(--color-bg-card-hover)');
           btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
           btn.addEventListener('click', () => {
-            chip.querySelector('[data-label]').textContent = chipText(f.options[i]);
+            chip.querySelector('[data-label]').textContent = chipValue(f.options[i]);
             if (onChange) onChange(f.key, f.options[i]);
             dropdown.remove();
             chip.setAttribute('aria-expanded', 'false');
@@ -689,7 +694,7 @@
     opts = opts || {};
     const centered = !!opts.centered;
     const unit = opts.unit || '';
-    const format = opts.format || ((v) => String(Math.round(v * 10) / 10));
+    const format = opts.format || ((v) => v.toFixed(1));
     const defined = rows.filter((r) => !isEmptyValue(r.value));
     const maxAbs = defined.length ? Math.max(...defined.map((r) => Math.abs(r.value)), 0.01) : 0.01;
 
@@ -732,7 +737,7 @@
     const caption = opts.caption ? `<div class="chart-card__unit">${opts.caption}</div>` : '';
     return `
       <article class="card chart-card insights_chart">
-        <div class="chart-card__head"><div><div class="chart-card__title">${title}</div>${caption}</div></div>
+        <div class="chart-card__head"><div class="chart-card__titles"><div class="chart-card__title">${title}</div>${caption}</div></div>
         <div class="insights_bar-chart">${axisHtml}${rowsHtml}</div>
       </article>
     `;
@@ -1102,8 +1107,7 @@
     const clubRows = (map) => [...rowsOf(map, ['All']), ...clubsOnly(map)];
     const bucketRows = (map) => rowsOf(map, ['All', ...PUTT_BUCKETS]);
     const hasData = (r) => !isEmptyValue(r.value);
-    const fx = (v) => v.toFixed(1); // arrondi à 0.1
-    const fxSG = (v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
+    const fx = (v) => v.toFixed(1); // m, %, coups par partie : 0.1 (les SG sont à 0.01 via fmtSG)
     const pct = fx;
     // Clubs : seuls ceux qui ont des données
     const clubsOnly = (map) => rowsOf(map, played).filter(hasData);
@@ -1112,16 +1116,16 @@
     const add = (title, rows, opts) => out.push(renderBarChart(title, rows, opts));
     const sgLabel = tabs.length === 1 ? CLUB_TABS.find((t) => t.value === tabs[0]).label : '';
     const PCT = { unit: '%', format: pct, caption: '(%)' };
-    const SG_CAPTION = '(coups gagnés par coup, vs TOUR)';
+    const SG_CAPTION = '(Vs Tour)';
 
     // Strokes gained : par tranche de distance pour le putting seul, sinon par club
     if (only('putting')) {
-      add('SG Putting', bucketRows(put.sg), { centered: true, format: fxSG, caption: '(coups gagnés par putt, vs TOUR)' });
+      add('SG Putting', bucketRows(put.sg), { centered: true, format: fmtSG, caption: '(Vs Tour)' });
     } else {
       const sgRows = clubRows(m.sg);
       // Les putts n'ont pas de club : une barre dédiée "Putting" s'ajoute à côté de "Tous"
       if (has('putting')) sgRows.push({ label: 'Putting', value: pickValue(m.sg, 'Putting') });
-      add(`SG${sgLabel ? ` ${sgLabel}` : ''}`, sgRows, { centered: true, format: fxSG, caption: SG_CAPTION });
+      add(`SG${sgLabel ? ` ${sgLabel}` : ''}`, sgRows, { centered: true, format: fmtSG, caption: SG_CAPTION });
     }
 
     if (only('driving')) {
@@ -1201,7 +1205,7 @@
     const counts = sumZoneCounts(selected.map((b) => d.zoneCounts[b]));
 
     root.innerHTML = `
-      ${renderBarChart('Strokes gained', rows(d.sg), { centered: true, format: fmtSG, caption: '(coups gagnés par coup, vs TOUR)' })}
+      ${renderBarChart('Strokes gained', rows(d.sg), { centered: true, format: fmtSG, caption: '(Vs Tour)' })}
       ${renderBarChart('Proximité médiane', rows(d.proximity), { unit: ' m', format: (v) => v.toFixed(1), caption: '(m)' })}
       ${renderBarChart('Coups par partie', rows(d.shotsPerRound))}
       <article class="card chart-card insights_chart">
@@ -1281,9 +1285,9 @@
     traditional: {
       filters: 'st-trad-filters', charts: 'st-trad-charts',
       defs: [
-        { key: 'avgDrive', title: 'Distance du drive', unit: ' m', caption: '(m)', decimals: 0, better: 'high', get: (r) => r.avgDrive },
-        { key: 'firPct', title: 'Fairways touchés', unit: '%', pts: true, caption: '(%)', decimals: 0, better: 'high', get: (r) => r.firPct },
-        { key: 'girPct', title: 'Greens en régulation', unit: '%', pts: true, caption: '(%)', decimals: 0, better: 'high', get: (r) => r.girPct },
+        { key: 'avgDrive', title: 'Distance du drive', unit: ' m', caption: '(m)', decimals: 1, better: 'high', get: (r) => r.avgDrive },
+        { key: 'firPct', title: 'Fairways touchés', unit: '%', pts: true, caption: '(%)', decimals: 1, better: 'high', get: (r) => r.firPct },
+        { key: 'girPct', title: 'Greens en régulation', unit: '%', pts: true, caption: '(%)', decimals: 1, better: 'high', get: (r) => r.girPct },
         { key: 'putts', title: 'Putts par partie', unit: '', caption: '', decimals: 1, better: 'low', get: (r) => r.putts },
         { key: 'puttsPerGir', title: 'Putts par GIR', unit: '', caption: '', decimals: 2, better: 'low', get: (r) => r.puttsPerGir },
       ],
@@ -1337,7 +1341,7 @@
   }
 
   function trendCardHtml(def, pts) {
-    const head = `<div class="chart-card__head"><div><div class="chart-card__title">${def.title}</div>${def.caption ? `<div class="chart-card__unit">${def.caption}</div>` : ''}</div></div>`;
+    const head = `<div class="chart-card__head"><div class="chart-card__titles"><div class="chart-card__title">${def.title}</div>${def.caption ? `<div class="chart-card__unit">${def.caption}</div>` : ''}</div></div>`;
     if (!pts.length) return `<article class="card chart-card">${head}<div class="insights_empty">Pas assez de données</div></article>`;
 
     const ys = pts.map((p) => p.y);
@@ -1456,7 +1460,7 @@
     renderFilterBar(document.getElementById('put-filters'), [
       DEFAULT_FILTERS.course,
       { key: 'distance', icon: 'target', label: 'Toutes distances', options: ['Toutes distances', '< 3 m', '3 – 5 m', '5 – 10 m', '> 10 m'] },
-      { key: 'range', icon: 'calendar', label: 'Période', options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
+      { key: 'range', icon: 'calendar', label: '20 derniers rounds', options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
     ]);
 
     const hasValue = puttingPerformance.value !== null && puttingPerformance.value !== undefined;

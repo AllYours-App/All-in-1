@@ -907,12 +907,49 @@ html {
 /* ---------- FilterBar ---------- */
 #page-stats .filter-bar {
   display: flex;
-  gap: var(--space-sm);
-  padding-bottom: 2px;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
-#page-stats .filter-bar .filter-chip { width: 100%; min-width: 0; padding-inline: var(--space-sm); }
-#page-stats .filter-bar .filter-chip svg { flex-shrink: 0; }
-#page-stats .filter-bar .filter-chip [data-label] { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+
+/* Boutons de tri : style repris du putting */
+#page-stats .analyse-filter {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 8px;
+  cursor: pointer;
+}
+#page-stats .analyse-filter.is-active {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+#page-stats .analyse-filter_label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+#page-stats .analyse-filter.is-active .analyse-filter_label { color: var(--color-accent); }
+#page-stats .analyse-filter_value {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  max-width: 100%;
+  min-width: 0;
+}
+#page-stats .analyse-filter_value svg { width: 14px; height: 14px; color: var(--color-text-secondary); flex-shrink: 0; }
+#page-stats .filter-value-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 #page-stats .filter-chip {
   display: inline-flex;
@@ -3019,3 +3056,18 @@ html {
 @media (max-width: 380px) {
   :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title__chevron { display: none; }
 }
+
+/* Titre de graphe suivi de son unité, sur la même ligne */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__titles {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__titles .chart-card__unit {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+/* Par club : Driving / Approach / Short Game / Putting sur une seule ligne */
+#page-stats #pc-tabs { flex-wrap: nowrap; }
+#page-stats #pc-tabs .insights_chip { flex: 1 1 auto; padding-inline: var(--space-xs); white-space: nowrap; }
