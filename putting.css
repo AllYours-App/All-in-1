@@ -2303,7 +2303,7 @@
   position: relative;
   margin: 0 -16px;
   height: var(--quick-image-height);
-  background-size: cover;
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 }
