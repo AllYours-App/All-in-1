@@ -32,10 +32,9 @@
 
   // API: GET /api/stats/analyses
   const detailedAnalyses = [
-    // "Par club" : aucun écran dédié fourni dans les maquettes → carte non interactive (voir note de livraison).
-    { key: 'par-club', title: 'Par club', description: 'Performance par club, coups moyens, dispersion, etc.', icon: 'bag', goto: null },
+    { key: 'par-club', title: 'Par club', description: 'Performance par club, coups moyens, dispersion, etc.', icon: 'bag', goto: 'par-club' },
     { key: 'par-distance', title: 'Par distance', description: 'Résultats selon la distance initiale : GIR, proximité du trou, score, etc.', icon: 'arc', goto: 'par-distance' },
-    { key: 'statistiques', title: 'Statistiques', description: "Vue d'ensemble : scoring, putting, scrambling, tendances, etc.", icon: 'bars', goto: 'putting' },
+    { key: 'statistiques', title: 'Statistiques', description: "Vue d'ensemble : scoring, putting, scrambling, tendances, etc.", icon: 'bars', goto: 'statistiques' },
   ];
 
   // API: GET /api/rounds?limit=6&sort=date_desc
@@ -47,34 +46,72 @@
     avgGrossScore: null, avgGrossDelta: null, birdiesTotal: null, doubleBogeyPlus: null,
   };
 
-  // API: GET /api/stats/par-distance?mode=multi&period=30d&course=all&lie=all
-  const distanceAnalysis = {
+  // API: GET /api/stats/overview?period=30d&course=all&lie=all
+  // Écran "Statistiques" — onglet Multi (aperçu : score, fairway, greens, approches, putts)
+  const statsOverview = {
     score: {
-      avgGross: null, avgGrossDelta: null, avgNet: null, avgNetDelta: null,
-      best: null, worst: null, played: null,
+      avgGross: null, avgGrossDelta: null, avgNet: null, avgNetDelta: null, avgToPar: null,
+      best: null, bestToPar: null, worst: null, worstToPar: null, played: null,
       byDistance: [],
+      // Moyenne par partie (nombre de trous de chaque résultat)
+      perRound: { eagle: null, birdie: null, par: null, bogey: null, double: null, triple: null },
+      // Score moyen par type de trou (par 4 courts / longs = sous / au-dessus de la médiane des par 4)
+      byHoleType: { par3: null, par4: null, par5: null, par4Short: null, par4Long: null },
+      // Score moyen par portion de parcours (par trou)
+      bySegment: { front9: null, back9: null, first6: null, mid6: null, last6: null },
     },
-    fairway: { hitPct: null, leftPct: null, rightPct: null, avgDistanceHit: null, avgDistanceMiss: null, penaltyPct: null },
-    approach: { girPct: null, proximity: null, under10: null, under20: null, over50: null,
-      zones: { center: null, top: null, left: null, right: null, bottom: null } },
+    fairway: {
+      hitPct: null, leftPct: null, rightPct: null, avgDistanceHit: null, avgDistanceMiss: null, penaltyPct: null,
+      hitPar4: null, hitPar5: null, scoreAfterHit: null, scoreAfterMiss: null,
+    },
+    approach: {
+      girPct: null, proximity: null, under10: null, under20: null, over50: null,
+      zones: { center: null, top: null, left: null, right: null, bottom: null },
+      greenHitPct: null, girPar3: null, girPar4: null, girPar5: null,
+      // Nombre d'attaques de green par zone : 'Centre', 'Green-<dir>', 'Hors-<dir>', 'ND' (raté sans zone précisée)
+      zoneCounts: {},
+    },
     approches: {
-      avgDistance: null, proximity: null, upDownPct: null,
+      avgDistance: null, proximity: null, upDownPct: null, upDownBunker: null, upDownNonBunker: null,
       byDistance: [],
       proximityBands: [],
+      // [{ type: 'Approches' | 'S. Bunker', count: 0, upDownPct: 0 }]
+      byType: [],
+      // Approches de récupération (après green raté), 9 zones : 'Centre' + 8 directions
+      zoneCounts: { all: {}, nonBunker: {}, bunker: {} },
     },
     putts: {
-      perHole: null, onePutt: null, twoPutt: null, threePlusPutt: null, avgFirstPuttDistance: null,
+      perHole: null, perRound: null, perHoleGir: null, perHoleNonGir: null,
+      onePutt: null, twoPutt: null, threePlusPutt: null, avgFirstPuttDistance: null,
       byDistance: [],
     },
   };
 
-  // API: GET /api/stats/trend?metric=fairways-touches&range=3m
-  const trendSeries = {
-    label: 'Fairways touchés', unit: '%',
-    ranges: ['1M', '3M', '6M', '1A', 'TOUT'], activeRange: '3M',
-    points: [],
-    progressionPts: null, average: null, best: { value: null, date: null }, worst: { value: null, date: null },
-    footnote: 'Pourcentage de fairways touchés depuis le tee de départ.',
+  // API: GET /api/stats/trends?course=all&rounds=all
+  // Onglets Traditionnel et SG de "Statistiques" : une entrée par partie, ordre chronologique.
+  // Exemple : { date: '2026-09-12', course: 'Nom du parcours', avgDrive: 231, firPct: 57, girPct: 44,
+  //             putts: 32, puttsPerGir: 1.78, sg: { total: 0.4, driving: 0.1, approach: -0.2, shortGame: 0.3, putting: 0.2 } }
+  const trendRounds = [];
+
+  // API: GET /api/stats/par-club?tabs=driving&rounds=all&course=all&lie=all
+  // Écran "Par club". Chaque métrique = { All: valeur, '<club>': valeur } (null tant que non disponible).
+  const clubInsights = {
+    clubs: [], // clubs réellement joués (ordre du sac) ; vide → repli sur Menu > Mon sac de golf
+    metrics: {
+      sg: {}, distance: {}, fairways: {}, gir: {}, birdies: {}, scrambling: {}, upDown: {}, shotsPerRound: {},
+    },
+    // Putting : clés = tranches de distance (PUTT_BUCKETS)
+    putting: { sg: {}, makeRate: {}, threePutt: {}, puttsPerGir: {}, holesPer3Putt: {} },
+    // Attaques de green par club : { All: { 'Centre': n, 'Green-Long': n, 'Hors-Court': n, 'ND': n, ... }, '<club>': {...} }
+    zoneCounts: {},
+  };
+
+  // API: GET /api/stats/par-distance?rounds=all&course=all&lie=all
+  // Écran "Par distance". Tableaux de 11 valeurs, dans l'ordre de DISTANCE_BUCKETS.
+  const distanceInsights = {
+    sg: [], proximity: [], shotsPerRound: [],
+    // Attaques de green par tranche : { '<tranche>': { 'Centre': n, 'Green-Long': n, ... } }
+    zoneCounts: {},
   };
 
   // API: GET /api/stats/putting?range=20-rounds
@@ -428,6 +465,8 @@
   const dataLabelPlugin = {
     id: 'valueLabels',
     afterDatasetsDraw(chart) {
+      const opts = chart.options.plugins.valueLabels;
+      if (opts && opts.display === false) return;
       const { ctx } = chart;
       const meta = chart.getDatasetMeta(chart.data.datasets.length - 1);
       ctx.save();
@@ -474,6 +513,7 @@
         layout: { padding: { top: 24 } },
         plugins: {
           legend: { display: false },
+          valueLabels: { display: points.length <= 10 },
           tooltip: { backgroundColor: cssVar('--color-bg-elevated'), borderColor: gridColor, borderWidth: 1, titleColor: textColor, bodyColor: '#fff', padding: 10, cornerRadius: 10, displayColors: false },
         },
         scales: {
@@ -603,6 +643,176 @@
   }
 
   /* ========================================================================
+     10 bis) HELPERS "INSIGHTS" — barres horizontales, puces, roue du green, tableaux
+     Partagés par les écrans Par club, Par distance et Statistiques.
+     ======================================================================== */
+
+  function fmtNum(value, decimals, suffix) {
+    if (value === null || value === undefined || Number.isNaN(value)) return '--';
+    const f = Math.pow(10, decimals === undefined ? 1 : decimals);
+    return `${Math.round(value * f) / f}${suffix || ''}`;
+  }
+
+  const fmtSG = (v) => `${v > 0 ? '+' : ''}${v.toFixed(2)}`;
+  const pickValue = (map, key) => (map && map[key] !== undefined ? map[key] : null);
+  const isEmptyValue = (v) => v === null || v === undefined || Number.isNaN(v);
+
+  // Échelle lisible (pas de 1 / 2 / 5 × 10^n, ~4 intervalles) pour l'axe des graphes en barres.
+  function niceScale(min, max) {
+    const span = (max - min) || 1;
+    const rawStep = span / 4;
+    const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const norm = rawStep / mag;
+    const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+    const niceMin = Math.floor(min / step) * step;
+    const niceMax = Math.ceil(max / step) * step;
+    const count = Math.round((niceMax - niceMin) / step);
+    const ticks = Array.from({ length: count + 1 }, (_, i) => +(niceMin + i * step).toFixed(6));
+    return { min: niceMin, max: niceMax, step, ticks };
+  }
+
+  /**
+   * Graphe en barres horizontales (une ligne = { label, value }).
+   * opts.centered : barres centrées sur 0 (strokes gained) ; sinon depuis 0.
+   * opts.showAxis : axe gradué ; opts.format : formatage de la valeur affichée.
+   */
+  function renderBarChart(title, rows, opts) {
+    opts = opts || {};
+    const centered = !!opts.centered;
+    const format = opts.format || ((v) => v.toFixed(1));
+    const defined = rows.filter((r) => !isEmptyValue(r.value));
+    const maxAbs = defined.length ? Math.max(...defined.map((r) => Math.abs(r.value)), 0.01) : 0.01;
+
+    let scaleMax = maxAbs;
+    let axisHtml = '';
+    if (opts.showAxis) {
+      const nice = niceScale(0, maxAbs);
+      scaleMax = nice.max || maxAbs;
+      let ticks = nice.ticks;
+      if (centered) {
+        const n = Math.round(nice.max / nice.step);
+        ticks = Array.from({ length: n * 2 + 1 }, (_, i) => +((i - n) * nice.step).toFixed(6));
+      }
+      axisHtml = `<div class="insights_bar-axis"><span></span><div class="insights_bar-ticks">${ticks.map((t) => `<span>${t}</span>`).join('')}</div><span></span></div>`;
+    }
+
+    const rowsHtml = rows.map((r) => {
+      const empty = isEmptyValue(r.value);
+      let fill = '';
+      if (!empty) {
+        if (centered) {
+          const pct = Math.min(50, Math.abs(r.value) / scaleMax * 50);
+          fill = `<div class="insights_bar-fill ${r.value >= 0 ? 'is-pos' : 'is-neg'}" style="${r.value >= 0 ? 'left' : 'right'}:50%;width:${pct}%;"></div>`;
+        } else {
+          fill = `<div class="insights_bar-fill is-pos" style="left:0;width:${Math.min(100, r.value / scaleMax * 100)}%;"></div>`;
+        }
+      }
+      return `
+        <div class="insights_bar-row">
+          <div class="insights_bar-label">${esc(r.label)}</div>
+          <div class="insights_bar-track">${centered ? '<div class="insights_bar-center"></div>' : ''}${fill}</div>
+          <div class="insights_bar-value${empty ? ' is-empty' : ''}">${empty ? '--' : format(r.value)}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <article class="card chart-card insights_chart">
+        <div class="chart-card__head"><div class="chart-card__title">${title}</div></div>
+        <div class="insights_bar-chart">${axisHtml}${rowsHtml}</div>
+      </article>
+    `;
+  }
+
+  // Groupe de puces cliquables ({ value, label }) ; `selected` = valeurs actives.
+  function chipGroupHtml(items, selected, attr) {
+    return items.map((it) => `<button type="button" class="insights_chip" aria-pressed="${selected.includes(it.value)}" ${attr || 'data-value'}="${esc(it.value)}">${esc(it.label)}</button>`).join('');
+  }
+
+  // Sélection multiple avec "Tous" exclusif : cliquer une valeur l'ajoute / la retire, au moins une reste active.
+  function toggleMulti(list, value) {
+    if (value === 'All') return ['All'];
+    let next = list.filter((v) => v !== 'All');
+    next = next.includes(value) ? next.filter((v) => v !== value) : [...next, value];
+    return next.length ? next : ['All'];
+  }
+
+  function sumZoneCounts(list) {
+    const out = {};
+    list.forEach((counts) => {
+      Object.keys(counts || {}).forEach((k) => { out[k] = (out[k] || 0) + (counts[k] || 0); });
+    });
+    return out;
+  }
+
+  /**
+   * Roue de dispersion (même découpage que la saisie : trou + 8 secteurs sur le green + 8 secteurs hors green).
+   * mode 'green17' : 'Centre', 'Green-<dir>', 'Hors-<dir>' (+ 'ND' = raté sans zone précisée).
+   * mode 'nine'    : 'Centre' + 8 directions (approches de récupération, sans distinction sur / hors green).
+   * counts         : nombre de coups par zone ; les pourcentages sont calculés ici.
+   */
+  const WHEEL_DIRECTIONS = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
+
+  function renderZoneWheel(counts, mode) {
+    counts = counts || {};
+    const nine = mode === 'nine';
+    const keys = nine
+      ? ['Centre', ...WHEEL_DIRECTIONS]
+      : ['Centre', ...WHEEL_DIRECTIONS.map((d) => `Green-${d}`), ...WHEEL_DIRECTIONS.map((d) => `Hors-${d}`)];
+    const nd = nine ? 0 : (counts.ND || 0);
+    const total = keys.reduce((sum, k) => sum + (counts[k] || 0), 0) + nd;
+    const pctOf = (k) => (total ? Math.round(((counts[k] || 0) / total) * 100) : null);
+
+    const c = 150, rHole = 22, rGreen = 78, rOuter = 146;
+    const rad = (deg) => (deg - 90) * Math.PI / 180;
+    const pt = (r, deg) => `${(c + r * Math.cos(rad(deg))).toFixed(2)} ${(c + r * Math.sin(rad(deg))).toFixed(2)}`;
+    const sector = (rIn, rOut, a0, a1) => `M ${pt(rOut, a0)} A ${rOut} ${rOut} 0 0 1 ${pt(rOut, a1)} L ${pt(rIn, a1)} A ${rIn} ${rIn} 0 0 0 ${pt(rIn, a0)} Z`;
+    const label = (r, deg, pct) => `<text x="${(c + r * Math.cos(rad(deg))).toFixed(2)}" y="${(c + r * Math.sin(rad(deg))).toFixed(2)}" class="insights_wheel-text${pct === null ? ' is-empty' : ''}" text-anchor="middle" dominant-baseline="central">${pct === null ? '--' : `${pct}%`}</text>`;
+    const opacity = (pct) => (pct === null ? 0.04 : Math.min(0.75, 0.08 + pct / 100 * 0.9)).toFixed(2);
+
+    let paths = '';
+    let labels = '';
+    WHEEL_DIRECTIONS.forEach((dir, i) => {
+      const mid = i * 45, a0 = mid - 22.5, a1 = mid + 22.5;
+      if (nine) {
+        const p = pctOf(dir);
+        paths += `<path d="${sector(rHole, rGreen + 40, a0, a1)}" class="insights_wheel-sector is-on" style="fill-opacity:${opacity(p)}"/>`;
+        labels += label((rHole + rGreen + 40) / 2, mid, p);
+      } else {
+        const pOut = pctOf(`Hors-${dir}`), pIn = pctOf(`Green-${dir}`);
+        paths += `<path d="${sector(rGreen, rOuter, a0, a1)}" class="insights_wheel-sector is-off" style="fill-opacity:${opacity(pOut)}"/>`;
+        paths += `<path d="${sector(rHole, rGreen, a0, a1)}" class="insights_wheel-sector is-on" style="fill-opacity:${opacity(pIn)}"/>`;
+        labels += label((rGreen + rOuter) / 2, mid, pOut) + label((rHole + rGreen) / 2, mid, pIn);
+      }
+    });
+    const pCenter = pctOf('Centre');
+    const ndPct = total ? Math.round((nd / total) * 100) : null;
+
+    return `
+      <div class="insights_wheel">
+        <svg viewBox="0 0 300 300" role="img" aria-label="Dispersion des coups">
+          ${paths}
+          <circle cx="${c}" cy="${c}" r="${rHole}" class="insights_wheel-sector is-on" style="fill-opacity:${opacity(pCenter)}"/>
+          ${labels}
+          ${label(0, 0, pCenter)}
+        </svg>
+        ${!nine ? `<div class="insights_wheel-note">Hors green non précisé : ${ndPct === null ? '--' : `${ndPct}%`}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function kvTable(head, rows) {
+    return `
+      <table class="data-table">
+        <thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map((r) => `<tr>${r.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+    `;
+  }
+
+  function subtitle(text) { return `<div class="insights_subtitle">${text}</div>`; }
+
+  /* ========================================================================
      11) BLOCS "PAR DISTANCE" — SCORE / FAIRWAY / APPROACH / APPROCHES / PUTTS
      ======================================================================== */
 
@@ -634,15 +844,22 @@
     `;
   }
 
+  function scoreWithPar(score, toPar) {
+    if (isEmptyValue(score)) return null;
+    return isEmptyValue(toPar) ? score : `${score} (${fmtSigned(toPar)})`;
+  }
+
   function renderScoreBlock(data) {
+    const p = data.perRound, t = data.byHoleType, s = data.bySegment;
     return `
       <section class="stat-block fade-up">
         ${statBlockHeader('bars', 'Score')}
         <div class="stat-block__metrics">
           ${metric('Score brut moyen', data.avgGross, data.avgGrossDelta, true)}
           ${metric('Score net moyen', data.avgNet, data.avgNetDelta, true)}
-          ${metric('Meilleur score', data.best)}
-          ${metric('Moins bon score', data.worst)}
+          ${metric('Score / par moyen', fmtSigned(data.avgToPar))}
+          ${metric('Meilleur score', scoreWithPar(data.best, data.bestToPar))}
+          ${metric('Moins bon score', scoreWithPar(data.worst, data.worstToPar))}
           ${metric('Parties jouées', data.played)}
         </div>
         <table class="data-table">
@@ -657,17 +874,59 @@
             `).join('')}
           </tbody>
         </table>
+        ${subtitle('Moyenne par partie')}
+        ${kvTable(['Résultat', 'Trous / partie'], [
+          ['Eagle ou mieux', fmtNum(p.eagle, 2)], ['Birdie', fmtNum(p.birdie, 2)], ['Par', fmtNum(p.par, 2)],
+          ['Bogey', fmtNum(p.bogey, 2)], ['Double bogey', fmtNum(p.double, 2)], ['Triple bogey ou pire', fmtNum(p.triple, 2)],
+        ])}
+        ${subtitle('Score moyen par type de trou')}
+        ${kvTable(['Type de trou', 'Score moyen'], [
+          ['Par 3', fmtNum(t.par3)], ['Par 4', fmtNum(t.par4)], ['Par 5', fmtNum(t.par5)],
+          ['Par 4 courts', fmtNum(t.par4Short)], ['Par 4 longs', fmtNum(t.par4Long)],
+        ])}
+        ${subtitle('Score moyen par portion de parcours')}
+        ${kvTable(['Portion', 'Score moyen'], [
+          ['Aller (trous 1-9)', fmtNum(s.front9)], ['Retour (trous 10-18)', fmtNum(s.back9)],
+          ['6 premiers trous', fmtNum(s.first6)], ['6 trous du milieu', fmtNum(s.mid6)], ['6 derniers trous', fmtNum(s.last6)],
+        ])}
       </section>
     `;
   }
 
   function renderFairwayBlock(data) {
-    return `<section class="stat-block fade-up">${statBlockHeader('flag', 'Fairway')}${renderFairwayMap(data)}</section>`;
+    return `
+      <section class="stat-block fade-up">
+        ${statBlockHeader('flag', 'Fairway')}
+        ${renderFairwayMap(data)}
+        ${subtitle('Fairways touchés')}
+        ${kvTable(['Type de trou', '%'], [['Global', fmt(data.hitPct, '%')], ['Par 4', fmt(data.hitPar4, '%')], ['Par 5', fmt(data.hitPar5, '%')]])}
+        ${subtitle('Score moyen selon le fairway')}
+        ${kvTable(['Situation', 'Score moyen'], [['Après fairway touché', fmtNum(data.scoreAfterHit)], ['Après fairway raté', fmtNum(data.scoreAfterMiss)]])}
+      </section>
+    `;
   }
 
   function renderApproachBlock(data) {
-    return `<section class="stat-block fade-up">${statBlockHeader('target', 'Approach')}${renderApproachMap(data)}</section>`;
+    return `
+      <section class="stat-block fade-up">
+        ${statBlockHeader('target', 'Approach')}
+        ${renderApproachMap(data)}
+        ${subtitle('Attaque de green réussie')}
+        ${kvTable(['Type de trou', '%'], [['Global', fmt(data.greenHitPct, '%')]])}
+        ${subtitle('Greens en régulation')}
+        ${kvTable(['Type de trou', '%'], [['Global', fmt(data.girPct, '%')], ['Par 3', fmt(data.girPar3, '%')], ['Par 4', fmt(data.girPar4, '%')], ['Par 5', fmt(data.girPar5, '%')]])}
+        ${subtitle('Dispersion sur le green')}
+        ${renderZoneWheel(data.zoneCounts, 'green17')}
+      </section>
+    `;
   }
+
+  const APPROCHES_TYPES = [
+    { value: 'all', label: 'Toutes' },
+    { value: 'nonBunker', label: 'Approches' },
+    { value: 'bunker', label: 'S. Bunker' },
+  ];
+  let approchesType = 'all';
 
   function renderApprochesBlock(data) {
     return `
@@ -677,15 +936,22 @@
           ${metric('Distance moyenne', data.avgDistance, undefined, undefined, ' m')}
           ${metric('Proximité moyenne', data.proximity, undefined, undefined, ' m')}
           ${metric('Up & Down', data.upDownPct, undefined, undefined, '%')}
+          ${metric('Up & Down bunker', data.upDownBunker, undefined, undefined, '%')}
+          ${metric('Up & Down hors bunker', data.upDownNonBunker, undefined, undefined, '%')}
         </div>
         <table class="data-table">
           <thead><tr><th>Distance</th><th>Proximité</th><th>Réussite</th></tr></thead>
           <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${row.proximity} m</td><td>${row.success}%</td></tr>`).join('')}</tbody>
         </table>
+        ${subtitle('Par type d\'approche')}
+        ${kvTable(['Type', 'Up & Down', 'Coups'], data.byType.map((t) => [t.type, fmt(t.upDownPct, '%'), fmt(t.count)]))}
         <div>
           <div class="chart-canvas-wrap chart-canvas-wrap--sm" style="height:180px;"><canvas data-dispersion></canvas></div>
           ${renderDispersionLegend(data.proximityBands)}
         </div>
+        ${subtitle('Dispersion des approches (après green raté)')}
+        <div class="insights_chips" data-approches-types>${chipGroupHtml(APPROCHES_TYPES, [approchesType])}</div>
+        <div data-approches-wheel>${renderZoneWheel(data.zoneCounts[approchesType], 'nine')}</div>
       </section>
     `;
   }
@@ -695,10 +961,14 @@
       <section class="stat-block fade-up">
         ${statBlockHeader('putter', 'Putts')}
         <div class="stat-block__metrics">
-          ${metric('Putts par trou', data.perHole)}
           ${metric('1 putt', data.onePutt, undefined, undefined, '%')}
           ${metric('2 putts', data.twoPutt, undefined, undefined, '%')}
+          ${metric('3 putts ou +', data.threePlusPutt, undefined, undefined, '%')}
         </div>
+        ${kvTable(['Moyennes', 'Putts'], [
+          ['Putts / partie', fmtNum(data.perRound)], ['Putts / trou', fmtNum(data.perHole, 2)],
+          ['Putts / trou en régulation', fmtNum(data.perHoleGir, 2)], ['Putts / trou hors régulation', fmtNum(data.perHoleNonGir, 2)],
+        ])}
         <table class="data-table">
           <thead><tr><th>Distance 1er putt</th><th>Putts moy.</th><th>1 putt</th><th>2 putts</th><th>3 putts+</th></tr></thead>
           <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${row.avgPutts.toFixed(2)}</td><td>${row.one}%</td><td>${row.two}%</td><td>${row.threePlus}%</td></tr>`).join('')}</tbody>
@@ -708,7 +978,7 @@
   }
 
   /* ========================================================================
-     12) INITIALISATION DES 6 ÉCRANS (appelée une seule fois, au premier accès)
+     12) INITIALISATION DES ÉCRANS (appelée une seule fois, au premier accès)
      ======================================================================== */
 
   function initDashboard() {
@@ -755,71 +1025,346 @@
     document.getElementById('screen-dashboard').appendChild(fabRow);
   }
 
+  /* ========================================================================
+     ÉCRAN "PAR CLUB" — graphes par club (Driving / Approach / Short Game / Putting)
+     ======================================================================== */
+
+  const INSIGHTS_ROUNDS = ['5 derniers parcours', '10 derniers parcours', '15 derniers parcours', '20 derniers parcours', 'Tout'];
+  const CLUB_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Sand', 'Recover', 'Green'];
+  const DISTANCE_LIES = ['Tous lies', 'Tee', 'Fringe', 'Fairway', 'Sand', 'Rough', 'Recover'];
+  const CLUB_TABS = [
+    { value: 'driving', label: 'Driving' },
+    { value: 'approach', label: 'Approach' },
+    { value: 'shortGame', label: 'Short Game' },
+    { value: 'putting', label: 'Putting' },
+  ];
+  const PUTT_BUCKETS = ['≤ 1 m', '> 1 à 2 m', '> 2 à 3 m', '> 3 à 5 m', '> 5 à 9 m', '> 9 m'];
+
+  // Filtres communs (Time / Parcours / Lie). À chaque changement : recharger les données avec ces valeurs.
+  const clubState = { tabs: ['driving'], greenClubs: ['All'], filters: { rounds: 'Tout', course: 'Tous parcours', lie: 'Tous lies' } };
+
+  function renderInsightsFilters(rootId, lieOptions, onChange) {
+    renderFilterBar(document.getElementById(rootId), [
+      { key: 'rounds', icon: 'calendar', label: 'Tout', options: INSIGHTS_ROUNDS },
+      { key: 'course', icon: 'flag', label: 'Tous parcours', options: DEFAULT_FILTERS.course.options },
+      { key: 'lie', icon: 'sliders', label: 'Tous lies', options: lieOptions },
+    ], onChange);
+  }
+
+  function initParClub() {
+    renderClubTabs();
+    renderInsightsFilters('pc-filters', CLUB_LIES, (key, value) => {
+      clubState.filters[key] = value;
+      // À brancher : GET /api/stats/par-club avec clubState.tabs et clubState.filters, puis remplacer clubInsights
+      renderClubCharts();
+    });
+    renderClubCharts();
+  }
+
+  function renderClubTabs() {
+    const root = document.getElementById('pc-tabs');
+    root.innerHTML = chipGroupHtml(CLUB_TABS, clubState.tabs);
+    root.querySelectorAll('.insights_chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tabs = clubState.tabs;
+        const i = tabs.indexOf(btn.dataset.value);
+        if (i === -1) tabs.push(btn.dataset.value);
+        else if (tabs.length > 1) tabs.splice(i, 1); // au moins un onglet reste actif
+        renderClubTabs();
+        renderClubCharts();
+      });
+    });
+  }
+
+  function renderClubCharts() {
+    const root = document.getElementById('pc-charts');
+    const tabs = clubState.tabs;
+    const has = (k) => tabs.includes(k);
+    const only = (k) => tabs.length === 1 && tabs[0] === k;
+    const m = clubInsights.metrics, put = clubInsights.putting;
+    const played = clubInsights.clubs.length ? clubInsights.clubs : getSdClubs().map((c) => c.name);
+
+    const rowsOf = (map, keys) => keys.map((k) => ({ label: k === 'All' ? 'Tous' : k, value: pickValue(map, k) }));
+    const clubRows = (map) => rowsOf(map, ['All', ...played]);
+    const bucketRows = (map) => rowsOf(map, ['All', ...PUTT_BUCKETS]);
+    const pct = (v) => Math.round(v);
+
+    const out = [];
+    const add = (title, rows, opts) => out.push(renderBarChart(title, rows, { showAxis: true, ...opts }));
+    const sgLabel = tabs.length === 1 ? CLUB_TABS.find((t) => t.value === tabs[0]).label : '';
+
+    // Strokes gained : par tranche de distance pour le putting seul, sinon par club
+    if (only('putting')) {
+      add('SG Putting (vs TOUR)', bucketRows(put.sg), { centered: true, format: fmtSG });
+    } else {
+      const sgRows = clubRows(m.sg);
+      // Les putts n'ont pas de club : une barre dédiée "Putting" s'ajoute à côté de "Tous"
+      if (has('putting')) sgRows.push({ label: 'Putting', value: pickValue(m.sg, 'Putting') });
+      add(`SG${sgLabel ? ` ${sgLabel}` : ''} (vs TOUR)`, sgRows, { centered: true, format: fmtSG });
+    }
+
+    if (only('driving')) {
+      add('Distance moyenne (m)', rowsOf(m.distance, played), { format: pct });
+      add('Fairways touchés (%)', clubRows(m.fairways), { format: pct });
+    }
+    if (only('approach')) {
+      add('Distance moyenne (m)', rowsOf(m.distance, played), { format: pct });
+      add('GIR (%)', clubRows(m.gir), { format: pct });
+      add('Tentatives de birdie / partie', clubRows(m.birdies));
+    }
+    if (only('shortGame')) {
+      add('Scrambling (%)', clubRows(m.scrambling), { format: pct });
+      add('Up & Down (%)', clubRows(m.upDown), { format: pct });
+    }
+    if (only('putting')) add('Taux de réussite (%)', bucketRows(put.makeRate), { format: pct });
+
+    if (!only('putting')) {
+      const shotRows = clubRows(m.shotsPerRound);
+      if (has('putting')) shotRows.push({ label: 'Putting', value: pickValue(m.shotsPerRound, 'Putting') });
+      add('Coups / partie', shotRows);
+    }
+    if (only('putting')) {
+      add('3 putts (%)', bucketRows(put.threePutt), { format: pct });
+      add('Putts / GIR', bucketRows(put.puttsPerGir), { format: (v) => v.toFixed(2) });
+      add('Trous par 3 putts', bucketRows(put.holesPer3Putt));
+      add('Coups / partie', rowsOf(m.shotsPerRound, ['All']));
+    }
+
+    // Dispersion sur le green : onglet Approach seul, un ou plusieurs clubs
+    let dispersion = '';
+    if (only('approach')) {
+      const zc = clubInsights.zoneCounts;
+      const counts = clubState.greenClubs.includes('All') ? (zc.All || {}) : sumZoneCounts(clubState.greenClubs.map((c) => zc[c]));
+      dispersion = `
+        <article class="card chart-card insights_chart">
+          <div class="chart-card__head"><div class="chart-card__title">Dispersion sur le green</div></div>
+          <div class="insights_chips" data-green-clubs>${chipGroupHtml([{ value: 'All', label: 'Tous' }, ...played.map((c) => ({ value: c, label: c }))], clubState.greenClubs)}</div>
+          ${renderZoneWheel(counts, 'green17')}
+        </article>
+      `;
+    }
+
+    root.innerHTML = out.join('') + dispersion;
+    root.querySelectorAll('[data-green-clubs] .insights_chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        clubState.greenClubs = toggleMulti(clubState.greenClubs, btn.dataset.value);
+        renderClubCharts();
+      });
+    });
+  }
+
+  /* ========================================================================
+     ÉCRAN "PAR DISTANCE" — graphes par tranche de distance avant le coup
+     ======================================================================== */
+
+  const DISTANCE_BUCKETS = ['< 23', '23 à 45', '46 à 68', '69 à 91', '91 à 114', '114 à 137', '137 à 159', '160 à 182', '183 à 205', '206 à 229', '> 229'];
+  const distanceState = { buckets: ['All'], filters: { rounds: 'Tout', course: 'Tous parcours', lie: 'Tous lies' } };
+
   function initParDistance() {
+    renderInsightsFilters('pd-filters', DISTANCE_LIES, (key, value) => {
+      distanceState.filters[key] = value;
+      // À brancher : GET /api/stats/par-distance avec distanceState.filters, puis remplacer distanceInsights
+      renderDistanceCharts();
+    });
+    renderDistanceCharts();
+  }
+
+  function renderDistanceCharts() {
+    const root = document.getElementById('pd-charts');
+    const d = distanceInsights;
+    const rows = (arr) => DISTANCE_BUCKETS.map((label, i) => ({ label, value: arr[i] === undefined ? null : arr[i] }));
+
+    const selected = distanceState.buckets.includes('All') ? DISTANCE_BUCKETS : distanceState.buckets;
+    const counts = sumZoneCounts(selected.map((b) => d.zoneCounts[b]));
+
+    root.innerHTML = `
+      ${renderBarChart('Strokes gained (vs TOUR)', rows(d.sg), { centered: true, format: fmtSG })}
+      ${renderBarChart('Proximité médiane (m)', rows(d.proximity), { format: (v) => v.toFixed(1) })}
+      ${renderBarChart('Coups / partie', rows(d.shotsPerRound), { format: (v) => v.toFixed(1) })}
+      <article class="card chart-card insights_chart">
+        <div class="chart-card__head"><div class="chart-card__title">Dispersion sur le green</div></div>
+        <div class="insights_chips" data-green-buckets>${chipGroupHtml([{ value: 'All', label: 'Toutes' }, ...DISTANCE_BUCKETS.map((b) => ({ value: b, label: b }))], distanceState.buckets)}</div>
+        ${renderZoneWheel(counts, 'green17')}
+      </article>
+    `;
+    root.querySelectorAll('[data-green-buckets] .insights_chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        distanceState.buckets = toggleMulti(distanceState.buckets, btn.dataset.value);
+        renderDistanceCharts();
+      });
+    });
+  }
+
+  /* ========================================================================
+     ÉCRAN "STATISTIQUES" — Multi (aperçu) / Traditionnel / SG
+     ======================================================================== */
+
+  function initStatistiques() {
     // Le segmented control change le pane affiché ; il ne change pas d'écran.
-    initSegmentedControl(document.getElementById('pd-modeTabs'), ['Multi', 'Traditionnel', 'SG'], 0, (i, label) => {
-      showParDistancePane(label);
+    initSegmentedControl(document.getElementById('st-modeTabs'), ['Multi', 'Traditionnel', 'SG'], 0, (i, label) => {
+      showStatistiquesPane(label);
     });
 
-    renderParDistanceMulti();
-    renderParDistanceTraditionnel();
-    // Pane "SG" : aucune maquette fournie → laissée vide intentionnellement.
-
-    showParDistancePane('Multi');
+    renderStatistiquesMulti();
+    initTrendPane('traditional');
+    initTrendPane('sg');
+    showStatistiquesPane('Multi');
   }
 
-  function showParDistancePane(label) {
-    const panes = { Multi: 'pd-pane-multi', Traditionnel: 'pd-pane-traditionnel', SG: 'pd-pane-sg' };
+  function showStatistiquesPane(label) {
+    const panes = { Multi: 'st-pane-multi', Traditionnel: 'st-pane-traditionnel', SG: 'st-pane-sg' };
     Object.values(panes).forEach((id) => document.getElementById(id).classList.remove('is-active'));
     document.getElementById(panes[label]).classList.add('is-active');
+    // Graphiques tracés une fois le pane visible (Chart.js mesure le conteneur)
+    if (label === 'Traditionnel') renderTrendPane('traditional');
+    if (label === 'SG') renderTrendPane('sg');
   }
 
-  // Pane "Multi" — image 2
-  function renderParDistanceMulti() {
-    renderFilterBar(document.getElementById('pd-multi-filters'), [DEFAULT_FILTERS.period, DEFAULT_FILTERS.course, DEFAULT_FILTERS.lie]);
+  // Pane "Multi" : aperçu score / fairway / greens / approches / putts
+  let dispersionChart = null;
 
-    const blocksEl = document.getElementById('pd-multi-blocks');
+  function renderStatistiquesMulti() {
+    renderFilterBar(document.getElementById('st-multi-filters'), [DEFAULT_FILTERS.period, DEFAULT_FILTERS.course, DEFAULT_FILTERS.lie]);
+
+    const blocksEl = document.getElementById('st-multi-blocks');
     blocksEl.innerHTML =
-      renderScoreBlock(distanceAnalysis.score) +
-      renderFairwayBlock(distanceAnalysis.fairway) +
-      renderApproachBlock(distanceAnalysis.approach) +
-      renderApprochesBlock(distanceAnalysis.approches) +
-      renderPuttsBlock(distanceAnalysis.putts);
+      renderScoreBlock(statsOverview.score) +
+      renderFairwayBlock(statsOverview.fairway) +
+      renderApproachBlock(statsOverview.approach) +
+      renderApprochesBlock(statsOverview.approches) +
+      renderPuttsBlock(statsOverview.putts);
 
     const dispersionCanvas = blocksEl.querySelector('[data-dispersion]');
-    if (dispersionCanvas) createDispersionChart(dispersionCanvas, distanceAnalysis.approches.proximityBands);
+    if (dispersionCanvas) dispersionChart = createDispersionChart(dispersionCanvas, statsOverview.approches.proximityBands);
 
-    animateCounters(document.getElementById('pd-pane-multi'), 800);
-  }
-
-  // Pane "Traditionnel" — image 4
-  function renderParDistanceTraditionnel() {
-    renderFilterBar(document.getElementById('pd-trad-filters'), [
-      { key: 'course', icon: 'flag', label: 'Tous parcours', options: DEFAULT_FILTERS.course.options },
-      { key: 'period', icon: 'calendar', label: '30 derniers parcours', options: ['10 derniers parcours', '30 derniers parcours', '90 derniers parcours', 'Tout'] },
-    ]);
-
-    document.getElementById('pd-trad-title').textContent = trendSeries.label;
-    document.getElementById('pd-trad-unit').textContent = `(${trendSeries.unit})`;
-    document.getElementById('pd-trad-average').textContent = fmt(trendSeries.average, trendSeries.unit);
-    document.getElementById('pd-trad-best').textContent = fmt(trendSeries.best.value, trendSeries.unit);
-    document.getElementById('pd-trad-bestDate').textContent = trendSeries.best.date || '--';
-    document.getElementById('pd-trad-worst').textContent = fmt(trendSeries.worst.value, trendSeries.unit);
-    document.getElementById('pd-trad-worstDate').textContent = trendSeries.worst.date || '--';
-    document.getElementById('pd-trad-progression').querySelector('span').textContent = fmt(trendSeries.progressionPts !== null && trendSeries.progressionPts !== undefined ? `+${trendSeries.progressionPts}` : null, ' pts');
-    document.getElementById('pd-trad-footnote').textContent = trendSeries.footnote;
-
-    const tabsEl = document.getElementById('pd-trad-periodTabs');
-    tabsEl.innerHTML = trendSeries.ranges.map((r) => `<button type="button" class="period-tab" role="tab" aria-selected="${r === trendSeries.activeRange}">${r}</button>`).join('');
-    tabsEl.querySelectorAll('.period-tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        tabsEl.querySelectorAll('.period-tab').forEach((t) => t.setAttribute('aria-selected', 'false'));
-        tab.setAttribute('aria-selected', 'true');
-        // Ici : recharger les points du graphique pour la période sélectionnée (branchement API)
+    // Dispersion des approches de récupération : Toutes / Approches / S. Bunker
+    const typesEl = blocksEl.querySelector('[data-approches-types]');
+    const wheelEl = blocksEl.querySelector('[data-approches-wheel]');
+    typesEl.querySelectorAll('.insights_chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        approchesType = btn.dataset.value;
+        typesEl.querySelectorAll('.insights_chip').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        wheelEl.innerHTML = renderZoneWheel(statsOverview.approches.zoneCounts[approchesType], 'nine');
       });
     });
 
-    createPerformanceChart(document.getElementById('pd-trad-chart'), trendSeries.points, 'bar-line');
+    animateCounters(document.getElementById('st-pane-multi'), 800);
+  }
+
+  // Panes "Traditionnel" et "SG" : une courbe par statistique, un point par partie
+  const TREND_PANES = {
+    traditional: {
+      filters: 'st-trad-filters', charts: 'st-trad-charts',
+      defs: [
+        { key: 'avgDrive', title: 'Distance moyenne du drive', unit: 'm', decimals: 0, better: 'high', get: (r) => r.avgDrive },
+        { key: 'firPct', title: 'Fairways touchés', unit: '%', decimals: 0, better: 'high', get: (r) => r.firPct },
+        { key: 'girPct', title: 'Greens en régulation', unit: '%', decimals: 0, better: 'high', get: (r) => r.girPct },
+        { key: 'putts', title: 'Putts par partie', unit: '', decimals: 1, better: 'low', get: (r) => r.putts },
+        { key: 'puttsPerGir', title: 'Putts par GIR', unit: '', decimals: 2, better: 'low', get: (r) => r.puttsPerGir },
+      ],
+    },
+    sg: {
+      filters: 'st-sg-filters', charts: 'st-sg-charts',
+      defs: [
+        { key: 'sgTotal', title: 'SG Total', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
+        { key: 'sgDriving', title: 'SG Driving', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
+        { key: 'sgApproach', title: 'SG Approach', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
+        { key: 'sgShortGame', title: 'SG Short Game', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
+        { key: 'sgPutting', title: 'SG Putting', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
+      ],
+    },
+  };
+  const trendFilters = { traditional: { course: 'Tous parcours', rounds: 'Tout' }, sg: { course: 'Tous parcours', rounds: 'Tout' } };
+  const trendCharts = { traditional: [], sg: [] };
+
+  function initTrendPane(key) {
+    renderFilterBar(document.getElementById(TREND_PANES[key].filters), [
+      { key: 'course', icon: 'flag', label: 'Tous parcours', options: DEFAULT_FILTERS.course.options },
+      { key: 'rounds', icon: 'calendar', label: 'Tout', options: INSIGHTS_ROUNDS },
+    ], (filterKey, value) => {
+      trendFilters[key][filterKey] = value;
+      // À brancher : GET /api/stats/trends avec trendFilters[key], puis remplacer trendRounds
+      renderTrendPane(key);
+    });
+  }
+
+  // Parties filtrées par parcours puis limitées aux N dernières, en ordre chronologique
+  function filteredTrendRounds(key) {
+    const f = trendFilters[key];
+    let list = trendRounds.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    if (f.course !== 'Tous parcours') list = list.filter((r) => r.course === f.course);
+    const n = parseInt(f.rounds, 10);
+    if (!Number.isNaN(n)) list = list.slice(-n);
+    return list;
+  }
+
+  function trendPoints(def, list) {
+    const f = Math.pow(10, def.decimals);
+    return list
+      .map((r) => ({ y: def.get(r), date: r.date }))
+      .filter((p) => !isEmptyValue(p.y))
+      .map((p, i) => ({ x: i + 1, y: Math.round(p.y * f) / f, date: p.date }));
+  }
+
+  function fmtDateFr(iso) {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? '--' : d.toLocaleDateString('fr-FR');
+  }
+
+  function trendCardHtml(def, pts) {
+    const unitLabel = def.unit ? `(${def.unit})` : '';
+    const head = `<div class="chart-card__head"><div><div class="chart-card__title">${def.title}</div><div class="chart-card__unit">${unitLabel}</div></div></div>`;
+    if (!pts.length) return `<article class="card chart-card">${head}<div class="insights_empty">Pas assez de données</div></article>`;
+
+    const ys = pts.map((p) => p.y);
+    const avg = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const isBetter = (a, b) => (def.better === 'low' ? a < b : a > b);
+    const best = pts.reduce((a, b) => (isBetter(b.y, a.y) ? b : a));
+    const worst = pts.reduce((a, b) => (isBetter(b.y, a.y) ? a : b));
+    const progression = pts.length > 1 ? pts[pts.length - 1].y - pts[0].y : null;
+    const show = (v) => (def.signed ? fmtSigned(fmtNum(v, def.decimals)) : fmtNum(v, def.decimals, def.unit ? ` ${def.unit}` : ''));
+
+    return `
+      <article class="card chart-card">
+        ${head}
+        <div class="chart-canvas-wrap"><canvas data-trend="${def.key}" role="img" aria-label="${def.title}"></canvas></div>
+        <div class="chart-stats-row">
+          <div class="chart-stats-row__item">
+            <div class="chart-stats-row__label">Progression</div>
+            <div class="chart-progression">${icon('trendUp')}<span>${progression === null ? '--' : `${fmtSigned(fmtNum(progression, def.decimals))}${def.unit && !def.signed ? ` ${def.unit}` : ''}`}</span></div>
+          </div>
+          <div class="chart-stats-row__item">
+            <div class="chart-stats-row__label">Moyenne</div>
+            <div class="chart-stats-row__value">${show(avg)}</div>
+          </div>
+          <div class="chart-stats-row__item">
+            <div class="chart-stats-row__label">Meilleure partie</div>
+            <div class="chart-stats-row__value chart-stats-row__value--accent">${show(best.y)}</div>
+            <div class="chart-stats-row__sub">${fmtDateFr(best.date)}</div>
+          </div>
+          <div class="chart-stats-row__item">
+            <div class="chart-stats-row__label">Plus basse partie</div>
+            <div class="chart-stats-row__value">${show(worst.y)}</div>
+            <div class="chart-stats-row__sub">${fmtDateFr(worst.date)}</div>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderTrendPane(key) {
+    const pane = TREND_PANES[key];
+    const root = document.getElementById(pane.charts);
+    trendCharts[key].forEach((chart) => chart && chart.destroy());
+    trendCharts[key] = [];
+
+    const list = filteredTrendRounds(key);
+    const series = pane.defs.map((def) => ({ def, pts: trendPoints(def, list) }));
+    root.innerHTML = series.map(({ def, pts }) => trendCardHtml(def, pts)).join('');
+    series.forEach(({ def, pts }) => {
+      if (!pts.length) return;
+      trendCharts[key].push(createPerformanceChart(root.querySelector(`[data-trend="${def.key}"]`), pts, 'line'));
+    });
   }
 
   function initHistorique() {
@@ -2207,7 +2752,9 @@
 
   const SCREEN_INIT = {
     dashboard: initDashboard,
+    'par-club': initParClub,
     'par-distance': initParDistance,
+    statistiques: initStatistiques,
     historique: initHistorique,
     putting: initPutting,
     'saisie-rapide': initSaisieRapide,

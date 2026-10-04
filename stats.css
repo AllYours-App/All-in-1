@@ -2765,3 +2765,145 @@ html {
   background: var(--color-accent);
   color: var(--color-bg-base);
 }
+
+/* ==========================================================================
+   INSIGHTS — écrans Par club, Par distance et Statistiques (Client-First)
+   Graphes en barres horizontales, puces de sélection, roue de dispersion.
+   ========================================================================== */
+
+#page-stats .insights_stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  margin-top: var(--space-xl);
+}
+
+/* ---------- Puces (onglets de catégorie, clubs, tranches de distance) ---------- */
+#page-stats .insights_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+#page-stats .insights_chip {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+#page-stats .insights_chip:hover { border-color: var(--color-border-strong); }
+#page-stats .insights_chip[aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg-base);
+}
+
+/* ---------- Carte de graphe ---------- */
+#page-stats .insights_chart .chart-card__title { font-size: var(--fs-base); }
+
+#page-stats .insights_bar-chart {
+  --insights-label-w: 84px;
+  --insights-value-w: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Axe gradué : aligné sur la colonne centrale des lignes */
+#page-stats .insights_bar-axis,
+#page-stats .insights_bar-row {
+  display: grid;
+  grid-template-columns: var(--insights-label-w) 1fr var(--insights-value-w);
+  align-items: center;
+  column-gap: var(--space-sm);
+}
+#page-stats .insights_bar-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+}
+
+#page-stats .insights_bar-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#page-stats .insights_bar-track {
+  position: relative;
+  height: 14px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+#page-stats .insights_bar-center {
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  width: 1px;
+  background: var(--color-border-strong);
+}
+#page-stats .insights_bar-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  min-width: 2px;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+#page-stats .insights_bar-fill.is-pos { background: var(--color-accent); }
+#page-stats .insights_bar-fill.is-neg { background: var(--color-negative); }
+#page-stats .insights_bar-value {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-align: right;
+}
+#page-stats .insights_bar-value.is-empty { color: var(--color-text-disabled); }
+
+/* ---------- Sous-titres et états vides ---------- */
+#page-stats .insights_subtitle {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-xs);
+}
+#page-stats .insights_empty {
+  font-size: var(--fs-sm);
+  color: var(--color-text-tertiary);
+  padding: var(--space-md) 0;
+}
+
+/* ---------- Roue de dispersion (green / approches) ---------- */
+#page-stats .insights_wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+#page-stats .insights_wheel svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+#page-stats .insights_wheel-sector {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+#page-stats .insights_wheel-sector.is-on { fill: var(--color-accent); }
+#page-stats .insights_wheel-sector.is-off { fill: var(--color-text-primary); }
+#page-stats .insights_wheel-text {
+  fill: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  pointer-events: none;
+}
+#page-stats .insights_wheel-text.is-empty { fill: var(--color-text-tertiary); }
+#page-stats .insights_wheel-note {
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+}
