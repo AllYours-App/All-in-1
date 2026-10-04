@@ -122,7 +122,7 @@
 
   // Note : la liste de parcours doit être alimentée dynamiquement (parcours réellement joués par l'utilisateur).
   const DEFAULT_FILTERS = {
-    period: { key: 'period', icon: 'calendar', label: '30 derniers jours', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
+    period: { key: 'period', icon: 'calendar', label: 'Période', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
     course: { key: 'course', icon: 'flag', label: 'Tous parcours', options: ['Tous parcours'] },
     lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
@@ -346,11 +346,18 @@
      7) COMPOSANT — Filter Bar
      ======================================================================== */
 
+  // Titre affiché sur le bouton : sans "Tous/Toutes", et titre unique pour le bouton de date
+  function chipText(label) {
+    if (label === 'Tout') return 'Période';
+    const m = /^Tou(?:s|tes) (.+)$/.exec(label);
+    return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : label;
+  }
+
   function renderFilterBar(root, filters, onChange) {
     root.innerHTML = filters.map((f) => `
-      <div class="filter-chip-wrap" style="position:relative; flex-shrink:0;">
+      <div class="filter-chip-wrap" style="position:relative; flex:1 1 0; min-width:0;">
         <button type="button" class="filter-chip" data-key="${f.key}" aria-haspopup="listbox" aria-expanded="false">
-          ${icon(f.icon)}<span data-label>${f.label}</span>${icon('chevronDown')}
+          ${icon(f.icon)}<span data-label>${chipText(f.label)}</span>${icon('chevronDown')}
         </button>
       </div>
     `).join('');
@@ -370,7 +377,8 @@
         const dropdown = document.createElement('div');
         dropdown.className = 'filter-dropdown';
         Object.assign(dropdown.style, {
-          position: 'absolute', top: 'calc(100% + 6px)', left: '0',
+          position: 'absolute', top: 'calc(100% + 6px)',
+          ...(wrap === root.lastElementChild && filters.length > 2 ? { right: '0' } : { left: '0' }),
           background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-md)', padding: '6px', zIndex: 'var(--z-dropdown)',
           minWidth: '160px', boxShadow: 'var(--shadow-card-hover)',
@@ -384,7 +392,7 @@
           btn.addEventListener('mouseenter', () => btn.style.background = 'var(--color-bg-card-hover)');
           btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
           btn.addEventListener('click', () => {
-            chip.querySelector('[data-label]').textContent = f.options[i];
+            chip.querySelector('[data-label]').textContent = chipText(f.options[i]);
             if (onChange) onChange(f.key, f.options[i]);
             dropdown.remove();
             chip.setAttribute('aria-expanded', 'false');
@@ -864,7 +872,6 @@
         ${statBlockHeader('bars', 'Score')}
         <div class="stat-block__metrics">
           ${metric('Brut moyen', data.avgGross, data.avgGrossDelta, true)}
-          ${metric('Net moyen', data.avgNet, data.avgNetDelta, true)}
           ${metric('Vs par moyen', fmtSigned(data.avgToPar))}
           ${metric('Meilleur score', data.best, undefined, undefined, undefined, toParSub(data.bestToPar))}
           ${metric('Pire score', data.worst, undefined, undefined, undefined, toParSub(data.worstToPar))}
@@ -885,7 +892,7 @@
         ${subtitle('Moyenne par partie')}
         ${kvTable(['Résultat', 'Trous'], [
           ['Eagle ou mieux', fmtNum(p.eagle, 2)], ['Birdie', fmtNum(p.birdie, 2)], ['Par', fmtNum(p.par, 2)],
-          ['Bogey', fmtNum(p.bogey, 2)], ['Double bogey', fmtNum(p.double, 2)], ['Triple bogey ou pire', fmtNum(p.triple, 2)],
+          ['Bogey', fmtNum(p.bogey, 2)], ['Double bogey ou pire', fmtNum(isEmptyValue(p.double) && isEmptyValue(p.triple) ? null : (p.double || 0) + (p.triple || 0), 2)],
         ])}
         ${subtitle('Par type de trou')}
         ${kvTable(['Trou', 'Score moyen'], [
@@ -941,8 +948,6 @@
       <section class="stat-block fade-up">
         ${statBlockHeader('putter', 'Approches')}
         <div class="stat-block__metrics">
-          ${metric('Distance moy.', data.avgDistance, undefined, undefined, ' m')}
-          ${metric('Proximité moy.', data.proximity, undefined, undefined, ' m')}
           ${metric('Up & Down', data.upDownPct, undefined, undefined, '%')}
           ${metric('U&D bunker', data.upDownBunker, undefined, undefined, '%')}
           ${metric('U&D hors bunker', data.upDownNonBunker, undefined, undefined, '%')}
@@ -1094,9 +1099,14 @@
     const played = clubInsights.clubs.length ? clubInsights.clubs : getSdClubs().map((c) => c.name);
 
     const rowsOf = (map, keys) => keys.map((k) => ({ label: k === 'All' ? 'Tous' : k, value: pickValue(map, k) }));
-    const clubRows = (map) => rowsOf(map, ['All', ...played]);
+    const clubRows = (map) => [...rowsOf(map, ['All']), ...clubsOnly(map)];
     const bucketRows = (map) => rowsOf(map, ['All', ...PUTT_BUCKETS]);
-    const pct = (v) => Math.round(v);
+    const hasData = (r) => !isEmptyValue(r.value);
+    const fx = (v) => v.toFixed(1); // arrondi à 0.1
+    const fxSG = (v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
+    const pct = fx;
+    // Clubs : seuls ceux qui ont des données
+    const clubsOnly = (map) => rowsOf(map, played).filter(hasData);
 
     const out = [];
     const add = (title, rows, opts) => out.push(renderBarChart(title, rows, opts));
@@ -1106,22 +1116,22 @@
 
     // Strokes gained : par tranche de distance pour le putting seul, sinon par club
     if (only('putting')) {
-      add('SG Putting', bucketRows(put.sg), { centered: true, format: fmtSG, caption: '(coups gagnés par putt, vs TOUR)' });
+      add('SG Putting', bucketRows(put.sg), { centered: true, format: fxSG, caption: '(coups gagnés par putt, vs TOUR)' });
     } else {
       const sgRows = clubRows(m.sg);
       // Les putts n'ont pas de club : une barre dédiée "Putting" s'ajoute à côté de "Tous"
       if (has('putting')) sgRows.push({ label: 'Putting', value: pickValue(m.sg, 'Putting') });
-      add(`SG${sgLabel ? ` ${sgLabel}` : ''}`, sgRows, { centered: true, format: fmtSG, caption: SG_CAPTION });
+      add(`SG${sgLabel ? ` ${sgLabel}` : ''}`, sgRows, { centered: true, format: fxSG, caption: SG_CAPTION });
     }
 
     if (only('driving')) {
-      add('Distance moyenne', rowsOf(m.distance, played), { unit: ' m', format: pct, caption: '(m)' });
+      add('Distance moyenne', clubsOnly(m.distance), { unit: ' m', format: pct, caption: '(m)' });
       add('Fairways touchés', clubRows(m.fairways), PCT);
     }
     if (only('approach')) {
-      add('Distance moyenne', rowsOf(m.distance, played), { unit: ' m', format: pct, caption: '(m)' });
+      add('Distance moyenne', clubsOnly(m.distance), { unit: ' m', format: pct, caption: '(m)' });
       add('Greens en régulation', clubRows(m.gir), PCT);
-      add('Chances de birdie', clubRows(m.birdies), { caption: '(par partie)' });
+      add('Chances de birdie', clubRows(m.birdies), { format: fx, caption: '(par partie)' });
     }
     if (only('shortGame')) {
       add('Scrambling', clubRows(m.scrambling), PCT);
@@ -1132,24 +1142,25 @@
     if (!only('putting')) {
       const shotRows = clubRows(m.shotsPerRound);
       if (has('putting')) shotRows.push({ label: 'Putting', value: pickValue(m.shotsPerRound, 'Putting') });
-      add('Coups par partie', shotRows);
+      add('Coups par partie', shotRows, { format: fx });
     }
     if (only('putting')) {
       add('3 putts', bucketRows(put.threePutt), { ...PCT, caption: '(% des trous)' });
-      add('Putts par GIR', bucketRows(put.puttsPerGir), { format: (v) => v.toFixed(2) });
-      add('Fréquence des 3 putts', bucketRows(put.holesPer3Putt), { caption: '(trous pour 1 three-putt)' });
-      add('Coups par partie', rowsOf(m.shotsPerRound, ['All']));
+      add('Putts par GIR', bucketRows(put.puttsPerGir), { format: fx });
+      add('Fréquence des 3 putts', bucketRows(put.holesPer3Putt), { format: fx, caption: '(trous pour 1 three-putt)' });
+      add('Coups par partie', rowsOf(m.shotsPerRound, ['All']), { format: fx });
     }
 
     // Dispersion sur le green : onglet Approach seul, un ou plusieurs clubs
     let dispersion = '';
     if (only('approach')) {
       const zc = clubInsights.zoneCounts;
+      const withData = played.filter((c) => Object.values(zc[c] || {}).some((n) => n > 0));
       const counts = clubState.greenClubs.includes('All') ? (zc.All || {}) : sumZoneCounts(clubState.greenClubs.map((c) => zc[c]));
       dispersion = `
         <article class="card chart-card insights_chart">
           <div class="chart-card__head"><div><div class="chart-card__title">Dispersion sur le green</div><div class="chart-card__unit">(% des attaques)</div></div></div>
-          <div class="insights_chips" data-green-clubs>${chipGroupHtml([{ value: 'All', label: 'Tous' }, ...played.map((c) => ({ value: c, label: c }))], clubState.greenClubs)}</div>
+          <div class="insights_chips" data-green-clubs>${chipGroupHtml([{ value: 'All', label: 'Tous' }, ...withData.map((c) => ({ value: c, label: c }))], clubState.greenClubs)}</div>
           ${renderZoneWheel(counts, 'green17')}
         </article>
       `;
@@ -1280,11 +1291,11 @@
     sg: {
       filters: 'st-sg-filters', charts: 'st-sg-charts',
       defs: [
-        { key: 'sgTotal', title: 'SG Total', unit: '', caption: '(coups gagnés par partie)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
-        { key: 'sgDriving', title: 'SG Driving', unit: '', caption: '(coups gagnés par partie)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
-        { key: 'sgApproach', title: 'SG Approach', unit: '', caption: '(coups gagnés par partie)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
-        { key: 'sgShortGame', title: 'SG Short Game', unit: '', caption: '(coups gagnés par partie)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
-        { key: 'sgPutting', title: 'SG Putting', unit: '', caption: '(coups gagnés par partie)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
+        { key: 'sgTotal', title: 'SG Total', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
+        { key: 'sgDriving', title: 'SG Driving', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
+        { key: 'sgApproach', title: 'SG Approach', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
+        { key: 'sgShortGame', title: 'SG Short Game', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
+        { key: 'sgPutting', title: 'SG Putting', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
       ],
     },
   };
@@ -1445,7 +1456,7 @@
     renderFilterBar(document.getElementById('put-filters'), [
       DEFAULT_FILTERS.course,
       { key: 'distance', icon: 'target', label: 'Toutes distances', options: ['Toutes distances', '< 3 m', '3 – 5 m', '5 – 10 m', '> 10 m'] },
-      { key: 'range', icon: 'calendar', label: '20 derniers rounds', options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
+      { key: 'range', icon: 'calendar', label: 'Période', options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
     ]);
 
     const hasValue = puttingPerformance.value !== null && puttingPerformance.value !== undefined;
