@@ -2806,8 +2806,8 @@ html {
 #page-stats .insights_chart .chart-card__title { font-size: var(--fs-base); }
 
 #page-stats .insights_bar-chart {
-  --insights-label-w: 84px;
-  --insights-value-w: 48px;
+  --insights-label-w: 76px;
+  --insights-value-w: 56px;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -2822,10 +2822,16 @@ html {
   column-gap: var(--space-sm);
 }
 #page-stats .insights_bar-ticks {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 14px;
   font-size: var(--fs-2xs);
   color: var(--color-text-tertiary);
+}
+#page-stats .insights_bar-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 #page-stats .insights_bar-label {
@@ -2907,3 +2913,18 @@ html {
   font-size: var(--fs-xs);
   color: var(--color-text-tertiary);
 }
+
+
+/* ==========================================================================
+   INSIGHTS — règles de design appliquées aux 3 écrans (Par club, Par distance, Statistiques)
+   Pas de lueur colorée, pas de dégradé radial de fond, pas de verre dépoli.
+   ========================================================================== */
+
+#screen-par-club,
+#screen-par-distance,
+#screen-statistiques {
+  background: var(--color-bg-base);
+  min-height: 100vh;
+}
+#screen-statistiques .stat-block__title::before { box-shadow: none; }
+#screen-statistiques .period-tab[aria-selected="true"]::after { box-shadow: none; }

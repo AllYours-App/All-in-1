@@ -482,7 +482,7 @@
     },
   };
 
-  function createPerformanceChart(canvas, points, variant) {
+  function createPerformanceChart(canvas, points, variant, axisTitles) {
     if (typeof Chart === 'undefined' || !canvas) return null;
     variant = variant || 'line';
     const accent = cssVar('--color-accent');
@@ -517,8 +517,8 @@
           tooltip: { backgroundColor: cssVar('--color-bg-elevated'), borderColor: gridColor, borderWidth: 1, titleColor: textColor, bodyColor: '#fff', padding: 10, cornerRadius: 10, displayColors: false },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: textColor, font: { size: 11 } } },
-          y: { grid: { color: gridColor, drawTicks: false }, border: { display: false }, ticks: { color: textColor, font: { size: 11 } } },
+          x: { grid: { display: false }, ticks: { color: textColor, font: { size: 11 } }, title: { display: !!(axisTitles && axisTitles.xTitle), text: axisTitles && axisTitles.xTitle, color: textColor, font: { size: 11 } } },
+          y: { grid: { color: gridColor, drawTicks: false }, border: { display: false }, ticks: { color: textColor, font: { size: 11 } }, title: { display: !!(axisTitles && axisTitles.yTitle), text: axisTitles && axisTitles.yTitle, color: textColor, font: { size: 11 } } },
         },
       },
       });
@@ -533,7 +533,6 @@
      ======================================================================== */
 
   function renderAnalysisCard(item, index) {
-    // "Par club" n'a pas d'écran dédié dans le périmètre livré : carte non interactive.
     const disabled = !item.goto;
     const tag = disabled ? 'div' : 'button';
     const attrs = disabled
@@ -674,27 +673,33 @@
   /**
    * Graphe en barres horizontales (une ligne = { label, value }).
    * opts.centered : barres centrées sur 0 (strokes gained) ; sinon depuis 0.
-   * opts.showAxis : axe gradué ; opts.format : formatage de la valeur affichée.
+   * opts.unit     : suffixe collé aux valeurs affichées ('%', ' m'…).
+   * opts.caption  : légende d'unité sous le titre, comme dans les cartes de tendance, ex. "(%)".
+   * opts.format   : formatage du nombre (avant ajout de l'unité).
    */
   function renderBarChart(title, rows, opts) {
     opts = opts || {};
     const centered = !!opts.centered;
-    const format = opts.format || ((v) => v.toFixed(1));
+    const unit = opts.unit || '';
+    const format = opts.format || ((v) => String(Math.round(v * 10) / 10));
     const defined = rows.filter((r) => !isEmptyValue(r.value));
     const maxAbs = defined.length ? Math.max(...defined.map((r) => Math.abs(r.value)), 0.01) : 0.01;
 
-    let scaleMax = maxAbs;
-    let axisHtml = '';
-    if (opts.showAxis) {
-      const nice = niceScale(0, maxAbs);
-      scaleMax = nice.max || maxAbs;
-      let ticks = nice.ticks;
-      if (centered) {
-        const n = Math.round(nice.max / nice.step);
-        ticks = Array.from({ length: n * 2 + 1 }, (_, i) => +((i - n) * nice.step).toFixed(6));
-      }
-      axisHtml = `<div class="insights_bar-axis"><span></span><div class="insights_bar-ticks">${ticks.map((t) => `<span>${t}</span>`).join('')}</div><span></span></div>`;
+    // Échelle lisible ; les graduations sont placées en % de la piste pour tomber pile sous les barres
+    const nice = niceScale(0, maxAbs);
+    const scaleMax = nice.max || maxAbs;
+    let ticks = nice.ticks;
+    if (centered) {
+      const n = Math.round(nice.max / nice.step);
+      ticks = Array.from({ length: n * 2 + 1 }, (_, i) => +((i - n) * nice.step).toFixed(6));
     }
+    const tickPos = (t) => (centered ? 50 + (t / scaleMax) * 50 : (t / scaleMax) * 100);
+    const axisHtml = `
+      <div class="insights_bar-axis">
+        <span></span>
+        <div class="insights_bar-ticks">${ticks.map((t) => `<span style="left:${tickPos(t).toFixed(2)}%">${fmtSigned0(t, centered)}</span>`).join('')}</div>
+        <span></span>
+      </div>`;
 
     const rowsHtml = rows.map((r) => {
       const empty = isEmptyValue(r.value);
@@ -711,18 +716,22 @@
         <div class="insights_bar-row">
           <div class="insights_bar-label">${esc(r.label)}</div>
           <div class="insights_bar-track">${centered ? '<div class="insights_bar-center"></div>' : ''}${fill}</div>
-          <div class="insights_bar-value${empty ? ' is-empty' : ''}">${empty ? '--' : format(r.value)}</div>
+          <div class="insights_bar-value${empty ? ' is-empty' : ''}">${empty ? '--' : `${format(r.value)}${unit}`}</div>
         </div>
       `;
     }).join('');
 
+    const caption = opts.caption ? `<div class="chart-card__unit">${opts.caption}</div>` : '';
     return `
       <article class="card chart-card insights_chart">
-        <div class="chart-card__head"><div class="chart-card__title">${title}</div></div>
+        <div class="chart-card__head"><div><div class="chart-card__title">${title}</div>${caption}</div></div>
         <div class="insights_bar-chart">${axisHtml}${rowsHtml}</div>
       </article>
     `;
   }
+
+  // Graduation de l'axe : signe explicite pour les valeurs centrées sur 0 (strokes gained)
+  const fmtSigned0 = (t, centered) => (centered && t > 0 ? `+${t}` : String(t));
 
   // Groupe de puces cliquables ({ value, label }) ; `selected` = valeurs actives.
   function chipGroupHtml(items, selected, attr) {
@@ -863,7 +872,7 @@
           ${metric('Parties jouées', data.played)}
         </div>
         <table class="data-table">
-          <thead><tr><th>Distance du trou</th><th>Score moyen</th><th>Vs par</th><th>Trous</th></tr></thead>
+          <thead><tr><th>Distance du trou (m)</th><th>Score moyen</th><th>Vs par</th><th>Trous</th></tr></thead>
           <tbody>
             ${data.byDistance.map((row) => `
               <tr>
@@ -875,17 +884,17 @@
           </tbody>
         </table>
         ${subtitle('Moyenne par partie')}
-        ${kvTable(['Résultat', 'Trous / partie'], [
+        ${kvTable(['Résultat', 'Trous par partie'], [
           ['Eagle ou mieux', fmtNum(p.eagle, 2)], ['Birdie', fmtNum(p.birdie, 2)], ['Par', fmtNum(p.par, 2)],
           ['Bogey', fmtNum(p.bogey, 2)], ['Double bogey', fmtNum(p.double, 2)], ['Triple bogey ou pire', fmtNum(p.triple, 2)],
         ])}
         ${subtitle('Score moyen par type de trou')}
-        ${kvTable(['Type de trou', 'Score moyen'], [
+        ${kvTable(['Type de trou', 'Score moyen (coups)'], [
           ['Par 3', fmtNum(t.par3)], ['Par 4', fmtNum(t.par4)], ['Par 5', fmtNum(t.par5)],
           ['Par 4 courts', fmtNum(t.par4Short)], ['Par 4 longs', fmtNum(t.par4Long)],
         ])}
         ${subtitle('Score moyen par portion de parcours')}
-        ${kvTable(['Portion', 'Score moyen'], [
+        ${kvTable(['Portion', 'Score moyen (coups par trou)'], [
           ['Aller (trous 1-9)', fmtNum(s.front9)], ['Retour (trous 10-18)', fmtNum(s.back9)],
           ['6 premiers trous', fmtNum(s.first6)], ['6 trous du milieu', fmtNum(s.mid6)], ['6 derniers trous', fmtNum(s.last6)],
         ])}
@@ -940,7 +949,7 @@
           ${metric('Up & Down hors bunker', data.upDownNonBunker, undefined, undefined, '%')}
         </div>
         <table class="data-table">
-          <thead><tr><th>Distance</th><th>Proximité</th><th>Réussite</th></tr></thead>
+          <thead><tr><th>Distance (m)</th><th>Proximité</th><th>Réussite</th></tr></thead>
           <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${row.proximity} m</td><td>${row.success}%</td></tr>`).join('')}</tbody>
         </table>
         ${subtitle('Par type d\'approche')}
@@ -966,11 +975,11 @@
           ${metric('3 putts ou +', data.threePlusPutt, undefined, undefined, '%')}
         </div>
         ${kvTable(['Moyennes', 'Putts'], [
-          ['Putts / partie', fmtNum(data.perRound)], ['Putts / trou', fmtNum(data.perHole, 2)],
-          ['Putts / trou en régulation', fmtNum(data.perHoleGir, 2)], ['Putts / trou hors régulation', fmtNum(data.perHoleNonGir, 2)],
+          ['Par partie', fmtNum(data.perRound)], ['Par trou', fmtNum(data.perHole, 2)],
+          ['Par trou, green en régulation', fmtNum(data.perHoleGir, 2)], ['Par trou, green manqué', fmtNum(data.perHoleNonGir, 2)],
         ])}
         <table class="data-table">
-          <thead><tr><th>Distance 1er putt</th><th>Putts moy.</th><th>1 putt</th><th>2 putts</th><th>3 putts+</th></tr></thead>
+          <thead><tr><th>1er putt (m)</th><th>Putts moy.</th><th>1 putt</th><th>2 putts</th><th>3 putts+</th></tr></thead>
           <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${row.avgPutts.toFixed(2)}</td><td>${row.one}%</td><td>${row.two}%</td><td>${row.threePlus}%</td></tr>`).join('')}</tbody>
         </table>
       </section>
@@ -1038,7 +1047,8 @@
     { value: 'shortGame', label: 'Short Game' },
     { value: 'putting', label: 'Putting' },
   ];
-  const PUTT_BUCKETS = ['≤ 1 m', '> 1 à 2 m', '> 2 à 3 m', '> 3 à 5 m', '> 5 à 9 m', '> 9 m'];
+  // Distance du 1er putt, en mètres : chaque borne haute est la borne basse de la tranche suivante
+  const PUTT_BUCKETS = ['≤ 1 m', '1–2 m', '2–3 m', '3–5 m', '5–9 m', '> 9 m'];
 
   // Filtres communs (Time / Parcours / Lie). À chaque changement : recharger les données avec ces valeurs.
   const clubState = { tabs: ['driving'], greenClubs: ['All'], filters: { rounds: 'Tout', course: 'Tous parcours', lie: 'Tous lies' } };
@@ -1090,44 +1100,46 @@
     const pct = (v) => Math.round(v);
 
     const out = [];
-    const add = (title, rows, opts) => out.push(renderBarChart(title, rows, { showAxis: true, ...opts }));
+    const add = (title, rows, opts) => out.push(renderBarChart(title, rows, opts));
     const sgLabel = tabs.length === 1 ? CLUB_TABS.find((t) => t.value === tabs[0]).label : '';
+    const PCT = { unit: '%', format: pct, caption: '(%)' };
+    const SG_CAPTION = '(coups gagnés par coup, vs TOUR)';
 
     // Strokes gained : par tranche de distance pour le putting seul, sinon par club
     if (only('putting')) {
-      add('SG Putting (vs TOUR)', bucketRows(put.sg), { centered: true, format: fmtSG });
+      add('SG Putting', bucketRows(put.sg), { centered: true, format: fmtSG, caption: '(coups gagnés par putt, vs TOUR · selon la distance du putt)' });
     } else {
       const sgRows = clubRows(m.sg);
       // Les putts n'ont pas de club : une barre dédiée "Putting" s'ajoute à côté de "Tous"
       if (has('putting')) sgRows.push({ label: 'Putting', value: pickValue(m.sg, 'Putting') });
-      add(`SG${sgLabel ? ` ${sgLabel}` : ''} (vs TOUR)`, sgRows, { centered: true, format: fmtSG });
+      add(`SG${sgLabel ? ` ${sgLabel}` : ''}`, sgRows, { centered: true, format: fmtSG, caption: SG_CAPTION });
     }
 
     if (only('driving')) {
-      add('Distance moyenne (m)', rowsOf(m.distance, played), { format: pct });
-      add('Fairways touchés (%)', clubRows(m.fairways), { format: pct });
+      add('Distance moyenne', rowsOf(m.distance, played), { unit: ' m', format: pct, caption: '(m)' });
+      add('Fairways touchés', clubRows(m.fairways), PCT);
     }
     if (only('approach')) {
-      add('Distance moyenne (m)', rowsOf(m.distance, played), { format: pct });
-      add('GIR (%)', clubRows(m.gir), { format: pct });
-      add('Tentatives de birdie / partie', clubRows(m.birdies));
+      add('Distance moyenne', rowsOf(m.distance, played), { unit: ' m', format: pct, caption: '(m)' });
+      add('Greens en régulation', clubRows(m.gir), PCT);
+      add('Tentatives de birdie', clubRows(m.birdies), { caption: '(tentatives par partie)' });
     }
     if (only('shortGame')) {
-      add('Scrambling (%)', clubRows(m.scrambling), { format: pct });
-      add('Up & Down (%)', clubRows(m.upDown), { format: pct });
+      add('Scrambling', clubRows(m.scrambling), PCT);
+      add('Up & Down', clubRows(m.upDown), PCT);
     }
-    if (only('putting')) add('Taux de réussite (%)', bucketRows(put.makeRate), { format: pct });
+    if (only('putting')) add('Putts rentrés', bucketRows(put.makeRate), { ...PCT, caption: '(% selon la distance du putt)' });
 
     if (!only('putting')) {
       const shotRows = clubRows(m.shotsPerRound);
       if (has('putting')) shotRows.push({ label: 'Putting', value: pickValue(m.shotsPerRound, 'Putting') });
-      add('Coups / partie', shotRows);
+      add('Coups', shotRows, { caption: '(coups par partie)' });
     }
     if (only('putting')) {
-      add('3 putts (%)', bucketRows(put.threePutt), { format: pct });
-      add('Putts / GIR', bucketRows(put.puttsPerGir), { format: (v) => v.toFixed(2) });
-      add('Trous par 3 putts', bucketRows(put.holesPer3Putt));
-      add('Coups / partie', rowsOf(m.shotsPerRound, ['All']));
+      add('3 putts', bucketRows(put.threePutt), { ...PCT, caption: '(% de trous, selon la distance du 1er putt)' });
+      add('Putts par GIR', bucketRows(put.puttsPerGir), { format: (v) => v.toFixed(2), caption: '(putts par green en régulation, selon la distance du 1er putt)' });
+      add('Fréquence des 3 putts', bucketRows(put.holesPer3Putt), { caption: '(1 three-putt tous les X trous, selon la distance du 1er putt)' });
+      add('Coups', rowsOf(m.shotsPerRound, ['All']), { caption: '(coups par partie)' });
     }
 
     // Dispersion sur le green : onglet Approach seul, un ou plusieurs clubs
@@ -1137,7 +1149,7 @@
       const counts = clubState.greenClubs.includes('All') ? (zc.All || {}) : sumZoneCounts(clubState.greenClubs.map((c) => zc[c]));
       dispersion = `
         <article class="card chart-card insights_chart">
-          <div class="chart-card__head"><div class="chart-card__title">Dispersion sur le green</div></div>
+          <div class="chart-card__head"><div><div class="chart-card__title">Dispersion sur le green</div><div class="chart-card__unit">(% des attaques de green, par club)</div></div></div>
           <div class="insights_chips" data-green-clubs>${chipGroupHtml([{ value: 'All', label: 'Tous' }, ...played.map((c) => ({ value: c, label: c }))], clubState.greenClubs)}</div>
           ${renderZoneWheel(counts, 'green17')}
         </article>
@@ -1157,7 +1169,8 @@
      ÉCRAN "PAR DISTANCE" — graphes par tranche de distance avant le coup
      ======================================================================== */
 
-  const DISTANCE_BUCKETS = ['< 23', '23 à 45', '46 à 68', '69 à 91', '91 à 114', '114 à 137', '137 à 159', '160 à 182', '183 à 205', '206 à 229', '> 229'];
+  // Distance au drapeau avant le coup, en mètres (pas de 25 yards ≈ 22,86 m, arrondis) : bornes continues, sans trou ni chevauchement
+  const DISTANCE_BUCKETS = ['< 23 m', '23–46 m', '46–69 m', '69–91 m', '91–114 m', '114–137 m', '137–160 m', '160–183 m', '183–206 m', '206–229 m', '> 229 m'];
   const distanceState = { buckets: ['All'], filters: { rounds: 'Tout', course: 'Tous parcours', lie: 'Tous lies' } };
 
   function initParDistance() {
@@ -1178,11 +1191,11 @@
     const counts = sumZoneCounts(selected.map((b) => d.zoneCounts[b]));
 
     root.innerHTML = `
-      ${renderBarChart('Strokes gained (vs TOUR)', rows(d.sg), { centered: true, format: fmtSG })}
-      ${renderBarChart('Proximité médiane (m)', rows(d.proximity), { format: (v) => v.toFixed(1) })}
-      ${renderBarChart('Coups / partie', rows(d.shotsPerRound), { format: (v) => v.toFixed(1) })}
+      ${renderBarChart('Strokes gained', rows(d.sg), { centered: true, format: fmtSG, caption: '(coups gagnés par coup, vs TOUR)' })}
+      ${renderBarChart('Proximité médiane', rows(d.proximity), { unit: ' m', format: (v) => v.toFixed(1), caption: '(m, distance au trou après le coup)' })}
+      ${renderBarChart('Coups', rows(d.shotsPerRound), { caption: '(coups par partie)' })}
       <article class="card chart-card insights_chart">
-        <div class="chart-card__head"><div class="chart-card__title">Dispersion sur le green</div></div>
+        <div class="chart-card__head"><div><div class="chart-card__title">Dispersion sur le green</div><div class="chart-card__unit">(% des attaques de green, par distance)</div></div></div>
         <div class="insights_chips" data-green-buckets>${chipGroupHtml([{ value: 'All', label: 'Toutes' }, ...DISTANCE_BUCKETS.map((b) => ({ value: b, label: b }))], distanceState.buckets)}</div>
         ${renderZoneWheel(counts, 'green17')}
       </article>
@@ -1252,25 +1265,27 @@
   }
 
   // Panes "Traditionnel" et "SG" : une courbe par statistique, un point par partie
+  // unit    : suffixe des valeurs ; pts : la progression d'un pourcentage s'exprime en points, pas en %
+  // caption : légende d'unité sous le titre ; note : définition affichée sous le graphe
   const TREND_PANES = {
     traditional: {
       filters: 'st-trad-filters', charts: 'st-trad-charts',
       defs: [
-        { key: 'avgDrive', title: 'Distance moyenne du drive', unit: 'm', decimals: 0, better: 'high', get: (r) => r.avgDrive },
-        { key: 'firPct', title: 'Fairways touchés', unit: '%', decimals: 0, better: 'high', get: (r) => r.firPct },
-        { key: 'girPct', title: 'Greens en régulation', unit: '%', decimals: 0, better: 'high', get: (r) => r.girPct },
-        { key: 'putts', title: 'Putts par partie', unit: '', decimals: 1, better: 'low', get: (r) => r.putts },
-        { key: 'puttsPerGir', title: 'Putts par GIR', unit: '', decimals: 2, better: 'low', get: (r) => r.puttsPerGir },
+        { key: 'avgDrive', title: 'Distance moyenne du drive', unit: ' m', caption: '(m)', note: 'Distance moyenne des drives de la partie.', decimals: 0, better: 'high', get: (r) => r.avgDrive },
+        { key: 'firPct', title: 'Fairways touchés', unit: '%', pts: true, caption: '(%)', note: 'Part des fairways touchés depuis le tee de départ.', decimals: 0, better: 'high', get: (r) => r.firPct },
+        { key: 'girPct', title: 'Greens en régulation', unit: '%', pts: true, caption: '(%)', note: 'Part des greens atteints en régulation.', decimals: 0, better: 'high', get: (r) => r.girPct },
+        { key: 'putts', title: 'Putts par partie', unit: '', caption: '(putts par partie)', note: 'Nombre total de putts sur la partie.', decimals: 1, better: 'low', get: (r) => r.putts },
+        { key: 'puttsPerGir', title: 'Putts par GIR', unit: '', caption: '(putts par green en régulation)', note: 'Putts moyens quand le green est atteint en régulation.', decimals: 2, better: 'low', get: (r) => r.puttsPerGir },
       ],
     },
     sg: {
       filters: 'st-sg-filters', charts: 'st-sg-charts',
       defs: [
-        { key: 'sgTotal', title: 'SG Total', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
-        { key: 'sgDriving', title: 'SG Driving', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
-        { key: 'sgApproach', title: 'SG Approach', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
-        { key: 'sgShortGame', title: 'SG Short Game', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
-        { key: 'sgPutting', title: 'SG Putting', unit: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
+        { key: 'sgTotal', title: 'SG Total', unit: '', caption: '(coups gagnés par partie, vs TOUR)', note: 'Positif : mieux que la référence TOUR.', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
+        { key: 'sgDriving', title: 'SG Driving', unit: '', caption: '(coups gagnés par partie, vs TOUR)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
+        { key: 'sgApproach', title: 'SG Approach', unit: '', caption: '(coups gagnés par partie, vs TOUR)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
+        { key: 'sgShortGame', title: 'SG Short Game', unit: '', caption: '(coups gagnés par partie, vs TOUR)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
+        { key: 'sgPutting', title: 'SG Putting', unit: '', caption: '(coups gagnés par partie, vs TOUR)', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
       ],
     },
   };
@@ -1312,8 +1327,7 @@
   }
 
   function trendCardHtml(def, pts) {
-    const unitLabel = def.unit ? `(${def.unit})` : '';
-    const head = `<div class="chart-card__head"><div><div class="chart-card__title">${def.title}</div><div class="chart-card__unit">${unitLabel}</div></div></div>`;
+    const head = `<div class="chart-card__head"><div><div class="chart-card__title">${def.title}</div><div class="chart-card__unit">${def.caption}</div></div></div>`;
     if (!pts.length) return `<article class="card chart-card">${head}<div class="insights_empty">Pas assez de données</div></article>`;
 
     const ys = pts.map((p) => p.y);
@@ -1322,7 +1336,11 @@
     const best = pts.reduce((a, b) => (isBetter(b.y, a.y) ? b : a));
     const worst = pts.reduce((a, b) => (isBetter(b.y, a.y) ? a : b));
     const progression = pts.length > 1 ? pts[pts.length - 1].y - pts[0].y : null;
-    const show = (v) => (def.signed ? fmtSigned(fmtNum(v, def.decimals)) : fmtNum(v, def.decimals, def.unit ? ` ${def.unit}` : ''));
+
+    const show = (v) => (def.signed ? fmtSigned(fmtNum(v, def.decimals)) : fmtNum(v, def.decimals, def.unit));
+    // Une variation de pourcentage se dit en points ("+7 pts"), pas en "%"
+    const showDelta = (v) => `${fmtSigned(fmtNum(v, def.decimals))}${def.pts ? ' pts' : def.unit}`;
+    const note = [def.note, 'Axe horizontal : numéro de la partie, de la plus ancienne à la plus récente.'].filter(Boolean).join(' ');
 
     return `
       <article class="card chart-card">
@@ -1331,7 +1349,7 @@
         <div class="chart-stats-row">
           <div class="chart-stats-row__item">
             <div class="chart-stats-row__label">Progression</div>
-            <div class="chart-progression">${icon('trendUp')}<span>${progression === null ? '--' : `${fmtSigned(fmtNum(progression, def.decimals))}${def.unit && !def.signed ? ` ${def.unit}` : ''}`}</span></div>
+            <div class="chart-progression">${icon('trendUp')}<span>${progression === null ? '--' : showDelta(progression)}</span></div>
           </div>
           <div class="chart-stats-row__item">
             <div class="chart-stats-row__label">Moyenne</div>
@@ -1343,11 +1361,12 @@
             <div class="chart-stats-row__sub">${fmtDateFr(best.date)}</div>
           </div>
           <div class="chart-stats-row__item">
-            <div class="chart-stats-row__label">Plus basse partie</div>
+            <div class="chart-stats-row__label">Moins bonne partie</div>
             <div class="chart-stats-row__value">${show(worst.y)}</div>
             <div class="chart-stats-row__sub">${fmtDateFr(worst.date)}</div>
           </div>
         </div>
+        <div class="chart-footnote">${icon('info')}<span>${note}</span></div>
       </article>
     `;
   }
@@ -1363,7 +1382,7 @@
     root.innerHTML = series.map(({ def, pts }) => trendCardHtml(def, pts)).join('');
     series.forEach(({ def, pts }) => {
       if (!pts.length) return;
-      trendCharts[key].push(createPerformanceChart(root.querySelector(`[data-trend="${def.key}"]`), pts, 'line'));
+      trendCharts[key].push(createPerformanceChart(root.querySelector(`[data-trend="${def.key}"]`), pts, 'line', { xTitle: 'Partie n°', yTitle: def.caption }));
     });
   }
 
