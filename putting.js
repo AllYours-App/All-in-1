@@ -2020,9 +2020,19 @@ function escHtml(t) {
   return String(t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
 }
 
-// Images de putt en arrière-plan : ExoRapidePutt12h, ExoRapidePutt1h, ... ExoRapidePutt11h
+// Images de putt en arrière-plan : une image par catégorie de pente (8 au total)
 const QUICK_PUTT_IMAGE_DIR = 'images/'; // dossier ou URL de base des images (avec "/" final)
-const QUICK_PUTT_IMAGE_EXT = '.png';  // extension des fichiers
+const QUICK_PUTT_IMAGE_EXT = '.png';    // extension des fichiers
+// Même ordre que PENTE_LABELS : Descente, Descente D→G, D→G, Montée D→G, Montée, Montée G→D, G→D, Descente G→D
+const QUICK_PUTT_IMAGE_NAMES = ['GreenPuttP', 'GreenPuttPDG', 'GreenPuttDG', 'GreenPuttMDG', 'GreenPuttM', 'GreenPuttMGD', 'GreenPuttGD', 'GreenPuttPGD'];
+
+const QUICK_PUTT_IMAGE_DEFAULT = 'GreenPuttM'; // image par défaut tant que la pente n'est pas saisie
+
+function quickPuttImageUrl(clock) {
+  const idx = penteCategoryIndex(clock);
+  const name = idx == null ? QUICK_PUTT_IMAGE_DEFAULT : QUICK_PUTT_IMAGE_NAMES[idx];
+  return QUICK_PUTT_IMAGE_DIR + name + QUICK_PUTT_IMAGE_EXT;
+}
 
 function toggleQuickStatsInfo() {
   quickStatsInfoOpen = !quickStatsInfoOpen;
@@ -2123,7 +2133,7 @@ function renderQuickSessionScreen() {
 
   const penteIdx = penteCategoryIndex(hole.clock);
   const penteLabel = penteIdx == null ? '' : PENTE_LABELS[penteIdx];
-  const puttImage = QUICK_PUTT_IMAGE_DIR + 'ExoRapidePutt' + hole.clock + 'h' + QUICK_PUTT_IMAGE_EXT;
+  const puttImage = quickPuttImageUrl(hole.clock);
   const sgClass = st.sgAvg == null ? '' : (st.sgAvg >= 0 ? 'is-accent' : 'is-negative');
 
   flowRoot.innerHTML = `
@@ -3327,7 +3337,7 @@ function renderNewParcoursModal() {
   const hasClock = row.clock !== null && row.clock !== undefined;
   const penteIdx = hasClock ? penteCategoryIndex(row.clock) : null;
   const penteLabel = penteIdx == null ? '' : PENTE_LABELS[penteIdx];
-  const puttImage = hasClock ? QUICK_PUTT_IMAGE_DIR + 'ExoRapidePutt' + row.clock + 'h' + QUICK_PUTT_IMAGE_EXT : '';
+  const puttImage = quickPuttImageUrl(row.clock);
   const sgClass = st.sgAvg == null ? '' : (st.sgAvg >= 0 ? 'is-accent' : 'is-negative');
   const currentResult = row.putts === null || row.putts === undefined ? null : (row.putts === 1 ? 'made' : 'missed');
   const resultatLabelText = row.resultat ? resultatLabel(row.resultat) : (currentResult === 'missed' ? 'Manqué' : 'Résultat du putt');
