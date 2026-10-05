@@ -15,7 +15,10 @@
 /* ============================ 1. CONSTANTES ================================ */
 
 // Cases de distance à faire (Journal Parcours), par paliers de 5m à partir de 50m
-const WEDGE_BUCKETS = (() => { const arr = []; for (let d = 50; d <= 105; d += 5) arr.push(d); return arr; })();
+// Limite haute d'un coup de wedge (comprise) : 110 m. Le dernier palier est "110m" tout seul (les autres
+// couvrent 5 m : 105-109m). stats.js lit cette valeur pour classer ses coups "wedging" : on ne la modifie qu'ici.
+const WEDGE_MAX_DISTANCE = 110;
+const WEDGE_BUCKETS = (() => { const arr = []; for (let d = 50; d <= WEDGE_MAX_DISTANCE; d += 5) arr.push(d); return arr; })();
 // Ordre des 8 directions périphériques (hors centre), dans le sens horaire en partant du haut
 const WEDGE_RADAR_ORDER = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
 // 9 zones sélectionnables au total : les 8 directions + le centre ("Green" = coup rentré)
@@ -25,6 +28,8 @@ const WEDGE_EXERCISE_DISTANCES = (() => { const arr = []; for (let d = 50; d <= 
 const WEDGE_SHOTS_LIMIT_OPTIONS = [[20, '20'], [50, '50'], [100, '100'], ['all', 'Tous']];
 const WEDGE_EX_REVIEW_LIMIT_OPTIONS = [10, 20, 50, 'all'];
 
+// Libellé d'un palier : "50-54m" ... "105-109m", puis "110m" (la limite haute n'a pas de tranche de 5 m)
+function wedgeBucketLabel(b) { return b >= WEDGE_MAX_DISTANCE ? `${b}m` : `${b}-${b + 4}m`; }
 function wedgeRadarShortLabel(zone) { return zone.split('-').map(w => w[0]).join('-'); }
 function wedgeZoneDisplayLabel(zone) { return zone === 'Green' ? 'Trou' : zone; }
 
@@ -429,7 +434,7 @@ function toggleWedgeHistoryDistance(d) { wedgeHistoryDistanceFilter.has(d) ? wed
 function wedgeHistoryDistancePopupHtml() {
   const buckets = Array.from(new Set(wedgeRounds.map(w => w.distanceToCover))).sort((a, b) => a - b);
   return UI.modal('Trier par distance', `
-    <div class="wg-chip-row">${buckets.length ? buckets.map(b => `<button type="button" class="wg-chip ${wedgeHistoryDistanceFilter.has(b) ? 'active' : ''}" onclick="toggleWedgeHistoryDistance(${b})">${b}-${b + 4}m</button>`).join('') : '<p class="wg-text-muted">Aucun coup enregistré.</p>'}</div>
+    <div class="wg-chip-row">${buckets.length ? buckets.map(b => `<button type="button" class="wg-chip ${wedgeHistoryDistanceFilter.has(b) ? 'active' : ''}" onclick="toggleWedgeHistoryDistance(${b})">${wedgeBucketLabel(b)}</button>`).join('') : '<p class="wg-text-muted">Aucun coup enregistré.</p>'}</div>
     <button class="wg-btn-primary mt-10" onclick="closeWedgeHistoryDistancePopup()">OK</button>
   `, 'closeWedgeHistoryDistancePopup');
 }
@@ -1324,7 +1329,7 @@ Views.parcours = function () {
     <section class="wg-section">
       <h4>Nouveau coup</h4>
       <label class="wg-label mt-8">Distance à faire</label>
-      <div class="wg-range-grid">${WEDGE_BUCKETS.map(b => `<button type="button" class="wg-range-btn ${wedgeNewShotBucket === b ? 'active' : ''}" onclick="setWedgeNewShotBucket(${b})">${b}-${b + 4}m</button>`).join('')}</div>
+      <div class="wg-range-grid">${WEDGE_BUCKETS.map(b => `<button type="button" class="wg-range-btn ${wedgeNewShotBucket === b ? 'active' : ''}" onclick="setWedgeNewShotBucket(${b})">${wedgeBucketLabel(b)}</button>`).join('')}</div>
 
       <label class="wg-label mt-12">Distance finale (m)</label>
       ${wedgeNewShotZone === 'Green' ? `
@@ -1350,7 +1355,7 @@ Views.parcours = function () {
         <div class="wg-history-item">
           <span class="wg-history-bar"></span>
           <div class="wg-history-mid">
-            <b>${w.distanceToCover}-${w.distanceToCover + 4}m</b>
+            <b>${wedgeBucketLabel(w.distanceToCover)}</b>
             <span class="wg-text-muted-sm">${wedgeZoneDisplayLabel(w.zone)} — ${w.finalDistance}m — ${UI.formatDate(w.date)}</span>
           </div>
           <button class="wg-btn-danger" onclick="deleteWedgeRound(${w.id})">${UI.ICONS.close}</button>
@@ -1422,7 +1427,7 @@ Views.sgAnalysis = function () {
     const bucketShots = shots.filter(w => wedgeBucketFor(w.distanceToCover) === b);
     const vals = bucketShots.map(Analytics.wedgeShotSG).filter(v => v !== null);
     const avg = vals.length ? vals.reduce((a, c) => a + c, 0) / vals.length : null;
-    return { label: `${b}-${b + 4}m`, value: avg };
+    return { label: wedgeBucketLabel(b), value: avg };
   });
   const maxAbs = Math.max(0.5, ...entries.filter(e => e.value !== null).map(e => Math.abs(e.value)));
   const rowsHtml = entries.map(e => {

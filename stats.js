@@ -1073,7 +1073,8 @@
   const ALL_LIES = 'Tous lies';
   const FIR_HIT = 'Centre';          // choix Gauche / Centre / Droite : Centre = fairway touché
   const AG_MAX = 30;                 // m : en dessous (hors green) = coup autour du green
-  const WEDGING_MAX = 100;           // m : de AG_MAX à ici = wedging, au-delà = approches
+  // m : de AG_MAX jusqu'à ici (compris) = wedging, au-delà = approches. Même limite que le Journal Wedging (WEDGE_MAX_DISTANCE de wedging.js)
+  const WEDGING_MAX = typeof WEDGE_MAX_DISTANCE === 'number' ? WEDGE_MAX_DISTANCE : 110;
   const BIRDIE_CHANCE_MAX = 8;       // m : approche finissant sur le green à moins de ça = chance de birdie
   const DASHBOARD_ROUNDS = 20;       // le dashboard porte sur les 20 dernières parties
 
@@ -1177,8 +1178,7 @@
      la saisie rapide n'a pas ces détails, elle n'alimente donc ni Wedging ni Putting.
      Les conversions sont envoyées aux fonctions exposées par wedging.js et putting.js, qui gardent leurs données en mémoire. */
   const WEDGE_SYNC_MIN = 50;    // m : début du premier palier du Journal Wedging
-  const WEDGE_SYNC_MAX = 110;   // m : borne exclue (le dernier palier du Journal est 105-109 m)
-  const wedgeBucketOf = (m) => Math.floor(m / 5) * 5;   // 53 m → palier 50 (affiché 50-54 m)
+  const wedgeBucketOf = (m) => Math.floor(m / 5) * 5;   // 53 m → palier 50 (affiché 50-54 m) ; 110 m → palier 110 (affiché 110m)
 
   // Coups de wedging d'un trou : distance à faire entre 50 et 109 m, hors putt et hors pénalité,
   // avec une zone d'arrivée exploitable (secteur du green ou hors green, ou balle rentrée)
@@ -1187,7 +1187,7 @@
     H.shots.forEach((S) => {
       if (S.cat === 'putting' || S.cat === 'driving' || S.lie === 'Green' || S.club === 'Putter') return;
       if (S.penalty > 0 || S.before === null || S.after === null) return;
-      if (S.before < WEDGE_SYNC_MIN || S.before >= WEDGE_SYNC_MAX) return;
+      if (S.before < WEDGE_SYNC_MIN || S.before > WEDGING_MAX) return;
       // Coup rentré = "Green" côté Wedging ; sinon on garde la direction (Green-Droite / Hors-Droite → Droite)
       const zone = S.holed ? 'Green' : String(S.zone || '').replace(/^(Green|Hors)-/, '');
       if (zone !== 'Green' && !WHEEL_DIRECTIONS.includes(zone)) return;

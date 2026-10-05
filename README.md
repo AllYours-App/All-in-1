@@ -43,7 +43,7 @@ Entraînement et suivi du putting :
 - **Parcours** : saisie des putts d'une partie réelle, avec historique et détail de chaque partie.
 - **Activité récente** : dernières sessions.
 
-### Wedging (jeu court, 50 à 105 m)
+### Wedging (jeu court, 50 à 110 m compris)
 - **Parcours** : après chaque coup d'approche, on note la distance qu'il fallait faire, puis la distance restante et la zone d'arrivée par rapport au drapeau (huit directions autour du trou, ou "coup rentré"). Un historique garde tous les coups.
 - **Analyses** : dispersion (où tombent les balles pour chaque distance), distance (distance moyenne restante au drapeau pour chaque palier de distance à faire) et Strokes Gained.
 - **Exercices** : exercices d'approche à créer, à jouer en séance, avec récapitulatif et revue.
@@ -56,6 +56,7 @@ Tableau de bord des performances, rempli à partir des parties que le joueur sai
 - **Historique des tours** : liste des parties, avec recherche par nom de parcours.
 - **Performance putting** : évolution du nombre de putts moyen par partie.
 - **Saisie d'une partie** : soit rapide (score, fairway, green en régulation, putts, trou par trou), soit détaillée (chaque coup avec le club, la position, la distance restante, la pénalité et le résultat). On peut chercher le golf joué parmi les parcours proches de soi.
+  Une partie saisie en détaillé alimente aussi Wedging (coups à faire entre 50 et 110 m compris, rangés par paliers de 5 m : 53 m devient 50-54 m ; 110 m a son propre palier "110m") et Putting (un parcours en mode Détaillée, un trou = son premier putt). La saisie rapide n'envoie rien : elle ne contient pas ces détails.
 
 ### Gym
 Préparation physique du golfeur :
@@ -106,7 +107,7 @@ gym.js
 putting.js
 vitesse.js
 stats.js            (?v=14)
-menu.js             (redéfinit des fonctions de putting.js, voir "Points d'attention")
+menu.js
 auth.js             (dernier : choisit la page de départ)
 ```
 
@@ -146,21 +147,25 @@ Connexion et création de compte. La session est uniquement la clé `golfSession
 ### `menu.js` / `menu.css`
 Profil et réglages. Gère l'état global persisté dans `golfAppState` : `userProfile`, `settings` (température, altitude, unités), `radars`, `golfBag`, `driverSettings`, `personalDistances`, `wedgeDistances`. Écrans : menu principal, sac de golf (`golfClubCatalog`), distances par club, aide. Contient son propre pavé numérique (`openMenuKeypad`...) construit sur `appKeypad`. Expose `window.renderMenuTab`.
 Ses variables globales (`golfBag`, `golfClubCatalog`, `personalDistances`, `wedgeDistances`, `settings`) sont lues directement par `parcours-ui.js` et `stats.js`.
+Ses fonctions de sauvegarde sont `saveMenuState()` / `loadMenuState()` (préfixées pour ne pas entrer en collision avec celles de `putting.js`).
 
 ### `parcours-ui.js` / `parcours-ui.css`
 Suivi pendant le parcours : Fairway (mises en jeu sur 18 trous), Green (attaques de green), Historique (bilan du parcours en cours), calculateur de vent, calculateur de dénivelé (capteurs d'orientation de l'appareil), calculateur "Mes distances" (lit `golfBag` et les distances de `menu.js`). Les fonctions sont globales car appelées depuis des `onclick` générés. Unités m/yd.
 
 ### `putting.js` / `putting.css`
 Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessions de putting, reprise de session, analyses (distance, pente, performance, comparaisons), et saisie d'un "Nouveau parcours" avec historique et détail. Calcule le Strokes Gained des putts via `strokes-gained.js`. Remplit aussi les encadrés `[data-stat]` de l'accueil via `renderGolfHome()`. Expose `window.renderPuttingTab` et `window.renderGolfHome`.
+Sauvegarde : `savePuttingState()` / `loadPuttingState()`. `importPuttingRoundFromStats(data)` (exposée sur `window`) crée une partie `source: 'stats'` à partir d'une partie saisie en détaillé dans `stats.js` ; elle est dédoublonnée par `statsKey`.
 
 ### `wedging.js` / `wedging.css`
-SPA autonome (7 sections : constantes, `Storage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 50 à 105 m, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Calcule son SG avec ses propres tables (rough et putts), sans passer par `strokes-gained.js`.
+SPA autonome (7 sections : constantes, `Storage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 50 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Calcule son SG avec ses propres tables (rough et putts), sans passer par `strokes-gained.js`.
+La limite haute d'un coup de wedge est la constante `WEDGE_MAX_DISTANCE` (110 m, comprise) : elle construit `WEDGE_BUCKETS` (derniers paliers : 105-109m puis 110m, libellés par `wedgeBucketLabel`) et `stats.js` la lit pour classer ses coups. `importWedgeShotsFromStats(list)` (exposée sur `window`) ajoute au Journal les coups venant de Stats (`source: 'stats'`, dédoublonnés par `statsKey`).
 
 ### `gym.js` / `gym.css`
 Le plus gros fichier (6071 lignes). Injecte tout son HTML dans `#app-root-gym`, puis : bibliothèque d'icônes, données mockées (`GYM_DATA`), routeur interne, générateurs de composants et vues (Accueil, Programmes, Détail programme, Créer programme, Créer séance, Exercices, Séance active, Progression, Historique, Récap, Objectifs). Pavé numérique propre au module.
 
 ### `stats.js` / `stats.css`
 IIFE unique. Composants (sparkline, KPI, filtres, graphiques Chart.js), écrans Dashboard / Par club / Par distance / Statistiques (Multi, Traditionnel, SG), saisie de parties (rapide trou par trou, ou détaillée coup par coup), calcul de toutes les stats à partir des parties enregistrées. Navigation interne via `data-goto`, exposée par `window.showStatsScreen`. Se rafraîchit au retour sur la page via un `MutationObserver`.
+À la fin d'une partie, `saveFinishedRound` appelle `syncRoundToModules` : pour une partie saisie en détaillé, les coups à faire entre 50 et `WEDGE_MAX_DISTANCE` m (compris) vont dans le Journal Wedging, et les premiers putts forment un parcours Putting. Sont ignorés : coups avec pénalité, sans zone d'arrivée exploitable (ou arrivée "Centre" sans secteur), trous rentrés sans putt. Un échec de synchro n'empêche jamais l'enregistrement dans Stats. Un coup est classé "wedging" dans Stats de 30 m (hors Short game) à `WEDGE_MAX_DISTANCE` compris.
 
 ### `vitesse.js` / `vitesse.css`
 Placeholder : affiche "Fonctionnalités à venir".
@@ -177,8 +182,8 @@ Fonds d'accueil (matin, midi, soir, nuit), fonds de boutons, illustrations de pu
 | `parcours-settings`, `parcours-fairway-unit` | `parcours-ui.js` | unités |
 | `parcours-fairway-round`, `parcours-green-round` | `parcours-ui.js` | tour en cours (Fairway, Green) |
 | `parcours-captures` | `parcours-ui.js` | captures de l'historique |
-| `putting_combines`, `putting_sessions`, `putting_rounds`, `putting_resume` | `putting.js` | combinés, sessions, parties, session à reprendre |
-| `wedgingShots`, `wedgingExercises`, `wedgingInProgressSessions` | `wedging.js` | coups, exercices, sessions en cours |
+| `putting_combines`, `putting_sessions`, `putting_rounds`, `putting_resume` | `putting.js` | combinés, sessions, parties (dont celles importées de Stats : `source: 'stats'`, `statsKey`), session à reprendre |
+| `wedgingShots`, `wedgingExercises`, `wedgingInProgressSessions` | `wedging.js` | coups (dont ceux importés de Stats : `source: 'stats'`, `statsKey`), exercices, sessions en cours |
 | `gym-programs-saved`, `gym-history`, `gym-goals`, `gym-active-program-id` | `gym.js` | programmes, historique, objectifs, programme actif |
 | `golfStatsRounds` | `stats.js` | parties saisies dans Stats |
 
@@ -186,14 +191,21 @@ Fonds d'accueil (matin, midi, soir, nuit), fonds de boutons, illustrations de pu
 
 Constats faits en lisant le code, classés par gravité. À confirmer en conditions réelles.
 
-1. **Conflit de noms entre `putting.js` et `menu.js`.** Les deux déclarent `saveStateToLocalStorage()` et `loadStateFromLocalStorage()` au niveau global. `menu.js` étant chargé après `putting.js`, ses versions remplacent celles de Putting. Après le chargement, les appels de `putting.js` (une dizaine, par ex. lignes 1843, 2412, 2490) exécutent la version du menu : ils écrivent `golfAppState` au lieu de `putting_combines` / `putting_sessions` / `putting_rounds`, et `refreshAllAnalytics()` n'est plus appelée. À tester en priorité : une session de putting survit-elle à un rechargement ?
-2. **Deux écrivains sur les encadrés de l'accueil.** `putting.js` appelle `renderGolfHome()` dès son chargement, puis `HomePage.js` appelle `renderGolfStats()` sans données au `DOMContentLoaded`, ce qui remet tous les `[data-stat]` à "_" et l'anneau à 0.
+1. ~~Conflit de noms entre `putting.js` et `menu.js`~~ : résolu, voir "Problèmes résolus".
+2. ~~Deux écrivains sur les encadrés de l'accueil~~ : résolu, voir "Problèmes résolus".
 3. **Authentification factice.** Tout e-mail valide et tout mot de passe de 8 caractères ou plus ouvre une session (`TODO` dans `auth.js`). Aucune donnée n'est liée à un compte : deux utilisateurs sur le même navigateur partagent tout.
-4. **Stats déconnecté des autres modules.** `stats.js` lit uniquement `golfStatsRounds` (ses propres parties) et le sac de `menu.js`. Il ne lit ni `putting_*`, ni `parcours-*`, ni `wedging*`. Les valeurs du Dashboard (`strokesGained`, `kpiCards`) sont mockées à `null`.
-5. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage.
+4. **Stats encore peu relié aux autres modules.** `stats.js` lit uniquement `golfStatsRounds` (ses propres parties) et le sac de `menu.js` ; il ne lit ni `putting_*`, ni `parcours-*`, ni `wedging*`. Il y écrit désormais (voir "Problèmes résolus", n° 3), mais dans un seul sens : un coup supprimé dans Wedging ou Putting reste dans Stats, et les parties saisies avant cette fonctionnalité ne sont pas rétro-importées.
+5. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage. Une partie détaillée de Stats est maintenant copiée dans `putting_rounds`, mais les deux saisies restent distinctes.
 6. **Strokes Gained dupliqué.** `wedging.js` embarque sa propre table rough et sa propre interpolation, `stats.js` calcule aussi du SG. `strokes-gained.js` n'est utilisé que par `putting.js`.
 7. **Couplage par `typeof` sur des globales de `menu.js`.** `parcours-ui.js` et `stats.js` testent `typeof golfBag` / `golfClubCatalog` / `personalDistances`. Cela fonctionne tant que le scope global est partagé, mais casse silencieusement si une variable est renommée.
 8. **Noms globaux génériques.** `root` (`putting.js`), `Storage` (`wedging.js`, masque l'interface Web `Storage`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Risque de collision à chaque nouveau fichier.
 9. **Commentaires périmés.** `auth.js` dit que `app-shell.js` "peut se charger après ce fichier", alors qu'il est chargé en premier. L'événement `parcours:ready` est émis par `parcours-ui.js` mais personne ne l'écoute.
 10. **Cache.** Seuls `parcours-ui` et `stats` ont un paramètre de version. Les autres fichiers peuvent rester en cache après un déploiement.
 11. **Taille des fichiers.** `gym.js` (6071 lignes, 408 Ko), `stats.js` (3672), `putting.js` (3732), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) : tout est chargé au démarrage, y compris les parties jamais ouvertes.
+
+## Problèmes résolus
+
+1. **Conflit de noms `putting.js` / `menu.js`.** Les deux déclaraient `saveStateToLocalStorage()` et `loadStateFromLocalStorage()` ; celles de `menu.js` (chargé après) remplaçaient celles de Putting, qui écrivaient alors dans `golfAppState` au lieu de `putting_combines` / `putting_sessions` / `putting_rounds`. Renommées : `savePuttingState` / `loadPuttingState` (`putting.js`) et `saveMenuState` / `loadMenuState` (`menu.js`). Aucun autre fichier n'utilisait les anciens noms.
+2. **Encadrés de l'accueil remis à "_".** `HomePage.js` appelait `renderGolfStats()` sans données au `DOMContentLoaded`, ce qui effaçait ce que `putting.js` venait d'écrire. `HomePage.js` rappelle maintenant `window.renderGolfHome()` juste après. Distance moyenne et Index restent à "_" tant qu'aucune source ne les alimente.
+3. **Stats relié à Wedging et Putting.** La saisie détaillée de Stats envoie ses coups de wedge (50 à 110 m compris) au Journal Wedging et ses premiers putts à Putting (voir `stats.js`, `wedging.js`, `putting.js`). L'accueil affiche "Parcours" comme dernière séance quand elle vient de Stats.
+4. **Limite du wedge incohérente.** Stats classait "wedging" jusqu'à 100 m et le Journal Wedging allait jusqu'à 109 m. Une seule constante, `WEDGE_MAX_DISTANCE` (110 m, comprise) dans `wedging.js`, sert aux deux ; le Journal a un palier "110m" en plus.
