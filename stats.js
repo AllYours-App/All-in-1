@@ -1081,33 +1081,15 @@
   const isGreenZone = (zone) => zone === 'Centre' || String(zone || '').startsWith('Green-');
 
   /* ---------- Barème Strokes Gained (coups attendus, moyenne Tour) ----------
-     Tables en yards (jeu) et en feet (putting), converties depuis les mètres de l'app.
-     À remplacer par sg-data.js si ce fichier fournit un barème : seule expectedStrokes() est à adapter. */
-  const SG_BASE = {
-    Tee: [[100, 2.92], [150, 3.08], [200, 3.17], [250, 3.45], [300, 3.71], [350, 3.86], [400, 3.99], [450, 4.15], [500, 4.41], [550, 4.64], [600, 4.84]],
-    Fairway: [[5, 2.05], [10, 2.18], [20, 2.40], [40, 2.60], [60, 2.70], [80, 2.75], [100, 2.80], [120, 2.85], [140, 2.91], [160, 2.98], [180, 3.08], [200, 3.19], [220, 3.32], [240, 3.45], [260, 3.58], [280, 3.69], [300, 3.78]],
-    Rough: [[5, 2.19], [10, 2.34], [20, 2.59], [40, 2.78], [60, 2.91], [80, 2.96], [100, 3.02], [120, 3.08], [140, 3.15], [160, 3.23], [180, 3.31], [200, 3.42], [220, 3.55], [240, 3.68], [260, 3.78], [280, 3.88], [300, 3.96]],
-    Bunker: [[5, 2.35], [10, 2.43], [20, 2.53], [40, 2.82], [60, 3.10], [80, 3.20], [100, 3.24], [150, 3.40], [200, 3.57], [250, 3.78], [300, 3.96]],
-  };
-  const SG_PUTT_FT = [[1, 1.001], [2, 1.01], [3, 1.04], [4, 1.13], [5, 1.23], [6, 1.34], [7, 1.42], [8, 1.50], [9, 1.56], [10, 1.61], [15, 1.78], [20, 1.87], [30, 1.98], [40, 2.06], [50, 2.14], [60, 2.21], [90, 2.40]];
-
-  function interpTable(table, x) {
-    if (x <= table[0][0]) return table[0][1];
-    for (let i = 1; i < table.length; i++) {
-      if (x <= table[i][0]) {
-        const [x0, y0] = table[i - 1], [x1, y1] = table[i];
-        return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
-      }
-    }
-    return table[table.length - 1][1];
-  }
+     Tables et conversions : sg-data.js / strokes-gained.js (sgExpected, distances en mètres).
+     Stats ne fait que traduire ses noms de lie vers ceux du moteur. */
+  const SG_LIE_KEY = { Tee: 'tee', Fairway: 'fairway', Rough: 'rough', Bunker: 'sand', Green: 'green' };
 
   function expectedStrokes(distM, lie) {
     if (distM === null || distM === undefined || Number.isNaN(distM)) return null;
     if (distM <= 0) return 0;
-    if (lie === 'Green') return interpTable(SG_PUTT_FT, distM * 3.28084);
-    const table = SG_BASE[lie];
-    return table ? interpTable(table, distM / 0.9144) : null;
+    const key = SG_LIE_KEY[lie];
+    return key ? sgExpected(key, distM) : null;
   }
 
   /* ---------- Petits utilitaires de calcul ---------- */

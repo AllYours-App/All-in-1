@@ -78,53 +78,12 @@ const Analytics = (function () {
     return { min: niceMin, max: niceMax, step, ticks };
   }
 
-  /* ---------- Moteur Strokes Gained (tables PGA Tour, copiées telles quelles) ---------- */
-  const SG_EXPECTED_PUTTS_TABLE = [
-    [1,1.001],[2,1.009],[3,1.053],[4,1.147],[5,1.256],[6,1.357],[7,1.443],[8,1.515],[9,1.575],[10,1.626],
-    [11,1.665],[12,1.705],[13,1.735],[14,1.765],[15,1.806],[16,1.848],[17,1.829],[18,1.811],[19,1.837],[20,1.863],
-    [21,1.875],[22,1.886],[23,1.897],[24,1.909],[25,1.921],[26,1.932],[27,1.944],[28,1.955],[29,1.966],[30,1.978],
-    [31,1.986],[32,1.993],[33,2.001],[34,2.009],[35,2.017],[36,2.024],[37,2.032],[38,2.04],[39,2.047],[40,2.055],
-    [45,2.089],[50,2.12],[60,2.174],[70,2.221],[80,2.261],[90,2.297],[100,2.328]
-  ];
-  function expectedPuttsForM(m) {
-    const ft = (m === null || m === undefined || isNaN(m)) ? null : m * 3.28084;
-    const table = SG_EXPECTED_PUTTS_TABLE;
-    if (ft === null) return table[0][1];
-    if (ft <= table[0][0]) return table[0][1];
-    if (ft >= table[table.length - 1][0]) return table[table.length - 1][1];
-    for (let i = 0; i < table.length - 1; i++) {
-      const a = table[i], b = table[i + 1];
-      if (ft >= a[0] && ft <= b[0]) { const t = (ft - a[0]) / (b[0] - a[0]); return a[1] + t * (b[1] - a[1]); }
-    }
-    return table[table.length - 1][1];
-  }
-  function expectedStrokesFromTable(table, x) {
-    if (x === null || x === undefined || isNaN(x)) return table[0][1];
-    if (x <= table[0][0]) return table[0][1];
-    if (x >= table[table.length - 1][0]) return table[table.length - 1][1];
-    for (let i = 0; i < table.length - 1; i++) {
-      const a = table[i], b = table[i + 1];
-      if (x >= a[0] && x <= b[0]) { const t = (x - a[0]) / (b[0] - a[0]); return a[1] + t * (b[1] - a[1]); }
-    }
-    return table[table.length - 1][1];
-  }
-  // Table Rough (yards) — seule table réellement utilisée par le Wedging (coup avant, depuis l'herbe)
-  const SG_ROUGH_TABLE = [
-    [10,2.34],[11,2.365],[12,2.39],[13,2.415],[14,2.44],[15,2.465],[16,2.49],[17,2.515],[18,2.54],[19,2.565],
-    [20,2.59],[25,2.645],[30,2.7],[35,2.74],[40,2.78],[45,2.825],[50,2.87],[55,2.89],[60,2.91],[65,2.92],
-    [70,2.93],[75,2.945],[80,2.96],[85,2.975],[90,2.99],[95,3.005],[100,3.02],[110,3.05],[120,3.08],[130,3.115],
-    [140,3.15],[150,3.19],[160,3.23],[170,3.27],[180,3.31],[190,3.365],[200,3.42],[220,3.53],[240,3.64],[260,3.74],
-    [280,3.83],[300,3.9],[320,3.95],[340,4.02],[360,4.11],[380,4.21],[400,4.3],[420,4.34],[440,4.39],[460,4.48],
-    [480,4.59],[500,4.72],[520,4.85],[540,4.97],[560,5.05],[580,5.1],[600,5.13]
-  ];
-  const METERS_TO_YARDS = 1.09361;
-  const SG_TABLES_BY_LIE = { Rough: SG_ROUGH_TABLE };
+  /* ---------- Moteur Strokes Gained ----------
+     Tables et interpolation : sg-data.js / strokes-gained.js (sgExpected, distances en mètres). */
+  // Coups attendus depuis un lie ('Rough' ou 'Green') et une distance en mètres ; null si lie ou distance invalide
   function expectedStrokesForLie(lie, distanceMeters) {
-    if (distanceMeters === null || distanceMeters === undefined) return null;
-    if (lie === 'Green') return expectedPuttsForM(distanceMeters);
-    const table = SG_TABLES_BY_LIE[lie];
-    if (!table) return null;
-    return expectedStrokesFromTable(table, distanceMeters * METERS_TO_YARDS);
+    const key = { Rough: 'rough', Green: 'green' }[lie];
+    return key ? sgExpected(key, distanceMeters) : null;
   }
   function fmtSG(v) { return (v === null || v === undefined || Number.isNaN(v)) ? '--' : (v >= 0 ? '+' : '') + v.toFixed(2); }
   // SG d'un coup de wedge : coups attendus depuis l'herbe (distance à faire) - coups attendus après
@@ -132,7 +91,8 @@ const Analytics = (function () {
   function wedgeShotSG(w) {
     const before = expectedStrokesForLie('Rough', w.distanceToCover);
     if (before === null) return null;
-    const after = w.finalDistance <= 0.05 ? 0 : expectedPuttsForM(w.finalDistance);
+    const after = w.finalDistance <= 0.05 ? 0 : expectedStrokesForLie('Green', w.finalDistance);
+    if (after === null) return null;
     return before - after - 1;
   }
 
