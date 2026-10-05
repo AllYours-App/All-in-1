@@ -408,7 +408,9 @@
       });
     });
 
-    document.addEventListener('click', (e) => { if (!root.contains(e.target)) closeAll(); });
+    if (root._closeFilters) document.removeEventListener('click', root._closeFilters);
+    root._closeFilters = (e) => { if (!root.contains(e.target)) closeAll(); };
+    document.addEventListener('click', root._closeFilters);
   }
 
   /* ========================================================================
@@ -416,8 +418,9 @@
      ======================================================================== */
 
   function scoreDiffHtml(vsPar) {
+    if (isEmptyValue(vsPar)) return '';
     const cls = vsPar > 0 ? 'round-row__score-diff--pos' : 'round-row__score-diff--neg';
-    return `<span class="round-row__score-diff ${cls}">${vsPar > 0 ? '+' : ''}${vsPar}</span>`;
+    return `<span class="round-row__score-diff ${cls}">${vsPar > 0 ? '+' : ''}${vsPar === 0 ? 'E' : vsPar}</span>`;
   }
 
   function renderRoundList(container, rounds, onSelect) {
@@ -427,12 +430,12 @@
           <div class="round-row" role="button" tabindex="0" data-id="${r.id}">
             <div class="round-row__thumb" style="display:flex;align-items:center;justify-content:center;color:var(--color-text-tertiary);">${icon('flag')}</div>
             <div class="round-row__info">
-              <div class="round-row__course">${r.course}</div>
-              <div class="round-row__location">${r.city.split(',')[0]}</div>
+              <div class="round-row__course">${esc(r.course)}</div>
+              <div class="round-row__location">${esc((r.city || '').split(',')[0])}</div>
             </div>
-            <div class="round-row__stat"><div class="round-row__stat-value">${r.fir}/14</div><div class="round-row__stat-label">FIR</div></div>
-            <div class="round-row__stat"><div class="round-row__stat-value">${r.gir}/18</div><div class="round-row__stat-label">GIR</div></div>
-            <div class="round-row__score"><div class="round-row__score-value">${r.score}</div>${scoreDiffHtml(r.vsPar)}</div>
+            <div class="round-row__stat"><div class="round-row__stat-value">${r.fir}/${r.firTotal}</div><div class="round-row__stat-label">FIR</div></div>
+            <div class="round-row__stat"><div class="round-row__stat-value">${r.gir}/${r.holeCount}</div><div class="round-row__stat-label">GIR</div></div>
+            <div class="round-row__score"><div class="round-row__score-value">${fmt(r.score)}</div>${scoreDiffHtml(r.vsPar)}</div>
             <div class="round-row__chevron">${icon('chevronRight')}</div>
           </div>
         `).join('')}
@@ -454,10 +457,10 @@
           <div class="round-row round-row--table" role="button" tabindex="0" data-id="${r.id}">
             <div class="round-row__date">${fmtDate(r.date)}</div>
             <div class="round-row__info">
-              <div class="round-row__course">${r.course}</div>
-              <div class="round-row__location">${r.city}</div>
+              <div class="round-row__course">${esc(r.course)}</div>
+              <div class="round-row__location">${esc(r.city)}</div>
             </div>
-            <div class="round-row__score"><div class="round-row__score-value">${r.score}</div>${scoreDiffHtml(r.vsPar)}</div>
+            <div class="round-row__score"><div class="round-row__score-value">${fmt(r.score)}</div>${scoreDiffHtml(r.vsPar)}</div>
             <div class="round-row__chevron">${icon('chevronRight')}</div>
           </div>
         `).join('')}
@@ -1053,10 +1056,686 @@
         ])}
         <table class="data-table">
           <thead><tr><th>1er putt (m)</th><th>Moy.</th><th>1 putt</th><th>2 putts</th><th>3+</th></tr></thead>
-          <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${row.avgPutts.toFixed(2)}</td><td>${row.one}%</td><td>${row.two}%</td><td>${row.threePlus}%</td></tr>`).join('')}</tbody>
+          <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${fmtNum(row.avgPutts, 2)}</td><td>${fmt(row.one, '%')}</td><td>${fmt(row.two, '%')}</td><td>${fmt(row.threePlus, '%')}</td></tr>`).join('')}</tbody>
         </table>
       </section>
     `;
+  }
+
+  /* ========================================================================
+     11 bis) DONNÉES — enregistrement des parties (localStorage) + calcul de toutes les stats
+     Les saisies (rapide / détaillée) émettent 'stats:round-finished' : la partie est enregistrée ici,
+     puis chaque écran recalcule ses données depuis ces parties (computeXxx).
+     ======================================================================== */
+
+  const ROUNDS_KEY = 'golfStatsRounds';
+  const ALL_COURSES = 'Tous parcours';
+  const ALL_LIES = 'Tous lies';
+  const FIR_HIT = 'Centre';          // choix Gauche / Centre / Droite : Centre = fairway touché
+  const AG_MAX = 30;                 // m : en dessous (hors green) = coup autour du green
+  const WEDGING_MAX = 100;           // m : de AG_MAX à ici = wedging, au-delà = approches
+  const BIRDIE_CHANCE_MAX = 8;       // m : approche finissant sur le green à moins de ça = chance de birdie
+  const DASHBOARD_ROUNDS = 20;       // le dashboard porte sur les 20 dernières parties
+
+  const isGreenZone = (zone) => zone === 'Centre' || String(zone || '').startsWith('Green-');
+
+  /* ---------- Barème Strokes Gained (coups attendus, moyenne Tour) ----------
+     Tables en yards (jeu) et en feet (putting), converties depuis les mètres de l'app.
+     À remplacer par sg-data.js si ce fichier fournit un barème : seule expectedStrokes() est à adapter. */
+  const SG_BASE = {
+    Tee: [[100, 2.92], [150, 3.08], [200, 3.17], [250, 3.45], [300, 3.71], [350, 3.86], [400, 3.99], [450, 4.15], [500, 4.41], [550, 4.64], [600, 4.84]],
+    Fairway: [[5, 2.05], [10, 2.18], [20, 2.40], [40, 2.60], [60, 2.70], [80, 2.75], [100, 2.80], [120, 2.85], [140, 2.91], [160, 2.98], [180, 3.08], [200, 3.19], [220, 3.32], [240, 3.45], [260, 3.58], [280, 3.69], [300, 3.78]],
+    Rough: [[5, 2.19], [10, 2.34], [20, 2.59], [40, 2.78], [60, 2.91], [80, 2.96], [100, 3.02], [120, 3.08], [140, 3.15], [160, 3.23], [180, 3.31], [200, 3.42], [220, 3.55], [240, 3.68], [260, 3.78], [280, 3.88], [300, 3.96]],
+    Bunker: [[5, 2.35], [10, 2.43], [20, 2.53], [40, 2.82], [60, 3.10], [80, 3.20], [100, 3.24], [150, 3.40], [200, 3.57], [250, 3.78], [300, 3.96]],
+  };
+  const SG_PUTT_FT = [[1, 1.001], [2, 1.01], [3, 1.04], [4, 1.13], [5, 1.23], [6, 1.34], [7, 1.42], [8, 1.50], [9, 1.56], [10, 1.61], [15, 1.78], [20, 1.87], [30, 1.98], [40, 2.06], [50, 2.14], [60, 2.21], [90, 2.40]];
+
+  function interpTable(table, x) {
+    if (x <= table[0][0]) return table[0][1];
+    for (let i = 1; i < table.length; i++) {
+      if (x <= table[i][0]) {
+        const [x0, y0] = table[i - 1], [x1, y1] = table[i];
+        return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+      }
+    }
+    return table[table.length - 1][1];
+  }
+
+  function expectedStrokes(distM, lie) {
+    if (distM === null || distM === undefined || Number.isNaN(distM)) return null;
+    if (distM <= 0) return 0;
+    if (lie === 'Green') return interpTable(SG_PUTT_FT, distM * 3.28084);
+    const table = SG_BASE[lie];
+    return table ? interpTable(table, distM / 0.9144) : null;
+  }
+
+  /* ---------- Petits utilitaires de calcul ---------- */
+  const sumOf = (a) => a.reduce((s, v) => s + v, 0);
+  const meanOf = (a) => (a.length ? sumOf(a) / a.length : null);
+  const medianOf = (a) => {
+    if (!a.length) return null;
+    const s = a.slice().sort((x, y) => x - y), m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  const rnd = (v, d) => (v === null || v === undefined || Number.isNaN(v) ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d));
+  const share = (n, total) => (total ? (n / total) * 100 : null);
+  const pctR = (n, total) => rnd(share(n, total), 0);
+  const notNull = (v) => v !== null && v !== undefined;
+  const bump = (obj, key) => { obj[key] = (obj[key] || 0) + 1; };
+  // Variation récente : moyenne des (jusqu'à) 5 dernières valeurs moins la moyenne des 5 précédentes
+  function recentDelta(values, decimals) {
+    if (values.length < 2) return null;
+    const n = Math.min(5, Math.floor(values.length / 2));
+    return rnd(meanOf(values.slice(-n)) - meanOf(values.slice(-2 * n, -n)), decimals);
+  }
+
+  /* ---------- Stockage ---------- */
+  function loadSavedRounds() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(ROUNDS_KEY) || '[]');
+      return Array.isArray(raw) ? raw.filter((r) => r && Array.isArray(r.holes)) : [];
+    } catch (err) { return []; }
+  }
+  function persistRounds() {
+    try { localStorage.setItem(ROUNDS_KEY, JSON.stringify(savedRounds)); } catch (err) { console.warn('Parties non enregistrées :', err); }
+  }
+  let savedRounds = loadSavedRounds();
+  let dataVersion = 0;
+  let expandedCache = { version: -1, list: [] };
+
+  // Partie terminée (round + round.entries, voir finishRound des deux saisies) → enregistrement normalisé
+  function buildSavedRound(round) {
+    const entries = round.entries || [];
+    const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+    const holes = round.holes.map((h, i) => {
+      const e = entries[i] || {};
+      const detailed = Array.isArray(e.shots);
+      return {
+        number: h.number, par: num(h.par), hcp: num(h.hcp), distance: num(h.distance),
+        score: num(e.score), putts: num(e.putts), fairway: e.fairway || null,
+        gir: detailed ? (e.gir === undefined ? null : e.gir) : (e.green ? isGreenZone(e.green) : null),
+        green: detailed ? null : (e.green || null),
+        shots: detailed ? e.shots.map((s) => ({
+          club: s.club || null, lie: s.lie || null, distance: num(s.distance),
+          penalty: num(s.penalty) || 0, result: s.result || null, green: s.green || null,
+        })) : null,
+      };
+    });
+    return {
+      id: `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      date: new Date().toISOString(),
+      course: round.courseName || 'Parcours sans nom',
+      city: (round.course && round.course.city) || '',
+      tee: round.tee || null, mode: round.mode || null, weather: round.weather || null, wind: round.wind || null,
+      startHole: round.startHole || 1, holeCount: round.holeCount || holes.length,
+      holes,
+    };
+  }
+
+  function saveFinishedRound(round) {
+    if (!round || round._saved || !Array.isArray(round.holes)) return;
+    round._saved = true;
+    savedRounds.push(buildSavedRound(round));
+    persistRounds();
+    dataVersion++;
+  }
+  document.addEventListener('stats:round-finished', (e) => saveFinishedRound(e.detail));
+
+  /* ---------- Parties "enrichies" : un trou = H, un coup = S (détaillé uniquement) ---------- */
+  function startLieOf(list, k) {
+    const s = list[k];
+    if (s.lie) return s.lie;
+    if (s.club === 'Putter') return 'Green';
+    if (k === 0) return 'Tee';
+    return isGreenZone(list[k - 1].green) ? 'Green' : 'Fairway';
+  }
+
+  function shotCat(S, par) {
+    if (S.lie === 'Green' || S.club === 'Putter') return 'putting';
+    if (S.k === 0 && S.lie === 'Tee') {
+      const long = notNull(par) ? par >= 4 : (S.before !== null && S.before >= 230);
+      if (long) return 'driving';
+    }
+    if (S.before !== null && S.before <= AG_MAX) return 'shortGame';
+    return 'approach';
+  }
+
+  // Groupes du dashboard : driving / green (A.G.) / wedging / approches / putting
+  function sgGroup(S) {
+    if (S.cat === 'putting') return 'putting';
+    if (S.cat === 'driving') return 'driving';
+    if (S.cat === 'shortGame') return 'green';
+    return S.before !== null && S.before <= WEDGING_MAX ? 'wedging' : 'approches';
+  }
+
+  // Distance parcourue par un coup (même calcul que la saisie détaillée : cosinus si une direction est connue)
+  function legDistance(before, after, zone) {
+    if (before === null || after === null) return null;
+    if (after === 0) return before;
+    const dir = WHEEL_DIRECTIONS.indexOf(String(zone || '').replace(/^(Green|Hors)-/, ''));
+    return dir === -1
+      ? Math.max(0, before - after)
+      : Math.sqrt(before ** 2 + after ** 2 + 2 * before * after * Math.cos(dir * Math.PI / 4));
+  }
+
+  // Coups joués depuis le coup S jusqu'à la balle rentrée (pénalités comprises)
+  const strokesFrom = (S) => sumOf(S.hole.shots.slice(S.k).map((x) => x.strokes));
+  const attackReached = (S) => (S.zone ? isGreenZone(S.zone) : (S.nextLie === 'Green' || S.holed));
+
+  // Remplit H.shots (+ SG, attaque de green, récupération, 1er putt) à partir des coups saisis
+  function buildShotRecords(H, rawShots) {
+    const raw = rawShots.filter((s) => !(s.club === null && s.lie === null && s.distance === null && !s.penalty && !s.result && !s.green));
+    const lies = raw.map((_, k) => startLieOf(raw, k));
+    let penalties = 0;
+    H.shots = raw.map((s, k) => {
+      const before = k === 0 ? (notNull(H.distance) ? H.distance : null) : raw[k - 1].distance;
+      const after = notNull(s.distance) ? s.distance : null;
+      const holed = after === 0;
+      const S = {
+        hole: H, k, club: s.club, lie: lies[k], before: notNull(before) ? before : null, after, penalty: s.penalty || 0,
+        zone: s.green || null, result: s.result || null, holed,
+        nextLie: holed ? 'Hole' : (k + 1 < raw.length ? lies[k + 1] : null),
+        n: k + 1 + penalties, strokes: 1 + (s.penalty || 0), sg: null, travel: null, cat: null,
+      };
+      penalties += S.penalty;
+      S.cat = shotCat(S, H.par);
+      S.travel = S.cat === 'putting' ? null : legDistance(S.before, S.after, S.zone);
+      const eb = expectedStrokes(S.before, S.lie);
+      const ea = S.nextLie === 'Hole' ? 0 : (S.nextLie ? expectedStrokes(S.after, S.nextLie) : null);
+      S.sg = eb === null || ea === null ? null : eb - ea - S.strokes;
+      return S;
+    });
+    H.sgOk = H.shots.length > 0 && H.shots.every((S) => S.sg !== null);
+    H.firstPuttShot = H.shots.find((S) => S.cat === 'putting') || null;
+
+    // Attaque du green : dernier coup (hors putt) numéroté ≤ par − 2, s'il est numéroté par − 2 ou a atteint le green.
+    // Sans par connu : premier coup avec une zone de green saisie.
+    const nonPutt = H.shots.filter((S) => S.cat !== 'putting');
+    H.attack = null;
+    if (notNull(H.par)) {
+      const limit = H.par - 2;
+      const cands = nonPutt.filter((S) => S.n <= limit);
+      const last = cands[cands.length - 1];
+      if (last && (last.n === limit || attackReached(last))) H.attack = last;
+    } else {
+      H.attack = nonPutt.find((S) => S.zone) || null;
+    }
+    H.recovery = H.attack && H.gir === false ? (H.shots[H.attack.k + 1] || null) : null;
+  }
+
+  function expandHole(round, h, idx) {
+    const H = {
+      round, idx, number: h.number, par: notNull(h.par) ? h.par : null, hcp: h.hcp, distance: notNull(h.distance) ? h.distance : null,
+      score: notNull(h.score) ? h.score : null, putts: notNull(h.putts) ? h.putts : null,
+      fairway: h.fairway || null, gir: notNull(h.gir) ? h.gir : null,
+      shots: [], sgOk: false, attack: null, recovery: null, firstPuttShot: null, attackInfo: null,
+    };
+    if (h.shots && h.shots.length) buildShotRecords(H, h.shots);
+    // Résultat de l'attaque du green (les deux modes) : { zone, reached }
+    if (h.shots) {
+      if (H.attack) H.attackInfo = { zone: H.attack.zone, reached: attackReached(H.attack) };
+      else if (H.gir === false) H.attackInfo = { zone: null, reached: false };
+    } else if (h.green) {
+      H.attackInfo = { zone: h.green, reached: isGreenZone(h.green) };
+    }
+    return H;
+  }
+
+  function expandedRounds() {
+    if (expandedCache.version !== dataVersion) {
+      const list = savedRounds.map((r) => {
+        const out = { id: r.id, date: r.date, course: r.course || 'Parcours sans nom', city: r.city || '', holes: [] };
+        out.holes = r.holes.map((h, i) => expandHole(out, h, i));
+        return out;
+      }).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+      expandedCache = { version: dataVersion, list };
+    }
+    return expandedCache.list;
+  }
+
+  /* ---------- Sélection (période / parcours / N dernières parties) ---------- */
+  function periodStart(label) {
+    const m = /^(\d+) derniers jours$/.exec(label || '');
+    if (m) return Date.now() - Number(m[1]) * 86400000;
+    if (label === 'Cette saison') return new Date(new Date().getFullYear(), 0, 1).getTime();
+    return -Infinity;
+  }
+
+  function selectRounds(f) {
+    f = f || {};
+    let list = expandedRounds();
+    if (f.course && f.course !== ALL_COURSES) list = list.filter((r) => r.course === f.course);
+    if (f.period) {
+      const t = periodStart(f.period);
+      if (t > -Infinity) list = list.filter((r) => new Date(r.date).getTime() >= t);
+    }
+    const n = parseInt(f.rounds, 10);
+    if (!Number.isNaN(n)) list = list.slice(-n);
+    return list;
+  }
+
+  // Parcours réellement joués (liste des filtres "Parcours")
+  function courseOptions() {
+    const names = [...new Set(expandedRounds().map((r) => r.course))].sort((a, b) => a.localeCompare(b));
+    return [ALL_COURSES, ...names];
+  }
+
+  /* ---------- Totaux d'une partie ---------- */
+  function roundTotals(r) {
+    const scored = r.holes.every((h) => h.score !== null);
+    const gross = scored ? sumOf(r.holes.map((h) => h.score)) : null;
+    const parKnown = r.holes.every((h) => h.par !== null);
+    const eligible = r.holes.filter((h) => h.par !== 3);
+    return {
+      id: r.id, date: r.date, course: r.course, city: r.city, holeCount: r.holes.length,
+      gross, vsPar: gross !== null && parKnown ? gross - sumOf(r.holes.map((h) => h.par)) : null,
+      fir: eligible.filter((h) => h.fairway === FIR_HIT).length, firTotal: eligible.length,
+      gir: r.holes.filter((h) => h.gir === true).length,
+    };
+  }
+
+  // Strokes gained des trous donnés, ramenés à 18 trous (seuls les trous détaillés et complets comptent)
+  function sgOfHoles(holes) {
+    const ok = holes.filter((h) => h.sgOk);
+    if (!ok.length) return null;
+    const out = { driving: 0, green: 0, wedging: 0, approches: 0, putting: 0 };
+    ok.forEach((h) => h.shots.forEach((S) => { out[sgGroup(S)] += S.sg; }));
+    const k = 18 / ok.length;
+    Object.keys(out).forEach((key) => { out[key] *= k; });
+    out.total = sumOf(Object.values(out));
+    return out;
+  }
+
+  // SG en direct d'un trou en cours de saisie (saisie détaillée) : somme des coups déjà calculables
+  function liveHoleSG(hole, rawShots) {
+    const H = { par: notNull(hole.par) ? hole.par : null, distance: notNull(hole.distance) ? hole.distance : null, gir: null };
+    buildShotRecords(H, rawShots);
+    const g = { driving: 0, green: 0, approach: 0, putting: 0 };
+    let any = false;
+    H.shots.forEach((S) => {
+      if (S.sg === null) return;
+      any = true;
+      const grp = sgGroup(S);
+      g[grp === 'wedging' || grp === 'approches' ? 'approach' : grp] += S.sg;
+    });
+    return any ? { ...g, total: sumOf(Object.values(g)) } : null;
+  }
+
+  /* ---------- Dashboard ---------- */
+  function roundListData() {
+    return expandedRounds().map(roundTotals)
+      .map((t) => ({ id: t.id, date: t.date, course: t.course, city: t.city, score: t.gross, vsPar: t.vsPar, fir: t.fir, firTotal: t.firTotal, gir: t.gir, holeCount: t.holeCount }))
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  }
+
+  function computeDashboard() {
+    const recent = expandedRounds().slice(-DASHBOARD_ROUNDS);
+    const holes = recent.flatMap((r) => r.holes);
+    const sg = sgOfHoles(holes);
+    const eligible = holes.filter((h) => h.par !== 3 && h.fairway);
+    const girHoles = holes.filter((h) => h.gir !== null);
+
+    const puttsPerRound = recent.map((r) => {
+      const hs = r.holes.filter((h) => h.putts !== null);
+      return hs.length ? meanOf(hs.map((h) => h.putts)) * 18 : null;
+    }).filter(notNull);
+    const birdiesPerRound = recent.map((r) => {
+      const hs = r.holes.filter((h) => h.score !== null && h.par !== null);
+      return hs.length ? hs.filter((h) => h.score - h.par <= -1).length * 18 / hs.length : null;
+    }).filter(notNull);
+
+    const value = {
+      fairways: eligible.length ? pctR(eligible.filter((h) => h.fairway === FIR_HIT).length, eligible.length) : null,
+      gir: girHoles.length ? pctR(girHoles.filter((h) => h.gir).length, girHoles.length) : null,
+      putts: rnd(meanOf(puttsPerRound), 1),
+      birdies: rnd(meanOf(birdiesPerRound), 1),
+    };
+    const history = roundListData();
+    return {
+      strokesGained: {
+        total: sg ? rnd(sg.total, 2) : null,
+        categories: strokesGained.categories.map((c) => ({ ...c, value: sg ? rnd(sg[c.key], 2) : null })),
+      },
+      kpiCards: kpiCards.map((k) => ({ ...k, value: value[k.key] === undefined ? null : value[k.key] })),
+      roundsHistory: history,
+      roundsSummary: computeRoundsSummary(),
+    };
+  }
+
+  function computeRoundsSummary() {
+    const rounds = expandedRounds();
+    const totals = rounds.map(roundTotals);
+    const withGross = totals.filter((t) => t.gross !== null);
+    const vsPars = totals.filter((t) => t.vsPar !== null).map((t) => t.vsPar);
+    const best = withGross.length ? withGross.reduce((a, b) => (b.gross < a.gross ? b : a)) : null;
+    const holes = rounds.flatMap((r) => r.holes).filter((h) => h.score !== null && h.par !== null);
+    return {
+      avgScore: rnd(meanOf(vsPars), 1), avgScoreDelta: recentDelta(vsPars, 1),
+      bestScore: best ? best.gross : null, bestScoreDelta: best ? best.vsPar : null,
+      played: rounds.length,
+      avgGrossScore: rnd(meanOf(withGross.map((t) => t.gross)), 1), avgGrossDelta: recentDelta(withGross.map((t) => t.gross), 1),
+      birdiesTotal: holes.length ? holes.filter((h) => h.score - h.par <= -1).length : null,
+      doubleBogeyPlus: holes.length ? holes.filter((h) => h.score - h.par >= 2).length : null,
+    };
+  }
+
+  /* ---------- Statistiques > Multi ---------- */
+  const approachBands = [
+    { key: 'under10', label: '< 10 m', test: (d) => d < 10 },
+    { key: 'under20', label: '10 – 20 m', test: (d) => d >= 10 && d < 20 },
+    { key: 'under50', label: '20 – 50 m', test: (d) => d >= 20 && d <= 50 },
+    { key: 'over50', label: '> 50 m', test: (d) => d > 50 },
+  ];
+
+  function computeOverview(f) {
+    const rounds = selectRounds({ period: f.period, course: f.course });
+    const holes = rounds.flatMap((r) => r.holes);
+    const lieActive = f.lie && f.lie !== ALL_LIES;
+    const vsParOf = (hs) => rnd(meanOf(hs.filter((h) => h.par !== null && h.score !== null).map((h) => h.score - h.par)), 2);
+
+    /* Score */
+    const totals = rounds.map(roundTotals);
+    const withGross = totals.filter((t) => t.gross !== null);
+    const best = withGross.length ? withGross.reduce((a, b) => (b.gross < a.gross ? b : a)) : null;
+    const worst = withGross.length ? withGross.reduce((a, b) => (b.gross > a.gross ? b : a)) : null;
+    const scored = holes.filter((h) => h.score !== null && h.par !== null);
+    const per18 = (n) => (scored.length ? rnd(n * 18 / scored.length, 2) : null);
+    const cnt = (fn) => scored.filter((h) => fn(h.score - h.par)).length;
+    const avgScore = (hs) => rnd(meanOf(hs.filter((h) => h.score !== null).map((h) => h.score)), 2);
+    const p4 = holes.filter((h) => h.par === 4);
+    const p4Med = medianOf(p4.filter((h) => h.distance !== null).map((h) => h.distance));
+    const score = {
+      avgGross: rnd(meanOf(withGross.map((t) => t.gross)), 1), avgGrossDelta: recentDelta(withGross.map((t) => t.gross), 1),
+      avgNet: null, avgNetDelta: null,
+      avgToPar: rnd(meanOf(totals.filter((t) => t.vsPar !== null).map((t) => t.vsPar)), 1),
+      best: best ? best.gross : null, bestToPar: best ? best.vsPar : null,
+      worst: worst ? worst.gross : null, worstToPar: worst ? worst.vsPar : null,
+      played: rounds.length, byDistance: [],
+      perRound: {
+        eagle: per18(cnt((d) => d <= -2)), birdie: per18(cnt((d) => d === -1)), par: per18(cnt((d) => d === 0)),
+        bogey: per18(cnt((d) => d === 1)), double: per18(cnt((d) => d === 2)), triple: per18(cnt((d) => d >= 3)),
+      },
+      byHoleType: {
+        par3: avgScore(holes.filter((h) => h.par === 3)), par4: avgScore(p4), par5: avgScore(holes.filter((h) => h.par === 5)),
+        par4Short: p4Med === null ? null : avgScore(p4.filter((h) => h.distance !== null && h.distance <= p4Med)),
+        par4Long: p4Med === null ? null : avgScore(p4.filter((h) => h.distance !== null && h.distance > p4Med)),
+      },
+      bySegment: {
+        front9: avgScore(holes.filter((h) => h.number <= 9)), back9: avgScore(holes.filter((h) => h.number >= 10)),
+        first6: avgScore(holes.filter((h) => h.idx < 6)), mid6: avgScore(holes.filter((h) => h.idx >= 6 && h.idx < 12)),
+        last6: avgScore(holes.filter((h) => h.idx >= 12)),
+      },
+    };
+
+    /* Fairway */
+    const fw = holes.filter((h) => h.par !== 3 && h.fairway);
+    const fwPct = (hs) => pctR(hs.filter((h) => h.fairway === FIR_HIT).length, hs.length);
+    const tee = holes.map((h) => h.shots.find((S) => S.cat === 'driving')).filter(Boolean);
+    const teeDist = (list) => rnd(meanOf(list.map((S) => S.travel).filter(notNull)), 0);
+    const fairway = {
+      hitPct: fwPct(fw), leftPct: pctR(fw.filter((h) => h.fairway === 'Gauche').length, fw.length),
+      rightPct: pctR(fw.filter((h) => h.fairway === 'Droite').length, fw.length),
+      avgDistanceHit: teeDist(tee.filter((S) => S.hole.fairway === FIR_HIT)),
+      avgDistanceMiss: teeDist(tee.filter((S) => S.hole.fairway && S.hole.fairway !== FIR_HIT)),
+      penaltyPct: pctR(tee.filter((S) => S.penalty > 0).length, tee.length),
+      hitPar4: fwPct(fw.filter((h) => h.par === 4)), hitPar5: fwPct(fw.filter((h) => h.par === 5)),
+      scoreAfterHit: vsParOf(fw.filter((h) => h.fairway === FIR_HIT)),
+      scoreAfterMiss: vsParOf(fw.filter((h) => h.fairway !== FIR_HIT)),
+    };
+
+    /* Approach (le filtre Lie porte sur le lie de départ du coup d'attaque du green) */
+    const byAttackLie = (h) => !lieActive || (h.attack && h.attack.lie === f.lie);
+    const apHoles = holes.filter((h) => h.attackInfo && byAttackLie(h));
+    const girHoles = holes.filter((h) => h.gir !== null && byAttackLie(h));
+    const girOf = (hs) => pctR(hs.filter((h) => h.gir).length, hs.length);
+    const zoneCounts = {};
+    apHoles.forEach((h) => {
+      const i = h.attackInfo;
+      if (i.zone) bump(zoneCounts, i.zone); else if (!i.reached) bump(zoneCounts, 'ND');
+    });
+    const nAtk = apHoles.length;
+    const zSum = (test) => sumOf(Object.keys(zoneCounts).filter(test).map((k) => zoneCounts[k]));
+    const atk = apHoles.map((h) => h.attack).filter((S) => S && S.after !== null);
+    const centerPct = pctR(apHoles.filter((h) => h.attackInfo.reached).length, nAtk);
+    const approach = {
+      girPct: girOf(girHoles), girPar3: girOf(girHoles.filter((h) => h.par === 3)),
+      girPar4: girOf(girHoles.filter((h) => h.par === 4)), girPar5: girOf(girHoles.filter((h) => h.par === 5)),
+      proximity: rnd(meanOf(atk.filter(attackReached).map((S) => S.after)), 1),
+      under10: pctR(atk.filter((S) => S.after < 10).length, atk.length),
+      under20: pctR(atk.filter((S) => S.after < 20).length, atk.length),
+      over50: pctR(atk.filter((S) => S.after > 50).length, atk.length),
+      greenHitPct: centerPct,
+      zones: {
+        center: centerPct,
+        top: pctR(zSum((k) => /^Hors-Long/.test(k)), nAtk), bottom: pctR(zSum((k) => /^Hors-Court/.test(k)), nAtk),
+        left: pctR(zSum((k) => k === 'Hors-Gauche'), nAtk), right: pctR(zSum((k) => k === 'Hors-Droite'), nAtk),
+      },
+      zoneCounts,
+    };
+
+    /* Approches (récupérations après un green raté ; le filtre Lie porte sur le lie du coup de récupération) */
+    const recHoles = holes.filter((h) => h.gir === false && (!lieActive || (h.recovery && h.recovery.lie === f.lie)));
+    // Up & down : balle rentrée en 2 coups maximum depuis le coup de récupération
+    const udOf = (hs) => {
+      const withRec = hs.filter((h) => h.recovery);
+      return pctR(withRec.filter((h) => strokesFrom(h.recovery) <= 2).length, withRec.length);
+    };
+    const bunkerHoles = recHoles.filter((h) => h.recovery && h.recovery.lie === 'Bunker');
+    const plainHoles = recHoles.filter((h) => h.recovery && h.recovery.lie !== 'Bunker');
+    const recs = recHoles.map((h) => h.recovery).filter(Boolean);
+    const nineKey = (zone) => String(zone).replace(/^(Green|Hors)-/, '');
+    const nine = (list) => {
+      const out = {};
+      list.filter((S) => S.zone).forEach((S) => bump(out, nineKey(S.zone)));
+      return out;
+    };
+    const recAfter = recs.filter((S) => S.after !== null);
+    const approches = {
+      avgDistance: rnd(meanOf(recs.filter((S) => S.before !== null).map((S) => S.before)), 1),
+      proximity: rnd(meanOf(recAfter.filter((S) => S.nextLie === 'Green' || S.holed).map((S) => S.after)), 1),
+      upDownPct: udOf(recHoles), upDownBunker: udOf(bunkerHoles), upDownNonBunker: udOf(plainHoles),
+      byDistance: [],
+      proximityBands: recAfter.length ? approachBands.map((b) => ({ key: b.key, label: b.label, pct: pctR(recAfter.filter((S) => b.test(S.after)).length, recAfter.length) })) : [],
+      byType: [
+        { type: 'Approches', count: plainHoles.length, upDownPct: udOf(plainHoles) },
+        { type: 'S. Bunker', count: bunkerHoles.length, upDownPct: udOf(bunkerHoles) },
+      ],
+      zoneCounts: { all: nine(recs), nonBunker: nine(recs.filter((S) => S.lie !== 'Bunker')), bunker: nine(recs.filter((S) => S.lie === 'Bunker')) },
+    };
+
+    /* Putts */
+    const ph = holes.filter((h) => h.putts !== null);
+    const putts = (hs) => rnd(meanOf(hs.map((h) => h.putts)), 2);
+    const firsts = holes.filter((h) => h.firstPuttShot && h.firstPuttShot.before !== null && h.putts !== null);
+    const putt = {
+      perHole: putts(ph), perRound: ph.length ? rnd(meanOf(ph.map((h) => h.putts)) * 18, 1) : null,
+      perHoleGir: putts(ph.filter((h) => h.gir === true)), perHoleNonGir: putts(ph.filter((h) => h.gir === false)),
+      onePutt: pctR(ph.filter((h) => h.putts <= 1).length, ph.length),
+      twoPutt: pctR(ph.filter((h) => h.putts === 2).length, ph.length),
+      threePlusPutt: pctR(ph.filter((h) => h.putts >= 3).length, ph.length),
+      avgFirstPuttDistance: rnd(meanOf(firsts.map((h) => h.firstPuttShot.before)), 1),
+      byDistance: PUTT_BUCKETS.map((label, i) => {
+        const hs = firsts.filter((h) => puttBucketIndex(h.firstPuttShot.before) === i);
+        return {
+          label, avgPutts: putts(hs),
+          one: pctR(hs.filter((h) => h.putts <= 1).length, hs.length), two: pctR(hs.filter((h) => h.putts === 2).length, hs.length),
+          threePlus: pctR(hs.filter((h) => h.putts >= 3).length, hs.length),
+        };
+      }),
+    };
+
+    return { score, fairway, approach, approches, putts: putt };
+  }
+
+  // Tranche du 1er putt : bornes hautes incluses (≤ 1, 1–2, 2–3, 3–5, 5–9, > 9)
+  function puttBucketIndex(d) {
+    const bounds = [1, 2, 3, 5, 9];
+    const i = bounds.findIndex((b) => d <= b);
+    return i === -1 ? 5 : i;
+  }
+  // Tranche de distance avant le coup (voir DISTANCE_BUCKETS)
+  const DIST_BOUNDS = [23, 46, 69, 91, 114, 137, 160, 183, 206, 229];
+  function distBucketIndex(d) {
+    const i = DIST_BOUNDS.findIndex((b) => d < b);
+    return i === -1 ? 10 : i;
+  }
+
+  /* ---------- Statistiques > Traditionnel / SG : un point par partie ---------- */
+  function trendRoundOf(r) {
+    const hs = r.holes;
+    const tee = hs.map((h) => h.shots.find((S) => S.cat === 'driving')).filter((S) => S && S.travel !== null);
+    const fw = hs.filter((h) => h.par !== 3 && h.fairway);
+    const girH = hs.filter((h) => h.gir !== null);
+    const pH = hs.filter((h) => h.putts !== null);
+    const girP = hs.filter((h) => h.gir === true && h.putts !== null);
+    const sg = sgOfHoles(hs);
+    return {
+      date: r.date, course: r.course,
+      avgDrive: tee.length ? meanOf(tee.map((S) => S.travel)) : null,
+      firPct: fw.length ? share(fw.filter((h) => h.fairway === FIR_HIT).length, fw.length) : null,
+      girPct: girH.length ? share(girH.filter((h) => h.gir).length, girH.length) : null,
+      putts: pH.length ? meanOf(pH.map((h) => h.putts)) * 18 : null,
+      puttsPerGir: girP.length ? meanOf(girP.map((h) => h.putts)) : null,
+      sg: sg ? { total: sg.total, driving: sg.driving, approach: sg.wedging + sg.approches, shortGame: sg.green, putting: sg.putting } : null,
+    };
+  }
+  const trendRoundsData = () => expandedRounds().map(trendRoundOf);
+
+  /* ---------- Par club ---------- */
+  function computeClubInsights(tabs, f) {
+    const rounds = selectRounds({ rounds: f.rounds, course: f.course });
+    const holes = rounds.flatMap((r) => r.holes).filter((h) => h.shots.length);
+    const nHoles = holes.length;
+    const okHoles = holes.filter((h) => h.sgOk).length;
+    const perRound = (n) => (nHoles ? n * 18 / nHoles : null);
+    const perRoundSg = (n) => (okHoles ? n * 18 / okHoles : null);
+    const lieOk = (S) => f.lie === ALL_LIES || S.lie === f.lie;
+    const shots = holes.flatMap((h) => h.shots).filter((S) => tabs.includes(S.cat) && lieOk(S));
+
+    const bag = getSdClubs().map((c) => c.name);
+    const used = [...new Set(shots.filter((S) => S.cat !== 'putting' && S.club).map((S) => S.club))];
+    const clubs = [...bag.filter((c) => used.includes(c)), ...used.filter((c) => !bag.includes(c))];
+
+    const recHoles = holes.filter((h) => h.recovery && h.par !== null && h.score !== null && tabs.includes(h.recovery.cat) && lieOk(h.recovery));
+    const metrics = { sg: {}, distance: {}, fairways: {}, gir: {}, birdies: {}, scrambling: {}, upDown: {}, shotsPerRound: {} };
+
+    ['All', ...clubs].forEach((key) => {
+      const ks = shots.filter((S) => key === 'All' || S.club === key);
+      const okShots = ks.filter((S) => S.hole.sgOk);
+      metrics.sg[key] = okShots.length ? rnd(perRoundSg(sumOf(okShots.map((S) => S.sg))), 2) : null;
+      metrics.distance[key] = rnd(meanOf(ks.filter((S) => S.cat !== 'putting' && S.travel !== null).map((S) => S.travel)), 1);
+
+      const drv = ks.filter((S) => S.cat === 'driving' && S.hole.fairway && S.hole.par !== 3);
+      metrics.fairways[key] = pctR(drv.filter((S) => S.hole.fairway === FIR_HIT).length, drv.length);
+
+      const atk = ks.filter((S) => S.hole.attack === S && S.hole.attackInfo);
+      metrics.gir[key] = pctR(atk.filter((S) => S.hole.attackInfo.reached).length, atk.length);
+
+      const app = ks.filter((S) => S.cat === 'approach');
+      metrics.birdies[key] = app.length
+        ? rnd(perRound(app.filter((S) => (S.nextLie === 'Green' || S.holed) && S.after !== null && S.after <= BIRDIE_CHANCE_MAX).length), 1)
+        : null;
+
+      const rec = recHoles.filter((h) => key === 'All' || h.recovery.club === key);
+      metrics.scrambling[key] = pctR(rec.filter((h) => h.score <= h.par).length, rec.length);
+
+      const sgm = ks.filter((S) => S.cat === 'shortGame');
+      metrics.upDown[key] = pctR(sgm.filter((S) => strokesFrom(S) <= 2).length, sgm.length);
+
+      metrics.shotsPerRound[key] = ks.length ? rnd(perRound(ks.length), 1) : (key === 'All' ? rnd(perRound(0), 1) : null);
+    });
+
+    // Putts : une barre "Putting" à côté de "Tous" quand l'onglet est actif
+    if (tabs.includes('putting')) {
+      const ps = shots.filter((S) => S.cat === 'putting');
+      const okPs = ps.filter((S) => S.hole.sgOk);
+      metrics.sg.Putting = okPs.length ? rnd(perRoundSg(sumOf(okPs.map((S) => S.sg))), 2) : null;
+      metrics.shotsPerRound.Putting = rnd(perRound(ps.length), 1);
+    }
+
+    // Putting par tranche de distance du 1er putt (le filtre Lie n'a de sens que sur "Green")
+    const putting = { sg: {}, makeRate: {}, threePutt: {}, puttsPerGir: {}, holesPer3Putt: {} };
+    const pHoles = (f.lie === ALL_LIES || f.lie === 'Green')
+      ? holes.filter((h) => h.firstPuttShot && h.firstPuttShot.before !== null) : [];
+    ['All', ...PUTT_BUCKETS].forEach((key) => {
+      const hs = key === 'All' ? pHoles : pHoles.filter((h) => PUTT_BUCKETS[puttBucketIndex(h.firstPuttShot.before)] === key);
+      const withPutts = hs.filter((h) => h.putts !== null);
+      const threes = withPutts.filter((h) => h.putts >= 3).length;
+      const okH = hs.filter((h) => h.sgOk);
+      putting.sg[key] = okH.length ? rnd(meanOf(okH.map((h) => sumOf(h.shots.filter((S) => S.cat === 'putting').map((S) => S.sg)))), 2) : null;
+      putting.makeRate[key] = pctR(hs.filter((h) => h.firstPuttShot.holed).length, hs.length);
+      putting.threePutt[key] = pctR(threes, withPutts.length);
+      putting.puttsPerGir[key] = rnd(meanOf(withPutts.filter((h) => h.gir === true).map((h) => h.putts)), 2);
+      putting.holesPer3Putt[key] = threes ? rnd(withPutts.length / threes, 1) : null;
+    });
+
+    // Attaques de green par club
+    const zoneCounts = { All: {} };
+    shots.filter((S) => S.cat !== 'putting' && S.zone).forEach((S) => {
+      bump(zoneCounts.All, S.zone);
+      if (S.club) bump(zoneCounts[S.club] = zoneCounts[S.club] || {}, S.zone);
+    });
+
+    return { clubs, metrics, putting, zoneCounts };
+  }
+
+  /* ---------- Par distance ---------- */
+  function computeDistanceInsights(f) {
+    const rounds = selectRounds({ rounds: f.rounds, course: f.course });
+    const holes = rounds.flatMap((r) => r.holes).filter((h) => h.shots.length);
+    const nHoles = holes.length;
+    const okHoles = holes.filter((h) => h.sgOk).length;
+    const shots = holes.flatMap((h) => h.shots)
+      .filter((S) => S.cat !== 'putting' && S.before !== null && (f.lie === ALL_LIES || S.lie === f.lie));
+    const buckets = DISTANCE_BUCKETS.map(() => []);
+    shots.forEach((S) => buckets[distBucketIndex(S.before)].push(S));
+
+    const zoneCounts = {};
+    DISTANCE_BUCKETS.forEach((label, i) => {
+      zoneCounts[label] = {};
+      buckets[i].filter((S) => S.zone).forEach((S) => bump(zoneCounts[label], S.zone));
+    });
+    return {
+      sg: buckets.map((list) => {
+        const ok = list.filter((S) => S.hole.sgOk);
+        return ok.length && okHoles ? rnd(sumOf(ok.map((S) => S.sg)) * 18 / okHoles, 2) : null;
+      }),
+      proximity: buckets.map((list) => {
+        const v = list.filter((S) => (S.nextLie === 'Green' || S.holed) && S.after !== null).map((S) => S.after);
+        return v.length ? rnd(medianOf(v), 1) : null;
+      }),
+      shotsPerRound: buckets.map((list) => (list.length && nHoles ? rnd(list.length * 18 / nHoles, 1) : null)),
+      zoneCounts,
+    };
+  }
+
+  /* ---------- Performance putting ---------- */
+  const PUTT_DISTANCE_TESTS = {
+    '< 3 m': (d) => d < 3, '3 – 5 m': (d) => d >= 3 && d < 5, '5 – 10 m': (d) => d >= 5 && d < 10, '> 10 m': (d) => d >= 10,
+  };
+
+  // Un point par partie : putts par partie (18 trous) ; avec un filtre de distance : putts par trou dont le 1er putt est dans la tranche
+  function computePuttingPerformance(f) {
+    const test = PUTT_DISTANCE_TESTS[f.distance] || null;
+    const pointOf = (r) => {
+      let hs = r.holes.filter((h) => h.putts !== null);
+      if (test) hs = hs.filter((h) => h.firstPuttShot && h.firstPuttShot.before !== null && test(h.firstPuttShot.before));
+      if (!hs.length) return null;
+      const avg = meanOf(hs.map((h) => h.putts));
+      return test ? avg : avg * 18;
+    };
+    const n = parseInt(f.range, 10) || 20;
+    const all = selectRounds({ course: f.course });
+    const cur = all.slice(-n).map(pointOf).filter(notNull);
+    const prev = all.slice(-2 * n, -n).map(pointOf).filter(notNull);
+    const dec = test ? 2 : 1;
+    return {
+      value: cur.length ? rnd(meanOf(cur), dec) : null,
+      delta: cur.length && prev.length ? rnd(meanOf(cur) - meanOf(prev), dec) : null,
+      compareLabel: 'vs période précédente',
+      perHole: !!test,
+      points: cur.map((v) => rnd(v, dec)),
+    };
   }
 
   /* ========================================================================
@@ -1064,9 +1743,21 @@
      ======================================================================== */
 
   function initDashboard() {
-    const hasTotal = strokesGained.total !== null && strokesGained.total !== undefined;
+    // Bouton flottant unique : ouvre le popup de paramétrage (voir openNewRound)
+    const fabRow = document.createElement('div');
+    fabRow.className = 'fab-row';
+    fabRow.innerHTML = `<button class="fab" type="button" data-new-round>${icon('flag')} Nouveau parcours</button>`;
+    document.getElementById('screen-dashboard').appendChild(fabRow);
+    renderDashboard();
+  }
+
+  // Recalculé à chaque affichage : SG, KPI, 6 dernières parties
+  function renderDashboard() {
+    const data = computeDashboard();
+    const sg = data.strokesGained;
+    const hasTotal = sg.total !== null && sg.total !== undefined;
     const totalValueHtml = hasTotal
-      ? `<div class="sg-card__value" data-count-to="${strokesGained.total}" data-count-prefix="${strokesGained.total > 0 ? '+' : ''}">+0.0</div>`
+      ? `<div class="sg-card__value" data-count-to="${sg.total}" data-count-prefix="${sg.total > 0 ? '+' : ''}">+0.0</div>`
       : `<div class="sg-card__value">--</div>`;
 
     document.getElementById('dash-strokesGained').innerHTML = `
@@ -1078,7 +1769,7 @@
         </div>
       </div>
       <div class="sg-card__breakdown">
-        ${strokesGained.categories.map((c) => `
+        ${sg.categories.map((c) => `
           <div class="sg-item">
             <div class="sg-item__label">${c.label}</div>
             <div class="sg-item__icon">${icon(c.icon)}</div>
@@ -1088,23 +1779,10 @@
       </div>
     `;
 
-    // Tout le HTML (y compris les 3 cartes "Analyses détaillées") est injecté
-    // AVANT la création des graphiques : si Chart.js échoue à charger (CDN
-    // bloqué, hors-ligne...), le reste de l'écran reste visible et cliquable.
-    const kpiGrid = document.getElementById('dash-kpiGrid');
-    kpiGrid.innerHTML = kpiCards.map((k, i) => renderKpiCard(k, i)).join('');
-
+    document.getElementById('dash-kpiGrid').innerHTML = data.kpiCards.map((k, i) => renderKpiCard(k, i)).join('');
     document.getElementById('dash-analysesGrid').innerHTML = detailedAnalyses.map((a, i) => renderAnalysisCard(a, i)).join('');
-
-    renderRoundList(document.getElementById('dash-historyList'), roundsHistory, () => showScreen('historique'));
-
+    renderRoundList(document.getElementById('dash-historyList'), data.roundsHistory.slice(0, 6), () => showScreen('historique'));
     animateCounters(document.getElementById('screen-dashboard'), 800);
-
-    // Bouton flottant unique : ouvre le popup de paramétrage (voir openNewRound)
-    const fabRow = document.createElement('div');
-    fabRow.className = 'fab-row';
-    fabRow.innerHTML = `<button class="fab" type="button" data-new-round>${icon('flag')} Nouveau parcours</button>`;
-    document.getElementById('screen-dashboard').appendChild(fabRow);
   }
 
   /* ========================================================================
@@ -1112,8 +1790,8 @@
      ======================================================================== */
 
   const INSIGHTS_ROUNDS = ['5 derniers parcours', '10 derniers parcours', '15 derniers parcours', '20 derniers parcours', 'Tout'];
-  const CLUB_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Sand', 'Recover', 'Green'];
-  const DISTANCE_LIES = ['Tous lies', 'Tee', 'Fringe', 'Fairway', 'Sand', 'Rough', 'Recover'];
+  const CLUB_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Bunker', 'Green'];
+  const DISTANCE_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Bunker'];
   const CLUB_TABS = [
     { value: 'driving', label: 'Driving' },
     { value: 'approach', label: 'Approach' },
@@ -1126,19 +1804,24 @@
   // Filtres communs (Time / Parcours / Lie). À chaque changement : recharger les données avec ces valeurs.
   const clubState = { tabs: ['driving'], greenClubs: ['All'], filters: { rounds: 'Tout', course: 'Tous parcours', lie: 'Tous lies' } };
 
-  function renderInsightsFilters(rootId, lieOptions, onChange) {
+  function renderInsightsFilters(rootId, lieOptions, filters, onChange) {
+    const courses = courseOptions(); // parcours réellement joués
+    if (!courses.includes(filters.course)) filters.course = ALL_COURSES;
     renderFilterBar(document.getElementById(rootId), [
-      { key: 'rounds', icon: 'calendar', label: 'Tout', options: INSIGHTS_ROUNDS },
-      { key: 'course', icon: 'flag', label: 'Tous parcours', options: DEFAULT_FILTERS.course.options },
-      { key: 'lie', icon: 'sliders', label: 'Tous lies', options: lieOptions },
+      { key: 'rounds', icon: 'calendar', label: filters.rounds, options: INSIGHTS_ROUNDS },
+      { key: 'course', icon: 'flag', label: filters.course, options: courses },
+      { key: 'lie', icon: 'sliders', label: filters.lie, options: lieOptions },
     ], onChange);
   }
 
   function initParClub() {
     renderClubTabs();
-    renderInsightsFilters('pc-filters', CLUB_LIES, (key, value) => {
+    refreshParClub();
+  }
+
+  function refreshParClub() {
+    renderInsightsFilters('pc-filters', CLUB_LIES, clubState.filters, (key, value) => {
       clubState.filters[key] = value;
-      // À brancher : GET /api/stats/par-club avec clubState.tabs et clubState.filters, puis remplacer clubInsights
       renderClubCharts();
     });
     renderClubCharts();
@@ -1164,8 +1847,9 @@
     const tabs = clubState.tabs;
     const has = (k) => tabs.includes(k);
     const only = (k) => tabs.length === 1 && tabs[0] === k;
-    const m = clubInsights.metrics, put = clubInsights.putting;
-    const played = clubInsights.clubs.length ? clubInsights.clubs : getSdClubs().map((c) => c.name);
+    const ci = computeClubInsights(tabs, clubState.filters);
+    const m = ci.metrics, put = ci.putting;
+    const played = ci.clubs.length ? ci.clubs : getSdClubs().map((c) => c.name);
 
     const rowsOf = (map, keys) => keys.map((k) => ({ label: k === 'All' ? 'Tous' : k, value: pickValue(map, k) }));
     const clubRows = (map) => [...rowsOf(map, ['All']), ...clubsOnly(map)];
@@ -1222,7 +1906,7 @@
     // Dispersion sur le green : onglet Approach seul, un ou plusieurs clubs
     let dispersion = '';
     if (only('approach')) {
-      const zc = clubInsights.zoneCounts;
+      const zc = ci.zoneCounts;
       const withData = played.filter((c) => Object.values(zc[c] || {}).some((n) => n > 0));
       const counts = clubState.greenClubs.includes('All') ? (zc.All || {}) : sumZoneCounts(clubState.greenClubs.map((c) => zc[c]));
       dispersion = `
@@ -1251,10 +1935,11 @@
   const DISTANCE_BUCKETS = ['< 23 m', '23–46 m', '46–69 m', '69–91 m', '91–114 m', '114–137 m', '137–160 m', '160–183 m', '183–206 m', '206–229 m', '> 229 m'];
   const distanceState = { buckets: ['All'], filters: { rounds: 'Tout', course: 'Tous parcours', lie: 'Tous lies' } };
 
-  function initParDistance() {
-    renderInsightsFilters('pd-filters', DISTANCE_LIES, (key, value) => {
+  function initParDistance() { refreshParDistance(); }
+
+  function refreshParDistance() {
+    renderInsightsFilters('pd-filters', DISTANCE_LIES, distanceState.filters, (key, value) => {
       distanceState.filters[key] = value;
-      // À brancher : GET /api/stats/par-distance avec distanceState.filters, puis remplacer distanceInsights
       renderDistanceCharts();
     });
     renderDistanceCharts();
@@ -1262,7 +1947,7 @@
 
   function renderDistanceCharts() {
     const root = document.getElementById('pd-charts');
-    const d = distanceInsights;
+    const d = computeDistanceInsights(distanceState.filters);
     const rows = (arr) => DISTANCE_BUCKETS.map((label, i) => ({ label, value: arr[i] === undefined ? null : arr[i] }));
 
     const selected = distanceState.buckets.includes('All') ? DISTANCE_BUCKETS : distanceState.buckets;
@@ -1302,6 +1987,15 @@
     showStatistiquesPane('Multi');
   }
 
+  // Réaffichage de l'écran : filtres (liste des parcours) et pane visible recalculés
+  function refreshStatistiques() {
+    renderStatistiquesMulti();
+    initTrendPane('traditional');
+    initTrendPane('sg');
+    if (document.getElementById('st-pane-traditionnel').classList.contains('is-active')) renderTrendPane('traditional');
+    if (document.getElementById('st-pane-sg').classList.contains('is-active')) renderTrendPane('sg');
+  }
+
   function showStatistiquesPane(label) {
     const panes = { Multi: 'st-pane-multi', Traditionnel: 'st-pane-traditionnel', SG: 'st-pane-sg' };
     Object.values(panes).forEach((id) => document.getElementById(id).classList.remove('is-active'));
@@ -1314,23 +2008,36 @@
   // Pane "Multi" : aperçu score / fairway / greens / approches / putts
   let dispersionChart = null;
 
+  const multiFilters = { period: DEFAULT_FILTERS.period.label, course: ALL_COURSES, lie: ALL_LIES };
+
   function renderStatistiquesMulti() {
-    renderFilterBar(document.getElementById('st-multi-filters'), [DEFAULT_FILTERS.period, DEFAULT_FILTERS.course, DEFAULT_FILTERS.lie]);
+    const courses = courseOptions();
+    if (!courses.includes(multiFilters.course)) multiFilters.course = ALL_COURSES;
+    renderFilterBar(document.getElementById('st-multi-filters'), [
+      { ...DEFAULT_FILTERS.period, label: multiFilters.period },
+      { ...DEFAULT_FILTERS.course, label: multiFilters.course, options: courses },
+      { ...DEFAULT_FILTERS.lie, label: multiFilters.lie },
+    ], (key, value) => {
+      multiFilters[key] = value;
+      loadMultiImages().then(buildStatistiquesMulti);
+    });
     // Les blocs fairway / green utilisent les images de la saisie : on attend leur chargement (proportions du green)
     loadMultiImages().then(buildStatistiquesMulti);
   }
 
   function buildStatistiquesMulti() {
     const blocksEl = document.getElementById('st-multi-blocks');
+    const ov = computeOverview(multiFilters);
     blocksEl.innerHTML =
-      renderScoreBlock(statsOverview.score) +
-      renderFairwayBlock(statsOverview.fairway) +
-      renderApproachBlock(statsOverview.approach) +
-      renderApprochesBlock(statsOverview.approches) +
-      renderPuttsBlock(statsOverview.putts);
+      renderScoreBlock(ov.score) +
+      renderFairwayBlock(ov.fairway) +
+      renderApproachBlock(ov.approach) +
+      renderApprochesBlock(ov.approches) +
+      renderPuttsBlock(ov.putts);
 
+    if (dispersionChart) { dispersionChart.destroy(); dispersionChart = null; }
     const dispersionCanvas = blocksEl.querySelector('[data-dispersion]');
-    if (dispersionCanvas) dispersionChart = createDispersionChart(dispersionCanvas, statsOverview.approches.proximityBands);
+    if (dispersionCanvas) dispersionChart = createDispersionChart(dispersionCanvas, ov.approches.proximityBands);
 
     // Dispersion des approches de récupération : Toutes / Approches / S. Bunker
     const typesEl = blocksEl.querySelector('[data-approches-types]');
@@ -1339,7 +2046,7 @@
       btn.addEventListener('click', () => {
         approchesType = btn.dataset.value;
         typesEl.querySelectorAll('.insights_chip').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        wheelEl.innerHTML = renderGreenWheelMap(statsOverview.approches.zoneCounts[approchesType], 'nine');
+        wheelEl.innerHTML = renderGreenWheelMap(ov.approches.zoneCounts[approchesType], 'nine');
       });
     });
 
@@ -1375,12 +2082,13 @@
   const trendCharts = { traditional: [], sg: [] };
 
   function initTrendPane(key) {
+    const courses = courseOptions();
+    if (!courses.includes(trendFilters[key].course)) trendFilters[key].course = ALL_COURSES;
     renderFilterBar(document.getElementById(TREND_PANES[key].filters), [
-      { key: 'course', icon: 'flag', label: 'Tous parcours', options: DEFAULT_FILTERS.course.options },
-      { key: 'rounds', icon: 'calendar', label: 'Tout', options: INSIGHTS_ROUNDS },
+      { key: 'course', icon: 'flag', label: trendFilters[key].course, options: courses },
+      { key: 'rounds', icon: 'calendar', label: trendFilters[key].rounds, options: INSIGHTS_ROUNDS },
     ], (filterKey, value) => {
       trendFilters[key][filterKey] = value;
-      // À brancher : GET /api/stats/trends avec trendFilters[key], puis remplacer trendRounds
       renderTrendPane(key);
     });
   }
@@ -1388,7 +2096,7 @@
   // Parties filtrées par parcours puis limitées aux N dernières, en ordre chronologique
   function filteredTrendRounds(key) {
     const f = trendFilters[key];
-    let list = trendRounds.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    let list = trendRoundsData().sort((a, b) => String(a.date).localeCompare(String(b.date)));
     if (f.course !== 'Tous parcours') list = list.filter((r) => r.course === f.course);
     const n = parseInt(f.rounds, 10);
     if (!Number.isNaN(n)) list = list.slice(-n);
@@ -1467,25 +2175,28 @@
   }
 
   function initHistorique() {
-    const summary = [
-      ['Score moyen', roundsSummary.avgScore, roundsSummary.avgScoreDelta, 'sliders'],
-      ['Meilleur score', roundsSummary.bestScore, roundsSummary.bestScoreDelta, 'target'],
-      ['Parties jouées', roundsSummary.played, null, 'flag'],
-      ['Score brut moy.', roundsSummary.avgGrossScore, roundsSummary.avgGrossDelta, 'trendUp'],
-      ['Birdies (total)', roundsSummary.birdiesTotal, null, 'bird'],
-      ['Double bogeys+', roundsSummary.doubleBogeyPlus, null, 'club'],
-    ];
-    document.getElementById('hist-summaryStrip').innerHTML = summary.map(([label, value, delta, ic]) => `
-      <div class="mini-stat fade-up">
-        <div class="mini-stat__icon">${icon(ic)}</div>
-        <div class="mini-stat__label">${label}</div>
-        <div class="mini-stat__value">${fmt(value)}</div>
-        ${delta !== null ? `<div class="mini-stat__delta ${delta <= 0 ? 'mini-stat__delta--pos' : 'mini-stat__delta--neg'}">${delta > 0 ? '+' : ''}${delta}</div>` : ''}
-      </div>
-    `).join('');
-
     const SORTS = [{ key: 'date', label: 'Date', icon: 'calendar' }, { key: 'course', label: 'Parcours', icon: 'flag' }, { key: 'score', label: 'Score', icon: 'sort' }];
     let activeSort = 'date', query = '', visibleCount = 6;
+
+    function renderSummary() {
+      const s = computeRoundsSummary();
+      const summary = [
+        ['Score moyen', s.avgScore, s.avgScoreDelta, 'sliders'],
+        ['Meilleur score', s.bestScore, s.bestScoreDelta, 'target'],
+        ['Parties jouées', s.played, null, 'flag'],
+        ['Score brut moy.', s.avgGrossScore, s.avgGrossDelta, 'trendUp'],
+        ['Birdies (total)', s.birdiesTotal, null, 'bird'],
+        ['Double bogeys+', s.doubleBogeyPlus, null, 'club'],
+      ];
+      document.getElementById('hist-summaryStrip').innerHTML = summary.map(([label, value, delta, ic]) => `
+        <div class="mini-stat fade-up">
+          <div class="mini-stat__icon">${icon(ic)}</div>
+          <div class="mini-stat__label">${label}</div>
+          <div class="mini-stat__value">${fmt(value)}</div>
+          ${delta !== null && delta !== undefined ? `<div class="mini-stat__delta ${delta <= 0 ? 'mini-stat__delta--pos' : 'mini-stat__delta--neg'}">${delta > 0 ? '+' : ''}${delta}</div>` : ''}
+        </div>
+      `).join('');
+    }
 
     const sortBar = document.getElementById('hist-sortBar');
     sortBar.innerHTML = SORTS.map((s) => `<button type="button" class="sort-chip" data-key="${s.key}" aria-pressed="${s.key === activeSort}">${icon(s.icon)} ${s.label}</button>`).join('');
@@ -1505,11 +2216,12 @@
     document.getElementById('hist-loadMore').addEventListener('click', () => { visibleCount += 6; render(); });
 
     function getFilteredSorted() {
-      const list = roundsHistory.filter((r) => r.course.toLowerCase().includes(query));
+      const list = roundListData().filter((r) => r.course.toLowerCase().includes(query));
+      const sc = (r) => (r.score === null ? Infinity : r.score); // parties sans score en dernier
       list.sort((a, b) => {
         if (activeSort === 'date') return new Date(b.date) - new Date(a.date);
         if (activeSort === 'course') return a.course.localeCompare(b.course);
-        if (activeSort === 'score') return a.score - b.score;
+        if (activeSort === 'score') return sc(a) - sc(b);
         return 0;
       });
       return list;
@@ -1521,37 +2233,54 @@
       renderRoundTable(document.getElementById('hist-roundTable'), visible);
       document.getElementById('hist-loadMore').style.display = visibleCount >= list.length ? 'none' : 'inline-flex';
     }
-    render();
+
+    refreshHistorique = () => { renderSummary(); render(); };
+    refreshHistorique();
+  }
+  let refreshHistorique = () => {};
+
+  /* Performance putting : filtres Parcours / Distance du 1er putt / Nombre de parties, courbe de la moyenne par partie */
+  const puttState = { course: ALL_COURSES, distance: 'Toutes distances', range: '20 derniers rounds' };
+  let puttChart = null;
+
+  function initPutting() { refreshPutting(); }
+
+  function refreshPutting() {
+    const courses = courseOptions();
+    if (!courses.includes(puttState.course)) puttState.course = ALL_COURSES;
+    renderFilterBar(document.getElementById('put-filters'), [
+      { ...DEFAULT_FILTERS.course, label: puttState.course, options: courses },
+      { key: 'distance', icon: 'target', label: puttState.distance, options: ['Toutes distances', '< 3 m', '3 – 5 m', '5 – 10 m', '> 10 m'] },
+      { key: 'range', icon: 'calendar', label: puttState.range, options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
+    ], (key, value) => { puttState[key] = value; renderPutting(); });
+    renderPutting();
   }
 
-  function initPutting() {
-    renderFilterBar(document.getElementById('put-filters'), [
-      DEFAULT_FILTERS.course,
-      { key: 'distance', icon: 'target', label: 'Toutes distances', options: ['Toutes distances', '< 3 m', '3 – 5 m', '5 – 10 m', '> 10 m'] },
-      { key: 'range', icon: 'calendar', label: '20 derniers rounds', options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
-    ]);
-
-    const hasValue = puttingPerformance.value !== null && puttingPerformance.value !== undefined;
+  function renderPutting() {
+    const perf = computePuttingPerformance(puttState);
+    const hasValue = perf.value !== null && perf.value !== undefined;
     const valueEl = document.getElementById('put-value');
     if (hasValue) {
-      valueEl.dataset.countTo = puttingPerformance.value;
+      valueEl.dataset.countTo = perf.value.toFixed(perf.perHole ? 2 : 1);
     } else {
+      delete valueEl.dataset.countTo; // la valeur de démo du HTML ne doit pas réapparaître
       valueEl.textContent = '--';
     }
 
     const deltaEl = document.getElementById('put-delta');
-    const hasDelta = puttingPerformance.delta !== null && puttingPerformance.delta !== undefined;
+    const hasDelta = perf.delta !== null && perf.delta !== undefined;
     if (hasDelta) {
-      const isGood = puttingPerformance.delta <= 0; // baisse des putts = amélioration
+      const isGood = perf.delta <= 0; // baisse des putts = amélioration
       deltaEl.className = `kpi-card__trend ${isGood ? 'kpi-card__trend--good' : 'kpi-card__trend--bad'}`;
-      deltaEl.textContent = `${puttingPerformance.delta > 0 ? '+' : ''}${puttingPerformance.delta} ${puttingPerformance.compareLabel}`;
+      deltaEl.textContent = `${perf.delta > 0 ? '+' : ''}${perf.delta} ${perf.compareLabel}`;
     } else {
       deltaEl.className = 'kpi-card__trend';
-      deltaEl.textContent = puttingPerformance.compareLabel;
+      deltaEl.textContent = perf.compareLabel;
     }
 
-    const points = puttingPerformance.points.map((y, i) => ({ x: String(i + 1), y }));
-    createPerformanceChart(document.getElementById('put-chart'), points, 'line');
+    if (puttChart) { puttChart.destroy(); puttChart = null; }
+    const points = perf.points.map((y, i) => ({ x: String(i + 1), y }));
+    puttChart = createPerformanceChart(document.getElementById('put-chart'), points, 'line');
 
     animateCounters(document.getElementById('screen-putting'), 800);
   }
@@ -2638,8 +3367,19 @@
       setText(d('fir'), `${fir}/${firTotal}`);
       setText(d('gir'), `${gir}/${round.holes.length}`);
       setText(d('putts'), puttsHoles ? String(putts) : '--');
-      // Strokes gained (d('sg'), d('sg-driving'), d('sg-green'), d('sg-approach'), d('sg-putting')) :
-      // à brancher, aucun barème de référence n'est encore disponible
+      // Strokes gained : total de la partie (haut) et détail du trou affiché (encadré SG)
+      const fmtLive = (v) => (v === null || v === undefined ? '--' : fmtSG(v));
+      let roundSg = 0, roundSgAny = false;
+      round.holes.forEach((hole, i) => {
+        const g = liveHoleSG(hole, holes[i]);
+        if (g) { roundSg += g.total; roundSgAny = true; }
+      });
+      setText(d('sg'), roundSgAny ? fmtSG(roundSg) : '--');
+      const cur = liveHoleSG(round.holes[idx], holes[idx]);
+      setText(d('sg-driving'), fmtLive(cur && cur.driving));
+      setText(d('sg-green'), fmtLive(cur && cur.green));
+      setText(d('sg-approach'), fmtLive(cur && cur.approach));
+      setText(d('sg-putting'), fmtLive(cur && cur.putting));
     }
 
     const isLastHole = () => idx === round.holes.length - 1;
@@ -2859,12 +3599,23 @@
     'saisie-rapide': initSaisieRapide,
     'saisie-detaillee': initSaisieDetaillee,
   };
+  // Écrans recalculés à chaque réaffichage (les données viennent des parties enregistrées)
+  const SCREEN_REFRESH = {
+    dashboard: renderDashboard,
+    'par-club': refreshParClub,
+    'par-distance': refreshParDistance,
+    statistiques: refreshStatistiques,
+    historique: () => refreshHistorique(),
+    putting: refreshPutting,
+  };
+
 
   /* ========================================================================
      13) NAVIGATION SPA — bascule entre écrans, init différée (une fois)
      ======================================================================== */
 
   const initialized = new Set();
+  let currentScreen = 'dashboard';
 
   // Portée sur #page-stats : évite toute interférence avec les autres
   // modules de l'app (Parcours, etc.) qui utilisent aussi des éléments
@@ -2882,7 +3633,10 @@
     if (!initialized.has(name)) {
       SCREEN_INIT[name]();
       initialized.add(name);
+    } else if (SCREEN_REFRESH[name]) {
+      SCREEN_REFRESH[name]();
     }
+    currentScreen = name;
     window.scrollTo(0, 0);
   }
 
@@ -2901,6 +3655,16 @@
     applyChartDefaults();
     initNav();
     showScreen('dashboard');
+    // Retour sur la page Stats depuis une autre partie de l'app : l'écran affiché est recalculé
+    const statsPage = getStatsRoot();
+    if (statsPage && typeof MutationObserver !== 'undefined') {
+      let wasActive = statsPage.classList.contains('active');
+      new MutationObserver(() => {
+        const nowActive = statsPage.classList.contains('active');
+        if (nowActive && !wasActive && initialized.has(currentScreen) && SCREEN_REFRESH[currentScreen]) SCREEN_REFRESH[currentScreen]();
+        wasActive = nowActive;
+      }).observe(statsPage, { attributes: true, attributeFilter: ['class'] });
+    }
   });
 
   // Exposé pour permettre à un autre module de naviguer directement vers un écran Stats.

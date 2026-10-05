@@ -1,161 +1,25 @@
 /* ==========================================================================
-   PARCOURS — UI interactions (front-end only, aucune logique métier)
-   Les écrans mockés (Distances, Ajouter un coup, Détail)
-   utilisent des valeurs statiques écrites directement dans le HTML —
-   à remplacer par le moteur de calcul réel de l'application.
+   PARCOURS — Fairway / Green / Historique / Vent / Dénivelé / Mes distances
+   Les fonctions sont globales : elles sont appelées depuis des attributs
+   onclick="" générés dans le HTML.
    ========================================================================== */
 
-(function () {
-  "use strict";
-
-  /* ------------------------------------------------------------------------
-     Dropdown premium
-     ------------------------------------------------------------------------ */
-  function initDropdowns() {
-    document.querySelectorAll(".dropdown").forEach((dropdown) => {
-      const trigger = dropdown.querySelector(".dropdown-trigger");
-      const menu = dropdown.querySelector(".dropdown-menu");
-      if (!trigger || !menu) return;
-
-      trigger.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = dropdown.classList.contains("open");
-        closeAllDropdowns();
-        if (!isOpen) dropdown.classList.add("open");
-      });
-
-      menu.querySelectorAll(".dropdown-option").forEach((option) => {
-        option.addEventListener("click", (e) => {
-          e.stopPropagation();
-          menu.querySelectorAll(".dropdown-option").forEach((o) => o.classList.remove("selected"));
-          option.classList.add("selected");
-          const label = trigger.querySelector(".trigger-label");
-          if (label) {
-            label.textContent = option.querySelector("span")?.textContent || option.textContent.trim();
-            label.classList.remove("placeholder");
-          }
-          dropdown.classList.remove("open");
-        });
-      });
-    });
-
-    document.addEventListener("click", closeAllDropdowns);
+document.addEventListener("DOMContentLoaded", () => {
+  // L'accueil Parcours tient sur un écran sans défilement (voir parcours-ui.css) :
+  // le scroll n'est bloqué que tant que #page-parcours est la page affichée (.app-page.active)
+  const page = document.getElementById("page-parcours");
+  if (page) {
+    const syncNoScroll = () => document.body.classList.toggle("no-scroll", page.classList.contains("active"));
+    new MutationObserver(syncNoScroll).observe(page, { attributes: true, attributeFilter: ["class"] });
+    syncNoScroll();
   }
-
-  function closeAllDropdowns() {
-    document.querySelectorAll(".dropdown.open").forEach((d) => d.classList.remove("open"));
-  }
-
-  /* ------------------------------------------------------------------------
-     Segmented controls
-     ------------------------------------------------------------------------ */
-  function initSegmentedControls() {
-    document.querySelectorAll(".segmented").forEach((group) => {
-      group.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          group.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-        });
-      });
-    });
-  }
-
-  /* ------------------------------------------------------------------------
-     Cartes sélectionnables (club, position finale, résultat...)
-     ------------------------------------------------------------------------ */
-  function initSelectCards() {
-    document.querySelectorAll(".select-grid").forEach((grid) => {
-      const multi = grid.dataset.multi === "true";
-      grid.querySelectorAll(".select-card").forEach((card) => {
-        card.setAttribute("tabindex", "0");
-        card.addEventListener("click", () => toggleSelectCard(grid, card, multi));
-        card.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggleSelectCard(grid, card, multi);
-          }
-        });
-      });
-    });
-  }
-
-  function toggleSelectCard(grid, card, multi) {
-    if (!multi) {
-      grid.querySelectorAll(".select-card").forEach((c) => c.classList.remove("selected"));
-    }
-    card.classList.toggle("selected");
-  }
-
-  /* ------------------------------------------------------------------------
-     Slider premium (distance / dénivelé)
-     ------------------------------------------------------------------------ */
-  function initSliders() {
-    document.querySelectorAll('input[type="range"]').forEach((slider) => {
-      const valueEl = document.querySelector(`[data-slider-value-for="${slider.id}"]`);
-      const unit = slider.dataset.unit || "";
-
-      function update() {
-        const min = Number(slider.min || 0);
-        const max = Number(slider.max || 100);
-        const pct = ((Number(slider.value) - min) / (max - min)) * 100;
-        slider.style.setProperty("--fill", pct + "%");
-        if (valueEl) valueEl.innerHTML = slider.value + (unit ? ` <span class="unit">${unit}</span>` : "");
-      }
-
-      slider.addEventListener("input", update);
-      update();
-    });
-  }
-
-  /* ------------------------------------------------------------------------
-     Routeur d'écrans — permet de garder les 7 écrans dans un seul fichier
-     HTML. Chaque écran est un <div class="screen-view" data-screen="id">
-     et tout élément avec [data-goto="id"] navigue vers cet écran.
-     ------------------------------------------------------------------------ */
-  function goToScreen(id) {
-    const target = document.querySelector(`.screen-view[data-screen="${id}"]`);
-    if (!target) return;
-
-    document.querySelectorAll(".screen-view").forEach((s) => s.classList.remove("active"));
-    target.classList.add("active");
-    document.body.classList.toggle("no-scroll", id === "home");
-
-    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
-    history.replaceState(null, "", `#${id}`);
-  }
-
-  function initRouter() {
-    document.addEventListener("click", (e) => {
-      const trigger = e.target.closest("[data-goto]");
-      if (!trigger) return;
-      e.preventDefault();
-      goToScreen(trigger.dataset.goto);
-    });
-
-    const initial = (window.location.hash || "#home").replace("#", "");
-    goToScreen(document.querySelector(`.screen-view[data-screen="${initial}"]`) ? initial : "home");
-  }
-
-  /* ------------------------------------------------------------------------
-     Init
-     ------------------------------------------------------------------------ */
-  document.addEventListener("DOMContentLoaded", () => {
-    initDropdowns();
-    initSegmentedControls();
-    initSelectCards();
-    initSliders();
-    initRouter();
-    renderFairway();
-    renderGreen();
-
-    document.dispatchEvent(new CustomEvent("parcours:ready"));
-  });
-})();
+  renderFairway();
+  renderGreen();
+  document.dispatchEvent(new CustomEvent("parcours:ready"));
+});
 
 /* ==========================================================================
    COURSE — Vent & Dénivelé : fonctionnalités réelles (adapté de course.js)
-   Ces fonctions sont volontairement en dehors de l'IIFE ci-dessus car elles
-   sont appelées depuis des attributs onclick="" dans le HTML.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -234,7 +98,7 @@ let lastBeta = null;
    Le résultat se met à jour en direct à chaque pression, comme le faisaient
    les oninput des inputs natifs qu'il remplace.
    -------------------------------------------------------------------------- */
-let courseKeypadPopup = null; // { title, target, value, unit, mode?, min?, max?, trackerType?, hole?, index? }
+let courseKeypadPopup = null; // { title, target, value, unit } (saisie live) ou { mode: "renumber", trackerType, hole, index, min, max } (avec Valider)
 
 function openCourseKeypad(title, target, currentValue, unit) {
   const start = (currentValue === null || currentValue === undefined || currentValue === "") ? "" : String(currentValue);
@@ -258,50 +122,32 @@ function openHoleNumberKeypad(trackerType, hole, index) {
   };
   renderCourseModals();
 }
-// Pavé numérique dédié à la calibration de la distance générique tee → green (fairway)
-function openFwDistanceKeypad() {
-  courseKeypadPopup = {
-    title: "Longueur du trou (tee → green)",
-    mode: "fwDistance",
-    value: "",
-    unit: distanceUnitLabel(),
-    min: 1,
-    max: 999
-  };
-  renderCourseModals();
-}
 function closeCourseKeypad() {
   courseKeypadPopup = null;
   renderCourseModals();
 }
+// Applique une modification de la valeur saisie, puis met à jour le champ visé (live) ou juste le pavé (mode Valider)
+function courseKeypadEdit(change) {
+  const p = courseKeypadPopup;
+  if (!p) return;
+  const next = change(p.value);
+  if (next === null) return;
+  p.value = next;
+  if (!p.mode) applyCourseKeypadValue(); // les modes "confirmés" attendent le bouton Valider
+  renderCourseModals();
+}
 function courseKeypadPress(d) {
-  const p = courseKeypadPopup;
-  if (!p) return;
-  const maxLen = p.max ? String(p.max).length : 5;
-  if (p.value.length >= maxLen) return;
-  const candidate = p.value + d;
-  if (p.max && Number(candidate) > p.max) return; // borne haute (ex: trou 18)
-  p.value = candidate;
-  if (p.mode) { renderCourseModals(); return; } // les modes "confirmés" attendent le bouton Valider
-  applyCourseKeypadValue();
-  renderCourseModals();
+  courseKeypadEdit((value) => {
+    const p = courseKeypadPopup;
+    const maxLen = p.max ? String(p.max).length : 5;
+    if (value.length >= maxLen) return null;
+    const candidate = value + d;
+    if (p.max && Number(candidate) > p.max) return null; // borne haute (ex: trou 18)
+    return candidate;
+  });
 }
-function courseKeypadBackspace() {
-  const p = courseKeypadPopup;
-  if (!p) return;
-  p.value = p.value.slice(0, -1);
-  if (p.mode) { renderCourseModals(); return; }
-  applyCourseKeypadValue();
-  renderCourseModals();
-}
-function courseKeypadClear() {
-  const p = courseKeypadPopup;
-  if (!p) return;
-  p.value = "";
-  if (p.mode) { renderCourseModals(); return; }
-  applyCourseKeypadValue();
-  renderCourseModals();
-}
+function courseKeypadBackspace() { courseKeypadEdit((value) => value.slice(0, -1)); }
+function courseKeypadClear() { courseKeypadEdit(() => ""); }
 // Pousse la valeur en cours de saisie vers le champ visé par "target" (modes "live", sans bouton Valider)
 function applyCourseKeypadValue() {
   const p = courseKeypadPopup;
@@ -309,13 +155,6 @@ function applyCourseKeypadValue() {
   if (p.target === "windSpeed") updateWindSpeed(p.value);
   else if (p.target === "windDistance") updateWindDistance(p.value);
   else if (p.target === "elevDistance") updateElevationInputDistance(p.value);
-}
-// Aiguille le bouton Valider vers le bon traitement selon le mode du pavé ouvert
-function confirmCourseKeypadValue() {
-  const p = courseKeypadPopup;
-  if (!p || !p.mode) return;
-  if (p.mode === "renumber") return confirmCourseKeypadRenumber();
-  if (p.mode === "fwDistance") return confirmFwDistance();
 }
 // Valide la renumérotation : déplace le point du trou source vers le trou saisi (1-18)
 function confirmCourseKeypadRenumber() {
@@ -339,23 +178,6 @@ function confirmCourseKeypadRenumber() {
     grShowToast(destIndex, "renuméroté");
   }
 }
-// Valide la nouvelle longueur du trou : les coups déjà posés conservent leur distance réelle
-// (leur position sur la règle est donc recalculée au prorata de l'ancien/nouveau repère)
-function confirmFwDistance() {
-  const p = courseKeypadPopup;
-  const n = parseFloat(p.value.replace(",", "."));
-  if (!n || n <= 0) { closeCourseKeypad(); return; }
-  const oldMaxM = fwRulerMaxM;
-  const newMaxM = distanceToMeters(n, parcoursSettings.distanceUnit);
-  fwHoles.forEach((h) => h.shots.forEach((s) => {
-    s.y = 100 - (100 - s.y) * (oldMaxM / newMaxM);
-    s.y = Math.max(0, Math.min(100, s.y));
-  }));
-  fwRulerMaxM = newMaxM;
-  fwSave();
-  closeCourseKeypad();
-  renderFairway();
-}
 function courseKeypadHtml() {
   const p = courseKeypadPopup;
   return `
@@ -367,7 +189,7 @@ function courseKeypadHtml() {
         </div>
         <div class="app-keypad-value">${p.value === "" ? "--" : p.value}${p.value !== "" && p.unit ? " " + p.unit : ""}</div>
         ${appKeypad("courseKeypadPress", "courseKeypadBackspace", "courseKeypadClear", null)}
-        ${p.mode ? `<button type="button" class="btn btn-primary keypad-confirm-btn" onclick="confirmCourseKeypadValue()">Valider</button>` : ""}
+        ${p.mode ? `<button type="button" class="btn btn-primary keypad-confirm-btn" onclick="confirmCourseKeypadRenumber()">Valider</button>` : ""}
       </div>
     </div>
   `;
@@ -824,8 +646,8 @@ function closeDistancesCalc() { distancesCalcOpen = false; renderCourseModals();
 
 function goToMenuDistances() {
   closeDistancesCalc();
-  if (typeof showPage === "function") showPage("menu");
-  if (typeof goToDistances === "function") goToDistances();
+  showPage("menu");
+  renderDistancesScreen(); // menu.js : écran "Mes distances" (retour -> Menu)
 }
 
 // Dans Menu, l'unité "Yards/Feet" représente des yards pour tous les clubs de
@@ -913,11 +735,76 @@ const TRACK_PENCIL_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
    Un seul point de contact = comportement normal (tap pour placer un point).
    Deux points de contact = zoom + déplacement de la couche de contenu.
    -------------------------------------------------------------------------- */
-function pinchTouchDist(a, b) {
-  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+const pinchTouchDist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+const pinchClamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+const newView = () => ({ scale: 1, tx: 0, ty: 0 });
+const newPinch = () => ({ active: false, justPinched: false, startDist: 0, startScale: 1, startMidX: 0, startMidY: 0, startTx: 0, startTy: 0, rectW: 0, rectH: 0 });
+
+function pinchStart(e, view, pinch) {
+  if (e.touches.length !== 2) return;
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const [a, b] = e.touches;
+  pinch.active = true;
+  pinch.startDist = pinchTouchDist(a, b);
+  pinch.startScale = view.scale;
+  pinch.startMidX = (a.clientX + b.clientX) / 2 - rect.left;
+  pinch.startMidY = (a.clientY + b.clientY) / 2 - rect.top;
+  pinch.startTx = view.tx;
+  pinch.startTy = view.ty;
+  pinch.rectW = rect.width;
+  pinch.rectH = rect.height;
 }
-function pinchClamp(v, min, max) {
-  return Math.min(max, Math.max(min, v));
+function pinchMove(e, view, pinch, layerSelector) {
+  if (!pinch.active || e.touches.length !== 2) return;
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const [a, b] = e.touches;
+  const scale = pinchClamp(pinch.startScale * (pinchTouchDist(a, b) / pinch.startDist), 1, 4);
+  const midX = (a.clientX + b.clientX) / 2 - rect.left;
+  const midY = (a.clientY + b.clientY) / 2 - rect.top;
+  // Le point du contenu situé sous les doigts au départ du geste doit rester sous les doigts
+  // pendant tout le pinch : c'est ce qui ancre le zoom sur le point pincé (et non sur le coin
+  // haut-gauche) et permet, à distance constante entre les doigts, un simple déplacement (pan).
+  const anchorX = (pinch.startMidX - pinch.startTx) / pinch.startScale;
+  const anchorY = (pinch.startMidY - pinch.startTy) / pinch.startScale;
+  view.scale = scale;
+  view.tx = pinchClamp(midX - anchorX * scale, -(scale - 1) * pinch.rectW, 0);
+  view.ty = pinchClamp(midY - anchorY * scale, -(scale - 1) * pinch.rectH, 0);
+  const layer = e.currentTarget.querySelector(layerSelector);
+  if (layer) layer.style.transform = viewTransform(view);
+}
+function pinchEnd(e, pinch) {
+  if (pinch.active) pinch.justPinched = true; // évite qu'un doigt relevé ne déclenche un tap-placement
+  if (e.touches.length < 2) pinch.active = false;
+}
+const viewTransform = (view) => `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
+// Attributs tactiles à poser sur le conteneur d'un terrain (fairway ou green)
+const pinchAttrs = (viewVar, pinchVar, layerSelector) =>
+  `ontouchstart="pinchStart(event, ${viewVar}, ${pinchVar})" ontouchmove="pinchMove(event, ${viewVar}, ${pinchVar}, '${layerSelector}')" ontouchend="pinchEnd(event, ${pinchVar})" ontouchcancel="pinchEnd(event, ${pinchVar})"`;
+
+// Position d'un tap en % du terrain (zoom/déplacement déduits) ; null si le tap clôt un pinch
+function tapPosition(event, view, pinch) {
+  if (pinch.justPinched) { pinch.justPinched = false; return null; }
+  const rect = event.currentTarget.getBoundingClientRect(); // conteneur non transformé : le zoom porte sur la couche interne
+  const clampPct = (v) => Math.max(0, Math.min(100, v));
+  return {
+    rect,
+    x: clampPct(((event.clientX - rect.left - view.tx) / view.scale / rect.width) * 100),
+    y: clampPct(((event.clientY - rect.top - view.ty) / view.scale / rect.height) * 100)
+  };
+}
+
+// Point déjà placé le plus proche du tap (tous trous confondus), en pixels réels ; key = "shots" | "marks"
+function findPointNear(holes, key, xPercent, yPercent, rect) {
+  let best = null;
+  let bestDist = Infinity;
+  holes.forEach((h, hole) => h[key].forEach((p, index) => {
+    const dist = Math.hypot(((p.x - xPercent) / 100) * rect.width, ((p.y - yPercent) / 100) * rect.height);
+    if (dist <= MARK_HIT_RADIUS_PX && dist < bestDist) { bestDist = dist; best = { hole, index }; }
+  }));
+  return best;
 }
 
 /* --------------------------------------------------------------------------
@@ -925,7 +812,6 @@ function pinchClamp(v, min, max) {
    du fairway et en anneaux concentriques sur le green. Ce ne sont pas des
    distances réelles du trou (non stockées ici) mais un repère d'échelle.
    -------------------------------------------------------------------------- */
-let fwRulerMaxM = 300; // distance tee → green : calibrable en tapant un repère (mode Modifier), 300 par défaut
 const FW_RULER_MARKS_M = [100, 150, 225, 300]; // repères affichés (mètres)
 const FW_RULER_Y_FIRST_PCT = 80; // hauteur du 1er repère (100 m), en % depuis le haut : bas du fairway
 const FW_RULER_Y_LAST_PCT = 14; // hauteur du dernier repère (300 m) : marge gardée en haut (zone du green)
@@ -976,7 +862,6 @@ function fwLoad() {
   try {
     const saved = JSON.parse(localStorage.getItem(FW_STORAGE_KEY) || "null");
     if (saved && Array.isArray(saved.holes) && saved.holes.length === 18) {
-      if (saved.maxDistanceM) fwRulerMaxM = saved.maxDistanceM;
       return saved.holes;
     }
   } catch (e) { /* localStorage indisponible : on repart d'un parcours vide */ }
@@ -984,7 +869,7 @@ function fwLoad() {
 }
 
 function fwSave() {
-  try { localStorage.setItem(FW_STORAGE_KEY, JSON.stringify({ holes: fwHoles, maxDistanceM: fwRulerMaxM })); } catch (e) { /* pas grave */ }
+  try { localStorage.setItem(FW_STORAGE_KEY, JSON.stringify({ holes: fwHoles })); } catch (e) { /* pas grave */ }
 }
 
 function fwCurrentHoleIndex() {
@@ -1020,82 +905,17 @@ function fwSetMode(mode) {
   renderFairway();
 }
 
-// Cherche le point déjà placé le plus proche du tap (tous trous confondus), en pixels réels
-function fwFindShotNear(xPercent, yPercent, rect) {
-  let best = null;
-  let bestDist = Infinity;
-  for (let i = 0; i < 18; i++) {
-    fwHoles[i].shots.forEach((s, si) => {
-      const dx = ((s.x - xPercent) / 100) * rect.width;
-      const dy = ((s.y - yPercent) / 100) * rect.height;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= MARK_HIT_RADIUS_PX && dist < bestDist) {
-        bestDist = dist;
-        best = { hole: i, index: si };
-      }
-    });
-  }
-  return best;
-}
-
-/* --- Pinch-to-zoom (2 doigts) : état de vue + gestion tactile --- */
-let fwView = { scale: 1, tx: 0, ty: 0 };
-let fwPinch = { active: false, justPinched: false, startDist: 0, startScale: 1, startMidX: 0, startMidY: 0, startTx: 0, startTy: 0, rectW: 0, rectH: 0 };
-
-function fwTouchStart(e) {
-  if (e.touches.length !== 2) return;
-  e.preventDefault();
-  const rect = e.currentTarget.getBoundingClientRect();
-  const [a, b] = e.touches;
-  fwPinch.active = true;
-  fwPinch.startDist = pinchTouchDist(a, b);
-  fwPinch.startScale = fwView.scale;
-  fwPinch.startMidX = (a.clientX + b.clientX) / 2 - rect.left;
-  fwPinch.startMidY = (a.clientY + b.clientY) / 2 - rect.top;
-  fwPinch.startTx = fwView.tx;
-  fwPinch.startTy = fwView.ty;
-  fwPinch.rectW = rect.width;
-  fwPinch.rectH = rect.height;
-}
-function fwTouchMove(e) {
-  if (!fwPinch.active || e.touches.length !== 2) return;
-  e.preventDefault();
-  const rect = e.currentTarget.getBoundingClientRect();
-  const [a, b] = e.touches;
-  const scale = pinchClamp(fwPinch.startScale * (pinchTouchDist(a, b) / fwPinch.startDist), 1, 4);
-  const midX = (a.clientX + b.clientX) / 2 - rect.left;
-  const midY = (a.clientY + b.clientY) / 2 - rect.top;
-  // Le point du contenu situé sous les doigts au départ du geste doit rester sous les doigts
-  // pendant tout le pinch : c'est ce qui ancre le zoom sur le point pincé (et non sur le coin
-  // haut-gauche) et permet, à distance constante entre les doigts, un simple déplacement (pan).
-  const anchorX = (fwPinch.startMidX - fwPinch.startTx) / fwPinch.startScale;
-  const anchorY = (fwPinch.startMidY - fwPinch.startTy) / fwPinch.startScale;
-  fwView.scale = scale;
-  fwView.tx = pinchClamp(midX - anchorX * scale, -(scale - 1) * fwPinch.rectW, 0);
-  fwView.ty = pinchClamp(midY - anchorY * scale, -(scale - 1) * fwPinch.rectH, 0);
-  const layer = e.currentTarget.querySelector(".fw-zoom-layer");
-  if (layer) layer.style.transform = `translate(${fwView.tx}px, ${fwView.ty}px) scale(${fwView.scale})`;
-}
-function fwTouchEnd(e) {
-  if (fwPinch.active) fwPinch.justPinched = true; // évite qu'un doigt relevé ne déclenche un tap-placement
-  if (e.touches.length < 2) fwPinch.active = false;
-}
+/* --- Vue (zoom/déplacement) et pinch --- */
+const fwView = newView();
+const fwPinch = newPinch();
 
 function fwZoneTap(event) {
-  if (fwPinch.justPinched) { fwPinch.justPinched = false; return; }
-  const zone = event.currentTarget;
-  const rect = zone.getBoundingClientRect(); // conteneur non transformé : le zoom porte sur .fw-zoom-layer
-  const rawX = event.clientX - rect.left;
-  const rawY = event.clientY - rect.top;
-  const contentX = (rawX - fwView.tx) / fwView.scale;
-  const contentY = (rawY - fwView.ty) / fwView.scale;
-  let x = (contentX / rect.width) * 100;
-  let y = (contentY / rect.height) * 100;
-  x = Math.max(0, Math.min(100, x));
-  y = Math.max(0, Math.min(100, y));
+  const tap = tapPosition(event, fwView, fwPinch);
+  if (!tap) return;
+  const { x, y, rect } = tap;
 
   if (fwMode === "minus") {
-    const hit = fwFindShotNear(x, y, rect);
+    const hit = findPointNear(fwHoles, "shots", x, y, rect);
     if (!hit) return;
     fwHoles[hit.hole].shots.splice(hit.index, 1);
     fwSave();
@@ -1105,7 +925,7 @@ function fwZoneTap(event) {
   }
 
   if (fwMode === "edit") {
-    const hit = fwFindShotNear(x, y, rect);
+    const hit = findPointNear(fwHoles, "shots", x, y, rect);
     if (!hit) return;
     openHoleNumberKeypad("fw", hit.hole, hit.index);
     return;
@@ -1156,8 +976,8 @@ function fwVisualHtml() {
   const holeNum = Math.min(fwCurrentHoleIndex() + 1, 18);
 
   return `
-    <div class="fw-visual" onclick="fwZoneTap(event)" ontouchstart="fwTouchStart(event)" ontouchmove="fwTouchMove(event)" ontouchend="fwTouchEnd(event)" ontouchcancel="fwTouchEnd(event)">
-      <div class="fw-zoom-layer" style="transform:translate(${fwView.tx}px, ${fwView.ty}px) scale(${fwView.scale});">
+    <div class="fw-visual" onclick="fwZoneTap(event)" ${pinchAttrs("fwView", "fwPinch", ".fw-zoom-layer")}>
+      <div class="fw-zoom-layer" style="transform:${viewTransform(fwView)};">
         <div class="fw-stripe fw-stripe-rough-left"></div>
         <div class="fw-stripe fw-stripe-fairway"></div>
         <div class="fw-stripe fw-stripe-rough-right"></div>
@@ -1261,79 +1081,17 @@ function grSetMode(mode) {
   renderGreen();
 }
 
-// Cherche le point déjà placé le plus proche du tap (tous trous confondus), en pixels réels
-function grFindMarkNear(xPercent, yPercent, rect) {
-  let best = null;
-  let bestDist = Infinity;
-  for (let i = 0; i < 18; i++) {
-    grHoles[i].marks.forEach((m, mi) => {
-      const dx = ((m.x - xPercent) / 100) * rect.width;
-      const dy = ((m.y - yPercent) / 100) * rect.height;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= MARK_HIT_RADIUS_PX && dist < bestDist) {
-        bestDist = dist;
-        best = { hole: i, index: mi };
-      }
-    });
-  }
-  return best;
-}
-
-/* --- Pinch-to-zoom (2 doigts) : état de vue + gestion tactile --- */
-let grView = { scale: 1, tx: 0, ty: 0 };
-let grPinch = { active: false, justPinched: false, startDist: 0, startScale: 1, startMidX: 0, startMidY: 0, startTx: 0, startTy: 0, rectW: 0, rectH: 0 };
-
-function grTouchStart(e) {
-  if (e.touches.length !== 2) return;
-  e.preventDefault();
-  const rect = e.currentTarget.getBoundingClientRect();
-  const [a, b] = e.touches;
-  grPinch.active = true;
-  grPinch.startDist = pinchTouchDist(a, b);
-  grPinch.startScale = grView.scale;
-  grPinch.startMidX = (a.clientX + b.clientX) / 2 - rect.left;
-  grPinch.startMidY = (a.clientY + b.clientY) / 2 - rect.top;
-  grPinch.startTx = grView.tx;
-  grPinch.startTy = grView.ty;
-  grPinch.rectW = rect.width;
-  grPinch.rectH = rect.height;
-}
-function grTouchMove(e) {
-  if (!grPinch.active || e.touches.length !== 2) return;
-  e.preventDefault();
-  const rect = e.currentTarget.getBoundingClientRect();
-  const [a, b] = e.touches;
-  const scale = pinchClamp(grPinch.startScale * (pinchTouchDist(a, b) / grPinch.startDist), 1, 4);
-  const midX = (a.clientX + b.clientX) / 2 - rect.left;
-  const midY = (a.clientY + b.clientY) / 2 - rect.top;
-  const anchorX = (grPinch.startMidX - grPinch.startTx) / grPinch.startScale;
-  const anchorY = (grPinch.startMidY - grPinch.startTy) / grPinch.startScale;
-  grView.scale = scale;
-  grView.tx = pinchClamp(midX - anchorX * scale, -(scale - 1) * grPinch.rectW, 0);
-  grView.ty = pinchClamp(midY - anchorY * scale, -(scale - 1) * grPinch.rectH, 0);
-  const layer = e.currentTarget.querySelector(".gr-zoom-layer");
-  if (layer) layer.style.transform = `translate(${grView.tx}px, ${grView.ty}px) scale(${grView.scale})`;
-}
-function grTouchEnd(e) {
-  if (grPinch.active) grPinch.justPinched = true;
-  if (e.touches.length < 2) grPinch.active = false;
-}
+/* --- Vue (zoom/déplacement) et pinch --- */
+const grView = newView();
+const grPinch = newPinch();
 
 function grZoneTap(event) {
-  if (grPinch.justPinched) { grPinch.justPinched = false; return; }
-  const zone = event.currentTarget;
-  const rect = zone.getBoundingClientRect();
-  const rawX = event.clientX - rect.left;
-  const rawY = event.clientY - rect.top;
-  const contentX = (rawX - grView.tx) / grView.scale;
-  const contentY = (rawY - grView.ty) / grView.scale;
-  let x = (contentX / rect.width) * 100;
-  let y = (contentY / rect.height) * 100;
-  x = Math.max(0, Math.min(100, x));
-  y = Math.max(0, Math.min(100, y));
+  const tap = tapPosition(event, grView, grPinch);
+  if (!tap) return;
+  const { x, y, rect } = tap;
 
   if (grMode === "minus") {
-    const hit = grFindMarkNear(x, y, rect);
+    const hit = findPointNear(grHoles, "marks", x, y, rect);
     if (!hit) return;
     grHoles[hit.hole].marks.splice(hit.index, 1);
     grSave();
@@ -1343,7 +1101,7 @@ function grZoneTap(event) {
   }
 
   if (grMode === "edit") {
-    const hit = grFindMarkNear(x, y, rect);
+    const hit = findPointNear(grHoles, "marks", x, y, rect);
     if (!hit) return;
     openHoleNumberKeypad("gr", hit.hole, hit.index);
     return;
@@ -1398,8 +1156,8 @@ function grVisualHtml() {
   const holeNum = Math.min(grCurrentHoleIndex() + 1, 18);
 
   return `
-    <div class="gr-visual" onclick="grZoneTap(event)" ontouchstart="grTouchStart(event)" ontouchmove="grTouchMove(event)" ontouchend="grTouchEnd(event)" ontouchcancel="grTouchEnd(event)">
-      <div class="gr-zoom-layer" style="transform:translate(${grView.tx}px, ${grView.ty}px) scale(${grView.scale});">
+    <div class="gr-visual" onclick="grZoneTap(event)" ${pinchAttrs("grView", "grPinch", ".gr-zoom-layer")}>
+      <div class="gr-zoom-layer" style="transform:${viewTransform(grView)};">
         <div class="gr-green"></div>
         ${grRingsHtml()}
         <div class="gr-flag">
@@ -1474,16 +1232,6 @@ const TENDANCE_LABELS = {
   long_left: "Long + gauche", long_right: "Long + droite"
 };
 
-// Chaque point vote pour l'axe (gauche/droite ou court/long) où son écart au centre est le plus marqué
-function addTendanceVote(votes, point) {
-  const dx = point.x - 50;
-  const dy = point.y - 50;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    if (dx < 0) votes.left++; else if (dx > 0) votes.right++;
-  } else {
-    if (dy > 0) votes.short++; else if (dy < 0) votes.long++;
-  }
-}
 function tendanceFromVotes(votes) {
   const best = Object.keys(votes).reduce((a, b) => (votes[a] >= votes[b] ? a : b));
   return votes[best] > 0 ? TENDANCE_LABELS[best] : null;

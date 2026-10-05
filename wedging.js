@@ -458,6 +458,7 @@ let wedgeRecapDistanceInput = '';
 let wedgeRecapZoneEditIdx = null;
 let wedgeRecapEditMode = false;
 let wedgeInProgressSessions = Array.isArray(Storage.getInProgress()) ? Storage.getInProgress() : [];
+wedgeInProgressSessions = wedgeInProgressSessions.filter(e => e && wedgeExercises.some(x => x.id === e.exerciseId));
 let wedgeResumePopupExerciseId = null;
 let wedgeEditConflictPopupOpen = false;
 let wedgePendingEditPayload = null;
@@ -590,7 +591,11 @@ function saveWedgeExercise() {
       rerender();
       return;
     }
-    if (existing) Object.assign(existing, payload);
+    if (existing) {
+      const struct = o => JSON.stringify([o.distances, o.ballsPerDistance, o.resultMode, o.elevatorMode, o.elevatorX, o.elevatorY]);
+      if (struct(existing) !== struct(payload)) removeInProgressFor(existing.id); // la session en cours ne correspond plus à l'exercice
+      Object.assign(existing, payload);
+    }
   } else {
     wedgeExercises.push({ id: Date.now(), logs: [], ...payload });
   }
@@ -835,7 +840,12 @@ function setWedgeExAttemptResult(value) {
   dist.results[s.activeAttempt] = value;
   if (s.activeAttempt < dist.results.length - 1) { s.activeAttempt += 1; rerender(); }
   else if (s.activeDistanceIdx < s.distances.length - 1) { s.activeDistanceIdx += 1; s.activeAttempt = 0; rerender(); }
-  else finishWedgeExSession();
+  else if (s.distances.every(d => d.results.every(r => r !== null))) finishWedgeExSession();
+  else {
+    // Dernier tir saisi alors que des tirs précédents sont vides : on y retourne au lieu d'enregistrer une session incomplète
+    const di = s.distances.findIndex(d => d.results.some(r => r === null));
+    s.activeDistanceIdx = di; s.activeAttempt = s.distances[di].results.findIndex(r => r === null); rerender();
+  }
 }
 function setWedgeExInOut(made) { setWedgeExAttemptResult(!!made); }
 
@@ -1177,8 +1187,7 @@ function setWedgeExReviewLimit(v) { wedgeExReviewLimit = v; rerender(); }
 function wedgeExRadarHtml(ex) {
   // Dispersion globale : toutes distances et toutes sessions confondues.
   // La carte (titre + cadre) est générée par la revue, le bouton de limite est au-dessus.
-  const limitedLogs = wedgeExReviewLimit === 'all' ? ex.logs : ex.logs.slice(-wedgeExReviewLimit);
-  const shots = limitedLogs.flatMap(l => l.shots);
+  const shots = ex.logs.flatMap(l => l.shots); // ex.logs est déjà limité par la revue (voir wedgeExerciseReviewHtml)
   if (!shots.length) return '';
   const holedCount = shots.filter(s => s.direction === 'Green').length;
   const items = WEDGE_RADAR_ORDER.map(zone => {
@@ -1225,7 +1234,10 @@ function wedgeExerciseReviewHtml() {
   const ex = wedgeExercises.find(e => e.id === wedgeReviewExerciseId);
   if (!ex) { wedgeReviewExerciseId = null; return wedgeExercisesListHtml(); }
   if (wedgeViewedLogId !== null) return wedgeExerciseLogDetailHtml(ex);
-  const logs = ex.logs; const charts = wedgeReviewChartsFor(ex);
+  const logs = ex.logs;
+  // La limite de sessions s'applique à tous les graphes ; la liste des sessions plus bas reste complète
+  const exView = Object.assign({}, ex, { logs: wedgeExReviewLimit === 'all' ? ex.logs : ex.logs.slice(-wedgeExReviewLimit) });
+  const charts = wedgeReviewChartsFor(exView);
   // Même carte que les graphes de Dispersion (Parcours) ; les graphes vides sont ignorés
   const chartsHtml = charts.map(c => {
     const body = c.build(logs);
@@ -1234,7 +1246,7 @@ function wedgeExerciseReviewHtml() {
   const sessionRows = logs.slice().reverse().map(l => `<li onclick="viewWedgeExerciseLog(${l.id})"><span>${UI.formatDate(l.date)}<br><span class="wg-text-muted-sm">${wedgeLogSummaryText(ex, l)}</span></span><span class="wg-log-row-right"><span class="wg-text-muted-sm">${l.summary.total} balles</span><button class="wg-btn-danger" onclick="event.stopPropagation(); askDeleteWedgeLog(${l.id})">${UI.ICONS.trash}</button></span></li>`).join('');
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseReview()">${UI.ICONS.back} Exercices</button></div>
     <div class="wg-session-title">${ex.name}</div>
-    ${ex.resultMode === 'zone' ? `<section class="wg-section"><div class="wg-chip-row">${wedgeSortBtnHtml('exReviewLimit')}</div></section>` : ''}
+    ${logs.length ? `<section class="wg-section"><div class="wg-chip-row">${wedgeSortBtnHtml('exReviewLimit')}</div></section>` : ''}
     ${chartsHtml}
     <div class="wg-section-desc mt-10">Voir les sessions précédentes</div>
     <ul class="wg-session-list">${sessionRows || '<li>Aucune session pour cet exercice.</li>'}</ul>

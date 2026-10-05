@@ -1,14 +1,16 @@
 /* ==========================================================================
-   SHELL — bascule entre les parties (Home / Parcours / Putting / Stats /
-   Gym / Wedging / Vitesse) fusionnées dans une seule page. N'utilise jamais
-   location.hash : ce hash est déjà possédé par le routeur interne de
-   Wedging (et lu une fois par Parcours), on ne veut pas déclencher leurs
-   routeurs en changeant de partie.
+   SHELL — bascule entre les pages de l'app (Home, Parcours, Putting, Stats,
+   Gym, Wedging, Vitesse, Menu, Login, Signup) fusionnées dans un seul
+   index.html. N'utilise jamais location.hash : ce hash est déjà possédé par le
+   routeur interne de Wedging (et lu une fois par Parcours), on ne veut pas
+   déclencher leurs routeurs en changeant de partie.
    ========================================================================== */
 function showPage(id) {
-  document.querySelectorAll(".app-page").forEach((p) => p.classList.remove("active"));
   const target = document.getElementById(`page-${id}`);
-  if (target) target.classList.add("active");
+  // Page inconnue : on reste où on est (sinon toutes les pages seraient masquées)
+  if (!target) return;
+
+  document.querySelectorAll(".app-page").forEach((p) => p.classList.toggle("active", p === target));
 
   // Parcours pilote lui-même body.no-scroll selon son propre écran actif ;
   // on resynchronise cet état à l'entrée/sortie de cette partie.
@@ -20,6 +22,6 @@ function showPage(id) {
     document.body.classList.remove("gym-home-locked", "gym-view-fit");
   }
 
-  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  window.scrollTo({ top: 0, behavior: "instant" });
 }
 window.showPage = showPage;

@@ -90,7 +90,7 @@ function renderPuttingTab() {
       <div class="history-card">
         <div class="history-card_header">
           <div class="history-card_title">Activité récente</div>
-          <a href="#" class="history-card_link is-disabled" onclick="event.preventDefault()">Voir tout</a>
+          <a href="#" class="history-card_link is-disabled" id="parcours-history-toggle" onclick="toggleParcoursHistory(event)">Voir tout</a>
         </div>
         <div class="history-card_list" id="parcours-history-list"></div>
       </div>
@@ -515,6 +515,16 @@ function renderPuttingTab() {
   renderParcoursHistory();
   renderResumeCards();
   refreshAllAnalytics();
+  syncFilterButtons();
+}
+
+// Le HTML est régénéré à chaque ouverture : on réaligne les libellés sur filterState (qui, lui, persiste)
+function syncFilterButtons() {
+  ['distance', 'pente', 'stats'].forEach(function (group) {
+    ['sessions', 'distance', 'parcours', 'compare'].forEach(function (type) {
+      updateFilterButtonUI(group, type);
+    });
+  });
 }
 
 function selectPuttingTab(event, tab) {
@@ -1201,12 +1211,19 @@ function renderHomeStats() {
   if (oneEl) oneEl.textContent = total ? fmtPct((made1 / total) * 100) : '--';
 }
 
+// Séances "Exercices" = exercices créés (puttingSessions) + exercices rapides (puttingRounds, source 'quick')
+function exerciseActivityDates() {
+  const dates = puttingSessions.map(function (s) { return s.dateISO; });
+  puttingRounds.forEach(function (r) { if (r.source === 'quick') dates.push(r.dateISO); });
+  return dates.filter(Boolean);
+}
+
 function renderExercicesStats() {
   const sessEl = document.getElementById('exo-sessions-value');
   if (!sessEl) return;
   const now = Date.now();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
-  const thisWeek = puttingSessions.filter(function (s) { return s.dateISO && (now - new Date(s.dateISO).getTime()) <= weekMs; }).length;
+  const thisWeek = exerciseActivityDates().filter(function (d) { return (now - new Date(d).getTime()) <= weekMs; }).length;
   sessEl.textContent = thisWeek;
   let made = 0, total = 0;
   puttingSessions.forEach(function (s) {
@@ -1214,8 +1231,73 @@ function renderExercicesStats() {
       (h.results || []).forEach(function (r) { total++; if (r === 'made') made++; });
     });
   });
+  puttingRounds.forEach(function (r) {
+    if (r.source !== 'quick') return;
+    (r.holes || []).forEach(function (h) {
+      if (h.putts == null) return;
+      total++;
+      if (h.putts === 1) made++;
+    });
+  });
   const rateEl = document.getElementById('exo-rate-value');
   if (rateEl) rateEl.textContent = total ? fmtPct((made / total) * 100) : '--';
+}
+
+/* ============================================================
+   ACCUEIL GÉNÉRAL (page-home) : encadrés [data-stat]
+   Alimentés par l'activité putting : parcours + exercices rapides + exercices créés.
+   Distance moyenne et Index ne dépendent pas du putting : non touchés ici.
+   ============================================================ */
+const GOLF_WEEKLY_GOAL = 5; // séances par semaine
+const RING_CIRCUMFERENCE = 2 * Math.PI * 9; // r=9 dans le SVG de l'accueil
+
+function allActivityDates() {
+  return puttingSessions.map(function (s) { return s.dateISO; })
+    .concat(puttingRounds.map(function (r) { return r.dateISO; }))
+    .filter(Boolean);
+}
+
+function relativeDayLabel(iso) {
+  const d = new Date(iso);
+  const today = new Date();
+  const dayDiff = Math.round((new Date(today.getFullYear(), today.getMonth(), today.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  if (dayDiff <= 0) return "Aujourd'hui";
+  if (dayDiff === 1) return 'Hier';
+  if (dayDiff < 7) return 'Il y a ' + dayDiff + ' j';
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+}
+
+function renderGolfHome() {
+  const q = function (name) { return document.querySelector('[data-stat="' + name + '"]'); };
+  const dates = allActivityDates();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const count = dates.filter(function (d) { return (now - new Date(d).getTime()) <= weekMs; }).length;
+  const ratio = Math.min(1, count / GOLF_WEEKLY_GOAL);
+
+  const ring = q('goal-ring');
+  if (ring) ring.textContent = count + '/' + GOLF_WEEKLY_GOAL;
+  const val = q('goal-value');
+  if (val) val.textContent = count + (count > 1 ? ' séances' : ' séance');
+  const fill = q('goal-progress-fill');
+  if (fill) fill.style.width = Math.round(ratio * 100) + '%';
+  const arc = document.querySelector('.progress-ring_progress');
+  if (arc) {
+    arc.setAttribute('data-progress', String(ratio));
+    arc.style.strokeDasharray = RING_CIRCUMFERENCE;
+    arc.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - ratio);
+  }
+
+  const lastVal = q('last-session-value');
+  const lastSec = q('last-session-secondary');
+  if (dates.length) {
+    const lastISO = dates.slice().sort().pop();
+    if (lastVal) lastVal.textContent = relativeDayLabel(lastISO);
+    if (lastSec) lastSec.textContent = 'Putting';
+  } else {
+    if (lastVal) lastVal.textContent = '--';
+    if (lastSec) lastSec.textContent = '';
+  }
 }
 
 function computeBucketStats(holes, bucketIndexFn, bucketCount) {
@@ -1345,22 +1427,32 @@ function renderStatsPerformance() {
   const cmp = getCompareRounds('stats');
   const rounds = cmp ? [cmp.A, cmp.B] : getFilteredRounds('stats');
   const cmpOpts = cmp ? { labelAll: true } : {};
-  const sgVals = rounds.map(function (r) {
-    const holes = (r.holes || []).filter(function (h) { return h.putts != null && h.m != null; });
-    if (!holes.length) return null;
+  // Le filtre Distance s'applique aussi ici : tout est recalculé depuis les trous filtrés de chaque round
+  const distIdx = { '0-2': 0, '2-3': 1, '3-5': 2, '5-9': 3, '9+': 4 }[filterState.stats.distance];
+  const holesOf = function (r) {
+    return (r.holes || []).filter(function (h) {
+      return h.putts != null && (distIdx === undefined || distanceBucketIndex(h.m) === distIdx);
+    });
+  };
+  const perRound = rounds.map(function (r) { return holesOf(r); });
+  const sgVals = perRound.map(function (holes) {
     let sum = 0, n = 0;
     holes.forEach(function (h) { const sg = puttSG(h.m, h.putts); if (sg != null) { sum += sg; n++; } });
     return n ? sum / n : null;
   });
-  const rateVals = rounds.map(function (r) {
-    const holes = (r.holes || []).filter(function (h) { return h.putts != null; });
+  const rateVals = perRound.map(function (holes) {
     if (!holes.length) return null;
-    const made = holes.filter(function (h) { return h.putts === 1; }).length;
-    return (made / holes.length) * 100;
+    return (holes.filter(function (h) { return h.putts === 1; }).length / holes.length) * 100;
   });
-  const oneVals = rounds.map(function (r) { return r.onePutts != null ? r.onePutts : null; });
-  const threeVals = rounds.map(function (r) { return r.threePutts != null ? r.threePutts : null; });
-  const meterVals = rounds.map(function (r) { return r.totalMeters || null; });
+  const oneVals = perRound.map(function (holes) {
+    return holes.length ? holes.filter(function (h) { return h.putts === 1; }).length : null;
+  });
+  const threeVals = perRound.map(function (holes) {
+    return holes.length ? holes.filter(function (h) { return h.putts >= 3; }).length : null;
+  });
+  const meterVals = perRound.map(function (holes) {
+    return holes.length ? holes.reduce(function (sum, h) { return sum + distanceForTotal(h.putts, h.m); }, 0) || null : null;
+  });
   const dateLabels = rounds.map(function (r, i) { return (cmp ? (i ? 'B · ' : 'A · ') : '') + new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }); });
 
   svgSG.innerHTML = svgLineChart(sgVals, Object.assign({ centered: true, fmt: fmtSG, axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels }, cmpOpts));
@@ -1376,6 +1468,8 @@ function renderStatsPerformance() {
 }
 
 function refreshAllAnalytics() {
+  renderParcoursHistory();
+  renderGolfHome();
   renderHomeStats();
   renderExercicesStats();
   renderAnalyseDistance();
@@ -2989,6 +3083,7 @@ function handleMainHeaderBack(event) {
     window.scrollTo(0, 0);
     return;
   }
+  renderGolfHome();
   showPage('home');
 }
 
@@ -3491,14 +3586,30 @@ function renderNewParcoursModal() {
 }
 
 /* ---------- Historique des parcours (accueil Parcours) ---------- */
+// Activité récente : 5 dernières séances, "Voir tout" déplie la liste complète
+const PARCOURS_HISTORY_PREVIEW = 5;
+let parcoursHistoryExpanded = false;
+
+function toggleParcoursHistory(event) {
+  if (event) event.preventDefault();
+  parcoursHistoryExpanded = !parcoursHistoryExpanded;
+  renderParcoursHistory();
+}
+
 function renderParcoursHistory() {
   const listRoot = document.getElementById('parcours-history-list');
   if (!listRoot) return;
+  const toggle = document.getElementById('parcours-history-toggle');
+  if (toggle) {
+    toggle.classList.toggle('is-disabled', puttingRounds.length <= PARCOURS_HISTORY_PREVIEW);
+    toggle.textContent = parcoursHistoryExpanded ? 'Réduire' : 'Voir tout';
+  }
   if (!puttingRounds.length) {
     listRoot.innerHTML = '';
     return;
   }
-  const sorted = puttingRounds.slice().reverse();
+  const sortedAll = puttingRounds.slice().reverse();
+  const sorted = parcoursHistoryExpanded ? sortedAll : sortedAll.slice(0, PARCOURS_HISTORY_PREVIEW);
   listRoot.innerHTML = sorted.map(function (r) {
     const date = new Date(r.dateISO);
     const dateLabel = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -3612,6 +3723,10 @@ function renderRoundDetailScreen(r) {
   `;
 }
 
+// Les encadrés de l'accueil général sont remplis dès le chargement, sans attendre l'ouverture du Putting
+renderGolfHome();
+
 // Expose renderPuttingTab globalement pour être appelée depuis index.html
 window.renderPuttingTab = renderPuttingTab;
+window.renderGolfHome = renderGolfHome;
 

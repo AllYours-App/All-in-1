@@ -2633,15 +2633,504 @@ function gymDeleteSession(programId, sessionId) {
 }
 
 /* ---- Bibliothèque de modèles de programmes (onglet "Bibliothèque") --------------
-   Ceci reste : c'est le catalogue fourni par l'application (comme une
-   bibliothèque d'exercices), pas une donnée d'usage personnelle. */
+   8 programmes golf de 4 semaines (4 débutant + 4 intermédiaire) (3 séances/semaine = 12 séances chacun).
+   Chaque bloc = une séance type ; chaque exercice = [id, séries, répétitions, repos, tempo, durée en s].
+   Séries, répétitions, repos et durée peuvent être un tableau de 4 valeurs (une par semaine)
+   pour porter la progression. Tempo "" = exécution explosive (pas de tempo imposé).
+   Sources de conception : revues systématiques sur la musculation et la vitesse de club
+   (J Sports Sci Med 2011 ; J Sports Sci 2020 ; JSCR 2021) et prévention des blessures du golfeur
+   (hanches, rotation thoracique, omoplates, avant-bras). */
 
 const PROGRAM_LIBRARY = [
-  { id: "lib-01", name: "Prise de masse débutant", goal: "hypertrophie", sessionsCount: 8, frequencyPerWeek: 3, level: "Débutant", icon: "muscle", description: "Une introduction progressive au volume d'entraînement pour construire du muscle en toute sécurité." },
-  { id: "lib-02", name: "Powerlifting essentiel", goal: "force", sessionsCount: 16, frequencyPerWeek: 4, level: "Avancé", icon: "dumbbell", description: "Squat, développé couché et soulevé de terre au centre d'un programme de force pure." },
-  { id: "lib-03", name: "Callisthénie & poids du corps", goal: "endurance", sessionsCount: 10, frequencyPerWeek: 3, level: "Intermédiaire", icon: "bodyweight", description: "Tractions, dips et gainage pour développer force et contrôle sans matériel." },
-  { id: "lib-04", name: "Sprint & explosivité", goal: "vitesse", sessionsCount: 6, frequencyPerWeek: 2, level: "Intermédiaire", icon: "bolt", description: "Un cycle court centré sur la puissance et la vitesse de réaction." },
+  {
+    id: "lib-01",
+    name: "Golf · Force & stabilité (débutant)",
+    goal: "force",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Débutant",
+    icon: "dumbbell",
+    description: "Squat, charnière et gainage pour poser les bases de force du swing.",
+    detail: "Programme débutant : apprendre les mouvements de base (squat, charnière de hanche, tirage, gainage) avec des charges modérées. Garde 3 répétitions en réserve sur chaque série. S1 : découverte. S2-S3 : une série de plus. S4 : allégée.",
+    blocks: [
+      {
+        title: "Squat & rotation",
+        duration: 45,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["1760", [2, 3, 3, 2], ["10", "10", "12", "10"], "90s", "3-1-1-0"],
+          ["1459", [2, 3, 3, 2], "10", "90s", "3-1-1-0"],
+          ["2368", [2, 2, 3, 2], "8/jambe", "60s", "2-0-2-0"],
+          ["0979", [2, 3, 3, 2], "8/côté", "45s", "2-0-2-0"],
+          ["0705", [2, 2, 3, 2], "", "45s", "", [20, 25, 30, 20]],
+        ],
+      },
+      {
+        title: "Charnière & tirage",
+        duration: 45,
+        exercises: [
+          ["1471", 2, "5", "30s", "2-0-2-0"],
+          ["3013", [2, 3, 3, 2], "12", "60s", "2-0-2-0"],
+          ["0293", [2, 3, 3, 2], "10", "90s", "3-1-1-0"],
+          ["0493", [2, 3, 3, 2], ["8", "10", "12", "10"], "60s", "2-0-2-0"],
+          ["1017", [2, 2, 3, 2], "10", "45s", "2-0-2-0"],
+          ["0126", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+          ["0082", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Fente, hanche & gainage",
+        duration: 45,
+        exercises: [
+          ["0628", 2, "10", "30s", "2-0-2-0"],
+          ["0431", [2, 3, 3, 2], "8/jambe", "60s", "2-0-2-0"],
+          ["0991", [2, 3, 3, 2], "12", "60s", "2-0-2-0"],
+          ["0276", [2, 3, 3, 2], "6/côté", "45s", "2-0-2-0"],
+          ["2133", [2, 3, 3, 2], "30 m", "60s", ""],
+          ["0235", [2, 2, 3, 2], "10/côté", "45s", "2-0-2-0"],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-02",
+    name: "Golf · Endurance 18 trous (débutant)",
+    goal: "endurance",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Débutant",
+    icon: "running",
+    description: "Circuits courts et aérobie facile pour tenir 18 trous sans perdre la posture.",
+    detail: "Programme débutant : tenir 18 trous (8 à 10 km, environ 4 h de jeu) sans perdre la posture. Circuits à repos courts et 10 à 20 min d'aérobie facile (tu dois pouvoir parler), en progression sur 3 semaines puis allègement en S4.",
+    blocks: [
+      {
+        title: "Jambes & aérobie",
+        duration: 45,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["1760", [2, 3, 3, 2], ["12", "12", "15", "12"], ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["1460", [2, 3, 3, 2], ["10/jambe", "12/jambe", "14/jambe", "10/jambe"], ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0991", [2, 3, 3, 2], "12", ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0710", [2, 2, 3, 2], "12/côté", "30s", "2-0-2-0"],
+          ["0417", [2, 3, 3, 2], ["15", "15", "20", "15"], "30s", "2-0-2-0"],
+          ["3666", 1, ["10 min", "15 min", "20 min", "15 min"], "60s", ""],
+        ],
+      },
+      {
+        title: "Haut du corps & gainage",
+        duration: 45,
+        exercises: [
+          ["1471", 2, "5", "30s", "2-0-2-0"],
+          ["0861", [2, 3, 3, 2], ["12", "15", "15", "12"], ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0493", [2, 3, 3, 2], ["8", "10", "12", "10"], ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0993", [2, 3, 3, 2], "12", "30s", "2-0-2-0"],
+          ["0705", [2, 3, 3, 2], "", "30s", "", [20, 25, 30, 20]],
+          ["0464", [2, 2, 3, 2], "", "30s", "", [15, 20, 25, 20]],
+          ["0489", [2, 3, 3, 2], "10", "45s", "2-0-2-0"],
+          ["0798", 1, ["10 min", "15 min", "20 min", "15 min"], "60s", ""],
+        ],
+      },
+      {
+        title: "Circuit global",
+        duration: 45,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0196", [2, 3, 3, 2], "12", ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0431", [2, 3, 3, 2], ["8/jambe", "10/jambe", "10/jambe", "8/jambe"], ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0293", [2, 3, 3, 2], "12", ["60s", "45s", "45s", "60s"], "2-0-2-0"],
+          ["0862", [2, 3, 3, 2], "10/côté", "45s", "2-0-2-0"],
+          ["2133", [2, 3, 3, 2], "30 m", "45s", ""],
+          ["2331", 1, ["10 min", "15 min", "20 min", "15 min"], "60s", ""],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-03",
+    name: "Golf · Masse fonctionnelle (débutant)",
+    goal: "hypertrophie",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Débutant",
+    icon: "muscle",
+    description: "Machines et haltères pour construire du muscle utile au swing.",
+    detail: "Programme débutant : prendre du muscle utile au swing (jambes, fessiers, dos, épaules, avant-bras) avec des machines et des haltères, plus faciles à contrôler. 2 à 3 séries de 10 à 12 répétitions, 2 répétitions en réserve. S4 : volume réduit.",
+    blocks: [
+      {
+        title: "Jambes & fessiers",
+        duration: 50,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0739", [2, 3, 3, 2], ["12", "12", "10-12", "12"], "90s", "3-1-1-0"],
+          ["1459", [2, 3, 3, 2], "10", "90s", "3-1-1-0"],
+          ["0599", [2, 3, 3, 2], "12", "60s", "3-1-1-0"],
+          ["3013", [2, 3, 3, 2], "12", "60s", "2-0-2-0"],
+          ["0417", [2, 3, 3, 2], "15", "45s", "2-0-2-0"],
+          ["0710", [2, 2, 3, 2], "12/côté", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Dos, épaules & prise",
+        duration: 50,
+        exercises: [
+          ["1017", 2, "10", "30s", "2-0-2-0"],
+          ["0198", [2, 3, 3, 2], "12", "90s", "3-1-1-0"],
+          ["0861", [2, 3, 3, 2], "12", "90s", "3-1-1-0"],
+          ["2292", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+          ["0235", [2, 2, 3, 2], "10/côté", "45s", "2-0-2-0"],
+          ["0126", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+          ["0082", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Pectoraux & tronc",
+        duration: 50,
+        exercises: [
+          ["1471", 2, "5", "30s", "2-0-2-0"],
+          ["0289", [2, 3, 3, 2], "10", "90s", "3-1-1-0"],
+          ["0405", [2, 3, 3, 2], "10", "90s", "3-1-1-0"],
+          ["0493", [2, 3, 3, 2], ["8", "10", "12", "10"], "60s", "2-0-2-0"],
+          ["0243", [2, 3, 3, 2], "10/côté", "60s", "2-0-2-0"],
+          ["0705", [2, 2, 3, 2], "", "45s", "", [20, 25, 30, 20]],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-04",
+    name: "Golf · Vitesse de club (débutant)",
+    goal: "vitesse",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Débutant",
+    icon: "bolt",
+    description: "Petits sauts et lancers rotatifs légers pour apprendre à produire de la vitesse.",
+    detail: "Programme débutant : apprendre à produire de la puissance avec peu de répétitions et des charges légères (ballon léger, haltère modéré). Repos complets : arrête la série dès que le geste ralentit. S1 : apprentissage. S2-S3 : une série de plus. S4 : allégée.",
+    blocks: [
+      {
+        title: "Puissance jambes & hanches",
+        duration: 40,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["1760", [2, 3, 3, 2], "6", "90s", ""],
+          ["0514", [2, 2, 3, 2], "4", "90s", ""],
+          ["0991", [2, 3, 3, 2], "8", "90s", ""],
+          ["1472", [2, 3, 3, 2], "3", "90s", ""],
+          ["3361", [2, 2, 3, 2], "4/côté", "60s", ""],
+        ],
+      },
+      {
+        title: "Puissance rotationnelle",
+        duration: 40,
+        exercises: [
+          ["1471", 2, "5", "30s", "2-0-2-0"],
+          ["1302", [2, 3, 3, 2], "6", "60s", ""],
+          ["0640", [2, 3, 3, 2], "5/côté", "90s", ""],
+          ["1353", [2, 3, 3, 2], "5", "90s", ""],
+          ["0862", [2, 3, 3, 2], "8/côté", "60s", "2-0-2-0"],
+          ["0979", [2, 3, 3, 2], "8/côté", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Force-vitesse & stabilité",
+        duration: 45,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["1459", [2, 3, 3, 2], "8", "90s", "3-1-1-0"],
+          ["0431", [2, 3, 3, 2], "6/jambe", "60s", "2-0-2-0"],
+          ["0405", [2, 3, 3, 2], "8", "90s", "2-0-2-0"],
+          ["0993", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+          ["0126", [2, 2, 3, 2], "12", "45s", "2-0-2-0"],
+          ["0705", [2, 2, 3, 2], "", "45s", "", [20, 25, 30, 20]],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-05",
+    name: "Golf · Force & stabilité (intermédiaire)",
+    goal: "force",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Intermédiaire",
+    icon: "dumbbell",
+    description: "Squat, charnière et anti-rotation pour driver plus loin en protégeant le dos.",
+    detail: "Squat, charnière, tirages et anti-rotation pour driver plus loin sans fragiliser le dos. S1-S2 : effort ressenti 7/10. S3 : 8/10. S4 : décharge, charges réduites d'environ 20 %.",
+    blocks: [
+      {
+        title: "Squat & rotation",
+        duration: 55,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0043", [4, 4, 5, 3], ["6", "5", "4", "5"], "120s", "3-1-1-0"],
+          ["1459", [3, 3, 4, 3], ["8", "8", "6", "8"], "90s", "3-1-1-0"],
+          ["0410", [3, 3, 3, 2], ["8/jambe", "8/jambe", "6/jambe", "8/jambe"], "90s", "3-1-1-0"],
+          ["0562", [3, 3, 3, 2], ["8/côté", "8/côté", "6/côté", "8/côté"], "90s", "2-0-2-0"],
+          ["0705", [3, 3, 3, 2], "", "45s", "", [30, 35, 40, 30]],
+        ],
+      },
+      {
+        title: "Charnière & tirage",
+        duration: 55,
+        exercises: [
+          ["1471", 2, "6", "30s", "2-0-2-0"],
+          ["0811", [4, 4, 5, 3], ["6", "5", "4", "5"], "120s", "3-1-1-0"],
+          ["0293", [4, 4, 4, 3], ["8", "6", "6", "8"], "90s", "3-1-1-0"],
+          ["0289", [3, 3, 4, 3], ["8", "8", "6", "8"], "90s", "3-1-1-0"],
+          ["1017", [3, 3, 3, 2], "12", "45s", "2-0-2-0"],
+          ["0126", [3, 3, 3, 2], "15", "45s", "2-0-2-0"],
+          ["0082", [3, 3, 3, 2], "15", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Fente, hanche & anti-rotation",
+        duration: 50,
+        exercises: [
+          ["0628", 2, "10", "30s", "2-0-2-0"],
+          ["0431", [4, 4, 4, 3], ["6/jambe", "6/jambe", "5/jambe", "6/jambe"], "90s", "3-1-1-0"],
+          ["1409", [4, 4, 5, 3], ["8", "6", "5", "6"], "90s", "3-1-1-0"],
+          ["0979", [3, 3, 3, 2], "10/côté", "45s", "2-0-2-0"],
+          ["0276", [3, 3, 3, 2], "8/côté", "45s", "2-0-2-0"],
+          ["2133", [3, 3, 4, 3], "40 m", "60s", ""],
+          ["0235", [2, 2, 3, 2], "12/côté", "45s", "2-0-2-0"],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-06",
+    name: "Golf · Endurance 18 trous (intermédiaire)",
+    goal: "endurance",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Intermédiaire",
+    icon: "running",
+    description: "Circuits denses et aérobie plus long pour tenir 18 trous sans perdre en vitesse de swing.",
+    detail: "Tenir 18 trous (8 à 10 km, environ 4 h de jeu) sans perdre la posture ni la vitesse de swing. Circuits à repos courts et 20 à 30 min d'aérobie facile (tu dois pouvoir parler), en progression sur 3 semaines puis allègement en S4.",
+    blocks: [
+      {
+        title: "Jambes & aérobie",
+        duration: 55,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["1760", [3, 4, 4, 3], ["15", "15", "15", "12"], ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["1460", [3, 3, 4, 3], ["12/jambe", "14/jambe", "16/jambe", "12/jambe"], ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["0991", [3, 4, 4, 3], "15", ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["0710", 3, "15/côté", "30s", "2-0-2-0"],
+          ["0417", 3, ["20", "20", "25", "20"], "30s", "2-0-2-0"],
+          ["3666", 1, ["20 min", "25 min", "30 min", "25 min"], "60s", ""],
+        ],
+      },
+      {
+        title: "Haut du corps & gainage",
+        duration: 55,
+        exercises: [
+          ["1471", 2, "6", "30s", "2-0-2-0"],
+          ["0861", [3, 4, 4, 3], "15", ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["0493", [3, 3, 4, 3], ["12", "15", "15", "12"], ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["0993", 3, "15", "30s", "2-0-2-0"],
+          ["0705", 3, "", "30s", "", [30, 40, 45, 30]],
+          ["0464", 3, "", "30s", "", [25, 30, 40, 30]],
+          ["0489", 3, "12", "45s", "2-0-2-0"],
+          ["0798", 1, ["20 min", "25 min", "30 min", "25 min"], "60s", ""],
+        ],
+      },
+      {
+        title: "Circuit global",
+        duration: 55,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0549", [3, 4, 4, 3], "15", ["45s", "45s", "30s", "45s"], ""],
+          ["0431", [3, 3, 4, 3], ["10/jambe", "12/jambe", "12/jambe", "10/jambe"], ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["0293", [3, 4, 4, 3], "12", ["45s", "45s", "30s", "45s"], "2-0-2-0"],
+          ["0862", 3, "12/côté", "45s", "2-0-2-0"],
+          ["2133", 3, "40 m", "45s", ""],
+          ["2331", 1, ["20 min", "25 min", "30 min", "25 min"], "60s", ""],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-07",
+    name: "Golf · Masse fonctionnelle (intermédiaire)",
+    goal: "hypertrophie",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Intermédiaire",
+    icon: "muscle",
+    description: "Fessiers, ischios, dos et avant-bras : du muscle utile au swing.",
+    detail: "Gagner du muscle utile au swing : fessiers, ischio-jambiers, dos, rotateurs d'épaule et avant-bras. 3 à 4 séries par exercice, en gardant 1 à 2 répétitions en réserve. S2-S3 : une série de plus sur les mouvements principaux. S4 : volume réduit.",
+    blocks: [
+      {
+        title: "Jambes & fessiers",
+        duration: 60,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0043", [3, 4, 4, 3], ["10", "10", "8", "10"], "90s", "3-1-1-0"],
+          ["0085", [3, 4, 4, 3], ["10", "10", "8", "10"], "90s", "3-1-1-0"],
+          ["0410", 3, "10/jambe", "60s", "3-1-1-0"],
+          ["0599", [3, 3, 4, 3], "12", "60s", "3-1-1-0"],
+          ["0417", 3, "15", "45s", "2-0-2-0"],
+          ["0710", 3, "15/côté", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Dos, épaules & prise",
+        duration: 60,
+        exercises: [
+          ["1017", 2, "12", "30s", "2-0-2-0"],
+          ["0198", [3, 4, 4, 3], ["12", "10-12", "8-10", "12"], "90s", "3-1-1-0"],
+          ["0293", [3, 4, 4, 3], ["12", "10-12", "8-10", "12"], "90s", "3-1-1-0"],
+          ["0238", 3, "12", "60s", "3-1-1-0"],
+          ["2292", [3, 4, 4, 3], "15", "45s", "2-0-2-0"],
+          ["0235", 3, "12/côté", "45s", "2-0-2-0"],
+          ["0126", 3, "15", "45s", "2-0-2-0"],
+          ["0082", 3, "15", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Pectoraux, tronc & rotation",
+        duration: 55,
+        exercises: [
+          ["1471", 2, "6", "30s", "2-0-2-0"],
+          ["0289", [3, 4, 4, 3], ["12", "10-12", "8-10", "12"], "90s", "3-1-1-0"],
+          ["0405", 3, "10", "90s", "3-1-1-0"],
+          ["0662", 3, "15", "60s", "2-0-2-0"],
+          ["0243", [3, 4, 4, 3], "12/côté", "60s", "2-0-2-0"],
+          ["0472", 3, "10", "60s", "2-0-2-0"],
+          ["0705", 3, "", "45s", "", [30, 40, 45, 30]],
+        ],
+      },
+    ],
+  },
+  {
+    id: "lib-08",
+    name: "Golf · Vitesse de club (intermédiaire)",
+    goal: "vitesse",
+    weeks: 4,
+    sessionsCount: 12,
+    frequencyPerWeek: 3,
+    level: "Intermédiaire",
+    icon: "bolt",
+    description: "Sauts, lancers rotatifs et charges légères à vitesse maximale pour gagner en vitesse de club.",
+    detail: "Convertir la force en vitesse de club : sauts, lancers rotatifs et charges légères exécutées à vitesse maximale. Repos complets (60 à 120 s) : la qualité du geste passe avant la fatigue. S1 : apprentissage. S2-S3 : volume puis intensité maximale. S4 : allégée pour tester ta vitesse.",
+    blocks: [
+      {
+        title: "Puissance jambes & hanches",
+        duration: 50,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0514", [3, 4, 4, 3], ["5", "5", "4", "4"], "90s", ""],
+          ["0549", [4, 4, 5, 4], ["10", "10", "8", "8"], "90s", ""],
+          ["0101", [4, 4, 5, 3], "3", "120s", ""],
+          ["3361", [3, 3, 4, 3], ["6/côté", "8/côté", "8/côté", "6/côté"], "60s", ""],
+          ["1374", 3, "5/jambe", "60s", ""],
+        ],
+      },
+      {
+        title: "Puissance rotationnelle",
+        duration: 45,
+        exercises: [
+          ["1471", 2, "6", "30s", "2-0-2-0"],
+          ["0640", [4, 4, 4, 3], ["6/côté", "6/côté", "5/côté", "5/côté"], "90s", ""],
+          ["1353", [3, 4, 4, 3], "6", "90s", ""],
+          ["0562", [4, 4, 4, 3], ["6/côté", "6/côté", "6/côté", "5/côté"], "90s", ""],
+          ["0862", [3, 3, 4, 3], "8/côté", "60s", ""],
+          ["1302", 3, "8", "60s", ""],
+          ["0979", 3, "8/côté", "45s", "2-0-2-0"],
+        ],
+      },
+      {
+        title: "Force-vitesse & stabilité",
+        duration: 55,
+        exercises: [
+          ["1604", 2, "5/côté", "30s", "2-0-2-0"],
+          ["0811", [3, 4, 4, 3], "3", "120s", "3-1-1-0"],
+          ["0371", [3, 3, 4, 3], "5", "90s", ""],
+          ["1700", [3, 4, 4, 3], ["5", "5", "4", "4"], "90s", ""],
+          ["1472", 3, "4", "90s", ""],
+          ["1015", 3, "8/côté", "45s", "2-0-2-0"],
+          ["0993", 3, "15", "45s", "2-0-2-0"],
+        ],
+      },
+    ],
+  },
 ];
+
+/**
+ * Crée dans « Mes programmes » une copie du modèle de la bibliothèque, avec ses
+ * 12 séances planifiées (lundi / mercredi / vendredi à partir d'aujourd'hui) puis
+ * ouvre le programme. Si le modèle a déjà été ajouté, on ouvre simplement la copie existante.
+ */
+function gymAddLibraryProgram(libId) {
+  const tpl = PROGRAM_LIBRARY.find((t) => t.id === libId);
+  if (!tpl) return;
+
+  const existing = PROGRAMS.find((p) => p.libraryId === libId);
+  if (existing) {
+    gymNavigate("programme-detail", { id: existing.id });
+    return;
+  }
+
+  const goalMeta = TRAINING_GOALS.find((g) => g.id === tpl.goal);
+  const programId = `prog-${libId}-${Date.now().toString(36)}`;
+  const dayOffsets = [0, 2, 4];
+  const pick = (value, week) => (Array.isArray(value) ? value[week] : value);
+  const sessions = [];
+
+  for (let week = 0; week < tpl.weeks; week++) {
+    tpl.blocks.forEach((block, blockIndex) => {
+      const index = sessions.length + 1;
+      const exercises = block.exercises.map(([exerciseId, sets, reps, rest, tempo, duration]) => ({
+        exerciseId,
+        sets: pick(sets, week),
+        reps: pick(reps, week),
+        rest: pick(rest, week),
+        tempo: tempo || "",
+        duration: Number(pick(duration, week)) || 0,
+      }));
+      sessions.push({
+        id: `${programId}-s${index}`,
+        index,
+        title: `Sem. ${week + 1} · ${block.title}`,
+        date: gymAddDays(GYM_TODAY, week * 7 + dayOffsets[blockIndex % dayOffsets.length]),
+        duration: block.duration,
+        exerciseIds: exercises.map((e) => e.exerciseId),
+        exercises,
+        status: index === 1 ? "en-cours" : "verrouillee",
+        goal: tpl.goal,
+        focusLabel: block.title,
+        level: tpl.level,
+      });
+    });
+  }
+
+  const program = {
+    id: programId,
+    libraryId: libId,
+    name: tpl.name,
+    goal: tpl.goal,
+    description: tpl.detail,
+    sessionsCount: sessions.length,
+    frequencyPerWeek: tpl.frequencyPerWeek,
+    objectiveLabel: goalMeta ? goalMeta.label : "",
+    currentIndex: 1,
+    icon: tpl.icon,
+    level: tpl.level,
+    sessions,
+  };
+
+  GYM_DATA.programs.push(program);
+  gymPersistPrograms();
+  gymNavigate("programme-detail", { id: program.id });
+}
 
 /* ---- Objectifs personnels (page Objectifs) --------------------------------------
    Vide au départ : la personne crée ses propres objectifs via le bouton
@@ -3562,11 +4051,11 @@ function gymRenderDualChart(points, series, selected) {
     list.innerHTML = GYM_DATA.programLibrary
       .map(
         (tpl) => `
-        <a class="card card--interactive list-row" href="#" onclick="gymNavigate('creer-programme', {objectif:'${tpl.goal}'}); return false;">
+        <a class="card card--interactive list-row" href="#" onclick="gymAddLibraryProgram('${tpl.id}'); return false;">
           ${gymThumb(tpl.icon, "thumb--sm")}
           <div class="list-row__body">
             <span class="list-row__title">${tpl.name}</span>
-            <span class="list-row__meta">${tpl.sessionsCount} séances · ${tpl.frequencyPerWeek}x/semaine · ${tpl.level}</span>
+            <span class="list-row__meta">${tpl.weeks} semaines · ${tpl.frequencyPerWeek}x/semaine · ${tpl.sessionsCount} séances · ${tpl.level}</span>
             <span class="list-row__meta">${tpl.description}</span>
           </div>
           <span class="list-row__chevron">${gymIcon("chevronRight")}</span>
