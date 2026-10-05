@@ -111,7 +111,7 @@ menu.js
 auth.js             (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=16`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=16` par le numéro suivant dans toutes les balises).
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=17`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=17` par le numéro suivant dans toutes les balises).
 
 ### Dépendances externes
 
@@ -131,6 +131,8 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 
 ### `base.css`, `commun.css`
 `base.css` : reset, tokens `:root` (dont les couleurs `--wg-*` partagées par tous les modules), règles globales. `commun.css` : composants partagés (`.app-keypad`, `.app-keypad-value`, en-têtes de page, etc.).
+
+**Marges des pages (modèle : Putting).** Deux variables dans `base.css` : `--app-padding-x` (20 px, 16 px sous 360 px) pour la marge horizontale, et `--app-page-top` (56 px + safe-area + 16 px) pour le début du contenu sous le header fixe. Toute nouvelle page ou tout nouveau bloc de page les utilise, sans valeur en dur. Exceptions volontaires : les écrans de Gym et de Parcours verrouillés à la hauteur de l'écran (accueil Gym, création de programme, accueil Parcours) gardent un décalage vertical plus serré. `.screen` de `parcours-ui.css` est limité à `#page-parcours` (via `:where()`, spécificité inchangée) : il s'appliquait aussi à Stats et doublait sa marge.
 
 ### `sg-data.js` et `strokes-gained.js`
 Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence `SG_BASELINES` (lies `tee`, `fairway`, `rough`, `sand`, `recovery`, `green` ; yards sauf `green` en pieds), extraites du dépôt `dgtaillie/python_strokes_gained`. `strokes-gained.js` convertit les mètres, interpole (`sgExpected`) et calcule le SG d'un coup (`sgShot`). Aucune dépendance au DOM. C'est le seul endroit où vivent des tables SG : `putting.js`, `wedging.js` et `stats.js` l'appellent. Sous 10 yd (9,1 m), les tables fairway / rough / sand sont plafonnées à leur valeur à 10 yd (la source n'a pas de points plus courts).
@@ -196,4 +198,5 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 3. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage. Une partie détaillée de Stats est copiée dans `putting_rounds`, mais les deux saisies restent distinctes.
 4. **Couplage par `typeof` sur des globales de `menu.js`.** `parcours-ui.js` et `stats.js` testent `typeof golfBag` / `golfClubCatalog` / `personalDistances`. Cela fonctionne tant que le scope global est partagé, mais casse silencieusement si une variable est renommée.
 5. **Noms globaux génériques.** `root` (`putting.js`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Aucune collision aujourd'hui, mais le risque reste à chaque nouveau fichier : préfixer les nouveaux noms globaux. Un `id="headerRightBtn"` est présent dans `putting.js` et `wedging.js` : aucun code ne le lit, sans effet.
-6. **Taille des fichiers.** Images : les 27 PNG pesaient environ 54 Mo (1,5 à 3,2 Mo chacun), elles sont passées en WebP. Les `.webp` doivent être présents dans `images/` au même nom (sinon les fonds ne s'affichent plus). JS / CSS, toujours à traiter : `gym.js` (6071 lignes, 408 Ko), `stats.js` (3708), `putting.js` (3779), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) sont chargés au démarrage, y compris les parties jamais ouvertes.
+6. **Page Parcours vide.** `#page-parcours .screen-view[data-screen="home"]` n'a jamais la classe `active` et reste en `display: none`. Le routeur d'écrans (`goToScreen`) a disparu de `parcours-ui.js` au commit `679b585`, et `app-shell.js` ne fait que lire cette classe. Les écrans `distances` et `add-shot` du même fichier sont des maquettes sans lien. À corriger : réactiver `home` à l'ouverture de la page.
+7. **Taille des fichiers.** Images : les 27 PNG pesaient environ 54 Mo (1,5 à 3,2 Mo chacun), elles sont passées en WebP. Les `.webp` doivent être présents dans `images/` au même nom (sinon les fonds ne s'affichent plus). JS / CSS, toujours à traiter : `gym.js` (6071 lignes, 408 Ko), `stats.js` (3708), `putting.js` (3779), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) sont chargés au démarrage, y compris les parties jamais ouvertes.

@@ -58,14 +58,20 @@
    d'exercice) n'en ont pas besoin, d'où un décalage ciblé sur le frère
    qui suit .wg-header plutôt qu'un padding-top global sur #page-wedging. */
 #page-wedging .wg-header + * {
-  margin-top: calc(56px + env(safe-area-inset-top));
+  margin-top: var(--app-page-top);
+}
+
+/* flow-root : empêche la marge ci-dessus de remonter hors de la page (sinon bande noire sous le header,
+   le fond de #page-wedging ne la recouvrant plus). */
+#page-wedging.active {
+  display: flow-root;
 }
 
 /* a{} et button{} : déjà couverts par le reset global de base.css */
 
 .wg-container{
   margin:0 auto;
-  padding:0 20px;
+  padding:0 var(--app-padding-x);
 }
 
 @media (min-width: 480px) {
@@ -106,7 +112,7 @@
   font-size:13px;
   margin:2px auto 10px;
   max-width:var(--wg-max-width);
-  padding:0 20px;
+  padding:0 var(--app-padding-x);
 }
 
 /* ---------- Cartes de navigation (Parcours / Exercices) ---------- */
@@ -116,7 +122,7 @@
   gap:10px;
   max-width:var(--wg-max-width);
   margin:16px auto 10px;
-  padding:0 20px;
+  padding:0 var(--app-padding-x);
 }
 .wg-nav-card{
   background:var(--wg-card);
@@ -158,7 +164,7 @@
   border:1px solid var(--wg-border);
   border-radius:var(--wg-radius);
   max-width:var(--wg-max-width);
-  margin:0 auto 10px;
+  margin:0 var(--app-padding-x) 10px;
   padding:14px;
 }
 .wg-section h4{
@@ -333,10 +339,10 @@
 .wg-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 /* ---------- Listes (exercices / historique) ---------- */
-.wg-list{display:flex;flex-direction:column;gap:12px;max-width:var(--wg-max-width);margin:0 auto;padding:0 20px;}
+.wg-list{display:flex;flex-direction:column;gap:12px;max-width:var(--wg-max-width);margin:0 auto;padding:0 var(--app-padding-x);}
 .wg-toolbar{
   display:flex;align-items:center;justify-content:space-between;
-  max-width:var(--wg-max-width);margin:0 auto 14px;padding:0 20px;
+  max-width:var(--wg-max-width);margin:0 auto 14px;padding:0 var(--app-padding-x);
 }
 .wg-toolbar-title{font-size:14px;font-weight:700;letter-spacing:1px;}
 .wg-select-inline{
@@ -393,7 +399,7 @@
 /* ---------- Historique ---------- */
 .wg-filters{
   display:flex;gap:8px;
-  max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 20px;
+  max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 var(--app-padding-x);
   overflow-x:auto;
 }
 .wg-filter-btn{
@@ -425,7 +431,7 @@
 .wg-history-sub{font-size:10.5px;color:var(--wg-text-secondary);}
 .wg-history-count-row{
   display:flex;align-items:center;gap:8px;
-  max-width:var(--wg-max-width);margin:0 auto;padding:0 20px;
+  max-width:var(--wg-max-width);margin:0 auto;padding:0 var(--app-padding-x);
   font-size:13px;color:var(--wg-text-secondary);
 }
 .wg-filters-row{
@@ -436,10 +442,10 @@
 /* ---------- Pages d'analyse (Distance / Dispersion / Historique) ---------- */
 .wg-topbar{
   display:flex;align-items:center;justify-content:space-between;
-  max-width:var(--wg-max-width);margin:0 auto;padding:20px 20px 0;
+  max-width:var(--wg-max-width);margin:0 auto;padding:20px var(--app-padding-x) 0;
 }
 .wg-analysis-header{
-  max-width:var(--wg-max-width);margin:0 auto;padding:16px 20px 4px;
+  max-width:var(--wg-max-width);margin:0 auto;padding:16px var(--app-padding-x) 4px;
 }
 .wg-eyebrow{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--wg-accent);font-weight:600;margin:0 0 6px;}
 .wg-page-title{font-size:26px;font-weight:700;margin:0 0 8px;line-height:1.2;}
@@ -483,6 +489,8 @@
 
 /* ---------- Filtres à puces (dispersion) ---------- */
 .wg-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+/* Rangée de chips posée directement dans la page (hors .wg-section) : même marge horizontale que le reste */
+#page-wedging #app > .wg-chip-row{padding:0 var(--app-padding-x);}
 .wg-chip{
   background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text-secondary);
   border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:pointer;
@@ -492,7 +500,7 @@
 /* ---------- Stats sous forme de 3 colonnes (dispersion) ---------- */
 .wg-analysis-stats{
   display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
-  max-width:var(--wg-max-width);margin:0 auto 20px;padding:0 20px;
+  max-width:var(--wg-max-width);margin:0 auto 20px;padding:0 var(--app-padding-x);
 }
 .wg-analysis-stats .wg-kpi-card{padding:12px;}
 .wg-analysis-stats .wg-kpi-label{font-size:10px;margin-bottom:6px;}
@@ -520,7 +528,7 @@
   gap:12px;
   max-width:var(--wg-max-width);
   margin:0 auto 20px;
-  padding:0 20px;
+  padding:0 var(--app-padding-x);
 }
 .wg-kpi-card{
   background:var(--wg-card);
@@ -710,7 +718,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 }
 .wg-bottom-stats-bar b{display:block;font-size:16px;color:var(--wg-text);font-weight:700;}
 .wg-ladder-grid{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 20px;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 var(--app-padding-x);
 }
 .wg-ladder-item{
   flex-shrink:0;background:var(--wg-card);border:1px solid var(--wg-border);color:var(--wg-text-secondary);
@@ -722,7 +730,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-series-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--wg-border);}
 .wg-series-dot.filled{background:var(--wg-accent);border-color:var(--wg-accent);}
 .wg-series-dot.missed{background:var(--wg-danger);border-color:var(--wg-danger);}
-.wg-recent-dots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 20px;}
+.wg-recent-dots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 var(--app-padding-x);}
 
 /* ---------- Cartes d'analyse (toile d'araignée / évolution) ---------- */
 .wg-insight-card{

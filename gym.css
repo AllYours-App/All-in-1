@@ -99,7 +99,7 @@ select:focus-visible,
 }
 
 .gym-main {
-  padding: calc(56px + env(safe-area-inset-top) + 20px) 20px 100px;
+  padding: var(--app-page-top) var(--app-padding-x) 100px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -107,14 +107,14 @@ select:focus-visible,
 
 @media (max-width: 400px) {
   .gym-main {
-    padding: calc(56px + env(safe-area-inset-top) + 16px) 16px 80px;
+    padding: var(--app-page-top) var(--app-padding-x) 80px;
     gap: 20px;
   }
 }
 
 @media (max-width: 360px) {
   .gym-main {
-    padding: calc(56px + env(safe-area-inset-top) + 14px) 14px 70px;
+    padding: var(--app-page-top) var(--app-padding-x) 70px;
     gap: 16px;
   }
 }
@@ -1748,7 +1748,7 @@ body.gym-home-locked {
 #view-gym-home .gym-main {
   flex: 1 1 auto;
   min-height: 0;
-  padding: calc(56px + env(safe-area-inset-top) + 10px) 16px 14px;
+  padding: calc(56px + env(safe-area-inset-top) + 10px) var(--app-padding-x) 14px; /* écran verrouillé à la hauteur : décalage vertical resserré */
   gap: 10px;
   display: flex;
   flex-direction: column;
@@ -1760,8 +1760,8 @@ body.gym-home-locked {
 .home-hero {
   position: relative;
   flex: 0 0 auto;
-  margin: 0 -16px;
-  padding: 0 16px 14px;
+  margin: 0 calc(-1 * var(--app-padding-x)); /* pleine largeur : compense le padding de .gym-main */
+  padding: 0 var(--app-padding-x) 14px;
   display: flex;
   align-items: flex-start;
   overflow: hidden;
@@ -2234,7 +2234,7 @@ body.gym-home-locked {
 
 .session-main {
   flex: 1 1 auto;
-  padding: 18px 20px 16px;
+  padding: 18px var(--app-padding-x) 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2647,6 +2647,13 @@ body.gym-home-locked {
   padding-top: 8px;
 }
 
+/* Barre posée juste après <main class="session-main"> (structure actuelle de gym.js) : elle n'hérite pas du padding
+   de .session-main, donc elle porte la même marge horizontale que le reste des pages et sa marge basse. */
+.session-main + .session-actions {
+  flex: 0 0 auto;
+  padding: 8px var(--app-padding-x) calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
 .session-main {
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
@@ -2926,7 +2933,7 @@ body.gym-view-fit .gym-app {
 
 #view-creer-programme .gym-main {
   flex: 1 0 auto;
-  padding: calc(56px + env(safe-area-inset-top) + 10px) 16px calc(14px + env(safe-area-inset-bottom));
+  padding: calc(56px + env(safe-area-inset-top) + 10px) var(--app-padding-x) calc(14px + env(safe-area-inset-bottom));
   gap: 10px;
 }
 

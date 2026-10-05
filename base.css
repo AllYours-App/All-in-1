@@ -16,6 +16,8 @@
   --app-min-width: 320px; /* Largeur min pour petits mobiles */
   --app-padding: 20px; /* Padding horizontal commun */
   --app-padding-small: 16px; /* Padding pour petits écrans */
+  --app-padding-x: var(--app-padding); /* Marge horizontale des pages (bascule sur --app-padding-small sous 360px, voir plus bas) */
+  --app-page-top: calc(56px + env(safe-area-inset-top) + 16px); /* Début du contenu sous le header fixe de 56px */
 
   --breakpoint-small: 360px;
   --breakpoint-medium: 400px;
@@ -117,7 +119,13 @@
   --mn-radius-l: 24px;
   --mn-radius-m: 18px;
   --mn-radius-s: 12px;
-  --mn-space-page: 20px;
+  --mn-space-page: var(--app-padding-x);
+}
+
+@media (max-width: 360px) {
+  :root {
+    --app-padding-x: var(--app-padding-small);
+  }
 }
 
 /* --------------------------- RESET GLOBAL ------------------------------- */

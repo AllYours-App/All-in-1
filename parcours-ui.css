@@ -16,7 +16,7 @@
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
-  padding: 0; /* .page-header et .screen portent déjà leur padding de 20px */
+  padding: 0; /* .page-header et .screen portent déjà leur padding horizontal (--app-padding-x) */
 }
 
 /* a{} et button{} : déjà couverts par le reset global de base.css */
@@ -70,7 +70,7 @@
 }
 
 .page-header {
-  padding: calc(56px + env(safe-area-inset-top) + 4px) 20px 18px;
+  padding: calc(56px + env(safe-area-inset-top) + 4px) var(--app-padding-x) 18px;
   text-align: center;
 }
 
@@ -94,8 +94,10 @@
    Layout helpers
    -------------------------------------------------------------------------- */
 
-.screen {
-  padding: 0 20px 28px;
+/* :where() garde la même spécificité que l'ancien `.screen` (les règles body.no-scroll plus bas restent prioritaires),
+   mais limite la règle à Parcours : elle s'appliquait aussi à Stats et ajoutait 20px de marge en plus. */
+:where(#page-parcours) .screen {
+  padding: 0 var(--app-padding-x) 28px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -220,7 +222,7 @@ body.no-scroll #page-parcours .screen-view.active .top-bar {
   width: 100%;
   margin: 0;
   flex: 0 0 auto;
-  padding: 14px 20px 4px;
+  padding: 14px var(--app-padding-x) 4px;
 }
 
 body.no-scroll .screen-view.active .screen {
