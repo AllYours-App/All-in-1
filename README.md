@@ -120,7 +120,7 @@ Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, 
 
 ## Fichiers partagés
 
-### `index.html` (1239 lignes)
+### `index.html` (1241 lignes)
 Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Un script en `<head>` ajoute la classe `has-session` sur `<html>` si `golfSession` existe, pour éviter le flash de la page de connexion.
 
 ### `app-shell.js`
@@ -172,6 +172,7 @@ IIFE unique. Composants (sparkline, KPI, filtres, graphiques Chart.js), écrans 
 Placeholder : affiche "Fonctionnalités à venir".
 
 ### `images/`
+`images/icon.png` (1024 px, carré plein sans coins arrondis) : icône de l'appli pour l'onglet et l'écran d'accueil du téléphone, déclarée par deux `<link>` dans `index.html`.
 Fonds d'accueil (matin, midi, soir, nuit), fonds de boutons, illustrations de putts (`GreenPutt*`), programmes de gym, popup de reprise. Tous les fichiers sont en WebP et le code ne lit plus que des `.webp` : `HomePage.js`, `gym.js`, `gym.css`, `putting.js` (`QUICK_PUTT_IMAGE_EXT`) et `stats.js` (`IMAGE_EXT`). Les `.png` ne sont plus utilisés.
 Non référencés dans le code (à confirmer avant suppression) : `FondEcranBoutonDenivele`, `FondEcranBoutonDistance`, `FondEcranBoutonVent`, `popupareprendre`.
 
