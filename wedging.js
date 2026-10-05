@@ -4,7 +4,7 @@
    version fonctionnelle (wedge_2.js + extraits de shared-core_3.js pour le SG).
    Sections :
    1. Constantes partagées
-   2. Storage (localStorage)
+   2. WedgeStorage (localStorage)
    3. Analytics (Strokes Gained, niceScale, radar SVG générique)
    4. UI (icônes, toast, layout, popup générique, roues de zones)
    5. État global "Wedge" + toutes les fonctions d'interaction (Parcours + Créatif)
@@ -35,7 +35,7 @@ function wedgeZoneDisplayLabel(zone) { return zone === 'Green' ? 'Trou' : zone; 
 
 /* ============================== 2. STORAGE ================================= */
 
-const Storage = (function () {
+const WedgeStorage = (function () {
   const KEYS = { SHOTS: "wedgingShots", EXERCISES: "wedgingExercises", IN_PROGRESS: "wedgingInProgressSessions" };
   function read(key) {
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
@@ -320,7 +320,7 @@ const UI = (function () {
 function rerender() { if (wedgeExSession) saveCurrentSessionAsInProgress(); Router.render(); }
 
 // --- Journal (Parcours) ---
-let wedgeRounds = normalizeWedgeRounds(Storage.getShots());
+let wedgeRounds = normalizeWedgeRounds(WedgeStorage.getShots());
 let wedgeNewShotBucket = WEDGE_BUCKETS[0];
 let wedgeNewShotFinal = '';
 let wedgeNewShotZone = null;
@@ -333,7 +333,7 @@ let wedgeHistoryZonePopupOpen = false;
 let wedgeShotsLimitPopupOpen = false;
 let wedgeRadarDistances = new Set();
 
-function persistWedgeRounds() { Storage.writeShots(wedgeRounds); }
+function persistWedgeRounds() { WedgeStorage.writeShots(wedgeRounds); }
 
 function setWedgeNewShotBucket(b) { wedgeNewShotBucket = b; rerender(); }
 function wedgeKeypadPress(digit) { if (wedgeNewShotFinal.length >= 3) return; wedgeNewShotFinal += digit; rerender(); }
@@ -477,7 +477,7 @@ function normalizeWedgeRounds(list) {
   return (Array.isArray(list) ? list : [])
     .filter(w => w && typeof w.distanceToCover === 'number' && typeof w.zone === 'string' && typeof w.finalDistance === 'number');
 }
-let wedgeExercises = normalizeWedgeExercises(Storage.getExercises());
+let wedgeExercises = normalizeWedgeExercises(WedgeStorage.getExercises());
 let wedgeExerciseModalOpen = false;
 let editingWedgeExerciseId = null;
 let wedgeExerciseForm = null;
@@ -495,7 +495,7 @@ let wedgeRecapDistanceEditIdx = null;
 let wedgeRecapDistanceInput = '';
 let wedgeRecapZoneEditIdx = null;
 let wedgeRecapEditMode = false;
-let wedgeInProgressSessions = Array.isArray(Storage.getInProgress()) ? Storage.getInProgress() : [];
+let wedgeInProgressSessions = Array.isArray(WedgeStorage.getInProgress()) ? WedgeStorage.getInProgress() : [];
 wedgeInProgressSessions = wedgeInProgressSessions.filter(e => e && wedgeExercises.some(x => x.id === e.exerciseId));
 let wedgeResumePopupExerciseId = null;
 let wedgeEditConflictPopupOpen = false;
@@ -571,8 +571,8 @@ function wedgeSortPopupHtml() {
   `, 'closeWedgeSortPopup');
 }
 
-function persistWedgeExercises() { Storage.writeExercises(wedgeExercises); }
-function persistWedgeInProgressSessions() { Storage.writeInProgress(wedgeInProgressSessions); }
+function persistWedgeExercises() { WedgeStorage.writeExercises(wedgeExercises); }
+function persistWedgeInProgressSessions() { WedgeStorage.writeInProgress(wedgeInProgressSessions); }
 function wedgeInProgressFor(exId) { return wedgeInProgressSessions.find(s => s.exerciseId === exId) || null; }
 function removeInProgressFor(exId) {
   wedgeInProgressSessions = wedgeInProgressSessions.filter(s => s.exerciseId !== exId);

@@ -101,17 +101,17 @@ commun.js           -> appKeypad()
 sg-data.js          -> SG_BASELINES
 strokes-gained.js   -> sgExpected(), sgShot()   (dépend de sg-data.js)
 HomePage.js
-parcours-ui.js      (?v=6)
+parcours-ui.js
 wedging.js
 gym.js
 putting.js
 vitesse.js
-stats.js            (?v=14)
+stats.js
 menu.js
 auth.js             (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Seuls `parcours-ui` (`?v=6`) et `stats` (`?v=14`) ont un numéro de version manuel pour le cache.
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=15`), à incrémenter partout à chaque déploiement qui modifie un fichier.
 
 ### Dépendances externes
 
@@ -157,7 +157,7 @@ Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessio
 Sauvegarde : `savePuttingState()` / `loadPuttingState()`. `importPuttingRoundFromStats(data)` (exposée sur `window`) crée une partie `source: 'stats'` à partir d'une partie saisie en détaillé dans `stats.js` ; elle est dédoublonnée par `statsKey`.
 
 ### `wedging.js` / `wedging.css`
-SPA autonome (7 sections : constantes, `Storage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 50 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Calcule son SG avec ses propres tables (rough et putts), sans passer par `strokes-gained.js`.
+SPA autonome (7 sections : constantes, `WedgeStorage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 50 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Calcule son SG avec ses propres tables (rough et putts), sans passer par `strokes-gained.js`.
 La limite haute d'un coup de wedge est la constante `WEDGE_MAX_DISTANCE` (110 m, comprise) : elle construit `WEDGE_BUCKETS` (derniers paliers : 105-109m puis 110m, libellés par `wedgeBucketLabel`) et `stats.js` la lit pour classer ses coups. `importWedgeShotsFromStats(list)` (exposée sur `window`) ajoute au Journal les coups venant de Stats (`source: 'stats'`, dédoublonnés par `statsKey`).
 
 ### `gym.js` / `gym.css`
@@ -198,9 +198,9 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 5. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage. Une partie détaillée de Stats est maintenant copiée dans `putting_rounds`, mais les deux saisies restent distinctes.
 6. **Strokes Gained dupliqué.** `wedging.js` embarque sa propre table rough et sa propre interpolation, `stats.js` calcule aussi du SG. `strokes-gained.js` n'est utilisé que par `putting.js`.
 7. **Couplage par `typeof` sur des globales de `menu.js`.** `parcours-ui.js` et `stats.js` testent `typeof golfBag` / `golfClubCatalog` / `personalDistances`. Cela fonctionne tant que le scope global est partagé, mais casse silencieusement si une variable est renommée.
-8. **Noms globaux génériques.** `root` (`putting.js`), `Storage` (`wedging.js`, masque l'interface Web `Storage`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Risque de collision à chaque nouveau fichier.
-9. **Commentaires périmés.** `auth.js` dit que `app-shell.js` "peut se charger après ce fichier", alors qu'il est chargé en premier. L'événement `parcours:ready` est émis par `parcours-ui.js` mais personne ne l'écoute.
-10. **Cache.** Seuls `parcours-ui` et `stats` ont un paramètre de version. Les autres fichiers peuvent rester en cache après un déploiement.
+8. **Noms globaux génériques.** `root` (`putting.js`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Aucune collision aujourd'hui (voir "Problèmes résolus", n° 5), mais le risque reste à chaque nouveau fichier : préfixer les nouveaux noms globaux.
+9. ~~Commentaires périmés~~ : résolu, voir "Problèmes résolus".
+10. ~~Cache~~ : résolu, voir "Problèmes résolus".
 11. **Taille des fichiers.** `gym.js` (6071 lignes, 408 Ko), `stats.js` (3672), `putting.js` (3732), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) : tout est chargé au démarrage, y compris les parties jamais ouvertes.
 
 ## Problèmes résolus
@@ -209,3 +209,6 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 2. **Encadrés de l'accueil remis à "_".** `HomePage.js` appelait `renderGolfStats()` sans données au `DOMContentLoaded`, ce qui effaçait ce que `putting.js` venait d'écrire. `HomePage.js` rappelle maintenant `window.renderGolfHome()` juste après. Distance moyenne et Index restent à "_" tant qu'aucune source ne les alimente.
 3. **Stats relié à Wedging et Putting.** La saisie détaillée de Stats envoie ses coups de wedge (50 à 110 m compris) au Journal Wedging et ses premiers putts à Putting (voir `stats.js`, `wedging.js`, `putting.js`). L'accueil affiche "Parcours" comme dernière séance quand elle vient de Stats.
 4. **Limite du wedge incohérente.** Stats classait "wedging" jusqu'à 100 m et le Journal Wedging allait jusqu'à 109 m. Une seule constante, `WEDGE_MAX_DISTANCE` (110 m, comprise) dans `wedging.js`, sert aux deux ; le Journal a un palier "110m" en plus.
+5. **Collisions de noms globaux.** Scan de toutes les déclarations racine des 13 scripts : plus aucun nom déclaré dans deux fichiers (les deux conflits de `saveStateToLocalStorage` / `loadStateFromLocalStorage` étaient les seuls). `Storage` (`wedging.js`) masquait l'interface Web `Storage` : renommé `WedgeStorage` (utilisé uniquement dans `wedging.js`). Reste un `id="headerRightBtn"` présent dans `putting.js` et `wedging.js` : aucun code ne le lit, sans effet.
+6. **Commentaires périmés (point 9).** `auth.js` ne dit plus que `app-shell.js` se charge après lui. L'événement `parcours:ready` (`parcours-ui.js`), sans écouteur, est annoté comme point d'accroche.
+7. **Cache (point 10).** Tous les CSS et JS locaux de `index.html` ont le même paramètre `?v=15` (avant : seulement `parcours-ui` et `stats`). Pour forcer le rechargement après un déploiement, remplacer `?v=15` par le numéro suivant dans toutes les balises.

@@ -10,8 +10,11 @@
 
   if (!document.getElementById('page-login')) return;
 
-  // Dès que l'utilisateur a cliqué, le garde-fou du "load" ne le renvoie plus à la page de départ
+  // Dès que l'utilisateur a cliqué, on ne le renvoie plus de force à la page de départ
   let hasInteracted = false;
+
+  // showPage() vient de app-shell.js, chargé en premier ; le typeof protège seulement d'un oubli de la balise <script>
+  const goTo = (page) => { if (typeof showPage === 'function') showPage(page); };
 
   /* ---------- Session (connexion unique) ---------- */
 
@@ -34,6 +37,7 @@
   // Home si l'utilisateur est déjà connecté, sinon connexion.
   // La classe anti-flash n'est retirée qu'une fois la bonne page affichée.
   function showStartPage() {
+    if (typeof showPage !== 'function') return;
     showPage(getSession() ? 'home' : 'login');
     document.documentElement.classList.remove('has-session');
   }
@@ -42,13 +46,12 @@
   window.authLogout = function () {
     clearSession();
     document.querySelectorAll('[data-auth-form]').forEach(resetForm);
-    showPage('login');
+    goTo('login');
   };
 
   showStartPage();
 
-  // Garde-fou : si un autre module a changé de page pendant son initialisation,
-  // on rétablit la page de départ (tant que l'utilisateur n'a encore rien fait)
+  // Après "load" : on corrige uniquement si app-shell.js a remis la mauvaise page de départ
   window.addEventListener('load', () => {
     const active = document.querySelector('.app-page.active');
     const current = active ? active.id.replace('page-', '') : '';
@@ -56,6 +59,8 @@
     if (!hasInteracted && (current === 'home' || current === 'login') && current !== wanted) {
       showStartPage();
     }
+    // Filet de sécurité : la page de connexion ne doit jamais rester masquée
+    document.documentElement.classList.remove('has-session');
   });
 
   /* ---------- Fond d'écran selon l'heure ---------- */
@@ -158,18 +163,18 @@
       // TODO : appel backend (connexion ou création de compte) avant d'enregistrer la session
       saveSession(form.elements.email.value.trim());
       resetForm(form);
-      showPage('home');
+      goTo('home');
     });
   });
 
   /* ---------- Navigation entre connexion / inscription ---------- */
 
-  // showPage() ignore une page inexistante (ex. "forgot-password" pas encore créée) :
-  // le lien deviendra actif tout seul dès que la page existera
+  // Actif dès que la page cible existe (ex. "forgot-password" pas encore créée)
   document.querySelectorAll('[data-auth-goto]').forEach((button) => {
     button.addEventListener('click', () => {
       hasInteracted = true;
-      showPage(button.dataset.authGoto);
+      const target = button.dataset.authGoto;
+      if (document.getElementById('page-' + target)) goTo(target);
     });
   });
 })();

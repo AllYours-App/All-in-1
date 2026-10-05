@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   renderFairway();
   renderGreen();
+  // Aucun écouteur pour l'instant : point d'accroche prévu pour d'autres modules
   document.dispatchEvent(new CustomEvent("parcours:ready"));
 });
 
