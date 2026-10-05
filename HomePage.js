@@ -95,6 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Appel réel à brancher sur la source de données
   renderGolfStats();
 
+  // putting.js remplit déjà objectif + dernière séance au chargement, mais
+  // l'appel ci-dessus vient de tout remettre à "_" : on le rejoue ensuite
+  if (typeof window.renderGolfHome === "function") window.renderGolfHome();
+
   // Retour visuel au toucher/clic sur les éléments interactifs
   document.querySelectorAll(".orbit-button, .profile_button").forEach((el) => {
     el.addEventListener("pointerdown", () => el.classList.add("is-pressed"));

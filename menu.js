@@ -38,7 +38,7 @@ let personalDistances = {}; // { clubId: distance } — un club = une distance
 let wedgeDistances = {};    // { clubId: [{ id, label, value }, ...] } — un wedge = plusieurs distances
 let driverSettings = { length: null, weight: null };
 
-function saveStateToLocalStorage() {
+function saveMenuState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       userProfile, settings, radars, golfBag, driverSettings, personalDistances, wedgeDistances,
@@ -48,7 +48,7 @@ function saveStateToLocalStorage() {
   }
 }
 
-function loadStateFromLocalStorage() {
+function loadMenuState() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!data) return;
@@ -102,7 +102,7 @@ function paint(html) {
 // et un re-render au blur ferait perdre le clic sur le bouton tapé ensuite)
 function updateFirstName(value) {
   userProfile.firstName = value.trim().slice(0, 20);
-  saveStateToLocalStorage();
+  saveMenuState();
   if (window.renderHomeGreeting) window.renderHomeGreeting();
 }
 
@@ -219,7 +219,7 @@ function indexLabel() {
 
 function updateProfileIndex(raw) {
   userProfile.index = toNumberOrNull(raw);
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 // showLogout : true uniquement sur l'écran Menu principal
@@ -381,12 +381,12 @@ function updateMenuSetting(key, value) {
     convertStoredDistances(settings.distanceUnit, value);
   }
   settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 function updateDriverField(key, value) {
   driverSettings[key] = toNumberOrNull(value);
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 /* --- Radars ------------------------------------------------------------- */
@@ -396,7 +396,7 @@ function updateRadarField(id, field, value) {
   const radar = radars.find(r => r.id === id);
   if (!radar) return;
   radar[field] = field.endsWith('OffsetValue') ? (parseFloat(value) || 0) : value;
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 function renameRadar(id, input) {
@@ -404,18 +404,18 @@ function renameRadar(id, input) {
   if (!radar) return;
   radar.label = input.value.trim() || radar.label;
   input.value = radar.label;
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 function setDefaultRadar(id) {
   settings.defaultRadarId = id;
-  saveStateToLocalStorage();
+  saveMenuState();
   renderMenuTab();
 }
 
 function addRadar() {
   radars.push({ id: 'radar_' + Date.now(), label: 'Nouveau radar', clubOffsetValue: 0, clubOffsetUnit: 'pct', ballOffsetValue: 0, ballOffsetUnit: 'pct' });
-  saveStateToLocalStorage();
+  saveMenuState();
   renderMenuTab();
 }
 
@@ -423,7 +423,7 @@ function removeRadar(id) {
   if (radars.length <= 1) return;
   radars = radars.filter(r => r.id !== id);
   if (settings.defaultRadarId === id) settings.defaultRadarId = radars[0].id;
-  saveStateToLocalStorage();
+  saveMenuState();
   renderMenuTab();
 }
 
@@ -491,7 +491,7 @@ function renderGolfBagScreen() {
 function toggleClub(id, isChecked) {
   const others = golfBag.clubs.filter(cid => cid !== id);
   golfBag.clubs = isChecked ? [...others, id] : others;
-  saveStateToLocalStorage();
+  saveMenuState();
   document.getElementById('bag-count').textContent = golfBag.clubs.length;
 }
 
@@ -523,7 +523,7 @@ function renderDistancesScreen() {
 
 function updateDistance(clubId, value) {
   personalDistances[clubId] = toNumberOrNull(value);
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 // Garantit au moins une distance ("Distance 1") pour un wedge du sac
@@ -555,14 +555,14 @@ function addWedgeDistance(clubId) {
   ensureWedgeEntries(clubId);
   const n = wedgeDistances[clubId].length + 1;
   wedgeDistances[clubId].push({ id: 'd' + Date.now(), label: 'Distance ' + n, value: null });
-  saveStateToLocalStorage();
+  saveMenuState();
   renderDistancesScreen();
 }
 
 function removeWedgeDistance(clubId, entryId) {
   if (!wedgeDistances[clubId] || wedgeDistances[clubId].length <= 1) return;
   wedgeDistances[clubId] = wedgeDistances[clubId].filter(e => e.id !== entryId);
-  saveStateToLocalStorage();
+  saveMenuState();
   renderDistancesScreen();
 }
 
@@ -572,14 +572,14 @@ function updateWedgeDistanceLabel(clubId, entryId, input) {
   if (!entry) return;
   entry.label = input.value.trim() || entry.label;
   input.value = entry.label;
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 function updateWedgeDistanceValue(clubId, entryId, value) {
   const entry = (wedgeDistances[clubId] || []).find(e => e.id === entryId);
   if (!entry) return;
   entry.value = toNumberOrNull(value);
-  saveStateToLocalStorage();
+  saveMenuState();
 }
 
 /* ==========================================================================
@@ -602,7 +602,7 @@ window.renderMenuTab = renderMenuTab;
    Initialisation
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-  loadStateFromLocalStorage();
+  loadMenuState();
   backBtn.addEventListener('click', () => backTarget());
   renderMenuTab();
 });

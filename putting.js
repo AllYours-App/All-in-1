@@ -1648,7 +1648,7 @@ function renderFilterSheet() {
     '<div class="filter-sheet_options">' + optionsHtml + '</div>';
 }
 
-function saveStateToLocalStorage() {
+function savePuttingState() {
   try {
     const persistable = puttingCombines.filter(function (c) { return !c.isQuick; });
     localStorage.setItem('putting_combines', JSON.stringify(persistable));
@@ -1660,7 +1660,7 @@ function saveStateToLocalStorage() {
   refreshAllAnalytics();
 }
 
-function loadStateFromLocalStorage() {
+function loadPuttingState() {
   try {
     const combines = localStorage.getItem('putting_combines');
     const sessions = localStorage.getItem('putting_sessions');
@@ -1677,7 +1677,7 @@ function loadStateFromLocalStorage() {
     resumableSession = null;
   }
 }
-loadStateFromLocalStorage();
+loadPuttingState();
 
 /* ---------- Carte "À reprendre" ---------- */
 function saveResumableSession() {
@@ -1840,7 +1840,7 @@ function duplicateCombine(id) {
   copy.name = c.name + ' (copie)';
   puttingCombines.push(copy);
   selectedCombineId = copy.id;
-  saveStateToLocalStorage();
+  savePuttingState();
   renderExerciseList();
   updateExerciseSelectBar();
 }
@@ -1849,7 +1849,7 @@ function deleteCombine(id) {
   if (!confirm('Supprimer cet exercice ?')) return;
   puttingCombines = puttingCombines.filter(function (c) { return c.id !== id; });
   if (selectedCombineId === id) selectedCombineId = null;
-  saveStateToLocalStorage();
+  savePuttingState();
   renderExerciseList();
   updateExerciseSelectBar();
 }
@@ -2409,7 +2409,7 @@ function editSessionField(field, label) {
   const v = prompt(label, session[field] || '');
   if (v === null) return;
   session[field] = v;
-  if (viewingSessionId) saveStateToLocalStorage();
+  if (viewingSessionId) savePuttingState();
   renderExerciseFlowScreen();
 }
 
@@ -2487,7 +2487,7 @@ function renderCombineRecapScreen() {
 function saveCombineSessionNow() {
   activeSession.id = Date.now();
   puttingSessions.push(activeSession);
-  saveStateToLocalStorage();
+  savePuttingState();
   activeSession = null;
   exitExerciseFlow();
 }
@@ -2502,7 +2502,7 @@ function deleteViewedSession() {
   if (!confirm('Supprimer cette séance ?')) return;
   const combineId = puttingSessions.find(function (s) { return s.id === viewingSessionId; }).combineId;
   puttingSessions = puttingSessions.filter(function (s) { return s.id !== viewingSessionId; });
-  saveStateToLocalStorage();
+  savePuttingState();
   viewingSessionId = null;
   reviewCombine(combineId);
 }
@@ -2722,7 +2722,7 @@ function finishQuickExercise() {
   if (played) {
     const round = quickSessionToRound(activeSession, combine);
     puttingRounds.push(round);
-    saveStateToLocalStorage();
+    savePuttingState();
     renderParcoursHistory();
     showToast('Exercice enregistré');
   }
@@ -2855,7 +2855,7 @@ function saveCreativeCombine() {
       previewRows: f.previewRows,
     });
   }
-  saveStateToLocalStorage();
+  savePuttingState();
   closeCreativeCombineModal();
   renderExerciseList();
 }
@@ -3333,7 +3333,7 @@ function saveNewParcours() {
     totalMeters: Math.round(totalMeters * 10) / 10,
     holes: JSON.parse(JSON.stringify(f.rows)),
   });
-  saveStateToLocalStorage();
+  savePuttingState();
   closeNewParcoursModal();
   renderParcoursHistory();
   showToast('Parcours enregistré');
