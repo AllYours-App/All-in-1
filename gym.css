@@ -1780,7 +1780,7 @@ body.gym-home-locked {
   position: absolute;
   inset: 0;
   background-color: var(--gym-bg);
-  background-image: url('images/FondGymHeader.png');
+  background-image: url('images/FondGymHeader.webp');
   background-size: cover;
   background-position: right center;
 }
@@ -1894,10 +1894,10 @@ body.gym-home-locked {
   background-color: transparent;
 }
 
-.feature-card__media--programmes { background-image: url('images/FondBoutonProgrammes.png'); background-size: cover; background-position: center; }
-.feature-card__media--exercices { background-image: url('images/FondBoutonExercices.png'); background-size: cover; background-position: center; }
-.feature-card__media--historique { background-image: url('images/FondBoutonHistorique.png'); background-size: cover; background-position: center; }
-.feature-card__media--progression { background-image: url('images/FondBoutonProgression.png'); background-size: cover; background-position: center; }
+.feature-card__media--programmes { background-image: url('images/FondBoutonProgrammes.webp'); background-size: cover; background-position: center; }
+.feature-card__media--exercices { background-image: url('images/FondBoutonExercices.webp'); background-size: cover; background-position: center; }
+.feature-card__media--historique { background-image: url('images/FondBoutonHistorique.webp'); background-size: cover; background-position: center; }
+.feature-card__media--progression { background-image: url('images/FondBoutonProgression.webp'); background-size: cover; background-position: center; }
 
 .feature-card__media::after {
   content: "";

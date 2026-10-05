@@ -2119,7 +2119,7 @@ function escHtml(t) {
 
 // Images de putt en arrière-plan : une image par catégorie de pente (8 au total)
 const QUICK_PUTT_IMAGE_DIR = 'images/'; // dossier ou URL de base des images (avec "/" final)
-const QUICK_PUTT_IMAGE_EXT = '.png';    // extension des fichiers
+const QUICK_PUTT_IMAGE_EXT = '.webp';   // extension des fichiers
 // Même ordre que PENTE_LABELS : Descente, Descente D→G, D→G, Montée D→G, Montée, Montée G→D, G→D, Descente G→D
 const QUICK_PUTT_IMAGE_NAMES = ['GreenPuttP', 'GreenPuttPDG', 'GreenPuttDG', 'GreenPuttMDG', 'GreenPuttM', 'GreenPuttMGD', 'GreenPuttGD', 'GreenPuttPGD'];
 

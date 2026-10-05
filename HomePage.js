@@ -11,10 +11,10 @@ function setProgressRing(ratio) {
 // Retourne le nom du fichier de fond selon l'heure de l'appareil
 function getBackgroundByHour() {
   const hour = new Date().getHours();
-  if (hour >= 7 && hour < 11) return "images/FondEcranHomePageMatin.png";
-  if (hour >= 11 && hour < 17) return "images/FondEcranHomePageMidi.png";
-  if (hour >= 17 && hour < 21) return "images/FondEcranHomePageSoir.png";
-  return "images/FondEcranHomePageNuit.png";
+  if (hour >= 7 && hour < 11) return "images/FondEcranHomePageMatin.webp";
+  if (hour >= 11 && hour < 17) return "images/FondEcranHomePageMidi.webp";
+  if (hour >= 17 && hour < 21) return "images/FondEcranHomePageSoir.webp";
+  return "images/FondEcranHomePageNuit.webp";
 }
 
 // Applique le fond correspondant sur le composant principal

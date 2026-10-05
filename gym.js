@@ -4093,13 +4093,13 @@ function gymRenderDualChart(points, series, selected) {
 
 (function () {
   function renderHero(program) {
-    // Image selon l'objectif : images/ProgrammeForce.png, ProgrammeEndurance.png,
-    // ProgrammeHypertrophie.png, ProgrammeVitesse.png
+    // Image selon l'objectif : images/ProgrammeForce.webp, ProgrammeEndurance.webp,
+    // ProgrammeHypertrophie.webp, ProgrammeVitesse.webp
     const goalId = program.goal || "";
     const imageName = `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
     document.getElementById("program-hero").innerHTML = `
       <div class="hero-photo">
-        <img class="hero-photo__image" src="images/${imageName}.png" alt="">
+        <img class="hero-photo__image" src="images/${imageName}.webp" alt="">
         <div class="hero-photo__content">
           <span class="gym-eyebrow">Programme</span>
           <h1 class="gym-title-xl" style="margin:6px 0 8px;">${program.name}</h1>

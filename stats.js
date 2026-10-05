@@ -2707,10 +2707,10 @@
      ======================================================================== */
 
   // Images de fond (dossier "images") : Green = FondGreenRond, Fairway = FondFairwaySaisieRapide.
-  // L'extension est détectée automatiquement parmi IMAGE_EXT.
+  // Les images sont en WebP : IMAGE_EXT ne contient que 'webp' pour éviter des requêtes 404 sur les autres extensions.
   const GREEN_BG_BASE = 'images/FondGreenRond';
   const FAIRWAY_BG_BASE = 'images/FondFairwaySaisieRapide';
-  const IMAGE_EXT = ['png', 'webp', 'jpg', 'jpeg', 'svg', 'PNG', 'WEBP', 'JPG', 'JPEG', 'SVG'];
+  const IMAGE_EXT = ['webp'];
 
   // Renvoie (en promesse) l'URL de la première image existante, ou null
   function findImage(base) {

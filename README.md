@@ -111,7 +111,7 @@ menu.js
 auth.js             (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=15`), à incrémenter partout à chaque déploiement qui modifie un fichier.
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=16`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=16` par le numéro suivant dans toutes les balises).
 
 ### Dépendances externes
 
@@ -133,13 +133,12 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 `base.css` : reset, tokens `:root` (dont les couleurs `--wg-*` partagées par tous les modules), règles globales. `commun.css` : composants partagés (`.app-keypad`, `.app-keypad-value`, en-têtes de page, etc.).
 
 ### `sg-data.js` et `strokes-gained.js`
-Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence `SG_BASELINES` (lies `tee`, `fairway`, `rough`, `sand`, `recovery`, `green` ; yards sauf `green` en pieds), extraites du dépôt `dgtaillie/python_strokes_gained`. `strokes-gained.js` convertit les mètres, interpole (`sgExpected`) et calcule le SG d'un coup (`sgShot`). Aucune dépendance au DOM. C'est le seul endroit où vivent des tables SG : `putting.js`, `wedging.js` et `stats.js` l'appellent.
-Seul `putting.js` l'appelle aujourd'hui (`sgShot('green', ...)`).
+Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence `SG_BASELINES` (lies `tee`, `fairway`, `rough`, `sand`, `recovery`, `green` ; yards sauf `green` en pieds), extraites du dépôt `dgtaillie/python_strokes_gained`. `strokes-gained.js` convertit les mètres, interpole (`sgExpected`) et calcule le SG d'un coup (`sgShot`). Aucune dépendance au DOM. C'est le seul endroit où vivent des tables SG : `putting.js`, `wedging.js` et `stats.js` l'appellent. Sous 10 yd (9,1 m), les tables fairway / rough / sand sont plafonnées à leur valeur à 10 yd (la source n'a pas de points plus courts).
 
 ## Modules
 
 ### `HomePage.js` / `HomePage.css`
-Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.png`), prénom du profil (lu dans `golfAppState`), panneau de stats via `[data-stat="..."]` (`renderGolfStats(data)`, anneau de progression `setProgressRing`). Expose `window.renderHomeGreeting` (rappelée par `menu.js`) et `window.renderGolfStats`.
+Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), panneau de stats via `[data-stat="..."]` (`renderGolfStats(data)`, anneau de progression `setProgressRing`). Expose `window.renderHomeGreeting` (rappelée par `menu.js`) et `window.renderGolfStats`.
 
 ### `auth.js` / `auth.css`
 Connexion et création de compte. La session est uniquement la clé `golfSession` du `localStorage` (`{ email, createdAt }`) : aucun serveur, la validation ne vérifie que le format de l'e-mail et la longueur du mot de passe (8 caractères minimum à l'inscription). Choisit la page de départ (`home` si session, sinon `login`), expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`). Réutilise `getBackgroundByHour()` de `HomePage.js`.
@@ -157,7 +156,7 @@ Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessio
 Sauvegarde : `savePuttingState()` / `loadPuttingState()`. `importPuttingRoundFromStats(data)` (exposée sur `window`) crée une partie `source: 'stats'` à partir d'une partie saisie en détaillé dans `stats.js` ; elle est dédoublonnée par `statsKey`.
 
 ### `wedging.js` / `wedging.css`
-SPA autonome (7 sections : constantes, `WedgeStorage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 50 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Calcule son SG avec ses propres tables (rough et putts), sans passer par `strokes-gained.js`.
+SPA autonome (7 sections : constantes, `WedgeStorage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 50 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Calcule son SG avec `sgExpected('rough' | 'green', m)` de `strokes-gained.js`.
 La limite haute d'un coup de wedge est la constante `WEDGE_MAX_DISTANCE` (110 m, comprise) : elle construit `WEDGE_BUCKETS` (derniers paliers : 105-109m puis 110m, libellés par `wedgeBucketLabel`) et `stats.js` la lit pour classer ses coups. `importWedgeShotsFromStats(list)` (exposée sur `window`) ajoute au Journal les coups venant de Stats (`source: 'stats'`, dédoublonnés par `statsKey`).
 
 ### `gym.js` / `gym.css`
@@ -171,7 +170,8 @@ IIFE unique. Composants (sparkline, KPI, filtres, graphiques Chart.js), écrans 
 Placeholder : affiche "Fonctionnalités à venir".
 
 ### `images/`
-Fonds d'accueil (matin, midi, soir, nuit), fonds de boutons, illustrations de putts (`GreenPutt*.png`), programmes de gym, popup de reprise.
+Fonds d'accueil (matin, midi, soir, nuit), fonds de boutons, illustrations de putts (`GreenPutt*`), programmes de gym, popup de reprise. Tous les fichiers sont en WebP et le code ne lit plus que des `.webp` : `HomePage.js`, `gym.js`, `gym.css`, `putting.js` (`QUICK_PUTT_IMAGE_EXT`) et `stats.js` (`IMAGE_EXT`). Les `.png` ne sont plus utilisés.
+Non référencés dans le code (à confirmer avant suppression) : `FondEcranBoutonDenivele`, `FondEcranBoutonDistance`, `FondEcranBoutonVent`, `popupareprendre`.
 
 ## Données persistées (`localStorage`)
 
@@ -191,25 +191,9 @@ Fonds d'accueil (matin, midi, soir, nuit), fonds de boutons, illustrations de pu
 
 Constats faits en lisant le code, classés par gravité. À confirmer en conditions réelles.
 
-1. ~~Conflit de noms entre `putting.js` et `menu.js`~~ : résolu, voir "Problèmes résolus".
-2. ~~Deux écrivains sur les encadrés de l'accueil~~ : résolu, voir "Problèmes résolus".
-3. **Authentification factice.** Tout e-mail valide et tout mot de passe de 8 caractères ou plus ouvre une session (`TODO` dans `auth.js`). Aucune donnée n'est liée à un compte : deux utilisateurs sur le même navigateur partagent tout.
-4. **Stats encore peu relié aux autres modules.** `stats.js` lit uniquement `golfStatsRounds` (ses propres parties) et le sac de `menu.js` ; il ne lit ni `putting_*`, ni `parcours-*`, ni `wedging*`. Il y écrit désormais (voir "Problèmes résolus", n° 3), mais dans un seul sens : un coup supprimé dans Wedging ou Putting reste dans Stats, et les parties saisies avant cette fonctionnalité ne sont pas rétro-importées.
-5. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage. Une partie détaillée de Stats est maintenant copiée dans `putting_rounds`, mais les deux saisies restent distinctes.
-6. ~~Strokes Gained dupliqué~~ : résolu, voir "Problèmes résolus".
-7. **Couplage par `typeof` sur des globales de `menu.js`.** `parcours-ui.js` et `stats.js` testent `typeof golfBag` / `golfClubCatalog` / `personalDistances`. Cela fonctionne tant que le scope global est partagé, mais casse silencieusement si une variable est renommée.
-8. **Noms globaux génériques.** `root` (`putting.js`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Aucune collision aujourd'hui (voir "Problèmes résolus", n° 5), mais le risque reste à chaque nouveau fichier : préfixer les nouveaux noms globaux.
-9. ~~Commentaires périmés~~ : résolu, voir "Problèmes résolus".
-10. ~~Cache~~ : résolu, voir "Problèmes résolus".
-11. **Taille des fichiers.** `gym.js` (6071 lignes, 408 Ko), `stats.js` (3672), `putting.js` (3732), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) : tout est chargé au démarrage, y compris les parties jamais ouvertes.
-
-## Problèmes résolus
-
-1. **Conflit de noms `putting.js` / `menu.js`.** Les deux déclaraient `saveStateToLocalStorage()` et `loadStateFromLocalStorage()` ; celles de `menu.js` (chargé après) remplaçaient celles de Putting, qui écrivaient alors dans `golfAppState` au lieu de `putting_combines` / `putting_sessions` / `putting_rounds`. Renommées : `savePuttingState` / `loadPuttingState` (`putting.js`) et `saveMenuState` / `loadMenuState` (`menu.js`). Aucun autre fichier n'utilisait les anciens noms.
-2. **Encadrés de l'accueil remis à "_".** `HomePage.js` appelait `renderGolfStats()` sans données au `DOMContentLoaded`, ce qui effaçait ce que `putting.js` venait d'écrire. `HomePage.js` rappelle maintenant `window.renderGolfHome()` juste après. Distance moyenne et Index restent à "_" tant qu'aucune source ne les alimente.
-3. **Stats relié à Wedging et Putting.** La saisie détaillée de Stats envoie ses coups de wedge (50 à 110 m compris) au Journal Wedging et ses premiers putts à Putting (voir `stats.js`, `wedging.js`, `putting.js`). L'accueil affiche "Parcours" comme dernière séance quand elle vient de Stats.
-4. **Limite du wedge incohérente.** Stats classait "wedging" jusqu'à 100 m et le Journal Wedging allait jusqu'à 109 m. Une seule constante, `WEDGE_MAX_DISTANCE` (110 m, comprise) dans `wedging.js`, sert aux deux ; le Journal a un palier "110m" en plus.
-5. **Collisions de noms globaux.** Scan de toutes les déclarations racine des 13 scripts : plus aucun nom déclaré dans deux fichiers (les deux conflits de `saveStateToLocalStorage` / `loadStateFromLocalStorage` étaient les seuls). `Storage` (`wedging.js`) masquait l'interface Web `Storage` : renommé `WedgeStorage` (utilisé uniquement dans `wedging.js`). Reste un `id="headerRightBtn"` présent dans `putting.js` et `wedging.js` : aucun code ne le lit, sans effet.
-6. **Commentaires périmés (point 9).** `auth.js` ne dit plus que `app-shell.js` se charge après lui. L'événement `parcours:ready` (`parcours-ui.js`), sans écouteur, est annoté comme point d'accroche.
-7. **Cache (point 10).** Tous les CSS et JS locaux de `index.html` ont le même paramètre `?v=15` (avant : seulement `parcours-ui` et `stats`). Pour forcer le rechargement après un déploiement, remplacer `?v=15` par le numéro suivant dans toutes les balises.
-8. **Strokes Gained dupliqué (point 6).** `sg-data.js` vérifié point par point contre les `data/*.txt` du dépôt `dgtaillie/python_strokes_gained` (342 points, 0 écart) ; `strokes-gained.js` : conversions et interpolation justes. `wedging.js` (tables putting et rough) et `stats.js` (`SG_BASE`, `SG_PUTT_FT`, `interpTable`) avaient leurs propres tables, approximatives (jusqu'à 0,15 coup d'écart ; la table putting de Wedging n'était pas croissante) : supprimées. `wedging.js` appelle `sgExpected('rough' | 'green', m)` et `stats.js` traduit ses lies (`Tee`, `Fairway`, `Rough`, `Bunker`, `Green`) vers ceux du moteur (`SG_LIE_KEY`). Conséquence : le SG affiché change légèrement, et sous 10 yd (9,1 m) les tables fairway / rough / sand sont plafonnées à leur valeur à 10 yd (celles de Stats descendaient à 5 yd, points qui n'existaient pas dans la source).
+1. **Authentification factice.** Tout e-mail valide et tout mot de passe de 8 caractères ou plus ouvre une session (`TODO` dans `auth.js`). Aucune donnée n'est liée à un compte : deux utilisateurs sur le même navigateur partagent tout.
+2. **Stats peu relié aux autres modules.** `stats.js` lit uniquement `golfStatsRounds` (ses propres parties) et le sac de `menu.js` ; il ne lit ni `putting_*`, ni `parcours-*`, ni `wedging*`. Il écrit dans Wedging et Putting, mais dans un seul sens : un coup supprimé dans Wedging ou Putting reste dans Stats, et les parties saisies avant cette fonctionnalité ne sont pas rétro-importées.
+3. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage. Une partie détaillée de Stats est copiée dans `putting_rounds`, mais les deux saisies restent distinctes.
+4. **Couplage par `typeof` sur des globales de `menu.js`.** `parcours-ui.js` et `stats.js` testent `typeof golfBag` / `golfClubCatalog` / `personalDistances`. Cela fonctionne tant que le scope global est partagé, mais casse silencieusement si une variable est renommée.
+5. **Noms globaux génériques.** `root` (`putting.js`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Aucune collision aujourd'hui, mais le risque reste à chaque nouveau fichier : préfixer les nouveaux noms globaux. Un `id="headerRightBtn"` est présent dans `putting.js` et `wedging.js` : aucun code ne le lit, sans effet.
+6. **Taille des fichiers.** Images : les 27 PNG pesaient environ 54 Mo (1,5 à 3,2 Mo chacun), elles sont passées en WebP. Les `.webp` doivent être présents dans `images/` au même nom (sinon les fonds ne s'affichent plus). JS / CSS, toujours à traiter : `gym.js` (6071 lignes, 408 Ko), `stats.js` (3708), `putting.js` (3779), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) sont chargés au démarrage, y compris les parties jamais ouvertes.
