@@ -1153,6 +1153,15 @@ select:focus-visible,
   color: var(--gym-text-muted);
 }
 
+/* Pavé numérique (bottom sheet) : l'icône Effacer est un SVG sans taille propre,
+   sans cette règle elle s'étire sur toute la touche */
+#keypad-grid button svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+}
+
 /* Champs readonly ouvrant le pavé numérique (voir gymOpenKeypad) */
 .gym-app input[readonly] {
   cursor: pointer;

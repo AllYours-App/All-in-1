@@ -347,7 +347,7 @@
    à renseigner par module, contrairement au header/nav ci-dessus.
    Ajouter le sélecteur #page-X ci-dessous à chaque module qui l'adopte.
    --------------------------------------------------------------------------- */
-:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu) .app-keypad-value {
+:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu, #page-stats) .app-keypad-value {
   font-size: 32px;
   font-weight: 700;
   text-align: center;
@@ -355,14 +355,14 @@
   margin: 8px 0 16px;
 }
 
-:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu) .app-keypad {
+:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu, #page-stats) .app-keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 14px;
 }
 
-:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu) .app-keypad button {
+:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu, #page-stats) .app-keypad button {
   background: var(--wg-bg);
   border: 1px solid var(--wg-border);
   color: var(--wg-text);

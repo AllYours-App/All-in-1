@@ -2552,6 +2552,7 @@ html {
   text-align: left;
 }
 #page-stats .saisie-detaillee_input::placeholder { color: var(--color-text-tertiary); }
+#page-stats .saisie-detaillee_input[readonly] { cursor: pointer; caret-color: transparent; }
 #page-stats .saisie-detaillee_unit {
   font-size: var(--fs-md);
   color: var(--color-text-secondary);
@@ -2712,6 +2713,19 @@ html {
   cursor: pointer;
 }
 #page-stats .saisie-detaillee_popup-close svg { width: 14px; height: 14px; }
+#page-stats .saisie-detaillee_popup-confirm {
+  min-height: 44px;
+  padding: 0 var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
 #page-stats .saisie-detaillee_result-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

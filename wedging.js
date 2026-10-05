@@ -185,8 +185,8 @@ const UI = (function () {
   }
   function navCards(active) {
     return `<nav class="wg-nav-cards">
-      <div class="wg-nav-card ${active === "parcours" ? "active" : ""}" onclick="Router.go('parcours')"><div class="wg-nav-card-head">${ICONS.flag}<span class="wg-nav-card-title">PARCOURS</span></div><span class="wg-nav-card-desc">Saisie réelle ou test</span></div>
-      <div class="wg-nav-card ${active === "exercices" ? "active" : ""}" onclick="Router.go('exercices')"><div class="wg-nav-card-head">${ICONS.target}<span class="wg-nav-card-title">EXERCICES</span></div><span class="wg-nav-card-desc">Entraînement structuré</span></div>
+      <div class="wg-nav-card ${active === "parcours" ? "active" : ""}" onclick="Router.go('parcours')"><div class="wg-nav-card-head">${ICONS.flag}<span class="wg-nav-card-title">PARCOURS</span></div></div>
+      <div class="wg-nav-card ${active === "exercices" ? "active" : ""}" onclick="Router.go('exercices')"><div class="wg-nav-card-head">${ICONS.target}<span class="wg-nav-card-title">EXERCICES</span></div></div>
     </nav>`;
   }
   // Barre basse : Toile d'araignée / Jauges / SG — le Journal (Parcours) n'y figure pas,

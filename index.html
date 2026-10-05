@@ -7,20 +7,30 @@
 <script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
-<link rel="stylesheet" href="base.css?v=17">
-<link rel="stylesheet" href="commun.css?v=17">
-<link rel="stylesheet" href="HomePage.css?v=17">
-<link rel="stylesheet" href="parcours-ui.css?v=17">
-<link rel="stylesheet" href="wedging.css?v=17">
-<link rel="stylesheet" href="gym.css?v=17">
-<link rel="stylesheet" href="putting.css?v=17">
-<link rel="stylesheet" href="vitesse.css?v=17">
-<link rel="stylesheet" href="stats.css?v=17">
-<link rel="stylesheet" href="menu.css?v=17">
-<link rel="stylesheet" href="auth.css?v=17">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="base.css?v=19">
+<link rel="stylesheet" href="commun.css?v=19">
+<link rel="stylesheet" href="HomePage.css?v=19">
+<link rel="stylesheet" href="parcours-ui.css?v=19">
+<link rel="stylesheet" href="wedging.css?v=19">
+<link rel="stylesheet" href="gym.css?v=19">
+<link rel="stylesheet" href="putting.css?v=19">
+<link rel="stylesheet" href="vitesse.css?v=19">
+<link rel="stylesheet" href="stats.css?v=19">
+<link rel="stylesheet" href="menu.css?v=19">
+<link rel="stylesheet" href="auth.css?v=19">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 </head>
 <body>
+
+<!-- Écran de secours : affiché uniquement en paysage, sur téléphone, quand l'appli est installée (mode standalone) -->
+<div class="orientation-lock_component" aria-hidden="true">
+  <svg class="orientation-lock_icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="2" width="10" height="20" rx="2"></rect>
+    <line x1="11" y1="18" x2="13" y2="18"></line>
+  </svg>
+  <p class="orientation-lock_text">Remets ton téléphone en mode portrait</p>
+</div>
 
 <!-- ============================ PARTIE : HOME ============================ -->
 <div id="page-home" class="app-page">
@@ -876,20 +886,20 @@
           </button>
         </div>
 
-        <!-- Distance restante après le coup : clavier numérique natif -->
+        <!-- Distance restante après le coup : pavé numérique de l'appli (popup) -->
         <div class="saisie-detaillee_group">
           <span class="saisie-detaillee_label">Distance restante</span>
           <label class="saisie-detaillee_field is-input">
-            <input class="saisie-detaillee_input" data-sd="distance" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="--" aria-label="Distance restante en mètres">
+            <input class="saisie-detaillee_input" data-sd="distance" type="text" inputmode="none" readonly autocomplete="off" placeholder="--" aria-label="Distance restante en mètres">
             <span class="saisie-detaillee_unit">m</span>
           </label>
         </div>
 
-        <!-- Pénalité : clavier numérique natif (masquée quand le lie est Green) -->
+        <!-- Pénalité : pavé numérique de l'appli (masquée quand le lie est Green) -->
         <div class="saisie-detaillee_group" data-sd="penalty-group">
           <span class="saisie-detaillee_label">Pénalité</span>
           <label class="saisie-detaillee_field is-input">
-            <input class="saisie-detaillee_input" data-sd="penalty" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="0" aria-label="Pénalité">
+            <input class="saisie-detaillee_input" data-sd="penalty" type="text" inputmode="none" readonly autocomplete="off" value="0" aria-label="Pénalité">
           </label>
         </div>
 
@@ -1222,19 +1232,27 @@
     if (x < 16 || x > window.innerWidth - 16) e.preventDefault();
   }, { passive: false });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+
+  // Verrouille l'orientation en portrait, uniquement quand l'appli est installée (pas dans l'onglet du navigateur)
+  try {
+    var isInstalledApp = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    if (isInstalledApp && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait').catch(function () {});
+    }
+  } catch (e) {}
 </script>
-<script src="app-shell.js?v=17"></script>
-<script src="commun.js?v=17"></script>
-<script src="sg-data.js?v=17"></script>
-<script src="strokes-gained.js?v=17"></script>
-<script src="HomePage.js?v=17"></script>
-<script src="parcours-ui.js?v=17"></script>
-<script src="wedging.js?v=17"></script>
-<script src="gym.js?v=17"></script>
-<script src="putting.js?v=17"></script>
-<script src="vitesse.js?v=17"></script>
-<script src="stats.js?v=17"></script>
-<script src="menu.js?v=17"></script>
-<script src="auth.js?v=17"></script>
+<script src="app-shell.js?v=19"></script>
+<script src="commun.js?v=19"></script>
+<script src="sg-data.js?v=19"></script>
+<script src="strokes-gained.js?v=19"></script>
+<script src="HomePage.js?v=19"></script>
+<script src="parcours-ui.js?v=19"></script>
+<script src="wedging.js?v=19"></script>
+<script src="gym.js?v=19"></script>
+<script src="putting.js?v=19"></script>
+<script src="vitesse.js?v=19"></script>
+<script src="stats.js?v=19"></script>
+<script src="menu.js?v=19"></script>
+<script src="auth.js?v=19"></script>
 </body>
 </html>

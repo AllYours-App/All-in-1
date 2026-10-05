@@ -847,7 +847,7 @@ document.getElementById("app-root-gym").innerHTML = `
       </label>
       <label class="field">
         <span id="icon-goal-target"></span>
-        <input type="text" id="goal-progress-input" inputmode="decimal" placeholder="Cible (ex. 12 séances)" />
+        <input type="text" id="goal-progress-input" inputmode="none" readonly placeholder="Cible (ex. 12 séances)" />
       </label>
       <button class="btn btn-primary" id="btn-create-goal">Créer l'objectif</button>
     </div>
@@ -6048,6 +6048,9 @@ function gymRenderDualChart(points, series, selected) {
   document.getElementById("goal-sheet-overlay").addEventListener("click", closeGoalSheet);
   document.getElementById("goal-sheet-close").addEventListener("click", closeGoalSheet);
   document.getElementById("btn-create-goal").addEventListener("click", createGoal);
+  document.getElementById("goal-progress-input").addEventListener("click", () => {
+    gymOpenKeypad({ input: document.getElementById("goal-progress-input"), title: "Cible", decimal: true, min: 0 });
+  });
 
   function render() {
     fillIcons();

@@ -3566,24 +3566,71 @@
       afterChange();
     });
 
-    // Distance saisie au clavier (virgule ou point)
-    distInput.addEventListener('change', () => {
-      if (!round) return;
-      const raw = distInput.value.trim().replace(',', '.');
-      const v = parseFloat(raw);
-      shot().distance = raw === '' || Number.isNaN(v) ? null : Math.max(0, round1(v));
-      afterChange();
-    });
-    distInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') distInput.blur(); });
+    /* ---------- Popup pavé numérique (distance restante / pénalité) ----------
+       Utilise appKeypad() (commun.js) : les touches appellent des fonctions globales par leur nom,
+       préfixées statsSd pour éviter toute collision. */
+    const KEYPAD_FIELDS = {
+      distance: { title: 'Distance restante', unit: 'm', decimal: true },
+      penalty: { title: 'Pénalité', unit: '', decimal: false },
+    };
+    let keypad = null; // { field: 'distance' | 'penalty', value: '' } tant que le popup est ouvert
 
-    // Pénalité saisie au clavier numérique (0 à 9)
-    penaltyInput.addEventListener('change', () => {
-      if (!round) return;
-      const v = parseInt(penaltyInput.value, 10);
-      shot().penalty = Number.isNaN(v) ? 0 : Math.min(9, Math.max(0, v));
+    function keypadDisplay() {
+      const el = popupRoot.querySelector('[data-sd-keypad-value]');
+      if (!el || !keypad) return;
+      const unit = KEYPAD_FIELDS[keypad.field].unit;
+      el.textContent = keypad.value === '' ? '--' : keypad.value.replace('.', ',') + (unit ? ' ' + unit : '');
+    }
+
+    function renderKeypadPopup(field) {
+      const conf = KEYPAD_FIELDS[field];
+      const current = field === 'distance' ? shot().distance : shot().penalty;
+      keypad = { field, value: current === null || current === undefined ? '' : String(current) };
+      popupRoot.innerHTML = `
+        <div class="saisie-detaillee_popup-overlay">
+          <div class="saisie-detaillee_popup" role="dialog" aria-modal="true" aria-label="${conf.title}">
+            <div class="saisie-detaillee_popup-head">
+              <h3 class="saisie-detaillee_popup-title">${conf.title}</h3>
+              <button type="button" class="saisie-detaillee_popup-close" data-sd-popup-close aria-label="Fermer">
+                <svg viewBox="0 0 24 24" ${STROKE}><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            </div>
+            <div class="app-keypad-value" data-sd-keypad-value></div>
+            ${appKeypad('statsSdKeypadPress', 'statsSdKeypadBackspace', 'statsSdKeypadClear', conf.decimal ? { fn: 'statsSdKeypadDecimal', label: ',' } : null)}
+            <button type="button" class="saisie-detaillee_popup-confirm" onclick="statsSdKeypadConfirm()">Valider</button>
+          </div>
+        </div>`;
+      keypadDisplay();
+    }
+
+    window.statsSdKeypadPress = (key) => {
+      if (!keypad) return;
+      if (keypad.field === 'penalty') keypad.value = key; // un seul chiffre (0 à 9)
+      else if (keypad.value === '0') keypad.value = key;  // pas de zéro en tête
+      else if (/\.\d$/.test(keypad.value) || keypad.value.replace('.', '').length >= 5) return; // 1 décimale max, 5 chiffres max
+      else keypad.value += key;
+      keypadDisplay();
+    };
+    window.statsSdKeypadBackspace = () => { if (keypad) { keypad.value = keypad.value.slice(0, -1); keypadDisplay(); } };
+    window.statsSdKeypadClear = () => { if (keypad) { keypad.value = ''; keypadDisplay(); } };
+    window.statsSdKeypadDecimal = () => {
+      if (!keypad || keypad.field !== 'distance' || keypad.value.includes('.')) return;
+      keypad.value = (keypad.value === '' ? '0' : keypad.value) + '.';
+      keypadDisplay();
+    };
+    window.statsSdKeypadConfirm = () => {
+      if (!keypad || !round) return;
+      const v = parseFloat(keypad.value);
+      if (keypad.field === 'distance') shot().distance = Number.isNaN(v) ? null : Math.max(0, round1(v));
+      else shot().penalty = Number.isNaN(v) ? 0 : Math.min(9, Math.max(0, Math.trunc(v)));
+      keypad = null;
+      renderResultPopup(false);
       afterChange();
-    });
-    penaltyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') penaltyInput.blur(); });
+    };
+
+    // Distance et pénalité : un appui ouvre le pavé numérique de l'appli (pas de clavier natif)
+    distInput.addEventListener('click', () => { if (round) renderKeypadPopup('distance'); });
+    penaltyInput.addEventListener('click', () => { if (round) renderKeypadPopup('penalty'); });
 
     /* ---------- Navigation entre les trous ---------- */
     function go(step) {
