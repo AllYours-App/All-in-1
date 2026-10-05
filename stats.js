@@ -1172,12 +1172,66 @@
     };
   }
 
+  /* ---------- Passerelles vers Wedging et Putting (saisie détaillée uniquement) ----------
+     Seule la saisie détaillée connaît la distance avant chaque coup, la zone d'arrivée et la distance restante :
+     la saisie rapide n'a pas ces détails, elle n'alimente donc ni Wedging ni Putting.
+     Les conversions sont envoyées aux fonctions exposées par wedging.js et putting.js, qui gardent leurs données en mémoire. */
+  const WEDGE_SYNC_MIN = 50;    // m : début du premier palier du Journal Wedging
+  const WEDGE_SYNC_MAX = 110;   // m : borne exclue (le dernier palier du Journal est 105-109 m)
+  const wedgeBucketOf = (m) => Math.floor(m / 5) * 5;   // 53 m → palier 50 (affiché 50-54 m)
+
+  // Coups de wedging d'un trou : distance à faire entre 50 et 109 m, hors putt et hors pénalité,
+  // avec une zone d'arrivée exploitable (secteur du green ou hors green, ou balle rentrée)
+  function wedgeShotsOfHole(H, roundId, date) {
+    const out = [];
+    H.shots.forEach((S) => {
+      if (S.cat === 'putting' || S.cat === 'driving' || S.lie === 'Green' || S.club === 'Putter') return;
+      if (S.penalty > 0 || S.before === null || S.after === null) return;
+      if (S.before < WEDGE_SYNC_MIN || S.before >= WEDGE_SYNC_MAX) return;
+      // Coup rentré = "Green" côté Wedging ; sinon on garde la direction (Green-Droite / Hors-Droite → Droite)
+      const zone = S.holed ? 'Green' : String(S.zone || '').replace(/^(Green|Hors)-/, '');
+      if (zone !== 'Green' && !WHEEL_DIRECTIONS.includes(zone)) return;
+      out.push({
+        distanceToCover: wedgeBucketOf(S.before), zone, finalDistance: S.holed ? 0 : S.after,
+        date, statsKey: `${roundId}:${H.number}:${S.k}`,
+      });
+    });
+    return out;
+  }
+
+  // Premier putt d'un trou : distance (= distance restante du coup précédent), nombre de putts, résultat
+  function firstPuttOfHole(H) {
+    const first = H.shots.find((S) => S.cat === 'putting' && S.club === 'Putter');
+    if (!first || !(first.before > 0) || !(H.putts >= 1)) return null;
+    // Putting note "made" uniquement pour un 1 putt ; sinon la direction du manque (peut rester vide)
+    const resultat = H.putts === 1 ? 'made' : (first.result && first.result !== 'made' ? first.result : null);
+    return { hole: H.number, m: rnd(first.before, 1), putts: H.putts, resultat };
+  }
+
+  function syncRoundToModules(saved) {
+    const holes = saved.holes.map((h, i) => expandHole({}, h, i));
+    if (!holes.some((H) => H.shots.length)) return; // saisie rapide : rien à envoyer
+
+    const wedgeShots = holes.flatMap((H) => wedgeShotsOfHole(H, saved.id, saved.date));
+    if (wedgeShots.length && typeof window.importWedgeShotsFromStats === 'function') {
+      window.importWedgeShotsFromStats(wedgeShots);
+    }
+
+    const puttHoles = holes.map(firstPuttOfHole).filter(Boolean);
+    if (puttHoles.length && typeof window.importPuttingRoundFromStats === 'function') {
+      window.importPuttingRoundFromStats({ statsKey: saved.id, name: saved.course, dateISO: saved.date, holes: puttHoles });
+    }
+  }
+
   function saveFinishedRound(round) {
     if (!round || round._saved || !Array.isArray(round.holes)) return;
     round._saved = true;
-    savedRounds.push(buildSavedRound(round));
+    const saved = buildSavedRound(round);
+    savedRounds.push(saved);
     persistRounds();
     dataVersion++;
+    // Un échec de synchro ne doit jamais empêcher l'enregistrement de la partie dans Stats
+    try { syncRoundToModules(saved); } catch (err) { console.warn('Synchro Wedging/Putting impossible :', err); }
   }
   document.addEventListener('stats:round-finished', (e) => saveFinishedRound(e.detail));
 

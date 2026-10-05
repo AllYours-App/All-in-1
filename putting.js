@@ -1292,8 +1292,11 @@ function renderGolfHome() {
   const lastSec = q('last-session-secondary');
   if (dates.length) {
     const lastISO = dates.slice().sort().pop();
+    // Une partie saisie dans Stats (source 'stats') est une partie sur le parcours, pas du putting
+    const lastIsStatsRound = puttingRounds.some(function (r) { return r.dateISO === lastISO && r.source === 'stats'; })
+      && !puttingSessions.some(function (s) { return s.dateISO === lastISO; });
     if (lastVal) lastVal.textContent = relativeDayLabel(lastISO);
-    if (lastSec) lastSec.textContent = 'Putting';
+    if (lastSec) lastSec.textContent = lastIsStatsRound ? 'Parcours' : 'Putting';
   } else {
     if (lastVal) lastVal.textContent = '--';
     if (lastSec) lastSec.textContent = '';
@@ -3338,6 +3341,50 @@ function saveNewParcours() {
   renderParcoursHistory();
   showToast('Parcours enregistré');
 }
+
+// Import depuis Stats (saisie détaillée) : une partie = un "Parcours" Putting en mode Détaillée.
+// Reçoit { statsKey, name, dateISO, holes: [{ hole, m, putts, resultat }] } (un trou par premier putt).
+// Pas de pente (clock) côté Stats : elle reste à null, ces trous sont ignorés de l'analyse par pente.
+function importPuttingRoundFromStats(data) {
+  if (!data || !data.statsKey || !Array.isArray(data.holes)) return false;
+  if (puttingRounds.some(function (r) { return r.statsKey === data.statsKey; })) return false;
+
+  const validResults = PARCOURS_RESULTAT_GRID.map(function (o) { return o.value; });
+  const rows = data.holes
+    .filter(function (h) { return h && h.m > 0 && Number.isInteger(h.putts) && h.putts >= 1; })
+    .map(function (h) {
+      return {
+        hole: h.hole,
+        m: Math.round(h.m * 10) / 10,
+        clock: null,
+        putts: h.putts,
+        resultat: validResults.indexOf(h.resultat) !== -1 ? h.resultat : null,
+      };
+    });
+  if (!rows.length) return false;
+
+  const usedIds = puttingRounds.map(function (r) { return r.id; });
+  let id = Date.now();
+  while (usedIds.indexOf(id) !== -1) id++;
+
+  puttingRounds.push({
+    id: id,
+    name: data.name || 'Parcours',
+    dateISO: data.dateISO || new Date().toISOString(),
+    mode: 'complete',
+    holesCount: rows.length,
+    onePutts: rows.filter(function (r) { return r.putts === 1; }).length,
+    threePutts: rows.filter(function (r) { return r.putts >= 3; }).length,
+    totalPutts: rows.reduce(function (sum, r) { return sum + r.putts; }, 0),
+    totalMeters: Math.round(rows.reduce(function (sum, r) { return sum + distanceForTotal(r.putts, r.m); }, 0) * 10) / 10,
+    holes: rows,
+    source: 'stats',
+    statsKey: data.statsKey,
+  });
+  savePuttingState(); // enregistre + rafraîchit les analyses et l'accueil
+  return true;
+}
+window.importPuttingRoundFromStats = importPuttingRoundFromStats;
 
 // --- Récap de fin de session (même esprit que le récap de l'exercice rapide) ---
 function renderNewParcoursRecapScreen() {

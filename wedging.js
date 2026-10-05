@@ -360,6 +360,39 @@ function addWedgeRound() {
 }
 function deleteWedgeRound(id) { wedgeRounds = wedgeRounds.filter(w => w.id !== id); persistWedgeRounds(); rerender(); }
 
+// Import depuis Stats (saisie détaillée) : reçoit des coups déjà convertis au format du Journal
+// { distanceToCover (palier de 5 m), zone, finalDistance, date, statsKey }.
+// Passe par la mémoire de ce module (wedgeRounds) : écrire directement dans le localStorage serait
+// écrasé au prochain persistWedgeRounds(). statsKey évite d'importer deux fois le même coup.
+function importWedgeShotsFromStats(list) {
+  if (!Array.isArray(list) || !list.length) return 0;
+  const knownKeys = new Set(wedgeRounds.map(w => w.statsKey).filter(Boolean));
+  const usedIds = new Set(wedgeRounds.map(w => w.id));
+  let nextId = Date.now();
+  let added = 0;
+  list.forEach(s => {
+    if (!s || !s.statsKey || knownKeys.has(s.statsKey)) return;
+    // Mêmes contraintes que la saisie manuelle : palier connu, zone connue, distance finale valide
+    if (!WEDGE_BUCKETS.includes(s.distanceToCover) || !WEDGE_ZONES.includes(s.zone)) return;
+    if (typeof s.finalDistance !== 'number' || !isFinite(s.finalDistance) || s.finalDistance < 0) return;
+    while (usedIds.has(nextId)) nextId++;
+    usedIds.add(nextId);
+    knownKeys.add(s.statsKey);
+    wedgeRounds.push({
+      id: nextId, date: s.date || new Date().toISOString(),
+      distanceToCover: s.distanceToCover, zone: s.zone, finalDistance: s.finalDistance,
+      source: 'stats', statsKey: s.statsKey
+    });
+    added++;
+  });
+  if (added) {
+    persistWedgeRounds();
+    if (document.getElementById('app')) Router.render(); // la vue Wedging reste à jour même masquée
+  }
+  return added;
+}
+window.importWedgeShotsFromStats = importWedgeShotsFromStats;
+
 function wedgeBucketFor(distance) { return Math.round(distance / 5) * 5; }
 function wedgeLimitedRounds() {
   const sorted = wedgeRounds.slice().sort((a, b) => b.id - a.id);
