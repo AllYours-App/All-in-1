@@ -2641,19 +2641,25 @@ body.gym-home-locked {
 /* ---- Actions basses --------------------------------------------------------- */
 
 .session-actions {
-  flex: 0 0 auto;
   display: flex;
   gap: 10px;
-  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--gym-border);
+  margin-top: auto; /* collé en bas d'écran s'il y a peu de séries, sinon après la dernière carte */
+  padding-top: 8px;
+}
+
+.session-main {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+#session-content {
+  flex: 1 1 auto;
 }
 
 @media (max-width: 400px) {
   .session-actions {
     gap: 8px;
-    padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
   }
-  
+
   .gym-app .session-actions .btn {
     padding: 14px 12px;
     font-size: 13px;
@@ -2663,14 +2669,13 @@ body.gym-home-locked {
 @media (max-width: 360px) {
   .session-actions {
     gap: 6px;
-    padding: 8px 14px calc(12px + env(safe-area-inset-bottom, 0px));
   }
-  
+
   .gym-app .session-actions .btn {
     padding: 12px 10px;
     font-size: 12px;
   }
-  
+
   .gym-app .session-actions .btn svg {
     width: 16px;
     height: 16px;

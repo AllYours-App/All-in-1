@@ -537,20 +537,20 @@ document.getElementById("app-root-gym").innerHTML = `
 
             <div class="session-sets-list" id="session-sets-list"></div>
 
+            <div class="session-actions" id="session-actions" style="display:none;">
+              <button type="button" class="btn btn-secondary session-actions__finish" id="btn-finish-session">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Terminer la séance
+              </button>
+              <button type="button" class="btn btn-primary session-actions__next" id="btn-next-series">
+                <span id="session-next-label">Exercice suivant</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+
           </div>
 
         </main>
-
-        <div class="session-actions" id="session-actions" style="display:none;">
-          <button type="button" class="btn btn-secondary session-actions__finish" id="btn-finish-session">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Terminer la séance
-          </button>
-          <button type="button" class="btn btn-primary session-actions__next" id="btn-next-series">
-            <span id="session-next-label">Série suivante</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
 
       </div>
     </section>
@@ -5170,10 +5170,8 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function updateNextButtonLabel() {
-    const exo = currentExercise();
-    const exerciseComplete = !exo.sets.some((s) => s.status === "en-cours");
     const isLastExercise = state.exerciseIndex === state.exercises.length - 1;
-    document.getElementById("session-next-label").textContent = exerciseComplete && isLastExercise ? "Terminer la séance" : "Série suivante";
+    document.getElementById("session-next-label").textContent = isLastExercise ? "Terminer la séance" : "Exercice suivant";
   }
 
   function renderSetsList() {
@@ -5218,7 +5216,20 @@ function gymRenderDualChart(points, series, selected) {
 
     list.querySelectorAll('[data-field="weight"]').forEach((input) => {
       input.addEventListener("input", (e) => {
-        exo.sets[Number(e.target.dataset.setIndex)].weight = e.target.value;
+        const index = Number(e.target.dataset.setIndex);
+        const set = exo.sets[index];
+        set.weight = e.target.value;
+
+        // Poids saisi sur la série en cours : on la valide et on passe à la suivante.
+        // Pas d'enchaînement sur la dernière série ni sur un exercice chronométré.
+        const next = exo.sets[index + 1];
+        if (!next || exo.timed || set.status !== "en-cours" || set.weight === "") return;
+        set.valid = true;
+        set.status = "terminee";
+        if (!set.reps) set.reps = set.target;
+        if (next.status === "a-venir") next.status = "en-cours";
+        renderSummary();
+        renderSetsList();
       });
       input.addEventListener("click", () => {
         gymOpenKeypad({ input, title: "Poids (kg)", decimal: true, min: 0 });
@@ -5294,31 +5305,21 @@ function gymRenderDualChart(points, series, selected) {
     renderSummary();
   }
 
-  /* ---- Actions basses : série suivante / terminer la séance ---------------------- */
+  /* ---- Actions basses : exercice suivant / terminer la séance ---------------------- */
 
   /**
-   * Valide la série en cours et passe à la suivante ; enchaîne sur
-   * l'exercice suivant une fois toutes les séries validées, ou termine la
-   * séance si c'était le dernier exercice.
+   * Valide la dernière série si elle est en cours, puis passe à l'exercice
+   * suivant (ou termine la séance si c'était le dernier exercice).
    */
-  function goToNextSeries() {
+  function goToNextExercise() {
     const exo = currentExercise();
     const current = exo.sets.find((s) => s.status === "en-cours");
 
-    if (current) {
-      const index = exo.sets.indexOf(current);
+    if (current && exo.sets.indexOf(current) === exo.sets.length - 1) {
       current.valid = true;
       current.status = "terminee";
-      if (exo.timed) settleTimedSet(exo, index);
+      if (exo.timed) settleTimedSet(exo, exo.sets.length - 1);
       else if (!current.reps) current.reps = current.target;
-      const next = exo.sets[index + 1];
-      if (next) {
-        next.status = "en-cours";
-        renderExerciseHero();
-        renderSummary();
-        renderSetsList();
-        return;
-      }
     }
 
     if (state.exerciseIndex < state.exercises.length - 1) {
@@ -5368,7 +5369,7 @@ function gymRenderDualChart(points, series, selected) {
     gymNavigate("seance-recap", { history: entry.id, from: "session" });
   }
 
-  document.getElementById("btn-next-series").addEventListener("click", goToNextSeries);
+  document.getElementById("btn-next-series").addEventListener("click", goToNextExercise);
 
   document.getElementById("btn-finish-session").addEventListener("click", () => {
     const totalSets = state.exercises.reduce((sum, e) => sum + e.sets.length, 0);
