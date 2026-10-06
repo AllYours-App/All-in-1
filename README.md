@@ -52,11 +52,11 @@ Entraînement et suivi du putting :
 Tableau de bord des performances, rempli à partir des parties que le joueur saisit lui-même :
 - **Tableau de bord** : Strokes Gained global et par catégorie (Driving, A.G., Wedging, Approches, Putting), et indicateurs clés (fairways touchés, greens touchés, putts par tour, birdies par tour).
 - **Par club** et **par distance** : graphiques filtrables par période, parcours et position de la balle.
-- **Statistiques** : trois présentations (aperçu multi-critères, statistiques traditionnelles, Strokes Gained).
+- **Statistiques** : trois présentations (aperçu multi-critères, statistiques traditionnelles, Strokes Gained). L'aperçu se filtre par période et par parcours.
 - **Historique des tours** : liste des parties, avec recherche par nom de parcours.
 - **Performance putting** : évolution du nombre de putts moyen par partie.
 - **Saisie d'une partie** : soit rapide (score, fairway, green en régulation, putts, trou par trou), soit détaillée (chaque coup avec le club, la position, la distance restante, la pénalité et le résultat). On peut chercher le golf joué parmi les parcours proches de soi.
-  En saisie détaillée, l'encadré du trou affiche six espaces : le détail du trou (numéro, par, distance, handicap) avec le score total de la partie juste dessous (somme des trous rentrés), puis FIR, GIR, putts et SG total. L'encadré Strokes Gained en bas à droite (Driving, A.G., App., Putts) cumule les SG de tous les trous depuis le début de la partie.
+  En saisie détaillée, l'encadré du trou affiche six espaces : le détail du trou (numéro, par, distance, handicap) avec le score total de la partie juste dessous, par rapport au par (+1, -2, ou E à égalité ; trous rentrés dont le par est connu), puis FIR, GIR, putts et SG total. L'encadré Strokes Gained en bas à droite (Driving, A.G., App., Putts) cumule les SG de tous les trous depuis le début de la partie.
   Catégories SG : Driving = départ des par 4 et 5 ; A.G. (attaque de green) = longs coups, à partir de 30 m du drapeau ; App. (approches) = petits coups autour du green, à moins de 30 m ; Putts = coups joués sur le green. Dans le tableau de bord, Wedging isole les coups de 30 m à 110 m compris : A.G. n'y compte alors que les coups de plus de 110 m.
   Une partie saisie en détaillé alimente aussi Wedging (coups à faire entre 30 et 110 m compris, rangés par paliers de 5 m : 33 m devient 30-34 m ; le dernier palier va de 105 à 110 m) et Putting (un parcours en mode Détaillée, un trou = son premier putt). La saisie rapide n'envoie rien : elle ne contient pas ces détails.
 
@@ -207,6 +207,9 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 
 ### Bugs résolus
 
+- **Stats : filtre "Lie" de l'aperçu (Multi) supprimé.** Il ne servait pas, et `computeOverview` n'a plus de paramètre `lie`. Les filtres Lie de "Par club" et "Par distance" restent : ils sont lus par `computeClubInsights` et `computeDistanceInsights`.
+- **Stats : boutons "⋯" sans action.** Les huit en-têtes de la page Stats (dont "Performance putting") avaient un bouton rond sans aucun gestionnaire. Retirés de `index.html`, ainsi que leurs règles dans `commun.css` et `stats.css` (le titre reste centré : la grille de l'en-tête a trois colonnes).
+- **Saisie détaillée : score total en coups au lieu de l'écart au par.** Il affiche maintenant +1, -2 ou E.
 - **Wedging : trou de 30 à 50 m et dernier palier.** Stats classait en wedging les coups à partir de 30 m, mais le Journal Wedging commençait à 50 m : les coups de 30 à 50 m n'allaient nulle part. Les paliers (boutons de saisie, filtres, graphes de dispersion, de distance et de SG) commencent maintenant à 30 m, comme les distances proposées pour les exercices (30 à 110 m). Le dernier palier affichait "105-109m" puis "110m" seul ; il devient "105-110m".
 - **Strokes Gained : A.G. et APP. inversés** (saisie détaillée, tableau de bord, onglet SG des Statistiques). A.G. affichait les petits coups autour du green et APP. les longs coups. `sgGroup` (`stats.js`) corrigé : A.G. = attaque de green (longs coups), APP. = autour du green (moins de 30 m). La constante `AG_MAX` est supprimée au profit de `WEDGING_MIN`, son nom prêtait à confusion.
 - **Encadré SG de la saisie détaillée** : il n'affichait que le SG du trou en cours. Il cumule maintenant tous les trous depuis le début de la partie, comme le SG total du haut.

@@ -124,7 +124,6 @@
   const DEFAULT_FILTERS = {
     period: { key: 'period', icon: 'calendar', label: '30 derniers jours', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
     course: { key: 'course', icon: 'flag', label: 'Tous parcours', options: ['Tous parcours'] },
-    lie: { key: 'lie', icon: 'sliders', label: 'Tous lies', options: ['Tous lies', 'Fairway', 'Rough', 'Bunker'] },
   };
 
   // Listes et valeurs par défaut du popup "Nouveau parcours" (les parcours viennent de l'API, voir loadNearbyCourses)
@@ -1072,8 +1071,10 @@
   const ALL_COURSES = 'Tous parcours';
   const ALL_LIES = 'Tous lies';
   const FIR_HIT = 'Centre';          // choix Gauche / Centre / Droite : Centre = fairway touché
-  const APP_MAX = 30;                // m : en dessous (hors green) = coup autour du green (APP.)
-  // m : de APP_MAX jusqu'à ici (compris) = wedging, au-delà = attaque de green (A.G., longs coups). Même limite que le Journal Wedging (WEDGE_MAX_DISTANCE de wedging.js)
+  // Limites du wedging : mêmes que le Journal Wedging (WEDGE_MIN_DISTANCE / WEDGE_MAX_DISTANCE de wedging.js)
+  // m : en dessous (hors green) = coup autour du green (APP.) ; de WEDGING_MIN jusqu'à WEDGING_MAX (compris) = wedging ;
+  // au-delà = attaque de green (A.G., longs coups)
+  const WEDGING_MIN = typeof WEDGE_MIN_DISTANCE === 'number' ? WEDGE_MIN_DISTANCE : 30;
   const WEDGING_MAX = typeof WEDGE_MAX_DISTANCE === 'number' ? WEDGE_MAX_DISTANCE : 110;
   const BIRDIE_CHANCE_MAX = 8;       // m : approche finissant sur le green à moins de ça = chance de birdie
   const DASHBOARD_ROUNDS = 20;       // le dashboard porte sur les 20 dernières parties
@@ -1159,17 +1160,17 @@
      Seule la saisie détaillée connaît la distance avant chaque coup, la zone d'arrivée et la distance restante :
      la saisie rapide n'a pas ces détails, elle n'alimente donc ni Wedging ni Putting.
      Les conversions sont envoyées aux fonctions exposées par wedging.js et putting.js, qui gardent leurs données en mémoire. */
-  const WEDGE_SYNC_MIN = 50;    // m : début du premier palier du Journal Wedging
-  const wedgeBucketOf = (m) => Math.floor(m / 5) * 5;   // 53 m → palier 50 (affiché 50-54 m) ; 110 m → palier 110 (affiché 110m)
+  // 33 m → palier 30 (affiché 30-34 m) ; 110 m → dernier palier, 105 (affiché 105-110 m)
+  const wedgeBucketOf = (m) => Math.min(Math.floor(m / 5) * 5, WEDGING_MAX - 5);
 
-  // Coups de wedging d'un trou : distance à faire entre 50 et 109 m, hors putt et hors pénalité,
+  // Coups de wedging d'un trou : distance à faire entre WEDGING_MIN et WEDGING_MAX (compris), hors putt et hors pénalité,
   // avec une zone d'arrivée exploitable (secteur du green ou hors green, ou balle rentrée)
   function wedgeShotsOfHole(H, roundId, date) {
     const out = [];
     H.shots.forEach((S) => {
       if (S.cat === 'putting' || S.cat === 'driving' || S.lie === 'Green' || S.club === 'Putter') return;
       if (S.penalty > 0 || S.before === null || S.after === null) return;
-      if (S.before < WEDGE_SYNC_MIN || S.before > WEDGING_MAX) return;
+      if (S.before < WEDGING_MIN || S.before > WEDGING_MAX) return;
       // Coup rentré = "Green" côté Wedging ; sinon on garde la direction (Green-Droite / Hors-Droite → Droite)
       const zone = S.holed ? 'Green' : String(S.zone || '').replace(/^(Green|Hors)-/, '');
       if (zone !== 'Green' && !WHEEL_DIRECTIONS.includes(zone)) return;
@@ -1232,7 +1233,7 @@
       const long = notNull(par) ? par >= 4 : (S.before !== null && S.before >= 230);
       if (long) return 'driving';
     }
-    if (S.before !== null && S.before <= APP_MAX) return 'shortGame';
+    if (S.before !== null && S.before < WEDGING_MIN) return 'shortGame';
     return 'approach';
   }
 
@@ -1468,7 +1469,6 @@
   function computeOverview(f) {
     const rounds = selectRounds({ period: f.period, course: f.course });
     const holes = rounds.flatMap((r) => r.holes);
-    const lieActive = f.lie && f.lie !== ALL_LIES;
     const vsParOf = (hs) => rnd(meanOf(hs.filter((h) => h.par !== null && h.score !== null).map((h) => h.score - h.par)), 2);
 
     /* Score */
@@ -1521,10 +1521,9 @@
       scoreAfterMiss: vsParOf(fw.filter((h) => h.fairway !== FIR_HIT)),
     };
 
-    /* Approach (le filtre Lie porte sur le lie de départ du coup d'attaque du green) */
-    const byAttackLie = (h) => !lieActive || (h.attack && h.attack.lie === f.lie);
-    const apHoles = holes.filter((h) => h.attackInfo && byAttackLie(h));
-    const girHoles = holes.filter((h) => h.gir !== null && byAttackLie(h));
+    /* Approach */
+    const apHoles = holes.filter((h) => h.attackInfo);
+    const girHoles = holes.filter((h) => h.gir !== null);
     const girOf = (hs) => pctR(hs.filter((h) => h.gir).length, hs.length);
     const zoneCounts = {};
     apHoles.forEach((h) => {
@@ -1551,8 +1550,8 @@
       zoneCounts,
     };
 
-    /* Approches (récupérations après un green raté ; le filtre Lie porte sur le lie du coup de récupération) */
-    const recHoles = holes.filter((h) => h.gir === false && (!lieActive || (h.recovery && h.recovery.lie === f.lie)));
+    /* Approches (récupérations après un green raté) */
+    const recHoles = holes.filter((h) => h.gir === false);
     // Up & down : balle rentrée en 2 coups maximum depuis le coup de récupération
     const udOf = (hs) => {
       const withRec = hs.filter((h) => h.recovery);
@@ -2046,7 +2045,7 @@
   // Pane "Multi" : aperçu score / fairway / greens / approches / putts
   let dispersionChart = null;
 
-  const multiFilters = { period: DEFAULT_FILTERS.period.label, course: ALL_COURSES, lie: ALL_LIES };
+  const multiFilters = { period: DEFAULT_FILTERS.period.label, course: ALL_COURSES };
 
   function renderStatistiquesMulti() {
     const courses = courseOptions();
@@ -2054,7 +2053,6 @@
     renderFilterBar(document.getElementById('st-multi-filters'), [
       { ...DEFAULT_FILTERS.period, label: multiFilters.period },
       { ...DEFAULT_FILTERS.course, label: multiFilters.course, options: courses },
-      { ...DEFAULT_FILTERS.lie, label: multiFilters.lie },
     ], (key, value) => {
       multiFilters[key] = value;
       loadMultiImages().then(buildStatistiquesMulti);
@@ -3393,20 +3391,21 @@
     }
 
     function renderStats() {
-      let fir = 0, gir = 0, putts = 0, puttsHoles = 0, scoreTotal = 0, scoreHoles = 0;
+      let fir = 0, gir = 0, putts = 0, puttsHoles = 0, vsParTotal = 0, vsParHoles = 0;
       holes.forEach((_, i) => {
         const h = holeSummary(i);
         if (round.holes[i].par !== 3 && h.fairway === FAIRWAY_HIT) fir++;
         if (h.gir) gir++;
         if (h.putts !== null) { putts += h.putts; puttsHoles++; }
-        if (h.score !== null) { scoreTotal += h.score; scoreHoles++; } // score total : trous rentrés uniquement
+        // Score total par rapport au par : trous rentrés dont le par est connu
+        if (h.score !== null && round.holes[i].par !== null) { vsParTotal += h.score - round.holes[i].par; vsParHoles++; }
       });
       // FIR sur les trous hors par 3 (par inconnu = compté), GIR sur tous les trous, putts = total de la partie
       const firTotal = round.holes.filter((h) => h.par !== 3).length;
       setText(d('fir'), `${fir}/${firTotal}`);
       setText(d('gir'), `${gir}/${round.holes.length}`);
       setText(d('putts'), puttsHoles ? String(putts) : '--');
-      setText(d('score'), scoreHoles ? String(scoreTotal) : '--');
+      setText(d('score'), vsParHoles ? (vsParTotal === 0 ? 'E' : `${vsParTotal > 0 ? '+' : ''}${vsParTotal}`) : '--');
       // Strokes gained : total de la partie (haut) et cumul par catégorie depuis le trou 1 (encadré SG)
       const fmtLive = (v) => (v === null || v === undefined ? '--' : fmtSG(v));
       const cumul = { driving: 0, green: 0, approach: 0, putting: 0 };

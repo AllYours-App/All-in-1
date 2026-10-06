@@ -196,8 +196,7 @@ html {
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
-#page-stats .page-header__back:hover,
-#page-stats .page-header__menu:hover { opacity: 0.7; }
+#page-stats .page-header__back:hover { opacity: 0.7; }
 
 #page-stats .page-header__title-group {
   flex: 1;

@@ -108,7 +108,6 @@
 /* Bouton menu — rond 36px, identique dans tous les modules (parcours et wedging inclus). */
 #page-putting .page-header_menu,
 #page-vitesse .page-header_menu,
-#page-stats .page-header__menu,
 #page-wedging .wg-icon-btn,
 #page-gym .gym-header__action,
 #page-parcours .top-bar .icon-btn {
@@ -128,7 +127,6 @@
 
 #page-putting .page-header_menu-icon,
 #page-vitesse .page-header_menu-icon,
-#page-stats .page-header__menu svg,
 #page-wedging .wg-icon-btn svg,
 #page-gym .gym-header__action svg,
 #page-parcours .top-bar .icon-btn svg {
