@@ -495,7 +495,7 @@ function renderPuttingTab() {
 <!-- Barre nav basse : uniquement pour l'onglet Parcours -->
 <nav class="bottom-nav" data-nav="parcours">
   <a href="#" class="bottom-nav_item" data-section="analyse-distance" onclick="selectAnalyseSection(event, 'analyse-distance')">
-    <svg class="bottom-nav_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17l9-14 9 14"/><path d="M8 17l4-8 4 8"/></svg>
+    <svg class="bottom-nav_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/></svg>
     <div class="bottom-nav_label">Analyse</div>
     <div class="bottom-nav_sublabel">Distance</div>
   </a>

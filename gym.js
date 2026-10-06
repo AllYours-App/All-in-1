@@ -875,6 +875,9 @@ document.getElementById("app-root-gym").innerHTML = `
    Utilisation : ICONS.dumbbell, ICONS.chevronRight, etc.
    ========================================================================== */
 
+/* Silhouette de base des icônes de zones du corps (la zone travaillée est dessinée en plein par-dessus) */
+const GYM_BODY = '<g opacity=".4"><circle cx="12" cy="3.6" r="2.1"/><path d="M8 7.5h8l1.2 7H6.8z"/><path d="M7.5 8.5L4.8 15M16.5 8.5l2.7 6.5"/><path d="M9.5 14.5L9 21.5M14.5 14.5L15 21.5"/></g>';
+
 const ICONS = {
   back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
 
@@ -884,9 +887,9 @@ const ICONS = {
 
   dumbbell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 7v10M4 9v6M17.5 7v10M20 9v6M8.5 12h7"/></svg>`,
 
-  running: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="15.5" cy="5" r="1.6" fill="currentColor" stroke="none"/><path d="M9 21l2-5 2.3-2M4 13l4-2.5 2.7 1.8L14.5 9l3 1.5M11.3 12.3L9.5 17l-4 1.5"/></svg>`,
+  running: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="14.5" cy="4.5" r="1.8"/><path d="M13 8.5l-3.5 2.5-1 3.5M13 8.5l3 3.5 3-.5M12 12.5l2.5 3.5-1.5 4.5M9.5 14.5L6.5 19"/></svg>`,
 
-  muscle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20c-1-3.5 0-7 2-9.5C8.5 8 9 5.5 8 4c2.5-1 5 .5 5.5 3 2-1 4 0 4.5 2.5.6 3-1 6-3 7.5-1 .8-1.5 1.7-1.5 3"/><path d="M9 20h8"/></svg>`,
+  muscle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c-1-4 .5-8 3.5-10.5L9 12c2-1.5 4-1 5.5.5L15 8.5a2.2 2.2 0 014.4.3c.3 3 .3 6-1 8.7-.7 1.5-1.5 2.5-3.4 2.5z"/></svg>`,
 
   bolt: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2L4 14h6l-1 8 9-13h-6l1-7z"/></svg>`,
 
@@ -898,7 +901,7 @@ const ICONS = {
 
   timer: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4M12 5v3"/><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5"/></svg>`,
 
-  tempo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v5h-5"/></svg>`,
+  tempo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10L14.5 3h-5z"/><path d="M12 17L16.5 7"/></svg>`,
 
   chevronRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
 
@@ -926,7 +929,7 @@ const ICONS = {
 
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
 
-  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h2M8 12h12M4 18h14M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>`,
+  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></svg>`,
 
   star: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.5l2.9 6.2 6.6.7-5 4.6 1.4 6.6L12 17.6l-5.9 3 1.4-6.6-5-4.6 6.6-.7z"/></svg>`,
 
@@ -940,25 +943,25 @@ const ICONS = {
 
   grid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>`,
 
-  legs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l.6 9.5.9 8a1.5 1.5 0 01-1.5 1.5h-.6a1.5 1.5 0 01-1.5-1.3L12 13l-.9 7.7a1.5 1.5 0 01-1.5 1.3h-.6A1.5 1.5 0 017.5 20l.9-8z"/></svg>`,
+  legs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GYM_BODY}<path d="M9.7 14.5h4.6M9.5 14.5L9 21.5M14.5 14.5L15 21.5" stroke-width="3.2"/></svg>`,
 
-  torso: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4L4 6.5 5.5 10 8 8.5V20h8V8.5l2.5 1.5L20 6.5 16 4c-1 1-2.5 1.5-4 1.5S9 5 8 4z"/></svg>`,
+  torso: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GYM_BODY}<path d="M8 7.5h8l.5 3.5H7.5z" fill="currentColor"/></svg>`,
 
-  abs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="4" width="10" height="16" rx="3"/><path d="M7 9.5h10M7 14.5h10M12 4v16"/></svg>`,
+  abs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GYM_BODY}<path d="M9.3 11.2h2.2v1.6H9.3zM12.5 11.2h2.2v1.6h-2.2zM9 13.4h2.5v1.6H9zM12.5 13.4H15v1.6h-2.5z" fill="currentColor"/></svg>`,
 
-  backMuscle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2 2-2.5 3-6 3.5M12 3c2 2 2.5 3 6 3.5M6 6.5c-1 4 0 9-2 13M18 6.5c1 4 0 9 2 13M9 10c1 3 1 7-.5 10M15 10c-1 3-1 7 .5 10M12 3v8"/></svg>`,
+  backMuscle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g opacity=".4"><circle cx="12" cy="3.6" r="2.1"/><path d="M7.5 8.5L4.8 15M16.5 8.5l2.7 6.5"/><path d="M9.5 14.5L9 21.5M14.5 14.5L15 21.5"/></g><path d="M7.2 7.5h4.2v7H8.6zM12.6 7.5h4.2l-1.4 7h-2.8z" fill="currentColor"/></svg>`,
 
-  shoulders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c0-4 2-6 4-6M21 15c0-4-2-6-4-6M7 9a5 5 0 0110 0M4 20c1-3 2-5 5-5M20 20c-1-3-2-5-5-5"/></svg>`,
+  shoulders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GYM_BODY}<circle cx="7.2" cy="8.4" r="2" fill="currentColor"/><circle cx="16.8" cy="8.4" r="2" fill="currentColor"/></svg>`,
 
-  arms: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v6c0 3 1.5 5 3 5.5M7 4c2 0 3 1 3 3M14 20l-1-6-3-1.5"/><circle cx="15" cy="18" r="2.2"/></svg>`,
+  arms: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GYM_BODY}<path d="M7.3 9.5L4.8 15M16.7 9.5l2.5 5.5" stroke-width="3.2"/></svg>`,
 
-  glutes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5c-3 0-5 3-5 7 0 4.5 2.5 8 5.5 8 1.8 0 2.3-1.5 3.5-1.5s1.7 1.5 3.5 1.5c3 0 5.5-3.5 5.5-8 0-4-2-7-5-7-2 0-3 1-4 1s-2-1-4-1z"/></svg>`,
+  glutes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g opacity=".4"><circle cx="12" cy="3.6" r="2.1"/><path d="M8 7.5h8l1 4H7z"/><path d="M9.5 17.5L9 21.5M14.5 17.5L15 21.5"/></g><path d="M7 12.5c0-1.3 1-2 2.4-2H12v6H8.4C7.4 16.5 7 15 7 12.5zM17 12.5c0-1.3-1-2-2.4-2H12v6h3.6c1 0 1.4-1.5 1.4-4z" fill="currentColor"/></svg>`,
 
-  mobility: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.6" fill="currentColor" stroke="none"/><path d="M12 6v6l-4 6M12 12l4.5 2M8 8l4 2 5-2.5"/></svg>`,
+  mobility: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8"/><path d="M12 7v7M12 8.5L6 5M12 8.5L18 5M12 14l-3.5 7M12 14l3.5 7"/></svg>`,
 
-  functional: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c2-1 2-3 4-3s2 2 4 2 2-2 4-2 2 2 4 2M4 8l3 3M17 8l3 3M9 9l3 3 3-3"/></svg>`,
+  functional: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M12 3l-2.5 2.5M12 3l2.5 2.5M12 21l-2.5-2.5M12 21l2.5-2.5M3 12l2.5-2.5M3 12l2.5 2.5M21 12l-2.5-2.5M21 12l-2.5 2.5"/></svg>`,
 
-  equipment: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9v6M22 9v6M6 6v12M18 6v12M6 12h12"/></svg>`,
+  equipment: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8.5V7a3 3 0 016 0v1.5"/><circle cx="12" cy="15" r="6"/></svg>`,
 
   bodyweight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v6M12 13l-4 6M12 13l4 6M7 9l5-2 5 2"/></svg>`,
 
@@ -973,7 +976,7 @@ const ICONS = {
   stop: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`,
   pause: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>`,
 
-  layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 11v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-5"/></svg>`,
+  layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>`,
 
   reset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.7-6M20 4v5h-5"/></svg>`,
 };

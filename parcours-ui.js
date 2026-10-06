@@ -186,7 +186,7 @@ function courseKeypadHtml() {
       <div class="modal-sheet keypad-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>${p.title}</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeCourseKeypad()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeCourseKeypad()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
         <div class="app-keypad-value">${p.value === "" ? "--" : p.value}${p.value !== "" && p.unit ? " " + p.unit : ""}</div>
         ${appKeypad("courseKeypadPress", "courseKeypadBackspace", "courseKeypadClear", null)}
@@ -227,7 +227,7 @@ function trackInfoHtml() {
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>Fairway &amp; Green</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeTrackInfo()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeTrackInfo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
         <p>
           <strong>+</strong> : ajoute un point à l'endroit touché<br>
@@ -347,7 +347,7 @@ function windCalcHtml() {
           <div class="modal-head-actions">
             ${unitToggleHtml()}
             <button class="icon-btn" aria-label="Écarts par direction" onclick="openWindDetail()">i</button>
-            <button class="icon-btn" aria-label="Fermer" onclick="closeWindCalc()">✕</button>
+            <button class="icon-btn" aria-label="Fermer" onclick="closeWindCalc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
         </div>
 
@@ -444,7 +444,7 @@ function windInfoHtml() {
           <h3>Charte de vent</h3>
           <div class="modal-head-actions">
             ${unitToggleHtml()}
-            <button class="icon-btn" aria-label="Fermer" onclick="closeWindInfo()">✕</button>
+            <button class="icon-btn" aria-label="Fermer" onclick="closeWindInfo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
         </div>
         ${windChartTableHtml("↓ Vent de face", 0, "distance")}
@@ -490,7 +490,7 @@ function windDetailHtml() {
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>Écarts par direction</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeWindDetail()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeWindDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
         <p class="hint-text">${distDisplay} · ${windCalc.speedKmh} km/h</p>
         <table class="data-table">
@@ -598,7 +598,7 @@ function elevationCalcHtml() {
           <h3>Dénivelé</h3>
           <div class="modal-head-actions">
             ${unitToggleHtml()}
-            <button class="icon-btn" aria-label="Fermer" onclick="closeElevationCalc()">✕</button>
+            <button class="icon-btn" aria-label="Fermer" onclick="closeElevationCalc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
         </div>
 
@@ -703,7 +703,7 @@ function distancesCalcHtml() {
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>Mes distances</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeDistancesCalc()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeDistancesCalc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
 
         ${rows.length === 0 ? `
@@ -1304,7 +1304,7 @@ function tendanceEditHtml() {
       <div class="modal-sheet keypad-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>${title}</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeTendanceEdit()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeTendanceEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
         <div class="select-grid cols-2">
           ${TENDANCE_OPTIONS[t.key].map((k) => `
@@ -1332,7 +1332,7 @@ function historyModalHtml() {
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-head">
           <h3>Historique</h3>
-          <button class="icon-btn" aria-label="Fermer" onclick="closeHistoryModal()">✕</button>
+          <button class="icon-btn" aria-label="Fermer" onclick="closeHistoryModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
 
         <p class="table-title">Ce parcours</p>

@@ -64,6 +64,11 @@
   transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .icon-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
