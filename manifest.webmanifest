@@ -1,0 +1,13 @@
+{
+  "name": "Golf App",
+  "short_name": "Golf App",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    { "src": "images/icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

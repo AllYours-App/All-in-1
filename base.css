@@ -198,3 +198,30 @@ a {
   max-width: var(--app-max-width);
   margin: 0 auto;
 }
+
+/* ---------- Écran "Remets ton téléphone en mode portrait" ----------
+   Masqué par défaut. Affiché seulement quand l'appli est installée (mode standalone),
+   en paysage et sur une hauteur de téléphone : dans l'onglet d'un navigateur, la rotation ne peut pas être verrouillée,
+   et l'écran ne doit jamais apparaître. */
+.orientation-lock_component {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--wg-bg, #050505);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+.orientation-lock_text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+@media (display-mode: standalone) and (orientation: landscape) and (max-height: 500px) {
+  .orientation-lock_component { display: flex; }
+}

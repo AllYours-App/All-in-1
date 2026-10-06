@@ -610,7 +610,7 @@
           <div class="field-map__row"><span class="field-map__row-label">Ratés droite</span><span class="field-map__row-value">${fmt(data.rightPct, '%')}</span></div>
           <div class="field-map__row"><span class="field-map__row-label">Distance moy. (touché)</span><span class="field-map__row-value">${fmt(data.avgDistanceHit, ' m')}</span></div>
           <div class="field-map__row"><span class="field-map__row-label">Distance moy. (raté)</span><span class="field-map__row-value">${fmt(data.avgDistanceMiss, ' m')}</span></div>
-          <div class="field-map__row"><span class="field-map__row-label">Penalty</span><span class="field-map__row-value">${fmt(data.penaltyPct, '%')}</span></div>
+          <div class="field-map__row"><span class="field-map__row-label">Pénalités</span><span class="field-map__row-value">${fmt(data.penaltyPct, '%')}</span></div>
         </div>
       </div>
     `;
@@ -625,7 +625,7 @@
           <div class="multi-green_overlay">
             ${label('top:10%; left:50%; transform:translateX(-50%);', fmt(z.top, '%'), 'Long')}
             ${label('top:46%; left:12%;', fmt(z.left, '%'), 'Gauche')}
-            ${label('top:44%; left:50%; transform:translateX(-50%);', fmt(z.center, '%'), 'GIR')}
+            ${label('top:55%; left:50%; transform:translateX(-50%);', fmt(z.center, '%'), 'Sur le green')}
             ${label('top:46%; right:10%;', fmt(z.right, '%'), 'Droite')}
             ${label('bottom:6%; left:50%; transform:translateX(-50%);', fmt(z.bottom, '%'), 'Court')}
           </div>
@@ -713,15 +713,18 @@
   function createDispersionChart(canvas, proximityBands) {
     if (typeof Chart === 'undefined' || !canvas) return null;
     const rand = mulberry32(42);
+    const BAND_RADIUS = { under10: 0.4, under20: 0.7, under50: 1, over50: 1.3 };
+    // Une tranche à 0 % n'affiche aucun point (avant : 3 points grisés même à 0 %)
     const groups = proximityBands.map((band) => ({
       ...band, color: DISPERSION_COLORS[band.key],
-      points: Array.from({ length: Math.max(3, Math.round(band.pct / 4)) }, () => {
-        const radius = { under10: 0.4, under20: 0.7, under50: 1, over50: 1.3 }[band.key];
+      points: Array.from({ length: band.pct > 0 ? Math.max(3, Math.round(band.pct / 4)) : 0 }, () => {
         const angle = rand() * Math.PI * 2;
-        const r = rand() * radius;
+        const r = rand() * BAND_RADIUS[band.key];
         return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
       }),
     }));
+    // Échelle des axes ajustée à la tranche la plus éloignée réellement présente : le nuage remplit le cadre
+    const reach = Math.max(0.4, ...proximityBands.filter((b) => b.pct > 0).map((b) => BAND_RADIUS[b.key])) * 1.15;
     try {
       return new Chart(canvas, {
         type: 'scatter',
@@ -729,7 +732,7 @@
         options: {
           responsive: true, maintainAspectRatio: false, animation: { duration: 700 },
           plugins: { legend: { display: false }, tooltip: { enabled: false } },
-          scales: { x: { display: false, min: -1.4, max: 1.4 }, y: { display: false, min: -1.4, max: 1.4 } },
+          scales: { x: { display: false, min: -reach, max: reach }, y: { display: false, min: -reach, max: reach } },
         },
       });
     } catch (err) {
@@ -909,7 +912,7 @@
 
   function kvTable(head, rows) {
     return `
-      <table class="data-table">
+      <table class="data-table data-table--kv">
         <thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
         <tbody>${rows.map((r) => `<tr>${r.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
       </table>
@@ -937,16 +940,14 @@
     `;
   }
 
-  // Chevron décoratif ("SCORE >", "FAIRWAY >"...) : présent dans la maquette
-  // mais aucune navigation associée n'y est montrée → non cliquable.
+  // Titre d'un bloc de Multi : icône + texte. Ni chevron ni menu "Toutes distances" :
+  // ils ressemblaient à des boutons mais n'avaient aucune action.
   function statBlockHeader(titleIcon, title) {
     return `
       <div class="stat-block__header">
         <div class="stat-block__title">
           ${icon(titleIcon)}<span class="stat-block__title-text">${title}</span>
-          <span class="stat-block__title__chevron">${icon('chevronRight')}</span>
         </div>
-        <div class="stat-block__dropdown">Toutes distances ${icon('chevronDown')}</div>
       </div>
     `;
   }
@@ -959,16 +960,16 @@
     return `
       <section class="stat-block fade-up">
         ${statBlockHeader('bars', 'Score')}
-        <div class="stat-block__metrics">
+        <div class="stat-block__metrics stat-block__metrics--5">
           ${metric('Brut moyen', data.avgGross, data.avgGrossDelta, true)}
-          ${metric('Vs par moyen', fmtSigned(data.avgToPar))}
+          ${metric('Écart au par', fmtSigned(data.avgToPar))}
           ${metric('Meilleur score', data.best, undefined, undefined, undefined, toParSub(data.bestToPar))}
           ${metric('Pire score', data.worst, undefined, undefined, undefined, toParSub(data.worstToPar))}
           ${metric('Parties jouées', data.played)}
         </div>
         ${subtitle('Moyenne par partie')}
         ${kvTable(['Résultat', 'Trous'], [
-          ['Eagle ou mieux', fmtNum(p.eagle, 2)], ['Birdie', fmtNum(p.birdie, 2)], ['Par', fmtNum(p.par, 2)],
+          ['Aigle ou mieux', fmtNum(p.eagle, 2)], ['Birdie', fmtNum(p.birdie, 2)], ['Par', fmtNum(p.par, 2)],
           ['Bogey', fmtNum(p.bogey, 2)], ['Double bogey ou pire', fmtNum(isEmptyValue(p.double) && isEmptyValue(p.triple) ? null : (p.double || 0) + (p.triple || 0), 2)],
         ])}
         ${subtitle('Par type de trou')}
@@ -1001,11 +1002,11 @@
   function renderApproachBlock(data) {
     return `
       <section class="stat-block fade-up">
-        ${statBlockHeader('target', 'Approach')}
+        ${statBlockHeader('target', 'Attaque de green')}
         ${renderApproachMap(data)}
         ${subtitle('Attaque de green réussie')}
         ${kvTable(['Trou', '%'], [['Global', fmt(data.greenHitPct, '%')]])}
-        ${subtitle('GIR par type de trou')}
+        ${subtitle('Greens en régulation par type de trou')}
         ${kvTable(['Trou', '%'], [['Global', fmt(data.girPct, '%')], ['Par 3', fmt(data.girPar3, '%')], ['Par 4', fmt(data.girPar4, '%')], ['Par 5', fmt(data.girPar5, '%')]])}
         ${subtitle('Dispersion sur le green')}
         ${renderGreenWheelMap(data.zoneCounts, 'green17')}
@@ -1016,23 +1017,24 @@
   const APPROCHES_TYPES = [
     { value: 'all', label: 'Toutes' },
     { value: 'nonBunker', label: 'Approches' },
-    { value: 'bunker', label: 'S. Bunker' },
+    { value: 'bunker', label: 'Bunker' },
   ];
   let approchesType = 'all';
 
   function renderApprochesBlock(data) {
     return `
       <section class="stat-block fade-up">
-        ${statBlockHeader('putter', 'Approches')}
+        ${statBlockHeader('wedge', 'Approches')}
         <div class="stat-block__metrics">
-          ${metric('Up & Down', data.upDownPct, undefined, undefined, '%')}
-          ${metric('U&D bunker', data.upDownBunker, undefined, undefined, '%')}
-          ${metric('U&D fairway', data.upDownNonBunker, undefined, undefined, '%')}
+          ${metric('Sauvetages', data.upDownPct, undefined, undefined, '%')}
+          ${metric('Sauvetages bunker', data.upDownBunker, undefined, undefined, '%')}
+          ${metric('Sauvetages hors bunker', data.upDownNonBunker, undefined, undefined, '%')}
         </div>
+        ${data.proximityBands.length ? `${subtitle('Distance restante après le coup')}
         <div>
           <div class="chart-canvas-wrap chart-canvas-wrap--sm" style="height:180px;"><canvas data-dispersion></canvas></div>
           ${renderDispersionLegend(data.proximityBands)}
-        </div>
+        </div>` : ''}
         ${subtitle('Dispersion après green raté')}
         <div class="insights_chips" data-approches-types>${chipGroupHtml(APPROCHES_TYPES, [approchesType])}</div>
         <div data-approches-wheel>${renderGreenWheelMap(data.zoneCounts[approchesType], 'nine')}</div>
@@ -1051,9 +1053,9 @@
         </div>
         ${kvTable(['Moyenne', 'Putts'], [
           ['Par partie', fmtNum(data.perRound)], ['Par trou', fmtNum(data.perHole, 2)],
-          ['Par trou, GIR', fmtNum(data.perHoleGir, 2)], ['Par trou, hors GIR', fmtNum(data.perHoleNonGir, 2)],
+          ['Par trou, green en régulation', fmtNum(data.perHoleGir, 2)], ['Par trou, green manqué', fmtNum(data.perHoleNonGir, 2)],
         ])}
-        <table class="data-table">
+        <table class="data-table data-table--dist">
           <thead><tr><th>1er putt (m)</th><th>Moy.</th><th>1 putt</th><th>2 putts</th><th>3+</th></tr></thead>
           <tbody>${data.byDistance.map((row) => `<tr><td>${row.label}</td><td>${fmtNum(row.avgPutts, 2)}</td><td>${fmt(row.one, '%')}</td><td>${fmt(row.two, '%')}</td><td>${fmt(row.threePlus, '%')}</td></tr>`).join('')}</tbody>
         </table>
@@ -2075,7 +2077,7 @@
     const dispersionCanvas = blocksEl.querySelector('[data-dispersion]');
     if (dispersionCanvas) dispersionChart = createDispersionChart(dispersionCanvas, ov.approches.proximityBands);
 
-    // Dispersion des approches de récupération : Toutes / Approches / S. Bunker
+    // Dispersion des approches de récupération : Toutes / Approches / Bunker
     const typesEl = blocksEl.querySelector('[data-approches-types]');
     const wheelEl = blocksEl.querySelector('[data-approches-wheel]');
     typesEl.querySelectorAll('.insights_chip').forEach((btn) => {

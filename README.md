@@ -52,7 +52,7 @@ Entraînement et suivi du putting :
 Tableau de bord des performances, rempli à partir des parties que le joueur saisit lui-même :
 - **Tableau de bord** : Strokes Gained global et par catégorie (Driving, A.G., Wedging, Approches, Putting), et indicateurs clés (fairways touchés, greens touchés, putts par tour, birdies par tour).
 - **Par club** et **par distance** : graphiques filtrables par période, parcours et position de la balle.
-- **Statistiques** : trois présentations (aperçu multi-critères, statistiques traditionnelles, Strokes Gained). L'aperçu se filtre par période et par parcours.
+- **Statistiques** : trois présentations (aperçu multi-critères : Score, Fairway, Attaque de green, Approches, Putts ; statistiques traditionnelles ; Strokes Gained). L'aperçu se filtre par période et par parcours.
 - **Historique des tours** : liste des parties, avec recherche par nom de parcours.
 - **Performance putting** : évolution du nombre de putts moyen par partie.
 - **Saisie d'une partie** : soit rapide (score, fairway, green en régulation, putts, trou par trou), soit détaillée (chaque coup avec le club, la position, la distance restante, la pénalité et le résultat). On peut chercher le golf joué parmi les parcours proches de soi.
@@ -113,7 +113,7 @@ menu.js
 auth.js             (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=17`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=17` par le numéro suivant dans toutes les balises).
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=25`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=25` par le numéro suivant dans toutes les balises).
 
 ### Dépendances externes
 
@@ -216,3 +216,9 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 - **Pavé numérique Gym disproportionné** (création de programme, objectifs, poids). L'icône Effacer est un SVG sans taille : elle s'étirait sur toute la touche. Fixé par une règle sur `#keypad-grid button svg` dans `gym.css`.
 - **Clavier natif dans Stats (saisie détaillée).** Les champs Distance restante et Pénalité ouvraient le clavier du téléphone. Ils ouvrent maintenant le pavé de l'appli (`appKeypad`), et `#page-stats` a été ajouté à la liste `:is(...)` du pavé dans `commun.css`.
 - **Clavier natif dans Gym (objectifs).** Le champ "Cible" du popup "Nouvel objectif" ouvre maintenant le pavé de Gym.
+- **Stats > Multi : valeurs non alignées.** Chaque tableau calculait sa propre largeur de colonne. Les lignes de résumé et les tableaux à 2 colonnes partagent maintenant `--multi-label-col` (60 %), dans `stats.css`.
+- **Stats > Multi : faux boutons.** Le chevron après le titre et le menu "Toutes distances" n'avaient aucune action. Supprimés de `statBlockHeader` (`stats.js`) et de `stats.css`.
+- **Stats > Multi : photo du fairway hors écran.** `min-height` + `aspect-ratio` donnaient à la grille `.field-map-layout` une largeur minimale supérieure à l'écran. Colonne `minmax(0, 1fr)` et `min-width: 0` sur les enfants.
+- **Stats > Multi : termes anglais.** Approach → Attaque de green, Penalty → Pénalités, Eagle → Aigle, Up & Down / U&D → Sauvetages (balle rentrée en 2 coups depuis un green raté), S. Bunker → Bunker, Vs par → Écart au par, GIR → Greens en régulation. Les autres écrans de Stats gardent leurs libellés.
+- **Stats > Multi : espaces vides.** Score : 5 tuiles en 3 + 2 (`.stat-block__metrics--5`). Green : pleine largeur au lieu d'une hauteur fixe de 240 px. Graphique de distance : masqué sans données, plus de points pour une tranche à 0 %, échelle ajustée.
+- **Écran "Remets ton téléphone en mode portrait" affiché partout.** `.orientation-lock_component` (`index.html`) n'avait aucune règle CSS : il s'affichait en clair sur toutes les pages. Règles ajoutées à la fin de `base.css` : masqué par défaut, visible seulement en mode installé (`display-mode: standalone`), en paysage et sur une hauteur de téléphone (500 px max). `index.html` référençait aussi `manifest.webmanifest`, absent du dépôt : ajouté, avec `"orientation": "portrait"` (verrouille la rotation sur Android à l'installation ; iOS ignore ce réglage et l'écran de secours prend le relais).

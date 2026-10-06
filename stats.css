@@ -960,23 +960,16 @@ html {
 }
 #page-stats .stat-block__title svg { width: 16px; height: 16px; color: var(--color-text-tertiary); }
 
-#page-stats .stat-block__dropdown {
-  font-size: var(--fs-xs);
-  color: var(--color-text-secondary);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-#page-stats .stat-block__dropdown svg { width: 12px; height: 12px; }
-
 /* ---------- Grille de mini-stats à l'intérieur d'un bloc ---------- */
 #page-stats .stat-block__metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-sm);
 }
-#page-stats .stat-block__metrics--5 { grid-template-columns: repeat(3, 1fr); }
+/* 5 tuiles : 3 sur la première ligne, 2 qui se partagent toute la seconde (pas de case vide) */
+#page-stats .stat-block__metrics--5 { grid-template-columns: repeat(6, 1fr); }
+#page-stats .stat-block__metrics--5 > .metric { grid-column: span 2; }
+#page-stats .stat-block__metrics--5 > .metric:nth-child(n + 4) { grid-column: span 3; }
 
 #page-stats .metric {
   background: var(--color-bg-elevated);
@@ -1175,10 +1168,6 @@ html {
 /* Panes internes à l'écran "Par distance" (Multi / Traditionnel / SG) */
 #page-stats .pane { display: none; }
 #page-stats .pane.is-active { display: block; }
-
-/* Chevron décoratif à côté des titres de section (pas de lien : aucune
-   maquette ne montre où il mène) */
-#page-stats .stat-block__title__chevron { width: 14px; height: 14px; color: var(--color-text-tertiary); margin-left: 2px; }
 
 /* Carte "Par club" : aucun écran dédié dans le périmètre livré → non interactive */
 #page-stats .analysis-card--disabled { cursor: default; }
@@ -2955,7 +2944,7 @@ html {
   text-overflow: ellipsis;
 }
 
-/* Titre de bloc (Statistiques > Multi) : icône, texte, chevron, puis menu "Toutes distances" */
+/* Titre de bloc (Statistiques > Multi) : icône puis texte */
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__header { min-width: 0; }
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title {
   flex: 1 1 auto;
@@ -2971,13 +2960,7 @@ html {
   white-space: nowrap;
 }
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title svg,
-:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title__chevron,
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title::before { flex-shrink: 0; }
-:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__dropdown {
-  flex: 0 0 auto;
-  font-size: var(--type-caption);
-  white-space: nowrap;
-}
 
 /* Titre de carte de graphe + légende d'unité */
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__head,
@@ -3027,11 +3010,6 @@ html {
 }
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .data-table td { font-size: var(--type-body); }
 
-/* Petits écrans (≤ 380px) : le chevron décoratif après le titre de bloc cède sa place au menu "Toutes distances" */
-@media (max-width: 380px) {
-  :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title__chevron { display: none; }
-}
-
 /* Titre de graphe suivi de son unité, sur la même ligne */
 :is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__titles {
   display: flex;
@@ -3052,17 +3030,32 @@ html {
    fairway et green repris de la saisie (mêmes images)
    ========================================================================== */
 
-/* Textes alignés à gauche */
+/* Textes alignés à gauche, valeurs sur UNE seule colonne : libellé 60 % / valeur 40 %,
+   identique pour les lignes de résumé (.field-map__row) et pour tous les tableaux à 2 colonnes (.data-table--kv) */
+#page-stats #st-pane-multi { --multi-label-col: 60%; }
 #page-stats #st-pane-multi .data-table th,
 #page-stats #st-pane-multi .data-table td,
 #page-stats #st-pane-multi .data-table td:not(:first-child),
 #page-stats #st-pane-multi .data-table th:not(:first-child) { text-align: left; }
+#page-stats #st-pane-multi .data-table--kv { table-layout: fixed; }
+#page-stats #st-pane-multi .data-table--kv th,
+#page-stats #st-pane-multi .data-table--kv td { padding-inline: 0; }
+#page-stats #st-pane-multi .data-table--kv th:first-child,
+#page-stats #st-pane-multi .data-table--kv td:first-child { width: var(--multi-label-col); }
+#page-stats #st-pane-multi .data-table--dist th,
+#page-stats #st-pane-multi .data-table--dist td { padding-inline: 0 var(--space-xs); }
 #page-stats #st-pane-multi .field-map__row {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: var(--space-sm);
+  grid-template-columns: var(--multi-label-col) minmax(0, 1fr);
+  gap: 0;
   text-align: left;
 }
+
+/* Fairway / green : une seule colonne à toutes les largeurs, et min-width: 0 sur les enfants de la grille.
+   Sans ça, la hauteur minimale de l'image du fairway (min-height + aspect-ratio) imposait une largeur
+   minimale supérieure à l'écran et l'image dépassait à droite. */
+#page-stats #st-pane-multi .field-map-layout { grid-template-columns: minmax(0, 1fr); }
+#page-stats #st-pane-multi .field-map-layout > * { min-width: 0; }
 
 /* Fairway : étiquettes posées sur l'image de la saisie */
 #page-stats #st-pane-multi .multi-fairway_labels {
@@ -3079,7 +3072,16 @@ html {
 #page-stats #st-pane-multi .multi-fairway_caption { font-size: var(--fs-2xs); opacity: 0.9; }
 
 /* Green : même conteneur que la saisie (image centrée, proportions réelles) */
-#page-stats #st-pane-multi .saisie-rapide_map.is-green { flex: none; height: 240px; margin-bottom: 0; }
+/* Le green occupe toute la largeur disponible (plafonnée), hauteur déduite des proportions de l'image :
+   plus de bandes vides à gauche et à droite */
+#page-stats #st-pane-multi .saisie-rapide_map.is-green {
+  flex: none;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  aspect-ratio: var(--qr-green-ratio);
+  margin: 0 auto;
+}
 #page-stats #st-pane-multi .multi-green_overlay {
   position: relative;
   width: var(--qr-green-img-w);
