@@ -8,17 +8,17 @@
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="base.css?v=19">
-<link rel="stylesheet" href="commun.css?v=19">
-<link rel="stylesheet" href="HomePage.css?v=19">
-<link rel="stylesheet" href="parcours-ui.css?v=19">
-<link rel="stylesheet" href="wedging.css?v=19">
-<link rel="stylesheet" href="gym.css?v=19">
-<link rel="stylesheet" href="putting.css?v=19">
-<link rel="stylesheet" href="vitesse.css?v=19">
-<link rel="stylesheet" href="stats.css?v=19">
-<link rel="stylesheet" href="menu.css?v=19">
-<link rel="stylesheet" href="auth.css?v=19">
+<link rel="stylesheet" href="base.css?v=22">
+<link rel="stylesheet" href="commun.css?v=22">
+<link rel="stylesheet" href="HomePage.css?v=22">
+<link rel="stylesheet" href="parcours-ui.css?v=22">
+<link rel="stylesheet" href="wedging.css?v=22">
+<link rel="stylesheet" href="gym.css?v=22">
+<link rel="stylesheet" href="putting.css?v=22">
+<link rel="stylesheet" href="vitesse.css?v=22">
+<link rel="stylesheet" href="stats.css?v=22">
+<link rel="stylesheet" href="menu.css?v=22">
+<link rel="stylesheet" href="auth.css?v=22">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 </head>
 <body>
@@ -816,8 +816,14 @@
     <!-- STATS DU TROU -->
     <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_stats" aria-label="Stats du trou">
       <div class="saisie-detaillee_hole">
-        <h2 class="saisie-detaillee_hole-title" data-sd="hole-number">Trou 1</h2>
-        <p class="saisie-detaillee_hole-meta" data-sd="hole-meta"></p>
+        <div class="saisie-detaillee_hole-info">
+          <h2 class="saisie-detaillee_hole-title" data-sd="hole-number">Trou 1</h2>
+          <p class="saisie-detaillee_hole-meta" data-sd="hole-meta"></p>
+        </div>
+        <div class="saisie-detaillee_hole-score">
+          <span class="saisie-detaillee_hole-score-label">Score</span>
+          <span class="saisie-detaillee_hole-score-value" data-sd="score">--</span>
+        </div>
       </div>
       <div class="saisie-detaillee_stats-body">
         <div class="saisie-detaillee_stat-list">
@@ -1241,18 +1247,18 @@
     }
   } catch (e) {}
 </script>
-<script src="app-shell.js?v=19"></script>
-<script src="commun.js?v=19"></script>
-<script src="sg-data.js?v=19"></script>
-<script src="strokes-gained.js?v=19"></script>
-<script src="HomePage.js?v=19"></script>
-<script src="parcours-ui.js?v=19"></script>
-<script src="wedging.js?v=19"></script>
-<script src="gym.js?v=19"></script>
-<script src="putting.js?v=19"></script>
-<script src="vitesse.js?v=19"></script>
-<script src="stats.js?v=19"></script>
-<script src="menu.js?v=19"></script>
-<script src="auth.js?v=19"></script>
+<script src="app-shell.js?v=22"></script>
+<script src="commun.js?v=22"></script>
+<script src="sg-data.js?v=22"></script>
+<script src="strokes-gained.js?v=22"></script>
+<script src="HomePage.js?v=22"></script>
+<script src="parcours-ui.js?v=22"></script>
+<script src="wedging.js?v=22"></script>
+<script src="gym.js?v=22"></script>
+<script src="putting.js?v=22"></script>
+<script src="vitesse.js?v=22"></script>
+<script src="stats.js?v=22"></script>
+<script src="menu.js?v=22"></script>
+<script src="auth.js?v=22"></script>
 </body>
 </html>

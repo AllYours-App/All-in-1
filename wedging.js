@@ -14,22 +14,24 @@
 
 /* ============================ 1. CONSTANTES ================================ */
 
-// Cases de distance à faire (Journal Parcours), par paliers de 5m à partir de 50m
-// Limite haute d'un coup de wedge (comprise) : 110 m. Le dernier palier est "110m" tout seul (les autres
-// couvrent 5 m : 105-109m). stats.js lit cette valeur pour classer ses coups "wedging" : on ne la modifie qu'ici.
+// Cases de distance à faire (Journal Parcours), par paliers de 5m de 30m à 110m.
+// Limites d'un coup de wedge : 30 m (comprise) à 110 m (comprise). En dessous de 30 m, c'est un coup autour du green
+// (APP. dans Stats). Les paliers couvrent 5 m (30-34m ... 100-104m), sauf le dernier qui prend aussi la limite haute : 105-110m.
+// stats.js lit ces deux valeurs pour classer ses coups "wedging" : on ne les modifie qu'ici.
+const WEDGE_MIN_DISTANCE = 30;
 const WEDGE_MAX_DISTANCE = 110;
-const WEDGE_BUCKETS = (() => { const arr = []; for (let d = 50; d <= WEDGE_MAX_DISTANCE; d += 5) arr.push(d); return arr; })();
+const WEDGE_BUCKETS = (() => { const arr = []; for (let d = WEDGE_MIN_DISTANCE; d < WEDGE_MAX_DISTANCE; d += 5) arr.push(d); return arr; })();
 // Ordre des 8 directions périphériques (hors centre), dans le sens horaire en partant du haut
 const WEDGE_RADAR_ORDER = ['Long', 'Long-Droite', 'Droite', 'Court-Droite', 'Court', 'Court-Gauche', 'Gauche', 'Long-Gauche'];
 // 9 zones sélectionnables au total : les 8 directions + le centre ("Green" = coup rentré)
 const WEDGE_ZONES = [...WEDGE_RADAR_ORDER, 'Green'];
-// Distances proposées pour construire un exercice Créatif (paliers de 5m, 10 à 100m)
-const WEDGE_EXERCISE_DISTANCES = (() => { const arr = []; for (let d = 50; d <= 100; d += 5) arr.push(d); return arr; })();
+// Distances proposées pour construire un exercice Créatif (paliers de 5m, de WEDGE_MIN_DISTANCE à WEDGE_MAX_DISTANCE compris)
+const WEDGE_EXERCISE_DISTANCES = (() => { const arr = []; for (let d = WEDGE_MIN_DISTANCE; d <= WEDGE_MAX_DISTANCE; d += 5) arr.push(d); return arr; })();
 const WEDGE_SHOTS_LIMIT_OPTIONS = [[20, '20'], [50, '50'], [100, '100'], ['all', 'Tous']];
 const WEDGE_EX_REVIEW_LIMIT_OPTIONS = [10, 20, 50, 'all'];
 
-// Libellé d'un palier : "50-54m" ... "105-109m", puis "110m" (la limite haute n'a pas de tranche de 5 m)
-function wedgeBucketLabel(b) { return b >= WEDGE_MAX_DISTANCE ? `${b}m` : `${b}-${b + 4}m`; }
+// Libellé d'un palier : "30-34m" ... "100-104m", puis "105-110m" (le dernier palier va jusqu'à la limite haute comprise)
+function wedgeBucketLabel(b) { return `${b}-${b === WEDGE_BUCKETS[WEDGE_BUCKETS.length - 1] ? WEDGE_MAX_DISTANCE : b + 4}m`; }
 function wedgeRadarShortLabel(zone) { return zone.split('-').map(w => w[0]).join('-'); }
 function wedgeZoneDisplayLabel(zone) { return zone === 'Green' ? 'Trou' : zone; }
 
@@ -434,8 +436,11 @@ function normalizeWedgeExercises(list) {
     .map(e => Object.assign({}, e, { logs: Array.isArray(e.logs) ? e.logs : [] }));
 }
 function normalizeWedgeRounds(list) {
+  // Les coups enregistrés avec l'ancien palier "110m" (seul) passent dans le dernier palier, 105-110m
+  const lastBucket = WEDGE_BUCKETS[WEDGE_BUCKETS.length - 1];
   return (Array.isArray(list) ? list : [])
-    .filter(w => w && typeof w.distanceToCover === 'number' && typeof w.zone === 'string' && typeof w.finalDistance === 'number');
+    .filter(w => w && typeof w.distanceToCover === 'number' && typeof w.zone === 'string' && typeof w.finalDistance === 'number')
+    .map(w => w.distanceToCover > lastBucket ? Object.assign({}, w, { distanceToCover: lastBucket }) : w);
 }
 let wedgeExercises = normalizeWedgeExercises(WedgeStorage.getExercises());
 let wedgeExerciseModalOpen = false;

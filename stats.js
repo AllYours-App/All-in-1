@@ -1072,8 +1072,8 @@
   const ALL_COURSES = 'Tous parcours';
   const ALL_LIES = 'Tous lies';
   const FIR_HIT = 'Centre';          // choix Gauche / Centre / Droite : Centre = fairway touché
-  const AG_MAX = 30;                 // m : en dessous (hors green) = coup autour du green
-  // m : de AG_MAX jusqu'à ici (compris) = wedging, au-delà = approches. Même limite que le Journal Wedging (WEDGE_MAX_DISTANCE de wedging.js)
+  const APP_MAX = 30;                // m : en dessous (hors green) = coup autour du green (APP.)
+  // m : de APP_MAX jusqu'à ici (compris) = wedging, au-delà = attaque de green (A.G., longs coups). Même limite que le Journal Wedging (WEDGE_MAX_DISTANCE de wedging.js)
   const WEDGING_MAX = typeof WEDGE_MAX_DISTANCE === 'number' ? WEDGE_MAX_DISTANCE : 110;
   const BIRDIE_CHANCE_MAX = 8;       // m : approche finissant sur le green à moins de ça = chance de birdie
   const DASHBOARD_ROUNDS = 20;       // le dashboard porte sur les 20 dernières parties
@@ -1232,16 +1232,17 @@
       const long = notNull(par) ? par >= 4 : (S.before !== null && S.before >= 230);
       if (long) return 'driving';
     }
-    if (S.before !== null && S.before <= AG_MAX) return 'shortGame';
+    if (S.before !== null && S.before <= APP_MAX) return 'shortGame';
     return 'approach';
   }
 
-  // Groupes du dashboard : driving / green (A.G.) / wedging / approches / putting
+  // Groupes du dashboard : driving / green (A.G. = attaque de green, longs coups) / wedging /
+  // approches (APP. = petits coups autour du green) / putting
   function sgGroup(S) {
     if (S.cat === 'putting') return 'putting';
     if (S.cat === 'driving') return 'driving';
-    if (S.cat === 'shortGame') return 'green';
-    return S.before !== null && S.before <= WEDGING_MAX ? 'wedging' : 'approches';
+    if (S.cat === 'shortGame') return 'approches';
+    return S.before !== null && S.before <= WEDGING_MAX ? 'wedging' : 'green';
   }
 
   // Distance parcourue par un coup (même calcul que la saisie détaillée : cosinus si une direction est connue)
@@ -1386,13 +1387,14 @@
   function liveHoleSG(hole, rawShots) {
     const H = { par: notNull(hole.par) ? hole.par : null, distance: notNull(hole.distance) ? hole.distance : null, gir: null };
     buildShotRecords(H, rawShots);
+    // green = A.G. (longs coups, wedging compris) ; approach = APP. (autour du green)
     const g = { driving: 0, green: 0, approach: 0, putting: 0 };
     let any = false;
     H.shots.forEach((S) => {
       if (S.sg === null) return;
       any = true;
       const grp = sgGroup(S);
-      g[grp === 'wedging' || grp === 'approches' ? 'approach' : grp] += S.sg;
+      g[grp === 'wedging' ? 'green' : grp === 'approches' ? 'approach' : grp] += S.sg;
     });
     return any ? { ...g, total: sumOf(Object.values(g)) } : null;
   }
@@ -1632,7 +1634,7 @@
       girPct: girH.length ? share(girH.filter((h) => h.gir).length, girH.length) : null,
       putts: pH.length ? meanOf(pH.map((h) => h.putts)) * 18 : null,
       puttsPerGir: girP.length ? meanOf(girP.map((h) => h.putts)) : null,
-      sg: sg ? { total: sg.total, driving: sg.driving, approach: sg.wedging + sg.approches, shortGame: sg.green, putting: sg.putting } : null,
+      sg: sg ? { total: sg.total, driving: sg.driving, approach: sg.wedging + sg.green, shortGame: sg.approches, putting: sg.putting } : null,
     };
   }
   const trendRoundsData = () => expandedRounds().map(trendRoundOf);
@@ -3391,31 +3393,36 @@
     }
 
     function renderStats() {
-      let fir = 0, gir = 0, putts = 0, puttsHoles = 0;
+      let fir = 0, gir = 0, putts = 0, puttsHoles = 0, scoreTotal = 0, scoreHoles = 0;
       holes.forEach((_, i) => {
         const h = holeSummary(i);
         if (round.holes[i].par !== 3 && h.fairway === FAIRWAY_HIT) fir++;
         if (h.gir) gir++;
         if (h.putts !== null) { putts += h.putts; puttsHoles++; }
+        if (h.score !== null) { scoreTotal += h.score; scoreHoles++; } // score total : trous rentrés uniquement
       });
       // FIR sur les trous hors par 3 (par inconnu = compté), GIR sur tous les trous, putts = total de la partie
       const firTotal = round.holes.filter((h) => h.par !== 3).length;
       setText(d('fir'), `${fir}/${firTotal}`);
       setText(d('gir'), `${gir}/${round.holes.length}`);
       setText(d('putts'), puttsHoles ? String(putts) : '--');
-      // Strokes gained : total de la partie (haut) et détail du trou affiché (encadré SG)
+      setText(d('score'), scoreHoles ? String(scoreTotal) : '--');
+      // Strokes gained : total de la partie (haut) et cumul par catégorie depuis le trou 1 (encadré SG)
       const fmtLive = (v) => (v === null || v === undefined ? '--' : fmtSG(v));
+      const cumul = { driving: 0, green: 0, approach: 0, putting: 0 };
       let roundSg = 0, roundSgAny = false;
       round.holes.forEach((hole, i) => {
         const g = liveHoleSG(hole, holes[i]);
-        if (g) { roundSg += g.total; roundSgAny = true; }
+        if (!g) return;
+        roundSg += g.total;
+        roundSgAny = true;
+        Object.keys(cumul).forEach((key) => { cumul[key] += g[key]; });
       });
       setText(d('sg'), roundSgAny ? fmtSG(roundSg) : '--');
-      const cur = liveHoleSG(round.holes[idx], holes[idx]);
-      setText(d('sg-driving'), fmtLive(cur && cur.driving));
-      setText(d('sg-green'), fmtLive(cur && cur.green));
-      setText(d('sg-approach'), fmtLive(cur && cur.approach));
-      setText(d('sg-putting'), fmtLive(cur && cur.putting));
+      setText(d('sg-driving'), fmtLive(roundSgAny ? cumul.driving : null));
+      setText(d('sg-green'), fmtLive(roundSgAny ? cumul.green : null));
+      setText(d('sg-approach'), fmtLive(roundSgAny ? cumul.approach : null));
+      setText(d('sg-putting'), fmtLive(roundSgAny ? cumul.putting : null));
     }
 
     const isLastHole = () => idx === round.holes.length - 1;
