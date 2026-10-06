@@ -306,11 +306,11 @@
     // Carte non interactive : symbole, titre, valeur (dimensions identiques via CSS).
     return `
       <article class="card kpi-card fade-up" style="--fade-index:${index}" data-kpi="${kpi.key}">
-        <div class="kpi-card__top">
-          <div class="icon-badge">${icon(kpi.icon)}</div>
+        <div class="icon-badge">${icon(kpi.icon)}</div>
+        <div class="kpi-card__body">
+          <div class="kpi-card__title">${kpi.title}</div>
           <div class="kpi-card__value">${fmt(kpi.value)}<sup>${kpi.unit}</sup></div>
         </div>
-        <div class="kpi-card__title">${kpi.title}</div>
       </article>
     `;
   }
@@ -555,11 +555,11 @@
       : `type="button" data-goto="${item.goto}" class="card card--interactive analysis-card fade-up"`;
     return `
       <${tag} ${attrs} style="--fade-index:${index};">
-        <div class="analysis-card__top">
-          <div class="analysis-card__icon">${icon(item.icon)}</div>
-          <span class="analysis-card__info" role="button" aria-label="${item.description}" onclick="event.stopPropagation(); var o = this.classList.contains('is-open'); document.querySelectorAll('.analysis-card__info.is-open').forEach(function (el) { el.classList.remove('is-open'); }); if (!o) this.classList.add('is-open');">i</span>
+        <div class="icon-badge analysis-card__icon">${icon(item.icon)}</div>
+        <div class="analysis-card__text">
+          <div class="analysis-card__title">${item.title}</div>
+          <div class="analysis-card__desc">${item.description}</div>
         </div>
-        <div class="analysis-card__title">${item.title}</div>
         <div class="analysis-card__arrow">${icon('chevronRight')}</div>
       </${tag}>
     `;
@@ -1799,20 +1799,26 @@
       ? `<div class="sg-card__value" data-count-to="${sg.total}" data-count-prefix="${sg.total > 0 ? '+' : ''}">+0.0</div>`
       : `<div class="sg-card__value">--</div>`;
 
+    // Barre SG : 2 coups gagnés ou perdus = barre pleine (échelle fixe)
+    const sgBar = (v) => (v === null || v === undefined || Number.isNaN(v) ? 0 : Math.min(Math.abs(v) / 2, 1) * 100);
+
     document.getElementById('dash-strokesGained').innerHTML = `
       <div class="sg-card__main">
         <div class="icon-badge">${icon('trendUp')}</div>
         <div class="sg-card__total">
-          <div class="sg-card__label">SG total</div>
+          <div class="sg-card__label">Strokes gained</div>
           ${totalValueHtml}
+          <div class="sg-card__sub">SG total</div>
         </div>
       </div>
       <div class="sg-card__breakdown">
         ${sg.categories.map((c) => `
-          <div class="sg-item">
-            <div class="sg-item__label">${c.label}</div>
-            <div class="sg-item__icon">${icon(c.icon)}</div>
-            <div class="sg-item__value">${fmtSigned(c.value)}</div>
+          <div class="sg-item${c.value !== null && c.value < 0 ? ' sg-item--neg' : ''}">
+            <div class="sg-item__head">
+              <span class="sg-item__label">${c.label}</span>
+              <span class="sg-item__value">${fmtSigned(c.value)}</span>
+            </div>
+            <div class="sg-item__bar"><span style="width:${sgBar(c.value)}%"></span></div>
           </div>
         `).join('')}
       </div>

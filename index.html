@@ -460,19 +460,35 @@
     </section>
 
     <section class="section">
+      <div class="section__header">
+        <h2 class="section__title section__title--icon">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+          Mes indicateurs
+        </h2>
+      </div>
       <div id="dash-kpiGrid" class="grid-2" role="list" aria-label="Indicateurs clés de performance"></div>
     </section>
 
     <section class="section">
       <div class="section__header">
-        <h2 class="section__title">Analyses détaillées</h2>
+        <h2 class="section__title section__title--icon">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M6 20v-6M12 20V6M18 20v-9"/></svg>
+          Analyser mon jeu
+        </h2>
       </div>
-      <div id="dash-analysesGrid" class="grid-3"></div>
+      <div id="dash-analysesGrid"></div>
     </section>
 
     <section class="section">
       <div class="section__header">
-        <h2 class="section__title">Historique des tours</h2>
+        <h2 class="section__title section__title--icon">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          Mes parcours
+        </h2>
+        <button type="button" class="section__link" data-goto="historique">
+          Voir tout
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
       <div id="dash-historyList"></div>
     </section>
@@ -1096,9 +1112,8 @@
 
       <p class="auth_legal">
         En continuant, vous acceptez nos
-        <a class="auth_legal-link" href="?legal=cgu" onclick="openHelpPage('cgu','login');return false;">conditions d'utilisation</a>
-        et notre
-        <a class="auth_legal-link" href="?legal=confidentialite" onclick="openHelpPage('confidentialite','login');return false;">politique de confidentialité</a>.
+        <a class="auth_legal-link" href="#">conditions d'utilisation</a>
+        et notre politique de confidentialité.
       </p>
 
     </div>
@@ -1199,9 +1214,8 @@
 
       <p class="auth_legal">
         En continuant, vous acceptez nos
-        <a class="auth_legal-link" href="?legal=cgu" onclick="openHelpPage('cgu','signup');return false;">conditions d'utilisation</a>
-        et notre
-        <a class="auth_legal-link" href="?legal=confidentialite" onclick="openHelpPage('confidentialite','signup');return false;">politique de confidentialité</a>.
+        <a class="auth_legal-link" href="#">conditions d'utilisation</a>
+        et notre politique de confidentialité.
       </p>
 
     </div>

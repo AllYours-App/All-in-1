@@ -11,7 +11,7 @@ Cette partie décrit l'application du point de vue de l'utilisateur, sans vocabu
 All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur téléphone. On s'y connecte, on arrive sur un accueil qui propose six parties de travail, et chacune se concentre sur un aspect du jeu. Les données sont enregistrées sur l'appareil.
 
 ### Connexion et création de compte
-Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
+Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu.
 
 ### Accueil
 Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine, distance moyenne, index et date de la dernière séance. Un bouton de profil ouvre le Menu.
@@ -24,15 +24,7 @@ C'est ici que le joueur renseigne ses informations personnelles, utilisées ensu
 - **Mon sac de golf** : cocher les clubs que l'on possède.
 - **Mes distances** : saisir la distance de chaque club. Les wedges peuvent avoir plusieurs distances (par exemple un coup plein et un trois-quarts).
 - **Driver** : longueur et poids.
-- **Aide & support** : FAQ (questions regroupées par thème), contact, textes légaux (conditions d'utilisation, politique de confidentialité, mentions légales), gestion des données personnelles et page À propos (version, crédits).
-- **Déconnexion**.
-
-#### Aide & support
-- **FAQ** : réponses aux questions fréquentes (stockage des données, position et capteurs, statistiques, Strokes Gained, usage en compétition, gym, gratuité).
-- **Contacter le support** : on choisit un sujet (question, problème technique, suggestion, données personnelles, autre) et on écrit son message. Le bouton Envoyer ouvre l'application e-mail du téléphone avec le message prêt à partir ; la version de l'appli et le type d'appareil sont ajoutés au message.
-- **Conditions d'utilisation, Politique de confidentialité, Mentions légales** : textes lisibles dans l'appli, avec leur date de mise à jour.
-- **Mes données** : exporter une copie de toutes ses données (fichier JSON, via la feuille de partage du téléphone ou en téléchargement), ou supprimer son compte et toutes ses données de l'appareil, après confirmation. La suppression est immédiate et irréversible.
-- **À propos** : nom, version et crédits.
+- **Aide** et **Déconnexion**.
 
 ### Parcours (sur le terrain)
 Outils à utiliser pendant une partie :
@@ -58,10 +50,10 @@ Entraînement et suivi du putting :
 
 ### Stats
 Tableau de bord des performances, rempli à partir des parties que le joueur saisit lui-même :
-- **Tableau de bord** : Strokes Gained global et par catégorie (Driving, A.G., Wedging, Approches, Putting), et indicateurs clés (fairways touchés, greens touchés, putts par tour, birdies par tour).
+- **Tableau de bord** : carte Strokes Gained (SG total à gauche, catégories Driving, A.G., Wedging, Approches, Putting à droite avec une barre de progression verte ou rouge), puis "Mes indicateurs" (fairways touchés, greens touchés, putts par tour, birdies par tour), "Analyser mon jeu" (accès à Par club, Par distance, Statistiques) et "Mes parcours" (6 derniers tours, lien "Voir tout" vers l'historique).
 - **Par club** et **par distance** : graphiques filtrables par période, parcours et position de la balle.
 - **Statistiques** : trois présentations (aperçu multi-critères : Score, Fairway, Attaque de green, Approches, Putts ; statistiques traditionnelles ; Strokes Gained). L'aperçu se filtre par période et par parcours.
-- **Historique des tours** : liste des parties, avec recherche par nom de parcours.
+- **Historique des tours** : liste des parties, avec recherche par nom de parcours. S'ouvre depuis "Voir tout" ou un tour de "Mes parcours".
 - **Performance putting** : évolution du nombre de putts moyen par partie.
 - **Saisie d'une partie** : soit rapide (score, fairway, green en régulation, putts, trou par trou), soit détaillée (chaque coup avec le club, la position, la distance restante, la pénalité et le résultat). On peut chercher le golf joué parmi les parcours proches de soi.
   En saisie détaillée, l'encadré du trou affiche six espaces : le détail du trou (numéro, par, distance, handicap) avec le score total de la partie juste dessous, par rapport au par (+1, -2, ou E à égalité ; trous rentrés dont le par est connu), puis FIR, GIR, putts et SG total. L'encadré Strokes Gained en bas à droite (Driving, A.G., App., Putts) cumule les SG de tous les trous depuis le début de la partie.
@@ -126,11 +118,11 @@ Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, 
 ### Dépendances externes
 
 - Chart.js 4.5.0 via cdnjs (graphiques de `stats.js`).
-- API publique `https://api.flyawaygolf.com/v2` : recherche de golfs par géolocalisation et profil de golf, appelée uniquement depuis `stats.js` (popup "Nouveau parcours"). Elle reçoit la position de l'appareil : elle est citée dans la politique de confidentialité, comme Vercel (hébergement) et cdnjs (Chart.js).
+- API publique `https://api.flyawaygolf.com/v2` : recherche de golfs par géolocalisation et profil de golf, appelée uniquement depuis `stats.js` (popup "Nouveau parcours").
 
 ## Fichiers partagés
 
-### `index.html` (1241 lignes)
+### `index.html` (1257 lignes)
 Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Un script en `<head>` ajoute la classe `has-session` sur `<html>` si `golfSession` existe, pour éviter le flash de la page de connexion.
 
 ### `app-shell.js`
@@ -153,21 +145,12 @@ Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence 
 Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), panneau de stats via `[data-stat="..."]` (`renderGolfStats(data)`, anneau de progression `setProgressRing`). Expose `window.renderHomeGreeting` (rappelée par `menu.js`) et `window.renderGolfStats`.
 
 ### `auth.js` / `auth.css`
-Connexion et création de compte. La session est uniquement la clé `golfSession` du `localStorage` (`{ email, createdAt }`) : aucun serveur, la validation ne vérifie que le format de l'e-mail et la longueur du mot de passe (8 caractères minimum à l'inscription). Choisit la page de départ (`home` si session, sinon `login`), expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`). Réutilise `getBackgroundByHour()` de `HomePage.js`. Les liens légaux sous les formulaires (dans `index.html`) appellent `openHelpPage('cgu' | 'confidentialite', 'login' | 'signup')` de `menu.js` : le texte s'ouvre dans la page Menu et le bouton retour ramène à l'écran d'origine.
+Connexion et création de compte. La session est uniquement la clé `golfSession` du `localStorage` (`{ email, createdAt }`) : aucun serveur, la validation ne vérifie que le format de l'e-mail et la longueur du mot de passe (8 caractères minimum à l'inscription). Choisit la page de départ (`home` si session, sinon `login`), expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`). Réutilise `getBackgroundByHour()` de `HomePage.js`.
 
 ### `menu.js` / `menu.css`
-Profil et réglages. Gère l'état global persisté dans `golfAppState` : `userProfile`, `settings` (température, altitude, unités), `radars`, `golfBag`, `driverSettings`, `personalDistances`, `wedgeDistances`. Écrans : menu principal, sac de golf (`golfClubCatalog`), distances par club, et le groupe Aide & support (voir ci-dessous). Contient son propre pavé numérique (`openMenuKeypad`...) construit sur `appKeypad`. Expose `window.renderMenuTab`.
+Profil et réglages. Gère l'état global persisté dans `golfAppState` : `userProfile`, `settings` (température, altitude, unités), `radars`, `golfBag`, `driverSettings`, `personalDistances`, `wedgeDistances`. Écrans : menu principal, sac de golf (`golfClubCatalog`), distances par club, aide. Contient son propre pavé numérique (`openMenuKeypad`...) construit sur `appKeypad`. Expose `window.renderMenuTab`.
 Ses variables globales (`golfBag`, `golfClubCatalog`, `personalDistances`, `wedgeDistances`, `settings`) sont lues directement par `parcours-ui.js` et `stats.js`.
 Ses fonctions de sauvegarde sont `saveMenuState()` / `loadMenuState()` (préfixées pour ne pas entrer en collision avec celles de `putting.js`).
-
-**Aide & support (`menu.js`, styles `faq_*`, `legal_*`, `contact_*`, `data_*` dans `menu.css`).**
-- `MENU_LEGAL` : constantes éditeur (nom, statut, adresse, SIRET, directeur de publication, e-mail de contact, médiateur), hébergeur, version et date de mise à jour. Les textes légaux lisent ces valeurs via des jetons `{{clé}}`. Tout champ encore au format `[À COMPLÉTER : ...]` est signalé dans la console au chargement. Pour mettre à jour un texte, changer `updatedAt`.
-- `MENU_DOCS` : contenu des CGU, de la politique de confidentialité et des mentions légales (`{ title, heading, sections: [{ h, p, ul }] }`), rendu par `renderLegalDoc(id)`. `MENU_FAQ` : questions de la FAQ (accordéon natif `<details>`).
-- `openHelpPage(id, from)` (exposée sur `window`) : routeur des écrans d'aide (`faq`, `contact`, `cgu`, `confidentialite`, `mentions`, `donnees`, `apropos`). `from` (`'login'` ou `'signup'`) fait revenir le bouton retour à cette page, pour les liens des écrans de connexion. `enterScreen()` accepte un 4e paramètre : le libellé du bouton retour.
-- Contact : pas de serveur, `menuSendContactMessage()` ouvre un `mailto:` pré-rempli.
-- Mes données : `exportMenuData()` (JSON de tout le `localStorage`) et `deleteMenuData()` (vide le `localStorage` puis recharge la page). Quand un backend existera, la suppression côté serveur devra être appelée avant l'effacement local (`TODO` dans le code).
-- Liens directs publics : `?legal=cgu`, `?legal=confidentialite`, `?legal=mentions`, `?legal=donnees` ouvrent le texte sans compte. Ce sont les URL à renseigner dans Google Play Console (politique de confidentialité, suppression de compte) puis dans App Store Connect.
-- À maintenir : toute nouvelle donnée collectée, tout nouveau service tiers (analytics, backend, paiement, connexion Apple/Google) ou changement de l'offre (abonnements) doit être reflété dans `MENU_DOCS.confidentialite` et `MENU_DOCS.cgu`, avec une nouvelle date `updatedAt`.
 
 ### `parcours-ui.js` / `parcours-ui.css`
 Suivi pendant le parcours : Fairway (mises en jeu sur 18 trous), Green (attaques de green), Historique (bilan du parcours en cours), calculateur de vent, calculateur de dénivelé (capteurs d'orientation de l'appareil), calculateur "Mes distances" (lit `golfBag` et les distances de `menu.js`). Les fonctions sont globales car appelées depuis des `onclick` générés. Unités m/yd.
@@ -222,10 +205,9 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 6. **Page Parcours vide.** `#page-parcours .screen-view[data-screen="home"]` n'a jamais la classe `active` et reste en `display: none`. Le routeur d'écrans (`goToScreen`) a disparu de `parcours-ui.js` au commit `679b585`, et `app-shell.js` ne fait que lire cette classe. Les écrans `distances` et `add-shot` du même fichier sont des maquettes sans lien. À corriger : réactiver `home` à l'ouverture de la page.
 7. **Taille des fichiers.** Images : les 27 PNG pesaient environ 54 Mo (1,5 à 3,2 Mo chacun), elles sont passées en WebP. Les `.webp` doivent être présents dans `images/` au même nom (sinon les fonds ne s'affichent plus). JS / CSS, toujours à traiter : `gym.js` (6071 lignes, 408 Ko), `stats.js` (3708), `putting.js` (3779), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) sont chargés au démarrage, y compris les parties jamais ouvertes.
 
-8. **Textes légaux à finaliser avant publication.** `MENU_LEGAL` (`menu.js`) contient des champs `[À COMPLÉTER : ...]` (éditeur, adresse, SIRET, e-mail de contact, médiateur). Les textes décrivent l'état actuel (données uniquement sur l'appareil, pas de backend, pas d'analytics, pas de paiement) et sont à faire relire par un juriste. Ils devront être mis à jour dès l'ajout d'un backend de comptes, d'une connexion Apple/Google, d'un outil de mesure d'audience ou d'abonnements. Apple impose aussi la suppression de compte dans l'appli et des achats via son système de paiement : à prévoir pour la version iOS.
-
 ### Bugs résolus
 
+- **Stats : accueil réorganisé.** Carte SG en deux colonnes avec barres de progression par catégorie, section "Mes indicateurs" (pastille à gauche, valeur à droite), "Analyser mon jeu" en liste de cartes pleine largeur avec description (la bulle "i" est supprimée), "Mes parcours" en cartes individuelles avec lien "Voir tout". Titres de section avec icône SVG (`.section__title--icon`). Calculs et valeurs inchangés.
 - **Icônes difformes ou sans rapport avec leur sens.** Revue complète des SVG : Gym (`ICONS` dans `gym.js` : muscle, running, tempo, sliders, legs, torso, abs, backMuscle, shoulders, arms, glutes, mobility, functional, equipment, layers). Les icônes de zones du corps partagent la silhouette `GYM_BODY` avec la zone travaillée en plein. Stats (`ICONS` et `LIE_ICON` dans `stats.js` : club, wedge, putter, bird, bag, bowl, arc, sliders, Fairway, Rough, Bunker). Accueil et Parcours (`index.html` : Wedging, Dénivelé, Historique, Bunker, Rough). Putting (`putting.js`, onglet Analyse distance). Les 9 boutons de fermeture `✕` de `parcours-ui.js` (caractère dépendant de la police) deviennent un SVG, dimensionné par `.icon-btn svg` dans `parcours-ui.css`. Convention : SVG inline 24×24, `stroke="currentColor"`, aucun emoji ni caractère Unicode comme icône.
 - **Stats : filtre "Lie" de l'aperçu (Multi) supprimé.** Il ne servait pas, et `computeOverview` n'a plus de paramètre `lie`. Les filtres Lie de "Par club" et "Par distance" restent : ils sont lus par `computeClubInsights` et `computeDistanceInsights`.
 - **Stats : boutons "⋯" sans action.** Les huit en-têtes de la page Stats (dont "Performance putting") avaient un bouton rond sans aucun gestionnaire. Retirés de `index.html`, ainsi que leurs règles dans `commun.css` et `stats.css` (le titre reste centré : la grille de l'en-tête a trois colonnes).
