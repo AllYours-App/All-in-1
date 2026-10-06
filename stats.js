@@ -23,12 +23,53 @@
   };
 
   // API: GET /api/stats/kpis?period=30d
-  const kpiCards = [
-    { key: 'fairways', title: 'Fairways touchés', value: null, unit: '%', icon: 'flag' },
-    { key: 'gir', title: 'Green touchés', value: null, unit: '%', icon: 'target' },
-    { key: 'putts', title: 'Putts par tour', value: null, unit: '', icon: 'putter' },
-    { key: 'birdies', title: 'Birdies par tour', value: null, unit: '', icon: 'bird' },
+  // Catalogue de tous les indicateurs affichables dans "Mes indicateurs" (calcul : computeKpiValues).
+  // unit : suffixe affiché derrière la valeur · signed : valeur affichée avec son signe (+ / -)
+  const kpiCatalog = [
+    // Score
+    { key: 'scoreGross', group: 'Score', title: 'Score moyen', unit: '', icon: 'bars' },
+    { key: 'scoreToPar', group: 'Score', title: 'Score moyen vs par', unit: '', icon: 'bars', signed: true },
+    { key: 'bestScore', group: 'Score', title: 'Meilleur score', unit: '', icon: 'flag' },
+    { key: 'eagles', group: 'Score', title: 'Aigles par tour', unit: '', icon: 'bird' },
+    { key: 'birdies', group: 'Score', title: 'Birdies par tour', unit: '', icon: 'bird' },
+    { key: 'pars', group: 'Score', title: 'Pars par tour', unit: '', icon: 'bars' },
+    { key: 'bogeys', group: 'Score', title: 'Bogeys par tour', unit: '', icon: 'bars' },
+    { key: 'doubles', group: 'Score', title: 'Double bogeys ou pire par tour', unit: '', icon: 'bars' },
+    { key: 'par3', group: 'Score', title: 'Score moyen sur par 3', unit: '', icon: 'flag' },
+    { key: 'par4', group: 'Score', title: 'Score moyen sur par 4', unit: '', icon: 'flag' },
+    { key: 'par5', group: 'Score', title: 'Score moyen sur par 5', unit: '', icon: 'flag' },
+    // Driving
+    { key: 'fairways', group: 'Driving', title: 'Fairways touchés', unit: '%', icon: 'flag' },
+    { key: 'driveDistance', group: 'Driving', title: 'Distance moyenne au drive', unit: 'm', icon: 'club' },
+    { key: 'drivePenalty', group: 'Driving', title: 'Drives pénalisés', unit: '%', icon: 'club' },
+    // Approche
+    { key: 'gir', group: 'Approche', title: 'Green touchés', unit: '%', icon: 'target' },
+    { key: 'girPar3', group: 'Approche', title: 'Green touchés sur par 3', unit: '%', icon: 'target' },
+    { key: 'girPar4', group: 'Approche', title: 'Green touchés sur par 4', unit: '%', icon: 'target' },
+    { key: 'girPar5', group: 'Approche', title: 'Green touchés sur par 5', unit: '%', icon: 'target' },
+    { key: 'proximity', group: 'Approche', title: 'Proximité des attaques de green', unit: 'm', icon: 'arc' },
+    // Petit jeu
+    { key: 'scrambling', group: 'Petit jeu', title: 'Scrambling', unit: '%', icon: 'wedge' },
+    { key: 'upDown', group: 'Petit jeu', title: 'Up & down', unit: '%', icon: 'wedge' },
+    { key: 'upDownBunker', group: 'Petit jeu', title: 'Up & down depuis le bunker', unit: '%', icon: 'wedge' },
+    // Putting
+    { key: 'putts', group: 'Putting', title: 'Putts par tour', unit: '', icon: 'putter' },
+    { key: 'puttsGir', group: 'Putting', title: 'Putts par green touché', unit: '', icon: 'putter' },
+    { key: 'onePutt', group: 'Putting', title: '1 putt', unit: '%', icon: 'putter' },
+    { key: 'threePutt', group: 'Putting', title: '3 putts ou plus', unit: '%', icon: 'putter' },
+    { key: 'firstPuttDistance', group: 'Putting', title: 'Distance moyenne du 1er putt', unit: 'm', icon: 'putter' },
+    { key: 'birdieAttempts7', group: 'Putting', title: 'Tentatives de birdie à 7 m', unit: '', icon: 'bird' },
+    { key: 'birdieAttempts3', group: 'Putting', title: 'Tentatives de birdie à 3 m', unit: '', icon: 'bird' },
+    // Strokes gained
+    { key: 'sgTotal', group: 'Strokes gained', title: 'SG Total', unit: '', icon: 'trendUp', signed: true },
+    { key: 'sgDriving', group: 'Strokes gained', title: 'SG Driving', unit: '', icon: 'club', signed: true },
+    { key: 'sgGreen', group: 'Strokes gained', title: 'SG A.G.', unit: '', icon: 'arc', signed: true },
+    { key: 'sgWedging', group: 'Strokes gained', title: 'SG Wedging', unit: '', icon: 'wedge', signed: true },
+    { key: 'sgApproches', group: 'Strokes gained', title: 'SG Approches', unit: '', icon: 'bowl', signed: true },
+    { key: 'sgPutting', group: 'Strokes gained', title: 'SG Putting', unit: '', icon: 'putter', signed: true },
   ];
+  // Indicateurs affichés par défaut (dans cet ordre) tant que le joueur n'a rien modifié
+  const DEFAULT_KPI_KEYS = ['fairways', 'gir', 'putts', 'birdies'];
 
   // API: GET /api/stats/analyses
   const detailedAnalyses = [
@@ -189,6 +230,7 @@
     search: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
     sort: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l3-3M17 20l-3-3"/></svg>`,
     close: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+    check: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12.5l4.5 4.5L19 7"/></svg>`,
     arrowRight: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`,
     weather: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 20h8.5a3.5 3.5 0 00.3-7A5 5 0 006.4 14.3 3.1 3.1 0 007 20z"/><circle cx="17" cy="6.5" r="2.4"/><path d="M17 2v1M21.5 6.5h-1M12.5 6.5h1M20.2 3.3l-.7.7M13.8 3.3l.7.7"/></svg>`,
     wind: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M3 8h10a2.5 2.5 0 10-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 11-2.5 2.5"/><path d="M3 16h7a2 2 0 11-2 2"/></svg>`,
@@ -309,7 +351,7 @@
         <div class="icon-badge">${icon(kpi.icon)}</div>
         <div class="kpi-card__body">
           <div class="kpi-card__title">${kpi.title}</div>
-          <div class="kpi-card__value">${fmt(kpi.value)}<sup>${kpi.unit}</sup></div>
+          <div class="kpi-card__value">${kpi.signed ? fmtSigned(kpi.value) : fmt(kpi.value)}<sup>${kpi.unit}</sup></div>
         </div>
       </article>
     `;
@@ -1409,35 +1451,204 @@
       .sort((a, b) => String(b.date).localeCompare(String(a.date)));
   }
 
-  function computeDashboard() {
-    const recent = expandedRounds().slice(-DASHBOARD_ROUNDS);
-    const holes = recent.flatMap((r) => r.holes);
-    const sg = sgOfHoles(holes);
-    const eligible = holes.filter((h) => h.par !== 3 && h.fairway);
-    const girHoles = holes.filter((h) => h.gir !== null);
+  /* ---------- Indicateurs choisis ("Mes indicateurs") ---------- */
+  const KPI_KEY = 'golfStatsKpis';
 
+  function loadKpiKeys() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KPI_KEY) || 'null');
+      if (Array.isArray(raw)) return raw.filter((k) => kpiCatalog.some((c) => c.key === k));
+    } catch (err) { /* valeur illisible : retour aux indicateurs par défaut */ }
+    return DEFAULT_KPI_KEYS.slice();
+  }
+  function persistKpiKeys() {
+    try { localStorage.setItem(KPI_KEY, JSON.stringify(selectedKpiKeys)); } catch (err) { console.warn('Indicateurs non enregistrés :', err); }
+  }
+
+  let selectedKpiKeys = loadKpiKeys();
+  let lastKpiValues = {}; // dernières valeurs calculées (évite de tout recalculer à chaque case cochée)
+
+  // Cartes à afficher : les indicateurs choisis, dans l'ordre de sélection
+  function pickKpiCards(value) {
+    return selectedKpiKeys.map((key) => kpiCatalog.find((c) => c.key === key)).filter(Boolean)
+      .map((c) => ({ ...c, value: value[c.key] === undefined ? null : value[c.key] }));
+  }
+
+  // Valeur de chaque indicateur du catalogue (kpiCatalog) sur les parties données
+  function computeKpiValues(recent, holes, sg) {
+    const girOf = (hs) => pctR(hs.filter((h) => h.gir).length, hs.length);
+    const avgScore = (hs) => rnd(meanOf(hs.filter((h) => h.score !== null).map((h) => h.score)), 2);
+    // Nombre de trous d'un résultat (écart au par), ramené à 18 trous puis moyenné sur les parties
+    const resultsPerRound = (test) => rnd(meanOf(recent.map((r) => {
+      const hs = r.holes.filter((h) => h.score !== null && h.par !== null);
+      return hs.length ? hs.filter((h) => test(h.score - h.par)).length * 18 / hs.length : null;
+    }).filter(notNull)), 1);
+
+    const totals = recent.map(roundTotals);
+    const gross = totals.filter((t) => t.gross !== null).map((t) => t.gross);
+    const vsPar = totals.filter((t) => t.vsPar !== null).map((t) => t.vsPar);
+
+    const fw = holes.filter((h) => h.par !== 3 && h.fairway);
+    const tee = holes.map((h) => h.shots.find((S) => S.cat === 'driving')).filter(Boolean);
+    const girHoles = holes.filter((h) => h.gir !== null);
+    const atk = holes.filter((h) => h.attackInfo).map((h) => h.attack).filter((S) => S && S.after !== null && attackReached(S));
+
+    // Petit jeu : trous où le green n'est pas touché
+    const missed = holes.filter((h) => h.gir === false);
+    const scrambleBase = missed.filter((h) => h.score !== null && h.par !== null);
+    const udOf = (hs) => {
+      const withRec = hs.filter((h) => h.recovery);
+      return pctR(withRec.filter((h) => strokesFrom(h.recovery) <= 2).length, withRec.length);
+    };
+
+    // Putting
+    const ph = holes.filter((h) => h.putts !== null);
     const puttsPerRound = recent.map((r) => {
       const hs = r.holes.filter((h) => h.putts !== null);
       return hs.length ? meanOf(hs.map((h) => h.putts)) * 18 : null;
     }).filter(notNull);
-    const birdiesPerRound = recent.map((r) => {
-      const hs = r.holes.filter((h) => h.score !== null && h.par !== null);
-      return hs.length ? hs.filter((h) => h.score - h.par <= -1).length * 18 / hs.length : null;
-    }).filter(notNull);
+    const firsts = holes.filter((h) => h.firstPuttShot && h.firstPuttShot.before !== null && h.putts !== null);
+    // Tentative de birdie = 1er putt tenté en régulation (green touché) à `max` m ou moins ; ramené à 18 trous saisis en détail
+    const detailed = holes.filter((h) => h.shots.length);
+    const attempts = (max) => (detailed.length
+      ? rnd(detailed.filter((h) => h.gir === true && h.firstPuttShot && h.firstPuttShot.before !== null && h.firstPuttShot.before <= max).length * 18 / detailed.length, 1)
+      : null);
 
-    const value = {
-      fairways: eligible.length ? pctR(eligible.filter((h) => h.fairway === FIR_HIT).length, eligible.length) : null,
-      gir: girHoles.length ? pctR(girHoles.filter((h) => h.gir).length, girHoles.length) : null,
+    const sgOf = (key) => (sg ? rnd(sg[key], 2) : null);
+
+    return {
+      scoreGross: rnd(meanOf(gross), 1), scoreToPar: rnd(meanOf(vsPar), 1), bestScore: gross.length ? Math.min(...gross) : null,
+      eagles: resultsPerRound((d) => d <= -2), birdies: resultsPerRound((d) => d <= -1), pars: resultsPerRound((d) => d === 0),
+      bogeys: resultsPerRound((d) => d === 1), doubles: resultsPerRound((d) => d >= 2),
+      par3: avgScore(holes.filter((h) => h.par === 3)), par4: avgScore(holes.filter((h) => h.par === 4)), par5: avgScore(holes.filter((h) => h.par === 5)),
+
+      fairways: fw.length ? pctR(fw.filter((h) => h.fairway === FIR_HIT).length, fw.length) : null,
+      driveDistance: rnd(meanOf(tee.map((S) => S.travel).filter(notNull)), 0),
+      drivePenalty: pctR(tee.filter((S) => S.penalty > 0).length, tee.length),
+
+      gir: girHoles.length ? girOf(girHoles) : null,
+      girPar3: girOf(girHoles.filter((h) => h.par === 3)), girPar4: girOf(girHoles.filter((h) => h.par === 4)), girPar5: girOf(girHoles.filter((h) => h.par === 5)),
+      proximity: rnd(meanOf(atk.map((S) => S.after)), 1),
+
+      scrambling: pctR(scrambleBase.filter((h) => h.score <= h.par).length, scrambleBase.length),
+      upDown: udOf(missed), upDownBunker: udOf(missed.filter((h) => h.recovery && h.recovery.lie === 'Bunker')),
+
       putts: rnd(meanOf(puttsPerRound), 1),
-      birdies: rnd(meanOf(birdiesPerRound), 1),
+      puttsGir: rnd(meanOf(ph.filter((h) => h.gir === true).map((h) => h.putts)), 2),
+      onePutt: pctR(ph.filter((h) => h.putts <= 1).length, ph.length),
+      threePutt: pctR(ph.filter((h) => h.putts >= 3).length, ph.length),
+      firstPuttDistance: rnd(meanOf(firsts.map((h) => h.firstPuttShot.before)), 1),
+      birdieAttempts7: attempts(7), birdieAttempts3: attempts(3),
+
+      sgTotal: sgOf('total'), sgDriving: sgOf('driving'), sgGreen: sgOf('green'),
+      sgWedging: sgOf('wedging'), sgApproches: sgOf('approches'), sgPutting: sgOf('putting'),
     };
+  }
+
+  /* ---------- Popup "Modifier" : choix des indicateurs ---------- */
+  let kpiPickerEl = null;
+  let kpiPickerTrigger = null;
+
+  function renderKpiPicker() {
+    const groups = [];
+    kpiCatalog.forEach((c) => {
+      let g = groups.find((x) => x.name === c.group);
+      if (!g) { g = { name: c.group, items: [] }; groups.push(g); }
+      g.items.push(c);
+    });
+    kpiPickerEl.querySelector('.new-round_modal').innerHTML = `
+      <div class="new-round_header">
+        <span class="new-round_icon">${icon('sliders')}</span>
+        <div class="new-round_heading">
+          <h2 class="new-round_title" id="kp-title">Mes indicateurs</h2>
+          <p class="new-round_subtitle" data-kp-count></p>
+        </div>
+        <button type="button" class="new-round_close" data-kp-close aria-label="Fermer">${icon('close')}</button>
+      </div>
+      <div class="new-round_form">
+        ${groups.map((g) => `
+          <div class="new-round_group">
+            <div class="new-round_label">${g.name}</div>
+            <div class="kpi-picker_list">
+              ${g.items.map((c) => `
+                <button type="button" role="checkbox" class="kpi-picker_item" data-kpi-key="${c.key}" aria-checked="${selectedKpiKeys.includes(c.key)}">
+                  <span class="kpi-picker_icon">${icon(c.icon)}</span>
+                  <span class="kpi-picker_title">${c.title}</span>
+                  <span class="kpi-picker_check">${icon('check')}</span>
+                </button>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+      <button type="button" class="new-round_cta kpi-picker_cta" data-kp-close>Terminer</button>
+    `;
+    updateKpiPickerCount();
+  }
+
+  function updateKpiPickerCount() {
+    const n = selectedKpiKeys.length;
+    kpiPickerEl.querySelector('[data-kp-count]').textContent = n === 0 ? 'Aucun indicateur affiché' : `${n} indicateur${n > 1 ? 's' : ''} affiché${n > 1 ? 's' : ''}`;
+  }
+
+  function renderKpiGrid(cards) {
+    document.getElementById('dash-kpiGrid').innerHTML = cards.length
+      ? cards.map((k, i) => renderKpiCard(k, i)).join('')
+      : '<p class="kpi-empty">Aucun indicateur affiché. Utilise "Modifier" pour en ajouter.</p>';
+  }
+
+  function ensureKpiPicker() {
+    if (kpiPickerEl) return;
+    kpiPickerEl = document.createElement('div');
+    kpiPickerEl.className = 'new-round_overlay';
+    kpiPickerEl.innerHTML = '<div class="new-round_modal" role="dialog" aria-modal="true" aria-labelledby="kp-title"></div>';
+    getStatsRoot().appendChild(kpiPickerEl);
+
+    kpiPickerEl.addEventListener('click', (e) => {
+      if (e.target === kpiPickerEl || e.target.closest('[data-kp-close]')) { closeKpiPicker(); return; }
+      const item = e.target.closest('[data-kpi-key]');
+      if (!item) return;
+      const key = item.dataset.kpiKey;
+      // Un indicateur ajouté se place à la fin ; chaque case cochée est enregistrée et appliquée tout de suite
+      selectedKpiKeys = selectedKpiKeys.includes(key) ? selectedKpiKeys.filter((k) => k !== key) : [...selectedKpiKeys, key];
+      persistKpiKeys();
+      item.setAttribute('aria-checked', String(selectedKpiKeys.includes(key)));
+      updateKpiPickerCount();
+      renderKpiGrid(pickKpiCards(lastKpiValues));
+    });
+  }
+
+  function onKpiPickerKeydown(e) {
+    if (e.key === 'Escape') closeKpiPicker();
+  }
+
+  function openKpiPicker(trigger) {
+    ensureKpiPicker();
+    renderKpiPicker();
+    kpiPickerTrigger = trigger || null;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKpiPickerKeydown);
+    kpiPickerEl.classList.add('is-open');
+    kpiPickerEl.querySelector('[data-kp-close]').focus();
+  }
+
+  function closeKpiPicker() {
+    kpiPickerEl.classList.remove('is-open');
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onKpiPickerKeydown);
+    if (kpiPickerTrigger) kpiPickerTrigger.focus();
+  }
+
+  function computeDashboard() {
+    const recent = expandedRounds().slice(-DASHBOARD_ROUNDS);
+    const holes = recent.flatMap((r) => r.holes);
+    const sg = sgOfHoles(holes);
+    lastKpiValues = computeKpiValues(recent, holes, sg);
     const history = roundListData();
     return {
       strokesGained: {
         total: sg ? rnd(sg.total, 2) : null,
         categories: strokesGained.categories.map((c) => ({ ...c, value: sg ? rnd(sg[c.key], 2) : null })),
       },
-      kpiCards: kpiCards.map((k) => ({ ...k, value: value[k.key] === undefined ? null : value[k.key] })),
+      kpiCards: pickKpiCards(lastKpiValues),
       roundsHistory: history,
       roundsSummary: computeRoundsSummary(),
     };
@@ -1824,7 +2035,7 @@
       </div>
     `;
 
-    document.getElementById('dash-kpiGrid').innerHTML = data.kpiCards.map((k, i) => renderKpiCard(k, i)).join('');
+    renderKpiGrid(data.kpiCards);
     document.getElementById('dash-analysesGrid').innerHTML = detailedAnalyses.map((a, i) => renderAnalysisCard(a, i)).join('');
     renderRoundList(document.getElementById('dash-historyList'), data.roundsHistory.slice(0, 6), () => showScreen('historique'));
     animateCounters(document.getElementById('screen-dashboard'), 800);
@@ -3743,6 +3954,8 @@
       if (!root || !root.contains(e.target)) return;
       const openBtn = e.target.closest('[data-new-round]');
       if (openBtn) { openNewRound(openBtn); return; }
+      const kpiBtn = e.target.closest('[data-kpi-edit]');
+      if (kpiBtn) { openKpiPicker(kpiBtn); return; }
       const btn = e.target.closest('[data-goto]');
       if (btn) showScreen(btn.dataset.goto);
     });
