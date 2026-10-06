@@ -8,17 +8,17 @@
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="base.css?v=28">
-<link rel="stylesheet" href="commun.css?v=28">
-<link rel="stylesheet" href="HomePage.css?v=28">
-<link rel="stylesheet" href="parcours-ui.css?v=28">
-<link rel="stylesheet" href="wedging.css?v=28">
-<link rel="stylesheet" href="gym.css?v=28">
-<link rel="stylesheet" href="putting.css?v=28">
-<link rel="stylesheet" href="vitesse.css?v=28">
-<link rel="stylesheet" href="stats.css?v=28">
-<link rel="stylesheet" href="menu.css?v=28">
-<link rel="stylesheet" href="auth.css?v=28">
+<link rel="stylesheet" href="base.css?v=30">
+<link rel="stylesheet" href="commun.css?v=30">
+<link rel="stylesheet" href="HomePage.css?v=30">
+<link rel="stylesheet" href="parcours-ui.css?v=30">
+<link rel="stylesheet" href="wedging.css?v=30">
+<link rel="stylesheet" href="gym.css?v=30">
+<link rel="stylesheet" href="putting.css?v=30">
+<link rel="stylesheet" href="vitesse.css?v=30">
+<link rel="stylesheet" href="stats.css?v=30">
+<link rel="stylesheet" href="menu.css?v=30">
+<link rel="stylesheet" href="auth.css?v=30">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 </head>
 <body>
@@ -1116,8 +1116,9 @@
 
       <p class="auth_legal">
         En continuant, vous acceptez nos
-        <a class="auth_legal-link" href="#">conditions d'utilisation</a>
-        et notre politique de confidentialité.
+        <a class="auth_legal-link" href="?legal=cgu" onclick="openHelpPage('cgu','login');return false;">conditions d'utilisation</a>
+        et notre
+        <a class="auth_legal-link" href="?legal=confidentialite" onclick="openHelpPage('confidentialite','login');return false;">politique de confidentialité</a>.
       </p>
 
     </div>
@@ -1218,8 +1219,9 @@
 
       <p class="auth_legal">
         En continuant, vous acceptez nos
-        <a class="auth_legal-link" href="#">conditions d'utilisation</a>
-        et notre politique de confidentialité.
+        <a class="auth_legal-link" href="?legal=cgu" onclick="openHelpPage('cgu','signup');return false;">conditions d'utilisation</a>
+        et notre
+        <a class="auth_legal-link" href="?legal=confidentialite" onclick="openHelpPage('confidentialite','signup');return false;">politique de confidentialité</a>.
       </p>
 
     </div>
@@ -1242,18 +1244,18 @@
     }
   } catch (e) {}
 </script>
-<script src="app-shell.js?v=28"></script>
-<script src="commun.js?v=28"></script>
-<script src="sg-data.js?v=28"></script>
-<script src="strokes-gained.js?v=28"></script>
-<script src="HomePage.js?v=28"></script>
-<script src="parcours-ui.js?v=28"></script>
-<script src="wedging.js?v=28"></script>
-<script src="gym.js?v=28"></script>
-<script src="putting.js?v=28"></script>
-<script src="vitesse.js?v=28"></script>
-<script src="stats.js?v=28"></script>
-<script src="menu.js?v=28"></script>
-<script src="auth.js?v=28"></script>
+<script src="app-shell.js?v=30"></script>
+<script src="commun.js?v=30"></script>
+<script src="sg-data.js?v=30"></script>
+<script src="strokes-gained.js?v=30"></script>
+<script src="HomePage.js?v=30"></script>
+<script src="parcours-ui.js?v=30"></script>
+<script src="wedging.js?v=30"></script>
+<script src="gym.js?v=30"></script>
+<script src="putting.js?v=30"></script>
+<script src="vitesse.js?v=30"></script>
+<script src="stats.js?v=30"></script>
+<script src="menu.js?v=30"></script>
+<script src="auth.js?v=30"></script>
 </body>
 </html>

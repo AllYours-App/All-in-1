@@ -594,16 +594,14 @@ const MENU_LEGAL = {
   appName: "All-in-1",
   appVersion: "1.0.0",
   updatedAt: "6 octobre 2026",
-  editorName: menuTodo("nom ou raison sociale de l'éditeur"),
-  editorStatus: menuTodo("statut : particulier, auto-entrepreneur, société..."),
-  editorAddress: menuTodo("adresse postale"),
-  editorSiret: menuTodo("SIRET, si activité professionnelle"),
-  publisherName: menuTodo("directeur de la publication"),
-  contactEmail: menuTodo("adresse e-mail de contact"),
-  mediator: menuTodo("médiateur de la consommation, obligatoire si activité professionnelle"),
-  hostName: "Vercel Inc.",
-  hostAddress: "440 N Barranca Ave #4133, Covina, CA 91723, États-Unis",
-  hostUrl: "vercel.com",
+  editorName: "Pierre-Antton Ducoin",
+  editorStatus: "éditeur non professionnel",
+  contactEmail: "contactgolfevolution@gmail.com",
+  backendName: "Supabase",
+  backendRegion: menuTodo("région du projet Supabase, de préférence dans l'Union européenne"),
+  hostName: menuTodo("hébergeur de l'application, en remplacement de Vercel"),
+  hostAddress: menuTodo("adresse de l'hébergeur"),
+  hostUrl: menuTodo("site web de l'hébergeur"),
 };
 
 function warnMenuLegalPlaceholders() {
@@ -680,9 +678,9 @@ const MENU_FAQ = [
   {
     title: "Compte et données",
     items: [
-      ["Où sont enregistrées mes données ?", "Sur votre téléphone, dans l'espace de stockage de l'application. Elles ne sont pas envoyées à nos serveurs. Désinstaller l'application ou vider ses données les efface définitivement."],
-      ["Comment changer de téléphone sans tout perdre ?", "Il n'existe pas encore de transfert automatique entre appareils. Vous pouvez conserver une copie de vos données depuis Aide & support, rubrique Mes données."],
-      ["Comment supprimer mon compte ?", "Menu, Aide & support, Mes données, puis Supprimer mon compte et mes données. L'effacement est immédiat et définitif."],
+      ["Où sont enregistrées mes données ?", "Sur nos serveurs sécurisés, liées à votre compte, avec une copie de travail sur votre téléphone. Désinstaller l'application n'efface donc pas votre compte : reconnectez-vous pour tout retrouver."],
+      ["Comment changer de téléphone sans tout perdre ?", "Connectez-vous avec le même compte sur le nouvel appareil : vos données sont retrouvées. Vous pouvez aussi conserver une copie depuis Aide & support, rubrique Mes données."],
+      ["Comment supprimer mon compte ?", "Menu, Aide & support, Mes données, puis Supprimer mon compte et mes données. Votre compte et vos données sont effacés de nos serveurs et de l'appareil, de façon définitive."],
       ["Mes données sont-elles revendues ?", "Non. Vos données ne sont ni vendues, ni utilisées à des fins publicitaires."],
     ],
   },
@@ -700,7 +698,7 @@ const MENU_FAQ = [
   {
     title: "Application",
     items: [
-      ["L'application est-elle gratuite ?", "Oui, aujourd'hui. Des fonctions ou des abonnements payants pourront être ajoutés plus tard : leurs conditions vous seront présentées avant toute souscription, et rien n'est facturé sans votre accord."],
+      ["L'application est-elle gratuite ?", "Oui. Elle ne contient ni publicité ni abonnement. Si cela devait changer, vous en seriez informé dans l'application avant toute mise en place, et rien ne serait facturé sans votre accord."],
       ["Sur quels appareils est-elle disponible ?", "Sur Android, via Google Play. Une version iOS est prévue ensuite."],
       ["Comment signaler un problème ou proposer une idée ?", "Depuis Aide & support, rubrique Contacter le support, en choisissant Problème technique ou Suggestion."],
     ],
@@ -798,18 +796,16 @@ const MENU_DOCS = {
         "En créant un compte ou en utilisant l'Application, vous acceptez les CGU.",
       ] },
       { h: "2. Éditeur", p: [
-        "L'Application est éditée par {{editorName}} ({{editorStatus}}), {{editorAddress}}. Contact : {{contactEmail}}. Les mentions légales complètes sont disponibles dans Aide & support.",
+        "L'Application est éditée par {{editorName}}, à titre non professionnel. Contact : {{contactEmail}}. Les mentions légales complètes sont disponibles dans Aide & support.",
       ] },
       { h: "3. Accès et compte", ul: [
         "Vous devez avoir au moins 15 ans, ou disposer de l'accord de vos représentants légaux.",
         "Les informations que vous fournissez doivent être exactes.",
         "Vous êtes responsable de la confidentialité de votre mot de passe et de l'usage de votre compte, qui est strictement personnel.",
       ] },
-      { h: "4. Gratuité et offres payantes", p: [
-        "L'Application est aujourd'hui gratuite. Des fonctions ou des abonnements payants pourront être proposés plus tard.",
-        "Dans ce cas, le prix, la durée, les conditions de renouvellement et de résiliation vous seront présentés clairement avant toute souscription, et aucun paiement ne sera déclenché sans votre accord explicite.",
-        "Les achats et abonnements réalisés via Google Play ou l'App Store sont soumis aux conditions de ces plateformes, qui gèrent le paiement, la facturation, les remboursements et la résiliation. Vos droits de consommateur, y compris le droit de rétractation lorsqu'il s'applique, restent garantis par la loi.",
-        "Toute évolution de l'offre vous sera communiquée dans l'Application avant son entrée en vigueur.",
+      { h: "4. Gratuité", p: [
+        "L'Application est gratuite et ne contient ni publicité ni abonnement.",
+        "Si une offre payante ou de la publicité devait un jour être introduite, les CGU, la politique de confidentialité et les mentions légales seraient mises à jour au préalable, vous en seriez informé dans l'Application avant son entrée en vigueur, et aucun paiement ne serait déclenché sans votre accord explicite.",
       ] },
       { h: "5. Usage autorisé", p: [
         "L'Application est réservée à un usage personnel et non commercial. Il est interdit de :",
@@ -821,7 +817,7 @@ const MENU_DOCS = {
       ] },
       { h: "6. Vos données", p: [
         "Les données que vous saisissez vous appartiennent. Vous nous accordez uniquement les droits nécessaires pour les faire fonctionner dans l'Application.",
-        "À ce jour, elles sont enregistrées sur votre appareil et ne sont pas sauvegardées ailleurs. Désinstaller l'Application, vider ses données ou changer d'appareil peut les effacer définitivement. Vous pouvez en conserver une copie depuis Aide & support, rubrique Mes données.",
+        "Elles sont enregistrées sur nos serveurs, liées à votre compte, avec une copie de travail sur votre appareil. Vous pouvez en conserver une copie depuis Aide & support, rubrique Mes données, et supprimer votre compte à tout moment.",
         "Le traitement de vos données personnelles est détaillé dans la politique de confidentialité.",
       ] },
       { h: "7. Outils indicatifs", p: [
@@ -839,18 +835,17 @@ const MENU_DOCS = {
         "Nous nous efforçons de maintenir l'Application accessible, sans pouvoir garantir une disponibilité continue. Elle peut être interrompue pour maintenance ou évolution, et ses fonctions peuvent être modifiées ou retirées.",
       ] },
       { h: "11. Responsabilité", p: [
-        "Dans les limites permises par la loi, l'éditeur n'est pas responsable des dommages indirects, de la perte de données enregistrées sur votre appareil, ni d'une décision de jeu prise sur la base des indications de l'Application.",
-        "Ces limites ne s'appliquent pas en cas de faute lourde ou dolosive, ni aux droits que la loi vous reconnaît en tant que consommateur.",
+        "Dans les limites permises par la loi, l'éditeur n'est pas responsable des dommages indirects, de la perte de données due à une cause qui ne nous est pas imputable, ni d'une décision de jeu prise sur la base des indications de l'Application.",
+        "Ces limites ne s'appliquent pas en cas de faute lourde ou dolosive, ni aux droits que la loi vous reconnaît.",
       ] },
       { h: "12. Suppression du compte et suspension", p: [
         "Vous pouvez cesser d'utiliser l'Application et supprimer votre compte à tout moment depuis Aide & support, rubrique Mes données. L'éditeur peut suspendre l'accès en cas de manquement grave aux CGU.",
       ] },
       { h: "13. Modification des CGU", p: [
-        "Les CGU peuvent évoluer, notamment pour introduire des offres payantes. La date de dernière mise à jour figure en haut de cette page. En cas de changement important, vous serez informé dans l'Application. Continuer à l'utiliser après cette information vaut acceptation ; sinon, vous pouvez supprimer votre compte.",
+        "Les CGU peuvent évoluer. La date de dernière mise à jour figure en haut de cette page. En cas de changement important, vous serez informé dans l'Application. Continuer à l'utiliser après cette information vaut acceptation ; sinon, vous pouvez supprimer votre compte.",
       ] },
       { h: "14. Droit applicable et litiges", p: [
-        "Les CGU sont soumises au droit français. En cas de litige, contactez-nous d'abord à {{contactEmail}}.",
-        "Si vous agissez en tant que consommateur, vous pouvez recourir gratuitement à un médiateur de la consommation : {{mediator}}. Vous conservez la possibilité de saisir le tribunal compétent selon la loi applicable.",
+        "Les CGU sont soumises au droit français. En cas de litige, contactez-nous d'abord à {{contactEmail}}. Vous conservez la possibilité de saisir le tribunal compétent selon la loi applicable.",
       ] },
     ],
   },
@@ -860,42 +855,47 @@ const MENU_DOCS = {
     heading: "Politique de confidentialité",
     sections: [
       { h: "1. Responsable du traitement", p: [
-        "Le responsable du traitement de vos données personnelles est {{editorName}}, {{editorAddress}}. Contact : {{contactEmail}}.",
+        "Le responsable du traitement de vos données personnelles est {{editorName}}, {{editorStatus}}. Contact : {{contactEmail}}.",
       ] },
       { h: "2. Données concernées", ul: [
-        "Compte : votre adresse e-mail, conservée sur l'appareil pour maintenir la session. Le mot de passe saisi n'est pas enregistré sur l'appareil.",
+        "Compte : adresse e-mail et mot de passe. Le mot de passe est stocké sous forme chiffrée (hachée) par notre prestataire d'authentification et n'est jamais lisible par nous.",
         "Profil : prénom et index de golf.",
         "Réglages : température, altitude, unités, radars, sac de golf, distances par club, caractéristiques du driver.",
         "Jeu et entraînement : parties, coups, putts, wedging, programmes et séances de gym, objectifs et historiques.",
         "Capteurs et position, avec votre autorisation : orientation du téléphone pour le dénivelé, position pour rechercher les golfs proches.",
-        "Données techniques : adresse IP, type d'appareil et date de la requête, vues par l'hébergeur lors du chargement de l'Application.",
+        "Données techniques : adresse IP, type d'appareil et date de la requête, vues par nos prestataires lors de l'utilisation de l'Application.",
       ] },
       { h: "3. Où vos données sont stockées", p: [
-        "Votre profil, vos réglages et vos données de jeu et d'entraînement sont enregistrés sur votre appareil, dans le stockage local de l'Application. À ce jour, ils ne sont pas envoyés à nos serveurs et nous n'y avons pas accès.",
-        "Conséquence : désinstaller l'Application ou en vider les données les efface.",
+        "Vos données de compte, de profil, de réglages, de jeu et d'entraînement sont enregistrées sur nos serveurs, hébergés par {{backendName}} (région : {{backendRegion}}). Elles sont ainsi liées à votre compte et retrouvées si vous changez d'appareil.",
+        "Une copie de travail est conservée sur votre appareil pour le fonctionnement de l'Application.",
       ] },
-      { h: "4. Services tiers", p: [
-        "Certains services tiers reçoivent des données techniques ou, à votre demande, votre position :",
+      { h: "4. Prestataires et services tiers", p: [
+        "Nous faisons appel aux prestataires suivants, qui peuvent recevoir tout ou partie de vos données :",
       ], ul: [
-        "{{hostName}} héberge l'Application et voit les données techniques de connexion (dont l'adresse IP).",
+        "{{backendName}} : base de données et authentification. Il agit comme sous-traitant, pour notre compte.",
+        "{{hostName}} : hébergement de l'Application. Il voit les données techniques de connexion, dont l'adresse IP.",
         "FlyAway Golf (api.flyawaygolf.com) : lorsque vous recherchez un golf proche dans Stats, les coordonnées de votre position sont envoyées à ce service pour retrouver les parcours voisins. Rien n'est envoyé sans cette action de votre part.",
-        "cdnjs (Cloudflare) fournit la bibliothèque de graphiques et voit l'adresse IP de votre appareil au chargement.",
-        "Google Play, et plus tard l'App Store, assurent la distribution de l'Application et, le cas échéant, le paiement des abonnements selon leurs propres politiques. Nous ne recevons pas vos coordonnées bancaires.",
+        "cdnjs (Cloudflare) : fournit la bibliothèque de graphiques et voit l'adresse IP de votre appareil au chargement.",
+        "Google et Apple : si vous vous connectez avec votre compte Google ou Apple, ils nous transmettent votre adresse e-mail et un identifiant, selon leurs propres politiques.",
+        "Google Play, et plus tard l'App Store : distribution de l'Application, selon leurs propres politiques.",
       ] },
       { h: "5. Ce que nous ne faisons pas", p: [
         "Nous ne vendons pas vos données, nous ne les utilisons pas à des fins publicitaires et l'Application n'intègre pas d'outil de mesure d'audience à ce jour.",
       ] },
       { h: "6. Finalités et bases légales", ul: [
-        "Fournir l'Application et ses fonctions : exécution du contrat formé par les CGU.",
-        "Assurer la sécurité et le bon fonctionnement du service : intérêt légitime.",
+        "Créer et gérer votre compte, fournir l'Application, enregistrer et synchroniser vos données : exécution du contrat formé par les CGU.",
+        "Assurer la sécurité et le bon fonctionnement du service, prévenir les abus : intérêt légitime.",
         "Utiliser votre position et les capteurs : votre consentement, donné via l'autorisation du système et retirable à tout moment dans les réglages du téléphone.",
+        "Répondre à vos messages et demandes : intérêt légitime et exécution du contrat.",
         "Respecter nos obligations légales.",
       ] },
-      { h: "7. Durées de conservation", p: [
-        "Les données enregistrées sur votre appareil sont conservées jusqu'à ce que vous les supprimiez ou désinstalliez l'Application. Les données techniques de connexion sont conservées par l'hébergeur pour une durée limitée, selon sa propre politique.",
+      { h: "7. Durées de conservation", ul: [
+        "Données du compte, du profil, des réglages et d'entraînement : conservées tant que votre compte existe. À sa suppression, elles sont effacées de nos serveurs ; d'éventuelles sauvegardes techniques sont purgées à l'issue de leur cycle de rotation.",
+        "Messages envoyés au support : conservés le temps nécessaire au traitement de votre demande, puis au maximum 3 ans.",
+        "Données techniques de connexion : conservées par nos prestataires pour une durée limitée, selon leurs politiques.",
       ] },
       { h: "8. Transferts hors Union européenne", p: [
-        "{{hostName}} est établi aux États-Unis. Les transferts de données sont encadrés par les garanties prévues par l'hébergeur, telles que le cadre de protection des données UE-États-Unis ou les clauses contractuelles types.",
+        "Vos données de compte sont hébergées dans la région indiquée plus haut. Certains de nos prestataires étant établis hors de l'Union européenne, des transferts peuvent avoir lieu, notamment vers les États-Unis. Ils sont encadrés par les garanties prévues par la réglementation, telles que le cadre de protection des données UE-États-Unis ou les clauses contractuelles types.",
       ] },
       { h: "9. Vos droits", p: [
         "Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité, de limitation et d'opposition, ainsi que du droit de retirer votre consentement et de définir des directives sur le sort de vos données après votre décès.",
@@ -903,13 +903,14 @@ const MENU_DOCS = {
         "Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).",
       ] },
       { h: "10. Sécurité", p: [
-        "L'Application est servie en HTTPS. Vos données étant stockées sur votre appareil, pensez à verrouiller votre téléphone.",
+        "Les échanges avec nos serveurs sont chiffrés (HTTPS) et l'accès aux données est limité aux personnes et services qui en ont besoin. Aucun système n'est infaillible : en cas de violation de données présentant un risque pour vous, nous vous en informerons et préviendrons la CNIL conformément à la loi.",
+        "Pensez aussi à verrouiller votre téléphone et à choisir un mot de passe unique.",
       ] },
       { h: "11. Mineurs", p: [
         "L'Application s'adresse aux personnes de 15 ans et plus. En dessous, l'accord d'un représentant légal est nécessaire.",
       ] },
       { h: "12. Évolutions", p: [
-        "Lorsqu'un nouveau service en ligne sera ajouté (synchronisation, connexion avec Apple ou Google, abonnements, mesure d'audience), cette politique sera mise à jour avant son entrée en vigueur et vous en serez informé dans l'Application.",
+        "Si nous ajoutons un nouveau prestataire, un nouvel usage de vos données (mesure d'audience ou publicité, par exemple) ou une offre payante, cette politique sera mise à jour avant son entrée en vigueur et vous en serez informé dans l'Application.",
       ] },
     ],
   },
@@ -918,18 +919,18 @@ const MENU_DOCS = {
     title: "Mentions légales",
     heading: "Mentions légales",
     sections: [
-      { h: "Éditeur", ul: [
-        "Nom ou raison sociale : {{editorName}}",
-        "Statut : {{editorStatus}}",
-        "Adresse : {{editorAddress}}",
-        "SIRET : {{editorSiret}}",
-        "Directeur de la publication : {{publisherName}}",
+      { h: "Éditeur", p: [
+        "L'Application est éditée par {{editorName}}, à titre non professionnel. Son identité complète est communiquée à l'hébergeur indiqué ci-dessous.",
+      ], ul: [
         "Contact : {{contactEmail}}",
       ] },
-      { h: "Hébergement", ul: [
+      { h: "Hébergement de l'application", ul: [
         "{{hostName}}",
         "{{hostAddress}}",
         "{{hostUrl}}",
+      ] },
+      { h: "Base de données et authentification", ul: [
+        "{{backendName}}, région : {{backendRegion}}",
       ] },
       { h: "Distribution", p: [
         "L'Application est distribuée via Google Play, puis ultérieurement via l'App Store.",
@@ -977,14 +978,13 @@ function renderDataScreen(back, label) {
     <div class="data_component">
       <section class="data_card">
         <h2 class="data_title">Exporter mes données</h2>
-        <p class="data_text">Enregistrez une copie de votre profil, de vos réglages et de toutes vos données de jeu et d'entraînement dans un fichier lisible (JSON).</p>
+        <p class="data_text">Enregistrez une copie de votre profil, de vos réglages et de vos données de jeu et d'entraînement dans un fichier lisible (JSON).</p>
         <button type="button" class="data_button" onclick="exportMenuData()">Exporter mes données</button>
         <p class="data_feedback" id="dataFeedback" role="status"></p>
       </section>
       <section class="data_card is-danger">
         <h2 class="data_title">Supprimer mon compte et mes données</h2>
-        <p class="data_text">Efface définitivement votre compte et toutes les données enregistrées sur cet appareil : profil, réglages, sac, distances, parties, putting, wedging et gym. Cette action est irréversible.</p>
-        <p class="data_text">Elle ne résilie pas un éventuel abonnement souscrit via Google Play ou l'App Store : résiliez-le depuis votre compte du store.</p>
+        <p class="data_text">Efface définitivement votre compte et toutes vos données, sur nos serveurs et sur cet appareil : profil, réglages, sac, distances, parties, putting, wedging et gym. Cette action est irréversible.</p>
         ${menuDeleteConfirm ? `
         <p class="data_text is-strong">Confirmer la suppression définitive ?</p>
         <div class="data_actions">
@@ -1045,7 +1045,8 @@ function askDeleteMenuData() { menuDeleteConfirm = true; currentRender(); }
 function cancelDeleteMenuData() { menuDeleteConfirm = false; currentRender(); }
 
 function deleteMenuData() {
-  // TODO : quand un backend existera, supprimer d'abord le compte côté serveur (puis effacer en local)
+  // TODO Supabase : appeler d'abord une Edge Function qui supprime l'utilisateur (auth.admin.deleteUser) et ses lignes,
+  // et n'effacer en local qu'après sa confirmation. Tant que ce n'est pas fait, la suppression ne touche que l'appareil.
   try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
   // Rechargement : remet à zéro l'état gardé en mémoire par tous les modules ; sans session, la page de connexion s'affiche
   location.replace(location.pathname);
