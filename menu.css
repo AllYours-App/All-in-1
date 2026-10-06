@@ -438,3 +438,300 @@
   cursor: pointer;
   vertical-align: middle;
 }
+
+/* ==========================================================================
+   Aide & support — couleur d'alerte locale (action destructive, erreurs)
+   ========================================================================== */
+#page-menu {
+  --mn-danger: #e5605a;
+}
+
+#page-menu summary:focus-visible,
+#page-menu textarea:focus-visible,
+#page-menu a:focus-visible,
+#page-menu .field-row-link:focus-visible {
+  outline: 2px solid var(--mn-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   FAQ — accordéon natif <details>
+   ========================================================================== */
+#page-menu .faq_component {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+#page-menu .faq_group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#page-menu .faq_group-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .faq_item {
+  background: var(--mn-surface);
+  border: 1px solid var(--mn-surface-border);
+  border-radius: var(--mn-radius-m);
+}
+
+#page-menu .faq_question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+  list-style: none;
+}
+
+#page-menu .faq_question::-webkit-details-marker {
+  display: none;
+}
+
+#page-menu .faq_chevron {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--mn-text-tertiary);
+  transition: transform 0.2s ease;
+}
+
+#page-menu .faq_item[open] .faq_chevron {
+  transform: rotate(90deg);
+}
+
+#page-menu .faq_answer {
+  margin: 0;
+  padding: 0 16px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mn-text-secondary);
+}
+
+/* ==========================================================================
+   Textes légaux (CGU, confidentialité, mentions légales, crédits)
+   ========================================================================== */
+#page-menu .legal_component {
+  padding-bottom: 8px;
+}
+
+#page-menu .legal_title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+#page-menu .legal_updated {
+  margin: 0 0 24px;
+  font-size: 13px;
+  color: var(--mn-text-tertiary);
+}
+
+#page-menu .legal_section {
+  margin-bottom: 22px;
+}
+
+#page-menu .legal_heading {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+#page-menu .legal_text {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .legal_list {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  list-style: disc;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .legal_list li {
+  margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   Contact
+   ========================================================================== */
+#page-menu .contact_component {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#page-menu .contact_text,
+#page-menu .contact_note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .contact_note {
+  font-size: 13px;
+  color: var(--mn-text-tertiary);
+}
+
+#page-menu .contact_field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#page-menu .contact_label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .contact_select,
+#page-menu .contact_textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--mn-surface);
+  border: 1px solid var(--mn-surface-border);
+  border-radius: var(--mn-radius-s);
+  color: var(--mn-text-primary);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+#page-menu .contact_textarea {
+  min-height: 160px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+#page-menu .contact_textarea::placeholder {
+  color: var(--mn-text-tertiary);
+}
+
+#page-menu .contact_error {
+  min-height: 18px;
+  margin: -8px 0 0;
+  font-size: 13px;
+  color: var(--mn-danger);
+}
+
+#page-menu .contact_link {
+  color: var(--mn-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   Mes données (export + suppression)
+   ========================================================================== */
+#page-menu .data_component {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#page-menu .data_card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--mn-surface);
+  border: 1px solid var(--mn-surface-border);
+  border-radius: var(--mn-radius-m);
+}
+
+#page-menu .data_card.is-danger {
+  border-color: color-mix(in srgb, var(--mn-danger) 40%, transparent);
+}
+
+#page-menu .data_title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#page-menu .data_text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mn-text-secondary);
+}
+
+#page-menu .data_text.is-strong {
+  color: var(--mn-text-primary);
+  font-weight: 600;
+}
+
+#page-menu .data_feedback {
+  min-height: 18px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--mn-accent);
+}
+
+#page-menu .data_actions {
+  display: flex;
+  gap: 10px;
+}
+
+#page-menu .data_button {
+  flex: 1;
+  padding: 14px 16px;
+  background: var(--mn-accent);
+  border: 1px solid var(--mn-accent);
+  border-radius: var(--mn-radius-m);
+  color: var(--mn-bg);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+#page-menu .data_button:active {
+  opacity: 0.7;
+}
+
+#page-menu .data_button.is-neutral {
+  background: transparent;
+  border-color: var(--mn-surface-border);
+  color: var(--mn-text-primary);
+}
+
+#page-menu .data_button.is-outline-danger {
+  background: transparent;
+  border-color: var(--mn-danger);
+  color: var(--mn-danger);
+}
+
+#page-menu .data_button.is-danger {
+  background: var(--mn-danger);
+  border-color: var(--mn-danger);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #page-menu .faq_chevron,
+  #page-menu .data_button {
+    transition: none;
+  }
+}
