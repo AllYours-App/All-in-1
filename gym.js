@@ -3633,6 +3633,9 @@ function gymNavigate(view, params) {
 }
 
 window.addEventListener("popstate", (e) => {
+  // Retour navigateur : Gym ne réagit que s'il est affiché. Sinon (Wedging, Home...), le hash n'est pas le sien
+  // et gymActivateView re-rendrait l'accueil Gym, ferait défiler la page et pourrait faire avancer un programme.
+  if (!document.getElementById("page-gym")?.classList.contains("active")) return;
   if (e.state && e.state.view) {
     gymActivateView(e.state.view, e.state.params);
   } else {

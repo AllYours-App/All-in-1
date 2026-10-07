@@ -1,6 +1,12 @@
 const root = document.getElementById('app-root');
 
+// Sélecteurs limités à la page Putting : d'autres modules réutilisent des noms proches (data-header, .bottom-nav...)
+function puttingQuery(sel) { return document.querySelector('#page-putting ' + sel); }
+function puttingQueryAll(sel) { return document.querySelectorAll('#page-putting ' + sel); }
+
 function renderPuttingTab() {
+  // Retour sur Putting : l'écran Stats de Putting n'est plus affiché, ce drapeau (resté sur body si on a quitté depuis cet écran) doit retomber
+  document.body.classList.remove('is-stats-screen');
   root.innerHTML = `
 <header class="page-header" data-header="main">
   <a href="#" class="page-header_back" onclick="handleMainHeaderBack(event)">
@@ -530,14 +536,14 @@ function syncFilterButtons() {
 function selectPuttingTab(event, tab) {
     event.preventDefault();
     if (document.body.classList.contains('is-stats-screen')) {
-      document.querySelector('[data-header="stats"]').classList.add('is-hidden');
-      document.querySelector('[data-header="main"]').classList.remove('is-hidden');
-      document.querySelector('.stats-wrapper').classList.add('is-hidden');
-      document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+      puttingQuery('[data-header="stats"]').classList.add('is-hidden');
+      puttingQuery('[data-header="main"]').classList.remove('is-hidden');
+      puttingQuery('.stats-wrapper').classList.add('is-hidden');
+      puttingQuery('.putting_wrapper').classList.remove('is-hidden');
       document.body.classList.remove('is-stats-screen');
       window.scrollTo(0, 0);
     }
-    document.querySelectorAll('.putting_tab').forEach(function (el) {
+    puttingQueryAll('.putting_tab').forEach(function (el) {
       el.classList.toggle('is-active', el.dataset.tab === tab);
     });
     if (tab !== 'exercices') {
@@ -545,20 +551,20 @@ function selectPuttingTab(event, tab) {
       renderExerciseList();
     }
     updateExerciseSelectBar();
-    document.querySelectorAll('.tab-panel').forEach(function (el) {
+    puttingQueryAll('.tab-panel').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.panel !== tab);
     });
-    document.querySelectorAll('.fab-group').forEach(function (el) {
+    puttingQueryAll('.fab-group').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.fab !== tab);
     });
-    document.querySelectorAll('.bottom-nav').forEach(function (el) {
+    puttingQueryAll('.bottom-nav').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.nav !== tab);
     });
     // Retour à l'accueil Parcours à chaque changement d'onglet supérieur
-    document.querySelectorAll('.analyse-subpanel').forEach(function (el) {
+    puttingQueryAll('.analyse-subpanel').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.sub !== 'home');
     });
-    document.querySelectorAll('.bottom-nav_item').forEach(function (el) {
+    puttingQueryAll('.bottom-nav_item').forEach(function (el) {
       el.classList.remove('is-active');
     });
     document.getElementById('main-header-back-label').textContent = 'Home';
@@ -570,17 +576,17 @@ function selectPuttingTab(event, tab) {
   function selectAnalyseSection(event, section) {
     event.preventDefault();
     if (document.body.classList.contains('is-stats-screen')) {
-      document.querySelector('[data-header="stats"]').classList.add('is-hidden');
-      document.querySelector('[data-header="main"]').classList.remove('is-hidden');
-      document.querySelector('.stats-wrapper').classList.add('is-hidden');
-      document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+      puttingQuery('[data-header="stats"]').classList.add('is-hidden');
+      puttingQuery('[data-header="main"]').classList.remove('is-hidden');
+      puttingQuery('.stats-wrapper').classList.add('is-hidden');
+      puttingQuery('.putting_wrapper').classList.remove('is-hidden');
       document.body.classList.remove('is-stats-screen');
       window.scrollTo(0, 0);
     }
-    document.querySelectorAll('.analyse-subpanel').forEach(function (el) {
+    puttingQueryAll('.analyse-subpanel').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.sub !== section);
     });
-    document.querySelectorAll('.bottom-nav_item').forEach(function (el) {
+    puttingQueryAll('.bottom-nav_item').forEach(function (el) {
       el.classList.toggle('is-active', el.dataset.section === section);
     });
     document.getElementById('main-header-back-label').textContent = section === 'home' ? 'Home' : 'Putting';
@@ -591,17 +597,17 @@ function selectPuttingTab(event, tab) {
 
   function goToStatsPerformance(event) {
     event.preventDefault();
-    document.querySelector('[data-header="main"]').classList.add('is-hidden');
-    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
-    document.querySelector('.putting_wrapper').classList.add('is-hidden');
-    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
-    document.querySelectorAll('.putting_tab').forEach(function (el) {
+    puttingQuery('[data-header="main"]').classList.add('is-hidden');
+    puttingQuery('[data-header="stats"]').classList.remove('is-hidden');
+    puttingQuery('.putting_wrapper').classList.add('is-hidden');
+    puttingQuery('.stats-wrapper').classList.remove('is-hidden');
+    puttingQueryAll('.putting_tab').forEach(function (el) {
       el.classList.toggle('is-active', el.dataset.tab === 'parcours');
     });
-    document.querySelectorAll('.fab-group').forEach(function (el) {
+    puttingQueryAll('.fab-group').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
     });
-    document.querySelectorAll('.bottom-nav_item').forEach(function (el) {
+    puttingQueryAll('.bottom-nav_item').forEach(function (el) {
       el.classList.toggle('is-active', el.dataset.section === 'stats-performance');
     });
     document.body.classList.add('is-stats-screen');
@@ -611,10 +617,10 @@ function selectPuttingTab(event, tab) {
 
   function backToPuttingMain(event) {
     event.preventDefault();
-    document.querySelector('[data-header="stats"]').classList.add('is-hidden');
-    document.querySelector('[data-header="main"]').classList.remove('is-hidden');
-    document.querySelector('.stats-wrapper').classList.add('is-hidden');
-    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+    puttingQuery('[data-header="stats"]').classList.add('is-hidden');
+    puttingQuery('[data-header="main"]').classList.remove('is-hidden');
+    puttingQuery('.stats-wrapper').classList.add('is-hidden');
+    puttingQuery('.putting_wrapper').classList.remove('is-hidden');
     document.body.classList.remove('is-stats-screen');
     selectPuttingTab({ preventDefault: function () {} }, 'parcours');
     window.scrollTo(0, 0);
@@ -1268,7 +1274,7 @@ function relativeDayLabel(iso) {
 }
 
 function renderGolfHome() {
-  const q = function (name) { return document.querySelector('[data-stat="' + name + '"]'); };
+  const q = function (name) { return document.querySelector('#page-home [data-stat="' + name + '"]'); };
   const dates = allActivityDates();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
   const now = Date.now();
@@ -1281,7 +1287,7 @@ function renderGolfHome() {
   if (val) val.textContent = count + (count > 1 ? ' séances' : ' séance');
   const fill = q('goal-progress-fill');
   if (fill) fill.style.width = Math.round(ratio * 100) + '%';
-  const arc = document.querySelector('.progress-ring_progress');
+  const arc = document.querySelector('#page-home .progress-ring_progress');
   if (arc) {
     arc.setAttribute('data-progress', String(ratio));
     arc.style.strokeDasharray = RING_CIRCUMFERENCE;
@@ -1717,7 +1723,7 @@ function resumeSession() {
 }
 
 function renderResumeCards() {
-  document.querySelectorAll('.resume-card').forEach(function (card) {
+  puttingQueryAll('.resume-card').forEach(function (card) {
     if (!resumableSession) {
       card.classList.add('is-hidden');
       return;
@@ -1821,8 +1827,8 @@ function toggleExerciseSelect(id) {
 function updateExerciseSelectBar() {
   const bar = document.getElementById('exercise-select-bar');
   if (!bar) return;
-  const exoTab = document.querySelector('[data-tab="exercices"]');
-  const wrapper = document.querySelector('.putting_wrapper');
+  const exoTab = puttingQuery('[data-tab="exercices"]');
+  const wrapper = puttingQuery('.putting_wrapper');
   // Visible en permanence sur l'onglet Exercices (hors flux exercice / écran stats)
   const visible = exoTab && exoTab.classList.contains('is-active') && wrapper && !wrapper.classList.contains('is-hidden');
   bar.classList.toggle('is-hidden', !visible);
@@ -1882,17 +1888,17 @@ function getCombineById(id) {
 // --- Entrée / sortie du flux ---
 function enterExerciseFlow(title) {
   exerciseFlowFromStats = document.body.classList.contains('is-stats-screen');
-  document.querySelector('[data-header="main"]').classList.add('is-hidden');
-  document.querySelector('[data-header="stats"]').classList.add('is-hidden');
-  document.querySelector('[data-header="exercise-flow"]').classList.remove('is-hidden');
-  document.querySelector('.putting_wrapper').classList.add('is-hidden');
-  document.querySelector('.stats-wrapper').classList.add('is-hidden');
+  puttingQuery('[data-header="main"]').classList.add('is-hidden');
+  puttingQuery('[data-header="stats"]').classList.add('is-hidden');
+  puttingQuery('[data-header="exercise-flow"]').classList.remove('is-hidden');
+  puttingQuery('.putting_wrapper').classList.add('is-hidden');
+  puttingQuery('.stats-wrapper').classList.add('is-hidden');
   document.body.classList.remove('is-stats-screen');
   document.getElementById('exercise-flow-root').classList.remove('is-hidden');
-  document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
+  puttingQueryAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
   const selectBar = document.getElementById('exercise-select-bar');
   if (selectBar) selectBar.classList.add('is-hidden');
-  const navEl = document.querySelector('.bottom-nav');
+  const navEl = puttingQuery('.bottom-nav');
   if (navEl) navEl.classList.add('is-hidden');
   document.getElementById('exercise-flow-title').textContent = title;
   window.scrollTo(0, 0);
@@ -1907,7 +1913,7 @@ function exitExerciseFlow(event) {
     clearResumableSession();
   }
   cleanupQuickCombine();
-  document.querySelector('[data-header="exercise-flow"]').classList.add('is-hidden');
+  puttingQuery('[data-header="exercise-flow"]').classList.add('is-hidden');
   document.getElementById('exercise-flow-root').classList.add('is-hidden');
   exerciseFlowScreen = null;
   activeCombineId = null;
@@ -1917,20 +1923,20 @@ function exitExerciseFlow(event) {
   const fromStats = exerciseFlowFromStats;
   exerciseFlowFromStats = false;
   if (fromStats) {
-    document.querySelector('[data-header="main"]').classList.add('is-hidden');
-    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
-    document.querySelector('.putting_wrapper').classList.add('is-hidden');
-    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
+    puttingQuery('[data-header="main"]').classList.add('is-hidden');
+    puttingQuery('[data-header="stats"]').classList.remove('is-hidden');
+    puttingQuery('.putting_wrapper').classList.add('is-hidden');
+    puttingQuery('.stats-wrapper').classList.remove('is-hidden');
     document.body.classList.add('is-stats-screen');
-    document.querySelectorAll('.fab-group').forEach(function (el) {
+    puttingQueryAll('.fab-group').forEach(function (el) {
       el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
     });
-    const navEl = document.querySelector('.bottom-nav');
+    const navEl = puttingQuery('.bottom-nav');
     if (navEl) navEl.classList.remove('is-hidden');
     renderStatsPerformance();
   } else {
-    document.querySelector('[data-header="main"]').classList.remove('is-hidden');
-    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+    puttingQuery('[data-header="main"]').classList.remove('is-hidden');
+    puttingQuery('.putting_wrapper').classList.remove('is-hidden');
     selectPuttingTab({ preventDefault: function () {} }, exerciseFlowOriginTab);
   }
   exerciseFlowOriginTab = 'exercices';
@@ -3032,13 +3038,13 @@ function openNewParcoursModal() {
   newParcoursModalOpen = true;
   parcoursPopup = null;
   parcoursModalFromStats = document.body.classList.contains('is-stats-screen');
-  document.querySelector('[data-header="stats"]').classList.add('is-hidden');
-  document.querySelector('[data-header="main"]').classList.remove('is-hidden');
-  document.querySelector('.stats-wrapper').classList.add('is-hidden');
+  puttingQuery('[data-header="stats"]').classList.add('is-hidden');
+  puttingQuery('[data-header="main"]').classList.remove('is-hidden');
+  puttingQuery('.stats-wrapper').classList.add('is-hidden');
   document.body.classList.remove('is-stats-screen');
-  document.querySelector('.putting_wrapper').classList.add('is-hidden');
-  document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
-  const navEl = document.querySelector('.bottom-nav');
+  puttingQuery('.putting_wrapper').classList.add('is-hidden');
+  puttingQueryAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
+  const navEl = puttingQuery('.bottom-nav');
   if (navEl) navEl.classList.add('is-hidden');
   document.getElementById('parcours-entry-root').classList.remove('is-hidden');
   document.getElementById('main-header-back-label').textContent = 'Putting';
@@ -3056,19 +3062,19 @@ function closeNewParcoursModal(event) {
   document.getElementById('parcours-entry-root').classList.add('is-hidden');
   document.getElementById('main-header-back-label').textContent = 'Home';
   document.getElementById('main-header-title').textContent = 'Putting';
-  document.querySelectorAll('.fab-group').forEach(function (el) {
+  puttingQueryAll('.fab-group').forEach(function (el) {
     el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
   });
-  const navEl = document.querySelector('.bottom-nav');
+  const navEl = puttingQuery('.bottom-nav');
   if (navEl) navEl.classList.remove('is-hidden');
   if (parcoursModalFromStats) {
-    document.querySelector('[data-header="main"]').classList.add('is-hidden');
-    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
-    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
+    puttingQuery('[data-header="main"]').classList.add('is-hidden');
+    puttingQuery('[data-header="stats"]').classList.remove('is-hidden');
+    puttingQuery('.stats-wrapper').classList.remove('is-hidden');
     document.body.classList.add('is-stats-screen');
     renderStatsPerformance();
   } else {
-    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+    puttingQuery('.putting_wrapper').classList.remove('is-hidden');
   }
   parcoursModalFromStats = false;
   window.scrollTo(0, 0);
@@ -3079,7 +3085,7 @@ function handleMainHeaderBack(event) {
     closeNewParcoursModal(event);
     return;
   }
-  const activeSub = document.querySelector('.analyse-subpanel:not(.is-hidden)');
+  const activeSub = puttingQuery('.analyse-subpanel:not(.is-hidden)');
   if (activeSub && activeSub.dataset.sub !== 'home') {
     event.preventDefault();
     selectPuttingTab({ preventDefault: function () {} }, 'parcours');
@@ -3683,13 +3689,13 @@ function openRoundDetail(id) {
   if (!r) return;
   viewingRoundId = id;
   parcoursModalFromStats = document.body.classList.contains('is-stats-screen');
-  document.querySelector('[data-header="stats"]').classList.add('is-hidden');
-  document.querySelector('[data-header="main"]').classList.remove('is-hidden');
-  document.querySelector('.stats-wrapper').classList.add('is-hidden');
+  puttingQuery('[data-header="stats"]').classList.add('is-hidden');
+  puttingQuery('[data-header="main"]').classList.remove('is-hidden');
+  puttingQuery('.stats-wrapper').classList.add('is-hidden');
   document.body.classList.remove('is-stats-screen');
-  document.querySelector('.putting_wrapper').classList.add('is-hidden');
-  document.querySelectorAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
-  const navEl = document.querySelector('.bottom-nav');
+  puttingQuery('.putting_wrapper').classList.add('is-hidden');
+  puttingQueryAll('.fab-group').forEach(function (el) { el.classList.add('is-hidden'); });
+  const navEl = puttingQuery('.bottom-nav');
   if (navEl) navEl.classList.add('is-hidden');
   document.getElementById('main-header-back-label').textContent = 'Putting';
   document.getElementById('main-header-title').textContent = 'Détail';
@@ -3703,19 +3709,19 @@ function closeRoundDetail() {
   document.getElementById('parcours-entry-root').classList.add('is-hidden');
   document.getElementById('main-header-back-label').textContent = 'Home';
   document.getElementById('main-header-title').textContent = 'Putting';
-  document.querySelectorAll('.fab-group').forEach(function (el) {
+  puttingQueryAll('.fab-group').forEach(function (el) {
     el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
   });
-  const navEl = document.querySelector('.bottom-nav');
+  const navEl = puttingQuery('.bottom-nav');
   if (navEl) navEl.classList.remove('is-hidden');
   if (parcoursModalFromStats) {
-    document.querySelector('[data-header="main"]').classList.add('is-hidden');
-    document.querySelector('[data-header="stats"]').classList.remove('is-hidden');
-    document.querySelector('.stats-wrapper').classList.remove('is-hidden');
+    puttingQuery('[data-header="main"]').classList.add('is-hidden');
+    puttingQuery('[data-header="stats"]').classList.remove('is-hidden');
+    puttingQuery('.stats-wrapper').classList.remove('is-hidden');
     document.body.classList.add('is-stats-screen');
     renderStatsPerformance();
   } else {
-    document.querySelector('.putting_wrapper').classList.remove('is-hidden');
+    puttingQuery('.putting_wrapper').classList.remove('is-hidden');
   }
   parcoursModalFromStats = false;
   window.scrollTo(0, 0);

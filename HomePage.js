@@ -1,6 +1,6 @@
 // Trace l'anneau de progression de l'objectif pour un ratio compris entre 0 et 1
 function setProgressRing(ratio) {
-  const ring = document.querySelector(".progress-ring_progress");
+  const ring = document.querySelector("#page-home .progress-ring_progress");
   if (!ring) return;
 
   const circumference = 2 * Math.PI * ring.r.baseVal.value;
@@ -19,14 +19,14 @@ function getBackgroundByHour() {
 
 // Applique le fond correspondant sur le composant principal
 function applyBackground() {
-  const el = document.querySelector(".home-screen_component");
+  const el = document.querySelector("#page-home .home-screen_component");
   if (!el) return;
   el.style.backgroundImage = `url("${getBackgroundByHour()}")`;
 }
 
 // Affiche le prénom enregistré dans le menu (localStorage) dans le titre d'accueil
 function renderHomeGreeting() {
-  const el = document.querySelector("[data-user-firstname], .header_title-highlight");
+  const el = document.querySelector("#page-home [data-user-firstname], #page-home .header_title-highlight");
   if (!el) return;
   let firstName = "";
   try {
@@ -43,7 +43,7 @@ window.renderHomeGreeting = renderHomeGreeting;
 
 // Écrit une valeur dans un [data-stat="..."]. Si la valeur est vide/absente, affiche "_"
 function setStat(name, value) {
-  const el = document.querySelector(`[data-stat="${name}"]`);
+  const el = document.querySelector(`#page-home [data-stat="${name}"]`);
   if (!el) return;
   el.textContent = (value == null || value === "") ? "_" : value;
 }
@@ -71,7 +71,7 @@ function renderGolfStats(data) {
   setStat("goal-ring", hasGoal ? `${goal.current}/${goal.target}` : null);
   setStat("goal-value", hasGoal ? `${goal.current} séance${goal.current > 1 ? "s" : ""}` : null);
 
-  const fill = document.querySelector('[data-stat="goal-progress-fill"]');
+  const fill = document.querySelector('#page-home [data-stat="goal-progress-fill"]');
   if (fill) fill.style.width = `${Math.round(ratio * 100)}%`;
   setProgressRing(ratio);
 
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof window.renderGolfHome === "function") window.renderGolfHome();
 
   // Retour visuel au toucher/clic sur les éléments interactifs
-  document.querySelectorAll(".orbit-button, .profile_button").forEach((el) => {
+  document.querySelectorAll("#page-home .orbit-button, #page-home .profile_button").forEach((el) => {
     el.addEventListener("pointerdown", () => el.classList.add("is-pressed"));
     ["pointerup", "pointerleave", "pointercancel"].forEach((type) =>
       el.addEventListener(type, () => el.classList.remove("is-pressed"))

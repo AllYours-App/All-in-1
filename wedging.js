@@ -1449,8 +1449,12 @@ Views.exercices = function () {
 
 const Router = (function () {
   let lastPath = null;
+  // Dernière route Wedging affichée : sert quand le hash appartient à un autre module (Gym écrit aussi dans location.hash)
+  let current = { path: "parcours", params: new URLSearchParams() };
+  // Wedging ne touche ni au body ni au scroll tant que sa page n'est pas celle affichée
+  function isActive() { return !!document.getElementById("page-wedging")?.classList.contains("active"); }
   window.addEventListener("resize", () => {
-    if (document.getElementById("page-wedging")?.classList.contains("active")) {
+    if (isActive()) {
       document.body.classList.remove("no-scroll", "gym-home-locked", "gym-view-fit");
     }
   });
@@ -1468,11 +1472,15 @@ const Router = (function () {
     return { path: (path && path !== "home") ? path : "parcours", params: new URLSearchParams(query || "") };
   }
   function render() {
-    const { path, params } = parseHash();
-    const route = ROUTES[path] || ROUTES["parcours"];
+    const parsed = parseHash();
+    // Hash étranger (ex. #programmes de Gym) : on garde la route Wedging courante au lieu de retomber sur Parcours
+    if (Object.prototype.hasOwnProperty.call(ROUTES, parsed.path)) current = parsed;
+    const { path, params } = current;
+    const route = ROUTES[path];
+    const active = isActive();
     const changed = path !== lastPath;
     lastPath = path;
-    document.body.classList.remove("no-scroll", "gym-home-locked", "gym-view-fit");
+    if (active) document.body.classList.remove("no-scroll", "gym-home-locked", "gym-view-fit");
     try {
       document.getElementById("app").innerHTML = route.view(params);
     } catch (e) {
@@ -1488,11 +1496,16 @@ const Router = (function () {
         '<button class="wg-btn-secondary" style="margin-top:14px;" onclick="Router.go(\'parcours\')">Retour à l\'accueil</button>' +
         '</div>';
     }
-    if (changed) requestAnimationFrame(() => window.scrollTo(0, 0));
+    if (changed && active) requestAnimationFrame(() => window.scrollTo(0, 0));
   }
   function go(hash) { location.hash = "#" + hash; }
-  window.addEventListener("hashchange", render);
+  // Un changement de hash n'est traité que si Wedging est affiché : sinon c'est un autre module (Gym, liens #...) qui navigue
+  window.addEventListener("hashchange", () => { if (isActive()) render(); });
   window.addEventListener("DOMContentLoaded", render);
-  window.addEventListener("error", (e) => { try { UI.toast('Erreur JS : ' + e.message); } catch (_) {} });
+  // Toast d'erreur : uniquement pour une erreur levée par wedging.js pendant que Wedging est affiché
+  window.addEventListener("error", (e) => {
+    if (!isActive() || !/wedging\.js/.test(e.filename || "")) return;
+    try { UI.toast('Erreur JS : ' + e.message); } catch (_) {}
+  });
   return { go, render };
 })();

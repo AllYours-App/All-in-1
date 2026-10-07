@@ -2,7 +2,7 @@ const rootVitesse = document.getElementById('app-root-vitesse');
 
 function renderVitesseTab() {
   rootVitesse.innerHTML = `
-<header class="page-header" data-header="main">
+<header class="page-header" data-header="vitesse">
   <a href="#" class="page-header_back" onclick="showPage('home')">
     <svg class="page-header_back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
     <span class="page-header_back-label">Home</span>
