@@ -132,7 +132,7 @@ function renderPuttingTab() {
 
         <div class="bar-chart bar-chart-centered" id="distance-sg-chart">
           <div class="bar-chart_row">
-            <div class="bar-chart_label">All</div>
+            <div class="bar-chart_label">Toutes</div>
             <div class="bar-chart_bar-wrap bar-chart_bar-wrap-centered"><div class="bar-chart_center-line"></div><div class="bar-chart_fill bar-chart_fill-centered" style="width: 0%; left: 50%;"></div><div class="bar-chart_value">--</div></div>
           </div>
           <div class="bar-chart_row">
@@ -168,7 +168,7 @@ function renderPuttingTab() {
 
         <div class="bar-chart" id="distance-rate-chart">
           <div class="bar-chart_row">
-            <div class="bar-chart_label">All</div>
+            <div class="bar-chart_label">Toutes</div>
             <div class="bar-chart_bar-wrap"><div class="bar-chart_fill" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
           </div>
           <div class="bar-chart_row">
@@ -212,7 +212,7 @@ function renderPuttingTab() {
 
         <div class="bar-chart" id="distance-error-chart">
           <div class="bar-chart_row">
-            <div class="bar-chart_label">All</div>
+            <div class="bar-chart_label">Toutes</div>
             <div class="bar-chart_bar-wrap-dual">
               <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-speed" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
               <div class="bar-chart_bar-wrap"><div class="bar-chart_fill bar-chart_fill-slope" style="width: 0%;"></div><div class="bar-chart_value">--</div></div>
@@ -638,6 +638,7 @@ let selectedCombineId = null;
 let editingCombineId = null;
 let puttingCreativeModalOpen = false;
 let puttingCreativeForm = null;
+let resumableSession = null; // session de putting à reprendre (clé putting_resume), voir loadPuttingState()
 
 /* ============================================================
    PAVÉ NUMÉRIQUE — popup générique remplaçant prompt() natif pour
@@ -799,7 +800,6 @@ function fmtPct(v) {
 }
 
 /* Regroupement des distances en 5 tranches (mêmes libellés que l'UI) */
-const DISTANCE_BUCKET_LABELS = ['0 à 2m', '>2 à 3m', '>3 à 5m', '>5 à 9m', '>9m'];
 function distanceBucketIndex(m) {
   if (m == null || isNaN(m)) return null;
   if (m <= 2) return 0;
@@ -1072,38 +1072,6 @@ function svgLineChart(values, opts) {
   const yTicks = yAxisTicks(min, max, top, bottom, opts.fmt);
   const xTicks = xAxisTickLabels(opts.labels, xAt, n);
   return grid + zeroLine + (areaPath ? '<path d="' + areaPath + '" class="line-chart-glow"/>' : '') + (path ? '<path d="' + path + '" class="line-chart-line"/>' : '') + dots + lastLabel + yTicks + xTicks + axisTitle;
-}
-
-// Colonnes (dénombrements par round, ex : 1 putt / 3 putts par round) — mélange volontairement le type de graphe avec les lignes ci-dessus
-function svgColumnChart(values, opts) {
-  opts = opts || {};
-  const left = 40, right = 890, top = 20, bottom = 420;
-  const vals = values.filter(function (v) { return v != null && !isNaN(v); });
-  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
-  let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
-    const y = top + f * (bottom - top);
-    return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
-  }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
-  if (!vals.length) {
-    return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
-  }
-  const max = Math.max.apply(null, vals.concat([1]));
-  const n = values.length;
-  const slot = (right - left) / n;
-  const barW = Math.min(28, slot * 0.55);
-  let bars = '';
-  function xAt(i) { return left + slot * (i + 0.5); }
-  values.forEach(function (v, i) {
-    if (v == null || isNaN(v)) return;
-    const cx = xAt(i);
-    const h = Math.max(2, (v / max) * (bottom - top));
-    const y = bottom - h;
-    bars += '<rect x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" class="line-chart-bar"/>';
-    if (i === n - 1) bars += '<text x="' + cx.toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" text-anchor="middle" class="line-chart-value">' + v + '</text>';
-  });
-  const yTicks = yAxisTicks(0, max, top, bottom, opts.fmt);
-  const xTicks = xAxisTickLabels(opts.labels, xAt, n);
-  return grid + bars + yTicks + xTicks + axisTitle;
 }
 
 // Deux lignes superposées, chacune avec sa propre échelle normalisée (utile pour comparer deux métriques d'unités différentes, ex : % et mètres)
@@ -1658,14 +1626,11 @@ function renderFilterSheet() {
 }
 
 function savePuttingState() {
-  try {
-    const persistable = puttingCombines.filter(function (c) { return !c.isQuick; });
-    localStorage.setItem('putting_combines', JSON.stringify(persistable));
-    localStorage.setItem('putting_sessions', JSON.stringify(puttingSessions));
-    localStorage.setItem('putting_rounds', JSON.stringify(puttingRounds));
-  } catch (e) {
-    console.warn('Sauvegarde locale impossible :', e);
-  }
+  // Stockage plein ou indisponible : appSafeSetItem (commun.js) prévient la personne.
+  const persistable = puttingCombines.filter(function (c) { return !c.isQuick; });
+  appSafeSetItem('putting_combines', JSON.stringify(persistable));
+  appSafeSetItem('putting_sessions', JSON.stringify(puttingSessions));
+  appSafeSetItem('putting_rounds', JSON.stringify(puttingRounds));
   refreshAllAnalytics();
 }
 
@@ -1699,7 +1664,7 @@ function saveResumableSession() {
     session: activeSession,
     dateISO: new Date().toISOString(),
   };
-  try { localStorage.setItem('putting_resume', JSON.stringify(resumableSession)); } catch (e) {}
+  appSafeSetItem('putting_resume', JSON.stringify(resumableSession));
 }
 
 function clearResumableSession() {
@@ -3145,11 +3110,6 @@ function updateParcoursName(value) {
   newParcoursForm.name = value;
 }
 
-function setParcoursRowPutts(idx, v) {
-  const n = parseInt(v, 10);
-  newParcoursForm.rows[idx].putts = isNaN(n) ? null : Math.max(0, Math.min(10, n));
-}
-
 // Saisie rapide : 1, 2 ou 3 putts (1 putt = vert). La distance de base saisie par
 // l'utilisateur est toujours conservée telle quelle (elle sert au Strokes Gained,
 // aux buckets d'analyse par distance, etc.). Seul le total de mètres comptabilisé
@@ -3180,12 +3140,6 @@ function setParcoursRowM(idx, v) {
 function promptParcoursRowM(idx) {
   const current = newParcoursForm.rows[idx].m;
   openNumericKeypad('Distance (m)', 'parcoursRowM:' + idx, current || '', true, 'm');
-}
-
-function setParcoursRowClock(idx, v) {
-  if ((v || '').trim() === '') { newParcoursForm.rows[idx].clock = null; return; }
-  const n = parseInt(v, 10);
-  newParcoursForm.rows[idx].clock = isNaN(n) ? null : Math.max(1, Math.min(12, n));
 }
 
 // Ouvre le popup horloge pour choisir la pente du trou idx
@@ -3401,7 +3355,7 @@ function renderNewParcoursRecapScreen() {
   const esc = escHtml;
 
   root.innerHTML = `
-    <div class="quick-entry_top">
+    <div>
       <a href="#" class="quick-entry_back" onclick="event.preventDefault();backToParcoursEntry()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
         Retour
@@ -3491,7 +3445,7 @@ function renderNewParcoursModal() {
   const resultatLabelText = row.resultat ? resultatLabel(row.resultat) : (currentResult === 'missed' ? 'Manqué' : 'Résultat du putt');
 
   root.innerHTML = `
-    <div class="quick-entry_top">
+    <div>
       <a href="#" class="quick-entry_back" onclick="closeNewParcoursModal(event)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
         Retour
@@ -3736,7 +3690,7 @@ function renderRoundDetailScreen(r) {
   const esc = escHtml;
 
   root.innerHTML = `
-    <div class="quick-entry_top">
+    <div>
       <a href="#" class="quick-entry_back" onclick="event.preventDefault();closeRoundDetail()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
         Retour

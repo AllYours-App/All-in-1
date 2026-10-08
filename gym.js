@@ -538,11 +538,11 @@ document.getElementById("app-root-gym").innerHTML = `
             <div class="session-sets-list" id="session-sets-list"></div>
 
             <div class="session-actions" id="session-actions" style="display:none;">
-              <button type="button" class="btn btn-secondary session-actions__finish" id="btn-finish-session">
+              <button type="button" class="btn btn-secondary" id="btn-finish-session">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Terminer la séance
               </button>
-              <button type="button" class="btn btn-primary session-actions__next" id="btn-next-series">
+              <button type="button" class="btn btn-primary" id="btn-next-series">
                 <span id="session-next-label">Exercice suivant</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </button>
@@ -728,7 +728,7 @@ document.getElementById("app-root-gym").innerHTML = `
         <section style="display:flex; flex-direction:column; gap:14px;">
           <div class="gym-section-head">
             <h2 class="gym-section-title">Mes objectifs</h2>
-            <a class="gym-link" href="#objectifs-grid">Voir tous <span id="icon-voir-tous"></span></a>
+            <a class="gym-link" href="#objectifs-grid" id="goals-see-all">Voir tous <span id="icon-voir-tous"></span></a>
           </div>
           <div class="choice-grid choice-grid--2 gym-stagger" id="objectifs-grid" style="align-items:stretch;"></div>
         </section>
@@ -743,8 +743,6 @@ document.getElementById("app-root-gym").innerHTML = `
         </button>
       </main>
     </section>
-
-  </div>
 
   <!-- Bottom sheet : choix d'une séance créée à lancer (accueil) -->
   <div class="sheet-overlay" id="launch-sheet-overlay"></div>
@@ -1025,7 +1023,11 @@ function gymFormatMonthYear(date) {
   return `${mois[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-const GYM_TODAY = new Date();
+/* Date du jour calculée à chaque appel (et non une fois au chargement de la page) :
+   dans une appli installée qui reste ouverte plusieurs jours, elle reste juste. */
+function gymToday() {
+  return new Date();
+}
 
 /* ---- Exercices (source : exercises-fr.json) -------------------------------- */
 
@@ -2440,11 +2442,8 @@ function gymReadSavedPrograms() {
 }
 
 function gymWriteSavedPrograms(programs) {
-  try {
-    localStorage.setItem(GYM_STORAGE_KEY, JSON.stringify(programs));
-  } catch (e) {
-    // Stockage indisponible : on ignore.
-  }
+  // Stockage plein ou indisponible : appSafeSetItem (commun.js) prévient la personne.
+  appSafeSetItem(GYM_STORAGE_KEY, JSON.stringify(programs));
 }
 
 const PROGRAMS = gymReadSavedPrograms();
@@ -2466,11 +2465,7 @@ function gymReadList(key) {
 }
 
 function gymWriteList(key, list) {
-  try {
-    localStorage.setItem(key, JSON.stringify(list));
-  } catch (e) {
-    // Stockage indisponible : on ignore.
-  }
+  appSafeSetItem(key, JSON.stringify(list));
 }
 
 function gymPersistPrograms() {
@@ -2511,11 +2506,7 @@ function gymGetActiveProgramId() {
 }
 
 function gymSetActiveProgramId(id) {
-  try {
-    localStorage.setItem(GYM_ACTIVE_PROGRAM_KEY, id);
-  } catch (e) {
-    // Stockage indisponible : on ignore.
-  }
+  appSafeSetItem(GYM_ACTIVE_PROGRAM_KEY, id);
 }
 
 /**
@@ -3103,7 +3094,7 @@ function gymAddLibraryProgram(libId) {
         id: `${programId}-s${index}`,
         index,
         title: `Sem. ${week + 1} · ${block.title}`,
-        date: gymAddDays(GYM_TODAY, week * 7 + dayOffsets[blockIndex % dayOffsets.length]),
+        date: gymAddDays(gymToday(), week * 7 + dayOffsets[blockIndex % dayOffsets.length]),
         duration: block.duration,
         exerciseIds: exercises.map((e) => e.exerciseId),
         exercises,
@@ -3323,7 +3314,7 @@ function gymGetDoneExercises() {
 /* ---- Export global ---------------------------------------------------------------- */
 
 const GYM_DATA = {
-  today: GYM_TODAY,
+  get today() { return gymToday(); },
   exercises: EXERCISES,
   categories: EXERCISE_CATEGORIES,
   trainingGoals: TRAINING_GOALS,
@@ -3339,14 +3330,6 @@ const GYM_DATA = {
 /* ==========================================================================
    GYM — Fonctions utilitaires partagées
    ========================================================================== */
-
-/**
- * Exécute une fonction dès que le DOM est prêt.
- */
-function gymOnReady(fn) {
-  if (document.readyState !== "loading") fn();
-  else document.addEventListener("DOMContentLoaded", fn);
-}
 
 /**
  * Anime le remplissage d'une barre de progression (largeur en %).
@@ -3688,7 +3671,7 @@ function gymOpenLaunchSheet() {
         .map(
           (program) => `
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <span class="gym-eyebrow">${program.name}</span>
+              <span class="gym-eyebrow">${appEscapeHtml(program.name)}</span>
               ${program.sessions.map((s) => gymRenderSessionRow(s, program.id)).join("")}
             </div>
           `
@@ -3782,7 +3765,7 @@ function gymRenderProgramCard(program) {
       <div class="list-row" style="width:100%;">
         ${gymThumb(program.icon, "thumb--sm")}
         <div class="list-row__body">
-          <span class="list-row__title">${program.name}</span>
+          <span class="list-row__title">${appEscapeHtml(program.name)}</span>
           <span class="list-row__meta">${program.sessionsCount} séances · ${program.frequencyPerWeek}x/semaine</span>
         </div>
         <button type="button" class="icon-btn icon-btn--sm" title="Supprimer le programme" onclick="event.preventDefault(); event.stopPropagation(); gymDeleteProgram('${program.id}');">${gymIcon("trash")}</button>
@@ -3852,7 +3835,7 @@ function gymRenderEditableExerciseRow(exerciseId, sets, reps, rest, tempo, rowIn
     <div class="exercise-row" data-row-index="${rowIndex}">
       ${gymThumb(exo.icon, "thumb--sm")}
       <div class="exercise-row__info">
-        <span class="exercise-row__name">${exo.name}</span>
+        <span class="exercise-row__name">${appEscapeHtml(exo.name)}</span>
         <span class="badge badge--tag">${exo.muscle}</span>
       </div>
       <button class="icon-btn" aria-label="Supprimer l'exercice" data-remove-index="${rowIndex}">${gymIcon("trash")}</button>
@@ -3924,7 +3907,7 @@ function gymRenderGoalCard(goal) {
             </svg>
             <span class="ring__icon">${gymIcon(goal.icon)}</span>
           </div>
-          <span class="list-row__title">${goal.title}</span>
+          <span class="list-row__title">${appEscapeHtml(goal.title)}</span>
         </div>
         <span class="list-row__chevron">${gymIcon("chevronRight")}</span>
       </div>
@@ -4099,17 +4082,19 @@ function gymRenderDualChart(points, series, selected) {
 
 (function () {
   function renderHero(program) {
-    // Image selon l'objectif : images/ProgrammeForce.webp, ProgrammeEndurance.webp,
-    // ProgrammeHypertrophie.webp, ProgrammeVitesse.webp
+    // Image selon l'objectif : images/ProgrammeEndurance.webp, ProgrammeHypertrophie.webp,
+    // ProgrammeVitesse.webp et ProgrammeForce-1.webp (nom réel du fichier du dépôt).
     const goalId = program.goal || "";
-    const imageName = `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
+    const imageName = goalId === "force"
+      ? "ProgrammeForce-1"
+      : `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
     document.getElementById("program-hero").innerHTML = `
       <div class="hero-photo">
         <img class="hero-photo__image" src="images/${imageName}.webp" alt="">
         <div class="hero-photo__content">
           <span class="gym-eyebrow">Programme</span>
-          <h1 class="gym-title-xl" style="margin:6px 0 8px;">${program.name}</h1>
-          <p class="gym-subtitle">${program.description}</p>
+          <h1 class="gym-title-xl" style="margin:6px 0 8px;">${appEscapeHtml(program.name)}</h1>
+          <p class="gym-subtitle">${appEscapeHtml(program.description)}</p>
         </div>
       </div>
     `;
@@ -4357,7 +4342,7 @@ function gymRenderDualChart(points, series, selected) {
         <button type="button" class="sheet__row" data-program-id="${p.id}">
           <div class="icon-circle icon-circle--sm">${gymIcon(p.icon)}</div>
           <div class="list-row__body">
-            <span class="list-row__title">${p.name}</span>
+            <span class="list-row__title">${appEscapeHtml(p.name)}</span>
             <span class="list-row__meta">${p.sessionsCount} séances · ${p.frequencyPerWeek}x/semaine</span>
           </div>
           ${p.id === state.programId ? `<span style="color:var(--gym-accent); flex-shrink:0;">${gymIcon("check")}</span>` : ""}
@@ -4537,7 +4522,7 @@ function gymRenderDualChart(points, series, selected) {
         <button type="button" class="sheet__row" data-exercise-id="${exo.id}">
           ${gymThumb(exo.icon, "thumb--sm")}
           <div class="list-row__body">
-            <span class="list-row__title">${exo.name}</span>
+            <span class="list-row__title">${appEscapeHtml(exo.name)}</span>
             <span class="badge badge--tag">${exo.muscle}</span>
           </div>
           <span class="list-row__chevron" style="color:var(--gym-accent);">${gymIcon("plus")}</span>
@@ -4760,7 +4745,7 @@ function gymRenderDualChart(points, series, selected) {
           <div class="card card--interactive list-row">
             ${gymThumb(exo.icon, "thumb--sm")}
             <div class="list-row__body">
-              <span class="list-row__title">${exo.name}</span>
+              <span class="list-row__title">${appEscapeHtml(exo.name)}</span>
               <span class="badge badge--tag" style="width:fit-content;">${exo.muscle}</span>
             </div>
             <span class="list-row__chevron">${gymIcon("chevronRight")}</span>
@@ -4848,6 +4833,72 @@ function gymRenderDualChart(points, series, selected) {
     isPaused: true,
   };
 
+  /* ---- Brouillon de la séance en cours -------------------------------------------
+     Les séries saisies, l'exercice affiché et le temps écoulé sont réécrits dans
+     le localStorage à chaque changement, pour qu'un rechargement ou un
+     déchargement de l'appli par le téléphone ne fasse pas perdre une séance d'une
+     heure. Un seul brouillon à la fois ; il est effacé quand la séance est
+     terminée, et ignoré au-delà de 12 h. */
+  const GYM_DRAFT_KEY = "gym-session-draft";
+  const GYM_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+  function saveDraft() {
+    if (!state.session || !state.program || !state.exercises.length) return;
+    const elapsedMs = state.elapsedMs + (state.timerStart ? Date.now() - state.timerStart : 0);
+    appSafeSetItem(
+      GYM_DRAFT_KEY,
+      JSON.stringify({
+        programId: state.program.id,
+        sessionId: state.session.id,
+        exerciseIndex: state.exerciseIndex,
+        elapsedMs,
+        savedAt: Date.now(),
+        exercises: state.exercises.map((exo) => ({
+          exerciseId: exo.exerciseId,
+          sets: exo.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps,
+            duration: set.duration,
+            valid: set.valid,
+            status: set.status,
+          })),
+        })),
+      })
+    );
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(GYM_DRAFT_KEY); } catch (e) { /* stockage indisponible */ }
+  }
+
+  /**
+   * Remet dans `built` (exercices fraîchement construits) les séries du brouillon,
+   * si celui-ci correspond bien à cette séance. Renvoie le brouillon utilisé, ou null.
+   */
+  function restoreDraft(session, built) {
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem(GYM_DRAFT_KEY)); } catch (e) { return null; }
+    if (!draft || draft.sessionId !== session.id) return null;
+    if (!(Date.now() - Number(draft.savedAt) < GYM_DRAFT_MAX_AGE_MS)) return null;
+    if (!Array.isArray(draft.exercises) || draft.exercises.length !== built.length) return null;
+    const matches = built.every((exo, i) => {
+      const saved = draft.exercises[i];
+      return saved && saved.exerciseId === exo.exerciseId && Array.isArray(saved.sets) && saved.sets.length === exo.sets.length;
+    });
+    if (!matches) return null;
+    built.forEach((exo, i) => {
+      exo.sets.forEach((set, j) => {
+        const saved = draft.exercises[i].sets[j];
+        set.weight = saved.weight == null ? "" : saved.weight;
+        set.reps = Number(saved.reps) || 0;
+        set.duration = Number(saved.duration) || 0;
+        set.valid = !!saved.valid;
+        set.status = saved.status === "terminee" || saved.status === "en-cours" ? saved.status : "a-venir";
+      });
+    });
+    return draft;
+  }
+
   /**
    * Déduit une répétition cible à partir d'une chaîne du type "8-12" ou "10"
    * (on retient la borne haute d'une plage saisie à la création).
@@ -4932,6 +4983,7 @@ function gymRenderDualChart(points, series, selected) {
     stopTimerInterval();
     syncPauseIcon();
     tickTimer(); // affiche la valeur exacte au moment de la pause
+    saveDraft();
   }
 
   // Chrono remis à 00:00:00 et arrêté (aucune séance active)
@@ -5130,6 +5182,7 @@ function gymRenderDualChart(points, series, selected) {
   /* ---- Résumé séries / répétitions / repos -------------------------------------- */
 
   function renderSummary() {
+    saveDraft();
     const exo = currentExercise();
     const validCount = exo.sets.filter((s) => s.valid).length;
     const repsItem = exo.timed
@@ -5367,6 +5420,7 @@ function gymRenderDualChart(points, series, selected) {
 
     // Oublie la séance terminée : la relancer repart d'un état vierge au lieu
     // de réafficher les séries déjà saisies.
+    clearDraft();
     state.session = null;
     state.exercises = [];
     state.exerciseIndex = 0;
@@ -5427,10 +5481,14 @@ function gymRenderDualChart(points, series, selected) {
     document.getElementById("session-content").style.display = "flex";
     document.getElementById("session-actions").style.display = "flex";
 
+    let restored = null;
     if (!isSameSession) {
       cancelHold();
       state.exercises = buildExerciseState(session);
       state.exerciseIndex = 0;
+      // Séance interrompue (rechargement, appli déchargée) : on reprend là où elle s'était arrêtée.
+      restored = restoreDraft(session, state.exercises);
+      if (restored) state.exerciseIndex = Math.min(Math.max(Number(restored.exerciseIndex) || 0, 0), state.exercises.length - 1);
     }
 
     renderHead();
@@ -5444,6 +5502,10 @@ function gymRenderDualChart(points, series, selected) {
       // Chrono en pause par défaut au lancement d'une séance : c'est la personne
       // qui décide quand elle démarre son chrono (bouton lecture dans le header).
       resetTimer();
+      if (restored) {
+        state.elapsedMs = Math.max(0, Number(restored.elapsedMs) || 0);
+        tickTimer();
+      }
     }
   }
 
@@ -5570,7 +5632,7 @@ function gymRenderDualChart(points, series, selected) {
             const last = e.sessions[e.sessions.length - 1].date;
             return `<button type="button" class="sheet__row" data-id="${e.exerciseId}">
               <span class="list-row__body">
-                <span class="list-row__title">${e.name}</span>
+                <span class="list-row__title">${appEscapeHtml(e.name)}</span>
                 <span class="list-row__meta">${e.sessions.length} séance${e.sessions.length > 1 ? "s" : ""} · dernière le ${gymFormatShortDate(last)}</span>
               </span>
             </button>`;
@@ -5800,7 +5862,7 @@ function gymRenderDualChart(points, series, selected) {
             (s, i) => `
             <span class="recap-set-pill ${s.valid ? "is-valid" : "is-invalid"}">
               <span class="recap-set-pill__index">${i + 1}</span>
-              <span class="recap-set-pill__value">${exo.timed ? `${s.weight > 0 ? `${s.weight} kg · ` : ""}${gymFormatSeconds(s.duration)}` : `${s.weight || 0} kg × ${s.reps || 0}`}</span>
+              <span>${exo.timed ? `${s.weight > 0 ? `${s.weight} kg · ` : ""}${gymFormatSeconds(s.duration)}` : `${s.weight || 0} kg × ${s.reps || 0}`}</span>
               <span class="recap-set-pill__icon">${gymIcon(s.valid ? "check" : "cross")}</span>
             </span>
           `
@@ -5811,7 +5873,7 @@ function gymRenderDualChart(points, series, selected) {
             <div class="recap-exercise__head">
               ${gymThumb("dumbbell", "thumb--sm")}
               <div class="list-row__body">
-                <span class="list-row__title">${exo.name}</span>
+                <span class="list-row__title">${appEscapeHtml(exo.name)}</span>
                 <span class="list-row__meta">${validCount} / ${exo.sets.length} séries validées</span>
               </div>
             </div>
@@ -6051,6 +6113,12 @@ function gymRenderDualChart(points, series, selected) {
     },
   });
   document.getElementById("btn-new-goal").addEventListener("click", openGoalSheet);
+  // "Voir tous" : la grille affiche déjà tous les objectifs. Le lien ne doit pas changer le hash
+  // (popstate renvoyait sur l'accueil Gym) : il amène simplement la grille à l'écran.
+  document.getElementById("goals-see-all").addEventListener("click", (e) => {
+    e.preventDefault();
+    document.getElementById("objectifs-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   document.getElementById("goal-sheet-overlay").addEventListener("click", closeGoalSheet);
   document.getElementById("goal-sheet-close").addEventListener("click", closeGoalSheet);
   document.getElementById("btn-create-goal").addEventListener("click", createGoal);

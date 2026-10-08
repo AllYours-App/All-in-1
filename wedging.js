@@ -44,8 +44,8 @@ const WedgeStorage = (function () {
     catch (e) { console.error("Wedging: lecture impossible", key, e); return []; }
   }
   function write(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); return true; }
-    catch (e) { console.error("Wedging: écriture impossible", key, e); return false; }
+    // appSafeSetItem (commun.js) prévient la personne si le stockage est plein ou indisponible.
+    return appSafeSetItem(key, JSON.stringify(val));
   }
   return {
     getShots: () => read(KEYS.SHOTS),
@@ -643,7 +643,7 @@ function confirmDeleteWedgeExercise() {
 function wedgeConfirmDeleteModalHtml() {
   const ex = wedgeExercises.find(e => e.id === wedgeConfirmDeleteExerciseId);
   return UI.modal('Supprimer l\'exercice', `
-    <p class="wg-text-muted mb-10">Supprimer définitivement « ${ex ? ex.name : ''} » ? Cette action est irréversible.</p>
+    <p class="wg-text-muted mb-10">Supprimer définitivement « ${ex ? appEscapeHtml(ex.name) : ''} » ? Cette action est irréversible.</p>
     <div class="wg-field-row"><button class="wg-btn-secondary" onclick="cancelDeleteWedgeExercise()">Annuler</button><button class="wg-btn-primary" onclick="confirmDeleteWedgeExercise()">Supprimer</button></div>
   `, 'cancelDeleteWedgeExercise');
 }
@@ -714,8 +714,8 @@ function wedgeExerciseModalHtml() {
   return `<div class="wg-modal-overlay" onclick="closeWedgeExerciseModal()">
     <div class="wg-modal" onclick="event.stopPropagation()">
       <div class="wg-modal-head"><h3>${editingWedgeExerciseId !== null ? "Éditer l'exercice" : 'Nouvel exercice'}</h3><button class="wg-modal-close" onclick="closeWedgeExerciseModal()">${UI.ICONS.close}</button></div>
-      <div class="wg-field"><label>Titre</label><input type="text" class="wg-input" placeholder="Titre de l'exercice" value="${f.name}" oninput="updateWedgeExerciseName(this.value)"></div>
-      <div class="wg-field"><label>Description</label><textarea class="wg-textarea" placeholder="Description (optionnel)" rows="2" oninput="updateWedgeExerciseDescription(this.value)">${f.description}</textarea></div>
+      <div class="wg-field"><label>Titre</label><input type="text" class="wg-input" placeholder="Titre de l'exercice" value="${appEscapeHtml(f.name)}" oninput="updateWedgeExerciseName(this.value)"></div>
+      <div class="wg-field"><label>Description</label><textarea class="wg-textarea" placeholder="Description (optionnel)" rows="2" oninput="updateWedgeExerciseDescription(this.value)">${appEscapeHtml(f.description)}</textarea></div>
       <div class="wg-field-box-grid">
         <div class="wg-field-box ${f.resultMode === 'elevator' ? 'wg-col-span-full' : ''}" onclick="openWedgeDistancesPopup()">
           <div class="wg-field-box-label">${f.resultMode === 'elevator' ? 'Paliers (du plus court au plus long)' : 'Distances'}</div>
@@ -768,7 +768,7 @@ function wedgeExerciseCardHtml(ex) {
     : `${ex.distances.map(d => d + 'm').join(' / ')} — ${ex.ballsPerDistance} balles/distance — ${resultModeLabel(ex.resultMode)}${(ex.resultMode === 'inout' || ex.resultMode === 'zone') ? ` (${ex.radius}${ex.radiusUnit})` : ''}`;
   return `<div class="wg-exercise-card2 ${selected ? 'selected' : ''}" onclick="selectWedgeExercise(${ex.id})">
     <div class="wg-exercise-card2-head">
-      <span class="wg-exercise-card2-title-wrap"><b>${ex.name}</b>${inProgress ? `<span class="wg-badge-progress" onclick="event.stopPropagation(); openWedgeResumePopup(${ex.id})">En cours</span>` : ''}</span>
+      <span class="wg-exercise-card2-title-wrap"><b>${appEscapeHtml(ex.name)}</b>${inProgress ? `<span class="wg-badge-progress" onclick="event.stopPropagation(); openWedgeResumePopup(${ex.id})">En cours</span>` : ''}</span>
       ${selected ? `<div class="wg-exercise-actions">
           <button title="Supprimer" onclick="event.stopPropagation(); askDeleteWedgeExercise(${ex.id})">${UI.ICONS.close}</button>
           <button title="Dupliquer" onclick="event.stopPropagation(); duplicateWedgeExercise(${ex.id})">${UI.ICONS.duplicate}</button>
@@ -776,7 +776,7 @@ function wedgeExerciseCardHtml(ex) {
           <button title="Graphe" onclick="event.stopPropagation(); reviewWedgeExercise(${ex.id})">${UI.ICONS.chart}</button>
         </div>` : `<span class="wg-text-muted-sm">${lastLog ? UI.formatDate(lastLog.date) : ''}</span>`}
     </div>
-    ${ex.description ? `<span class="wg-text-muted">${ex.description}</span>` : ''}
+    ${ex.description ? `<span class="wg-text-muted">${appEscapeHtml(ex.description)}</span>` : ''}
     <span class="wg-text-muted">${formatLabel}</span>
     ${lastLog ? `<div class="wg-text-muted-sm">Dernière session : ${UI.formatDate(lastLog.date)} — ${wedgeLogSummaryText(ex, lastLog)}</div>` : ''}
   </div>`;
@@ -822,7 +822,7 @@ function restartWedgeExerciseFromPopup() {
 function wedgeResumePopupHtml() {
   const ex = wedgeExercises.find(e => e.id === wedgeResumePopupExerciseId);
   return UI.modal('Session en cours', `
-    <p class="wg-text-muted mb-10">Tu as une session en cours pour « ${ex ? ex.name : ''} ». Reprendre où tu t'es arrêté, ou recommencer à zéro ?</p>
+    <p class="wg-text-muted mb-10">Tu as une session en cours pour « ${ex ? appEscapeHtml(ex.name) : ''} ». Reprendre où tu t'es arrêté, ou recommencer à zéro ?</p>
     <div class="wg-field-row"><button class="wg-btn-secondary" onclick="restartWedgeExerciseFromPopup()">Recommencer</button><button class="wg-btn-primary" onclick="resumeWedgeExerciseFromPopup()">Reprendre</button></div>
   `, 'closeWedgeResumePopup');
 }
@@ -908,7 +908,7 @@ function wedgeExSessionScreenHtml() {
   const distTabsHtml = s.distances.map((dd, idx) => `<button class="wg-ladder-item ${idx === s.activeDistanceIdx ? 'active' : ''}" onclick="setWedgeExActiveDistance(${idx})">${dd.distance}m</button>`).join('');
   const currentResult = dist.results[s.activeAttempt];
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
-    <div class="wg-session-title">${ex.name}</div>
+    <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-session-subtitle">${dist.distance}m - ${s.activeAttempt + 1}/${dist.results.length}${wedgeExSuccessDistanceLabel(ex, dist.distance) ? ' · ' + wedgeExSuccessDistanceLabel(ex, dist.distance) : ''}</div>
     <section class="wg-section"><h4 class="mb-8">Balles</h4><div class="wg-attempts-grid">${attemptsHtml}</div></section>
     <section class="wg-section">${wedgeExResultInputHtml(ex, currentResult, dist.distance)}</section>
@@ -945,7 +945,7 @@ function wedgeExElevatorScreenHtml() {
   const seriesHtml = isXY ? `<div class="wg-series-dots">${Array.from({ length: s.xyY }, (_, i) => { const r = s.levelAttempts[i]; const cls = r === true ? 'filled' : (r === false ? 'missed' : ''); return `<span class="wg-series-dot ${cls}"></span>`; }).join('')}</div>
     <div class="wg-info-note mb-10">Balle ${Math.min(s.levelAttempts.length + 1, s.xyY)} / ${s.xyY} — besoin de ${s.xyX} réussies pour monter</div>` : '';
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
-    <div class="wg-session-title">${ex.name}</div>
+    <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-section-desc wg-text-center">Palier ${s.currentLevelIdx + 1}/${s.levels.length} — ${distance}m</div>
     <p class="wg-text-muted wg-text-center mb-10">${isXY ? `Réussis ${s.xyX} balles sur ${s.xyY} pour monter d'un palier, sinon tu redescends — balles illimitées` : `Réussis pour monter d'un palier, rate pour redescendre — balles illimitées`}</p>
     <div class="wg-ladder-grid">${ladderHtml}</div>
@@ -1077,7 +1077,6 @@ function wedgeAllExerciseLogs() {
   return rows;
 }
 function setWedgeExercisesTab(tab) { wedgeExercisesTab = tab; rerender(); }
-function setWedgeExercisesSort(mode) { wedgeExercisesSort = wedgeExercisesSort === mode ? null : mode; rerender(); }
 function wedgeSortedExercises() {
   const list = wedgeExercises.slice();
   const byName = (a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
@@ -1089,7 +1088,7 @@ function wedgeSortedExercises() {
 function wedgeExerciseHistoryHtml() {
   const rows = wedgeAllExerciseLogs();
   const rowsHtml = rows.map(({ ex, log }) => `<li onclick="editWedgeExerciseLog(${ex.id}, ${log.id})">
-      <span>${ex.name}<br><span class="wg-text-muted-sm">${UI.formatDate(log.date)} — ${wedgeLogSummaryText(ex, log)}</span></span>
+      <span>${appEscapeHtml(ex.name)}<br><span class="wg-text-muted-sm">${UI.formatDate(log.date)} — ${wedgeLogSummaryText(ex, log)}</span></span>
       <span class="wg-log-row-right"><button class="wg-btn-danger" onclick="event.stopPropagation(); askDeleteWedgeLog(${log.id}, ${ex.id})">${UI.ICONS.trash}</button></span>
     </li>`).join('');
   return `<ul class="wg-session-list mb-70">${rowsHtml || '<li>Aucune session enregistrée pour le moment.</li>'}</ul>`;
@@ -1103,7 +1102,7 @@ function wedgeExRecapScreenHtml() {
       <button class="wg-back-btn" onclick="discardWedgeExRecap()">${UI.ICONS.back} Annuler</button>
       ${needsEditMode ? `<button class="wg-icon-btn ${wedgeRecapEditMode ? 'active' : ''}" onclick="toggleWedgeRecapEditMode()">${UI.ICONS.edit}</button>` : ''}
     </div>
-    <div class="wg-session-title">${ex.name}</div>
+    <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-section-desc wg-text-center">${needsEditMode ? (wedgeRecapEditMode ? 'Touche un tir pour changer son résultat' : 'Récapitulatif — touche le crayon pour corriger') : 'Récapitulatif — touche un tir pour le corriger'}</div>
     <div class="wg-insight-card-title wg-text-center mt-8">${wedgeLogSummaryText(ex, { summary: wedgeExRecap.summary })}</div>
     <ul class="wg-session-list">${rows}</ul>
@@ -1186,7 +1185,6 @@ function wedgeReviewChartsFor(ex) {
   charts.push({ title: 'Évolution', build: () => wedgeExEvolutionHtml(ex) });
   return charts;
 }
-function setWedgeExReviewLimit(v) { wedgeExReviewLimit = v; rerender(); }
 function wedgeExRadarHtml(ex) {
   // Dispersion globale : toutes distances et toutes sessions confondues.
   // La carte (titre + cadre) est générée par la revue, le bouton de limite est au-dessus.
@@ -1244,11 +1242,11 @@ function wedgeExerciseReviewHtml() {
   // Même carte que les graphes de Dispersion (Parcours) ; les graphes vides sont ignorés
   const chartsHtml = charts.map(c => {
     const body = c.build(logs);
-    return body ? `<div class="wg-insight-card"><div class="wg-insight-card-title">${c.title}</div><div class="wg-insight-card-body">${body}</div></div>` : '';
+    return body ? `<div class="wg-insight-card"><div class="wg-insight-card-title">${c.title}</div><div>${body}</div></div>` : '';
   }).join('');
   const sessionRows = logs.slice().reverse().map(l => `<li onclick="viewWedgeExerciseLog(${l.id})"><span>${UI.formatDate(l.date)}<br><span class="wg-text-muted-sm">${wedgeLogSummaryText(ex, l)}</span></span><span class="wg-log-row-right"><span class="wg-text-muted-sm">${l.summary.total} balles</span><button class="wg-btn-danger" onclick="event.stopPropagation(); askDeleteWedgeLog(${l.id})">${UI.ICONS.trash}</button></span></li>`).join('');
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseReview()">${UI.ICONS.back} Exercices</button></div>
-    <div class="wg-session-title">${ex.name}</div>
+    <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     ${logs.length ? `<section class="wg-section"><div class="wg-chip-row">${wedgeSortBtnHtml('exReviewLimit')}</div></section>` : ''}
     ${chartsHtml}
     <div class="wg-section-desc mt-8">Voir les sessions précédentes</div>
@@ -1268,7 +1266,7 @@ function wedgeExerciseLogDetailHtml(ex) {
     return `<li>${dotClass ? `<span class="wg-dot ${dotClass}"></span>` : ''}<span>Tir ${i + 1} — ${s.distance}m</span><span class="wg-text-muted-sm">${resultLabel}</span></li>`;
   }).join('');
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseLog()">${UI.ICONS.back} Retour</button><button class="wg-icon-btn" onclick="askDeleteWedgeLog(${log.id})">${UI.ICONS.trash}</button></div>
-    <div class="wg-session-title">${ex.name}</div>
+    <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-section-desc wg-text-center">${UI.formatDate(log.date)}</div>
     <div class="wg-insight-card-title mt-8">${wedgeLogSummaryText(ex, log)}</div>
     <ul class="wg-session-list">${shotRows}</ul>

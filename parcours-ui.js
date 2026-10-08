@@ -870,7 +870,7 @@ function fwLoad() {
 }
 
 function fwSave() {
-  try { localStorage.setItem(FW_STORAGE_KEY, JSON.stringify({ holes: fwHoles })); } catch (e) { /* pas grave */ }
+  appSafeSetItem(FW_STORAGE_KEY, JSON.stringify({ holes: fwHoles }));
 }
 
 function fwCurrentHoleIndex() {
@@ -1057,7 +1057,7 @@ function grLoad() {
 }
 
 function grSave() {
-  try { localStorage.setItem(GR_STORAGE_KEY, JSON.stringify({ holes: grHoles })); } catch (e) { /* pas grave */ }
+  appSafeSetItem(GR_STORAGE_KEY, JSON.stringify({ holes: grHoles }));
 }
 
 function grCurrentHoleIndex() {
@@ -1393,6 +1393,6 @@ function saveHistoryEntry() {
   let list = [];
   try { list = JSON.parse(localStorage.getItem(CAPTURE_STORAGE_KEY) || "[]"); } catch (e) { list = []; }
   list.push(snapshot);
-  try { localStorage.setItem(CAPTURE_STORAGE_KEY, JSON.stringify(list)); } catch (e) { /* pas grave */ }
+  appSafeSetItem(CAPTURE_STORAGE_KEY, JSON.stringify(list));
   renderCourseModals(); // rafraîchit la modale : la progression affiche immédiatement le nouveau bilan
 }
