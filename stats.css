@@ -13,12 +13,11 @@
   --color-bg-base: #0b0f0c;
   --color-bg-elevated: #10150f;
   --color-bg-card: #131916;
-  --color-bg-card-hover: #131916;
+  --color-bg-card-hover: #1a221d; /* survol : un cran plus clair que --color-bg-card (#131916) */
 
   /* ---------- Couleurs — accent (vert lime) ---------- */
   --color-accent: #8fd13f;
   --color-accent-bright: #8fd13f;
-  --color-accent-dim: #8fd13f;
   --color-accent-10: rgba(143, 209, 63, 0.12);
   --color-accent-15: rgba(143, 209, 63, 0.12);
   --color-accent-25: rgba(143, 209, 63, 0.25);
@@ -88,15 +87,6 @@
   --radius-xl: 24px;
   --radius-full: 999px;
 
-  /* ---------- Ombres ---------- */
-  --shadow-card: none;
-  --shadow-card-hover: none;
-  --shadow-accent-glow: none;
-
-  /* ---------- Effet verre léger ---------- */
-  --glass-bg: rgba(11, 21, 32, 0.6);
-  --glass-blur: blur(20px);
-
   /* ---------- Transitions / animations ---------- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -164,14 +154,8 @@ html {
 #page-stats .app {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: calc(56px + env(safe-area-inset-top) + 16px) var(--app-padding) var(--bottom-safe);
+  padding: var(--app-page-top) var(--app-padding-x) var(--bottom-safe);
   position: relative;
-}
-
-@media (max-width: 360px) {
-  #page-stats .app {
-    padding: calc(56px + env(safe-area-inset-top) + 16px) var(--app-padding-small) var(--bottom-safe);
-  }
 }
 
 /* Accueil Stats : le premier bloc suit directement l'espacement ci-dessus (pas de marge en plus) */
@@ -196,17 +180,13 @@ html {
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
-#page-stats .page-header__back:hover { opacity: 0.7; }
+@media (hover: hover) {
+  #page-stats .page-header__back:hover { opacity: 0.7; }
+}
 
 #page-stats .page-header__title-group {
   flex: 1;
   text-align: center;
-}
-
-#page-stats .page-header__subtitle {
-  margin: var(--space-2xs) 0 0;
-  font-size: var(--fs-sm);
-  color: var(--color-text-secondary);
 }
 
 /* ---------- Sections ---------- */
@@ -269,12 +249,6 @@ html {
 #page-stats .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-sm);
-}
-
-#page-stats .grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-sm);
 }
 
@@ -627,7 +601,9 @@ html {
   transition: background var(--duration-fast) var(--ease-out);
 }
 #page-stats .round-row:last-child { border-bottom: none; }
-#page-stats .round-row:hover { background: var(--color-bg-card-hover); }
+@media (hover: hover) {
+  #page-stats .round-row:hover { background: var(--color-bg-card-hover); }
+}
 
 #page-stats .round-row__thumb {
   width: 48px;
@@ -816,21 +792,6 @@ html {
   margin-top: 2px;
 }
 
-#page-stats .chart-card__info-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background: none;
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-#page-stats .chart-card__info-btn svg { width: 16px; height: 16px; }
-
 #page-stats .chart-card__legend {
   display: flex;
   align-items: center;
@@ -843,39 +804,6 @@ html {
   border-radius: 50%;
   background: var(--color-accent);
   position: relative;
-}
-
-/* ---------- Tabs période (1M / 3M / 6M / 1A / TOUT) ---------- */
-#page-stats .period-tabs {
-  display: flex;
-  gap: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-sm);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-#page-stats .period-tabs::-webkit-scrollbar { display: none; }
-
-#page-stats .period-tab {
-  background: none;
-  border: none;
-  color: var(--color-text-tertiary);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  padding: var(--space-2xs) 0;
-  position: relative;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color var(--duration-fast) var(--ease-out);
-}
-#page-stats .period-tab[aria-selected="true"] { color: var(--color-accent); }
-#page-stats .period-tab[aria-selected="true"]::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: -13px;
-  height: 2px;
-  background: var(--color-accent);
-  border-radius: var(--radius-full);
 }
 
 /* ---------- Zone de tracé ---------- */
@@ -923,17 +851,6 @@ html {
   font-weight: var(--fw-bold);
 }
 #page-stats .chart-progression svg { width: 16px; height: 16px; }
-
-#page-stats .chart-footnote {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  font-size: var(--fs-xs);
-  color: var(--color-text-tertiary);
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--color-border);
-}
-#page-stats .chart-footnote svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
 /* ==========================================================================
    STATS — segmented control, filtres, maps, tableaux de distance
    ========================================================================== */
@@ -1026,7 +943,6 @@ html {
   flex-shrink: 0;
 }
 #page-stats .filter-chip svg:first-child { width: 15px; height: 15px; color: var(--color-accent); flex-shrink: 0; }
-#page-stats .filter-chip__chevron { width: 13px; height: 13px; color: var(--color-text-tertiary); margin-left: 2px; }
 
 /* ---------- Sous-section avec accent gauche (variante compacte) ---------- */
 #page-stats .stat-block {
@@ -1117,21 +1033,9 @@ html {
 #page-stats .data-table tr:last-child td { border-bottom: none; }
 #page-stats .data-table td:not(:first-child), #page-stats .data-table th:not(:first-child) { text-align: right; }
 
-#page-stats .data-table .val-pos { color: var(--color-positive); font-weight: var(--fw-semibold); }
-#page-stats .data-table .val-neg { color: var(--color-negative); font-weight: var(--fw-semibold); }
-
 /* ==========================================================================
    FAIRWAY MAP — schéma dispersion fairway (SVG)
    ========================================================================== */
-
-#page-stats .field-map {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  aspect-ratio: 16 / 11;
-  background: linear-gradient(180deg, #1b3a1f 0%, #234a29 55%, #2c5a33 100%);
-}
-#page-stats .field-map svg { width: 100%; height: 100%; display: block; }
 
 #page-stats .field-map__label {
   position: absolute;
@@ -1234,17 +1138,6 @@ html {
 }
 #page-stats .sort-chip svg { width: 13px; height: 13px; }
 
-#page-stats .round-table-head {
-  display: grid;
-  grid-template-columns: 96px 1fr 64px 20px;
-  gap: var(--space-sm);
-  padding: 0 var(--space-md);
-  font-size: var(--fs-2xs);
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-
 #page-stats .round-row--table {
   display: grid;
   grid-template-columns: 96px 1fr 64px 20px;
@@ -1268,162 +1161,11 @@ html {
 
 /* Carte "Par club" : aucun écran dédié dans le périmètre livré → non interactive */
 #page-stats .analysis-card--disabled { cursor: default; }
-#page-stats .analysis-card--disabled:hover { transform: none; box-shadow: var(--shadow-card); }
 #page-stats .analysis-card--disabled .analysis-card__arrow { opacity: 0.3; }
 
 /* ==========================================================================
    SAISIE RAPIDE — écran de saisie par trou (score, putts, fairway, green)
    ========================================================================== */
-
-/* ---------- Badge numéroté (réutilisé : trou, score, putts) ---------- */
-#page-stats .num-badge {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border-accent);
-  color: var(--color-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-base);
-  font-weight: var(--fw-bold);
-}
-
-/* ---------- Carte info trou (par / hcp / distance) ---------- */
-#page-stats .hole-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
-  border-color: var(--color-border-accent);
-}
-#page-stats .hole-card__info { flex: 1; min-width: 0; }
-#page-stats .hole-card__par {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-#page-stats .hole-card__hcp {
-  font-size: var(--fs-xs);
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
-}
-#page-stats .hole-card__divider {
-  width: 1px;
-  align-self: stretch;
-  background: var(--color-border);
-}
-#page-stats .hole-card__distance {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-bold);
-}
-#page-stats .hole-card__distance svg { width: 16px; height: 16px; color: var(--color-text-tertiary); }
-
-/* ---------- Carte stepper (score / putts) ---------- */
-#page-stats .stepper-card {
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  min-width: 0;
-}
-#page-stats .stepper-card__head { display: flex; align-items: flex-start; gap: var(--space-sm); }
-#page-stats .stepper-card__title {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-#page-stats .stepper-card__desc {
-  font-size: 0.6875rem;
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
-}
-
-#page-stats .stepper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-md);
-  padding: var(--space-xs);
-}
-#page-stats .stepper__btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: var(--color-bg-card-hover);
-  color: var(--color-text-primary);
-  font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
-}
-#page-stats .stepper__btn:active { background: var(--color-accent); color: var(--color-bg-base); }
-#page-stats .stepper__value {
-  font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
-  min-width: 32px;
-  text-align: center;
-}
-
-/* ---------- Carte zone (fairway / green) — placeholder simple ---------- */
-#page-stats .zone-card { padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
-#page-stats .zone-card__head { display: flex; align-items: flex-start; gap: var(--space-sm); }
-#page-stats .zone-card__title {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-#page-stats .zone-card__desc {
-  font-size: var(--fs-xs);
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
-}
-
-#page-stats .zone-map {
-  position: relative;
-  margin: 0 auto;
-  width: 100%;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  cursor: pointer;
-  background: linear-gradient(180deg, #1b3a1f 0%, #234a29 55%, #2c5a33 100%);
-}
-#page-stats .zone-map--fairway { max-width: 65%; aspect-ratio: 3 / 4; }
-#page-stats .zone-map--green { max-width: 60%; aspect-ratio: 1 / 1; }
-
-#page-stats .zone-map__marker {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  border: 1.5px solid var(--color-accent);
-  pointer-events: none;
-}
-#page-stats .zone-map__marker::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 12px;
-  height: 12px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
-}
 
 /* ---------- Bouton Valider ---------- */
 #page-stats .qr-submit {
@@ -1527,7 +1269,9 @@ html {
   cursor: pointer;
   transition: color var(--duration-fast) var(--ease-out);
 }
-#page-stats .new-round_close:hover { color: var(--color-text-primary); }
+@media (hover: hover) {
+  #page-stats .new-round_close:hover { color: var(--color-text-primary); }
+}
 #page-stats .new-round_close svg { width: 22px; height: 22px; }
 
 /* ---------- Formulaire ---------- */
@@ -1656,7 +1400,9 @@ html {
   color: var(--color-text-primary);
   cursor: pointer;
 }
-#page-stats .new-round_result:hover,
+@media (hover: hover) {
+  #page-stats .new-round_result:hover { background: var(--color-bg-card-hover); }
+}
 #page-stats .new-round_result:focus-visible { background: var(--color-bg-card-hover); }
 #page-stats .new-round_result-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
 #page-stats .new-round_result-city { font-size: var(--fs-xs); color: var(--color-text-secondary); }
@@ -2598,6 +2344,22 @@ html {
   background: var(--color-accent);
   color: var(--color-bg-base);
 }
+/* Zone d'appui élargie (44 px) sans changer le visuel : la mise en page de la saisie
+   détaillée tient sans défilement, on ne peut pas grossir les boutons eux-mêmes */
+#page-stats .saisie-detaillee_delete,
+#page-stats .saisie-detaillee_holed,
+#page-stats .saisie-detaillee_popup-close { position: relative; }
+#page-stats .saisie-detaillee_delete::after,
+#page-stats .saisie-detaillee_holed::after {
+  content: '';
+  position: absolute;
+  inset: -6px -5px -8px; /* 6 px en haut = le padding du pied de panneau : aucun débordement sur la ligne du dessus */
+}
+#page-stats .saisie-detaillee_popup-close::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
 
 #page-stats .saisie-detaillee_group {
   display: flex;
@@ -3016,8 +2778,6 @@ html {
   background: var(--color-bg-base);
   min-height: 100vh;
 }
-#screen-statistiques .stat-block__title::before { box-shadow: none; }
-#screen-statistiques .period-tab[aria-selected="true"]::after { box-shadow: none; }
 
 
 /* ==========================================================================
@@ -3031,14 +2791,6 @@ html {
   --type-caption: var(--fs-xs);
   --type-label: var(--fs-2xs);
   --type-body: var(--fs-sm);
-}
-
-/* Sous-titre de page */
-:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .page-header__subtitle {
-  font-size: var(--type-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Titre de bloc (Statistiques > Multi) : icône puis texte */
