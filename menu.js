@@ -875,7 +875,6 @@ const MENU_DOCS = {
         "{{backendName}} : base de données et authentification. Il agit comme sous-traitant, pour notre compte.",
         "{{hostName}} : hébergement de l'Application. Il voit les données techniques de connexion, dont l'adresse IP.",
         "FlyAway Golf (api.flyawaygolf.com) : lorsque vous recherchez un golf proche dans Stats, les coordonnées de votre position sont envoyées à ce service pour retrouver les parcours voisins. Rien n'est envoyé sans cette action de votre part.",
-        "cdnjs (Cloudflare) : fournit la bibliothèque de graphiques et voit l'adresse IP de votre appareil au chargement.",
         "Google et Apple : si vous vous connectez avec votre compte Google ou Apple, ils nous transmettent votre adresse e-mail et un identifiant, selon leurs propres politiques.",
         "Google Play, et plus tard l'App Store : distribution de l'Application, selon leurs propres politiques.",
       ] },

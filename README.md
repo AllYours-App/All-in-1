@@ -14,7 +14,7 @@ All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur t�
 Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
 
 ### Accueil
-Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine, distance moyenne, index et date de la dernière séance. Un bouton de profil ouvre le Menu.
+Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine et date de la dernière séance. Un bouton de profil ouvre le Menu.
 
 ### Menu (profil et réglages)
 C'est ici que le joueur renseigne ses informations personnelles, utilisées ensuite dans le reste de l'application :
@@ -105,7 +105,7 @@ Tous les scripts sont des scripts classiques (pas de modules ES). Ils partagent 
 Cet ordre compte, car les fichiers se parlent par le scope global.
 
 ```
-Chart.js 4.5.0 (CDN)
+Chart.js 4.5.0 (`vendor/chart.umd.min.js`)
 app-shell.js        -> showPage()
 commun.js           -> appKeypad()
 sg-data.js          -> SG_BASELINES
@@ -125,8 +125,8 @@ Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, 
 
 ### Dépendances externes
 
-- Chart.js 4.5.0 via cdnjs (graphiques de `stats.js`).
-- API publique `https://api.flyawaygolf.com/v2` : recherche de golfs par géolocalisation et profil de golf, appelée uniquement depuis `stats.js` (popup "Nouveau parcours"). Elle reçoit la position de l'appareil : elle est citée dans la politique de confidentialité, comme Supabase, l'hébergeur et cdnjs (Chart.js).
+- Chart.js 4.5.0, hébergé dans `vendor/chart.umd.min.js` (graphiques de `stats.js`) : plus aucun CDN tiers.
+- API publique `https://api.flyawaygolf.com/v2` : recherche de golfs par géolocalisation et profil de golf, appelée uniquement depuis `stats.js` (popup "Nouveau parcours"). Elle reçoit la position de l'appareil : elle est citée dans la politique de confidentialité, comme Supabase et l'hébergeur.
 
 ### Règles de cloisonnement entre modules
 
@@ -185,7 +185,7 @@ Le plan gratuit de Vercel (Hobby) est limité à un usage non commercial. Tant q
 
 ## Fichiers partagés
 
-### `index.html` (1261 lignes)
+### `index.html` (1073 lignes)
 Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Un script en `<head>` ajoute la classe `has-session` sur `<html>` si `golfSession` existe, pour éviter le flash de la page de connexion.
 
 ### `app-shell.js`
@@ -199,13 +199,16 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 
 **Marges des pages (modèle : Putting).** Deux variables dans `base.css` : `--app-padding-x` (20 px, 16 px sous 360 px) pour la marge horizontale, et `--app-page-top` (56 px + safe-area + 16 px) pour le début du contenu sous le header fixe. Toute nouvelle page ou tout nouveau bloc de page les utilise, sans valeur en dur. Exceptions volontaires : les écrans de Gym et de Parcours verrouillés à la hauteur de l'écran (accueil Gym, création de programme, accueil Parcours) gardent un décalage vertical plus serré. `.screen` de `parcours-ui.css` est limité à `#page-parcours` (via `:where()`, spécificité inchangée) : il s'appliquait aussi à Stats et doublait sa marge.
 
+### `vendor/chart.umd.min.js`
+Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=31`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
+
 ### `sg-data.js` et `strokes-gained.js`
 Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence `SG_BASELINES` (lies `tee`, `fairway`, `rough`, `sand`, `recovery`, `green` ; yards sauf `green` en pieds), extraites du dépôt `dgtaillie/python_strokes_gained`. `strokes-gained.js` convertit les mètres, interpole (`sgExpected`) et calcule le SG d'un coup (`sgShot`). Aucune dépendance au DOM. C'est le seul endroit où vivent des tables SG : `putting.js`, `wedging.js` et `stats.js` l'appellent. Sous 10 yd (9,1 m), les tables fairway / rough / sand sont plafonnées à leur valeur à 10 yd (la source n'a pas de points plus courts).
 
 ## Modules
 
 ### `HomePage.js` / `HomePage.css`
-Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), panneau de stats via `[data-stat="..."]` (`renderGolfStats(data)`, anneau de progression `setProgressRing`). Expose `window.renderHomeGreeting` (rappelée par `menu.js`) et `window.renderGolfStats`. Toutes ses requêtes DOM sont limitées à `#page-home`.
+Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), Expose `window.renderHomeGreeting` (rappelée par `menu.js`). Le panneau du bas de l'accueil (objectif de la semaine, dernière séance) est rempli par `renderGolfHome()` dans `putting.js`. Toutes ses requêtes DOM sont limitées à `#page-home`.
 
 ### `auth.js` / `auth.css`
 Connexion et création de compte. La session est uniquement la clé `golfSession` du `localStorage` (`{ email, createdAt }`) : aucun serveur, la validation ne vérifie que le format de l'e-mail et la longueur du mot de passe (8 caractères minimum à l'inscription). Choisit la page de départ (`home` si session, sinon `login`), expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`). Réutilise `getBackgroundByHour()` de `HomePage.js`. Les liens légaux sous les formulaires (dans `index.html`) appellent `openHelpPage('cgu' | 'confidentialite', 'login' | 'signup')` de `menu.js` : le texte s'ouvre dans la page Menu et le bouton retour ramène à l'écran d'origine.
@@ -228,7 +231,7 @@ Ses fonctions de sauvegarde sont `saveMenuState()` / `loadMenuState()` (préfix�
 Suivi pendant le parcours : Fairway (mises en jeu sur 18 trous), Green (attaques de green), Historique (bilan du parcours en cours), calculateur de vent, calculateur de dénivelé (capteurs d'orientation de l'appareil), calculateur "Mes distances" (lit `golfBag` et les distances de `menu.js`). Les fonctions sont globales car appelées depuis des `onclick` générés. Unités m/yd.
 
 ### `putting.js` / `putting.css`
-Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessions de putting, reprise de session, analyses (distance, pente, performance, comparaisons), et saisie d'un "Nouveau parcours" avec historique et détail. Calcule le Strokes Gained des putts via `strokes-gained.js`. Remplit aussi les encadrés `[data-stat]` de l'accueil via `renderGolfHome()`. Expose `window.renderPuttingTab` et `window.renderGolfHome`. Ses requêtes DOM passent par `puttingQuery` / `puttingQueryAll` (limitées à `#page-putting`), sauf celles de `renderGolfHome()` qui visent `#page-home`. `renderPuttingTab()` retire `is-stats-screen` de `body` : ce drapeau reste sinon en place quand on quitte Putting depuis son écran Stats.
+Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessions de putting, reprise de session, analyses (distance, pente, performance, comparaisons), et saisie d'un "Nouveau parcours" avec historique et détail. Calcule le Strokes Gained des putts via `strokes-gained.js`. Remplit aussi le panneau de l'accueil (objectif de la semaine, dernière séance, `[data-stat]`) via `renderGolfHome()`, seule source de ce panneau. Expose `window.renderPuttingTab` et `window.renderGolfHome`. Ses requêtes DOM passent par `puttingQuery` / `puttingQueryAll` (limitées à `#page-putting`), sauf celles de `renderGolfHome()` qui visent `#page-home`. `renderPuttingTab()` retire `is-stats-screen` de `body` : ce drapeau reste sinon en place quand on quitte Putting depuis son écran Stats.
 Sauvegarde : `savePuttingState()` / `loadPuttingState()`. `importPuttingRoundFromStats(data)` (exposée sur `window`) crée une partie `source: 'stats'` à partir d'une partie saisie en détaillé dans `stats.js` ; elle est dédoublonnée par `statsKey`.
 
 ### `wedging.js` / `wedging.css`
@@ -276,7 +279,8 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 3. **Deux saisies de "Nouveau parcours".** `putting.js` (`putting_rounds`) et `stats.js` (`golfStatsRounds`) ont chacun leur popup, leur format et leur stockage. Une partie détaillée de Stats est copiée dans `putting_rounds`, mais les deux saisies restent distinctes.
 4. **Couplage par `typeof` sur des globales de `menu.js`.** `parcours-ui.js` et `stats.js` testent `typeof golfBag` / `golfClubCatalog` / `personalDistances`. Cela fonctionne tant que le scope global est partagé, mais casse silencieusement si une variable est renommée.
 5. **Noms globaux génériques.** `root` (`putting.js`), `Analytics`, `Router`, `UI`, `Views` (`wedging.js`), `backBtn`, `headerTitle`, `STORAGE_KEY` (`menu.js`). Aucune collision aujourd'hui, mais le risque reste à chaque nouveau fichier : préfixer les nouveaux noms globaux. Un `id="headerRightBtn"` est présent dans `putting.js` et `wedging.js` : aucun code ne le lit, sans effet.
-6. **Page Parcours vide.** `#page-parcours .screen-view[data-screen="home"]` n'a jamais la classe `active` et reste en `display: none`. Le routeur d'écrans (`goToScreen`) a disparu de `parcours-ui.js` au commit `679b585`, et `app-shell.js` ne fait que lire cette classe. Les écrans `distances` et `add-shot` du même fichier sont des maquettes sans lien. À corriger : réactiver `home` à l'ouverture de la page.
+6. **Résolu.** L'écran `home` de Parcours porte la classe `active` dans `index.html` (le routeur `goToScreen` n'existe plus). À vérifier à l'écran (**T**) : ouverture de Parcours et verrou de défilement (`body.no-scroll`, posé par `showPage` à l'entrée) (voir "Bugs résolus").
+
 7. **Taille des fichiers.** Images : les 27 PNG pesaient environ 54 Mo (1,5 à 3,2 Mo chacun), elles sont passées en WebP. Les `.webp` doivent être présents dans `images/` au même nom (sinon les fonds ne s'affichent plus). JS / CSS, toujours à traiter : `gym.js` (6071 lignes, 408 Ko), `stats.js` (3708), `putting.js` (3779), `gym.css`, `stats.css` et `putting.css` (3000 à 3600 lignes chacun) sont chargés au démarrage, y compris les parties jamais ouvertes.
 
 8. **Textes légaux non publiables en l'état.** Ils décrivent la cible (comptes et données sur Supabase) alors que le code est encore local : ne publier l'appli qu'une fois Supabase branché, et après avoir complété les champs listés dans "Mise en ligne et conformité". À faire relire par un juriste.
@@ -285,20 +289,9 @@ Constats faits en lisant le code, classés par gravité. À confirmer en conditi
 11. **Pas de gestion d'erreurs ni de validation.** Pas d'états de chargement ni d'échec réseau (appel à `api.flyawaygolf.com` dans `stats.js`, future synchro Supabase). Les saisies numériques (distance restante, pénalité, putts, poids, distances de clubs) doivent être bornées et validées avant d'être enregistrées. Aucun suivi des erreurs en production : ajouter un outil comme Sentry avant la mise en ligne publique, et le déclarer dans la politique de confidentialité.
 12. **Pas de service worker.** Le manifest est présent, mais aucun fichier de service worker n'est documenté : l'appli ne se charge pas sans réseau et n'est pas réellement installable hors-ligne. À ajouter avec la synchro hors-ligne (voir "Brancher Supabase").
 13. **Aucun outillage de contrôle.** Pas de `package.json`, de lint, de tests ni d'étape de build. Le numéro de version `?v=31` se change à la main dans toutes les balises, et un oubli laisse des fichiers en cache périmés chez les utilisateurs. Recommandé : ESLint avec les règles `no-undef`, `no-redeclare` et `no-unused-vars`, qui détectent automatiquement les collisions de noms globaux (points 4 et 5), les fonctions jamais appelées (code mort) et les noms mal écrits. Plus tard, un build (Vite) pour regrouper, minifier et versionner les fichiers sans intervention manuelle, ce qui règle aussi le poids des gros fichiers (point 7).
-14. **Chart.js sans SRI.** `index.html` charge Chart.js depuis cdnjs sans attribut `integrity` ni `crossorigin` : si le CDN est compromis, le code s'exécute dans l'appli. Ajouter le hash SRI, ou héberger le fichier soi-même (ce qui retire aussi cdnjs de la politique de confidentialité).
-15. **Panneau de statistiques de l'accueil : à moitié mort (vérifié dans le code).** Le panneau du bas de l'accueil a quatre colonnes, deux vivantes et deux mortes.
-    - **Vivantes** : "Objectif semaine" et "Dernière séance" sont alimentées par `renderGolfHome()` (`putting.js`, ligne 1276), à partir de `putting_sessions` et `putting_rounds` uniquement. Elles ignorent donc le Gym, le Wedging, la Vitesse et les parties de Stats (sauf celles copiées dans `putting_rounds`). L'objectif de 5 séances par semaine est la constante `GOLF_WEEKLY_GOAL`, non modifiable par l'utilisateur.
-    - **Mortes** : "Distance moyenne" et "Index" ne sont alimentées par aucun code. Les valeurs écrites en dur dans `index.html` (247 m, +8 m, 12.4, +0,3) ne s'affichent jamais : `renderGolfStats()` est appelée sans argument au chargement (`HomePage.js`, ligne 96) et les remplace par "_". Le commentaire de `putting.js` le dit : "Distance moyenne et Index ne dépendent pas du putting : non touchés ici".
-    - **Ordre fragile** : `HomePage.js` remet tout à "_" au chargement (`renderGolfStats()`), puis rappelle `renderGolfHome()` pour tout remplir (ligne 100). Si l'ordre de chargement des scripts ou ce rappel change, le panneau reste vide. `putting.js` appelle aussi `renderGolfHome()` à son chargement (ligne 3780), dans `refreshAllAnalytics()` (ligne 1481) et au retour vers l'accueil (ligne 3095).
-    - **Index** : la valeur existe déjà dans le profil (`golfAppState.userProfile`, saisie dans le Menu) mais n'est pas lue par l'accueil.
+14. **Résolu.** Chart.js 4.5.0 est hébergé avec l'appli (`vendor/chart.umd.min.js`) : plus de CDN tiers, donc plus besoin de SRI (voir "Bugs résolus").
 
-    À supprimer si tu retires les deux colonnes mortes (Distance moyenne et Index) ou tout le panneau. Termes à chercher dans tous les fichiers :
-    - `index.html` : colonnes `.bottom-panel_column.is-distance` et `.is-index` (lignes 162 à 189), ou tout le bloc `.bottom-panel_wrapper` (ligne 143) ; attributs `data-stat="distance-value"`, `"distance-variation"`, `"index-value"`, `"index-variation"`.
-    - `HomePage.js` : `renderGolfStats`, `setStat`, `setProgressRing`, `window.renderGolfStats`, l'appel `renderGolfStats()` de `DOMContentLoaded` et le rappel de `renderGolfHome` qui le suit (deviennent inutiles si `renderGolfStats` disparaît). Retirer les deux ensemble.
-    - `putting.js` : `renderGolfHome`, `GOLF_WEEKLY_GOAL`, `RING_CIRCUMFERENCE`, `allActivityDates`, `relativeDayLabel`, ses 3 appels et `window.renderGolfHome`. À ne supprimer que si tout le panneau part.
-    - `HomePage.css` : `bottom-panel_*`, `column_*` (lignes 215 à 315 environ), `progress-ring_*` et `goal_progress-*` (lignes 268 à 350 environ).
-
-    Précautions anti-collision : (1) `data-progress` est aussi utilisé par `gym.js` (lignes 3770, 3933, 4075, 5966) sur `.progress-fill` : ne pas le supprimer globalement, seulement dans `index.html` et `putting.js` ; (2) `setStat`, `GOLF_WEEKLY_GOAL`, `RING_CIRCUMFERENCE`, `allActivityDates` et `relativeDayLabel` ne sont utilisés dans aucun autre fichier : suppression sans risque de collision ; (3) retirer `renderGolfHome` avec tous ses appels en même temps, sinon `is not defined` bloque les scripts suivants ; (4) vérifier la mise en page de l'accueil après suppression, car `HomePage.css` peut positionner les boutons orbitaux par rapport à ce panneau. Une fois fait, mettre à jour ce README : la phrase "Un petit panneau résume l'activité..." de l'Accueil (guide fonctionnel), la description de `HomePage.js` et celle de `putting.js`, puis déplacer ce point dans "Bugs résolus".
+15. **Résolu.** Colonnes mortes Distance moyenne et Index retirées de l'accueil, remise à "_" au chargement supprimée (voir "Bugs résolus").
 
 ### Plan de correction par fichier
 
@@ -310,12 +303,12 @@ Chaque ligne est un fichier à ouvrir une seule fois : tous les points qui le co
 | 2 | `vitesse.css`, `base.css`, `commun.css`, `HomePage.css`, `auth.css` | Fait (voir "Bugs résolus"). Reste le point 35 : héberger Inter. |
 | 3 | `parcours-ui.css` (27 Ko) | Fait (voir "Bugs résolus"). |
 | 4 | `menu.css` (15 Ko) | Fait (voir "Bugs résolus"), à tester : 55. |
-| 5 | `stats.css` (96 Ko) | 45 (l. 792), 48 (l. 167, 173), 64, 59, 60, 51 |
-| 6 | `putting.css` (60 Ko) | 48 (l. 107, 115, 799, 807, 1349, 1357), 53, 54, 59, 60, 61, 51 |
-| 7 | `gym.css` (69 Ko) | 47 (l. 22-62), 58 (l. 224-257, 1399, 2794), 48 (l. 1760, 2945, 3218, 3442, 3478), 49 (l. 1646, **T**), 61, 65 (l. 466 et 1590), 53, 54, 59, 60, 51 |
-| 8 | `index.html` (66 Ko) | 14 (hash SRI de Chart.js), 15 (colonnes mortes, l. 143-189), 17 et 46 (markup connexion, l. 1090-1104), 23 (l. 1231-1236, **T**), 25 (viewport, **décision**, dépend de 23), 39 (écrans `distances` et `add-shot`), 53 (`#hist-search`, l. 619), 56 (balises iOS), 6 |
+| 5 | `stats.css` (96 Ko) | Fait (voir "Bugs résolus"). Reste : retirer `boxShadow: var(--shadow-card-hover)` dans `stats.js:430` (jeton supprimé, sans effet visible). |
+| 6 | `putting.css` (60 Ko) | Fait (voir "Bugs résolus"). Reste : 53 pour Wedging (voir `wedging.css`). |
+| 7 | `gym.css` (69 Ko) | Fait (voir "Bugs résolus"). |
+| 8 | `index.html` | Fait : 6, 14, 15, 39, 53, 56. Reste : 17 et 46 (**décision** boutons morts), 23 (**T**), 25 (**décision**). |
 | 9 | `auth.js` (6 Ko) | 17 (câbler ou retirer Apple, Google et « Mot de passe oublié »). Voir aussi les décisions 1 et 9 |
-| 10 | `HomePage.js` (4 Ko) | 15 (ordre `renderGolfStats()` puis `renderGolfHome()`) |
+| 10 | `HomePage.js` (4 Ko) | Fait (point 15). |
 | 11 | `stats.js` (202 Ko) | **29, 30, 31, 32, 33** (données, critiques), 11, 24 (`stats.js:92, 135, 139, 152, 159, 309`), 52 (l. 403, 868) |
 | 12 | `putting.js` (177 Ko) | 18 (l. 1681-1789), 41 (l. 17 et 26), 50 (l. 135, 171, 215), 27 (11 dialogues), 24 (l. 802, 1078, 3148, 3185), 52 (l. 3404), 5, 3 |
 | 13 | `wedging.js` (99 Ko) | 19 (échappement), 40, 24 (l. 1080, 1189), 52 (l. 1247), 5 |
@@ -333,7 +326,7 @@ Chaque ligne est un fichier à ouvrir une seule fois : tous les points qui le co
 
 **Décisions du propriétaire avant toute modification** : 1 et 9 (authentification et session, dépendent de Supabase), 2 et 3 (une seule saisie de parties, un seul stockage), 7 et 26 (poids des images, suppression des PNG), 8 (textes légaux), 10 (sauvegarde des données), 12 (service worker), 13 (outillage et version `?v=31`), 25 (zoom autorisé ou non), 28 (briques partagées).
 
-**À vérifier à l'écran après correction (T)** : 23, 43, 44, 45, 49, 53, 55, 59.
+**À vérifier à l'écran après correction (T)** : 6, 15, 23, 43, 44, 45, 49, 53, 54, 55, 59, 60.
 
 ### Analyse approfondie du code (bugs et améliorations)
 
@@ -385,7 +378,8 @@ ESLint signale 236 variables non utilisées, mais la plupart sont appelées par 
 
 37. **Fuites CSS globales restantes.** `parcours-ui.css` : `body.no-scroll .app`, `.screen-view.active` et `.screen` ne sont pas limités à `#page-parcours` (sans effet tant que `no-scroll` n'est posé que pendant que Parcours est affiché) ; `input[type="range"]` est stylé pour toute l'app (seul l'écran mort `add-shot` en utilise un). `stats.css` : `html { scroll-behavior: smooth; }` s'applique à toute l'appli et anime les `window.scrollTo(0, 0)` de Gym, Wedging et Putting (`showPage` force `instant`).
 38. **Verrous de scroll sans propriétaire unique.** `no-scroll` est posé par `parcours-ui.js` (`MutationObserver`) et retiré par `showPage` ; `gym-home-locked` / `gym-view-fit` sont posés par `gym.js` et retirés par `app-shell.js` : le shell connaît donc Gym et Parcours. `stats.js` pose `body.style.overflow` dans trois popups (nouvelle partie, pavé de score, indicateurs). Tout nouveau module qui verrouille le scroll doit se retirer lui-même en quittant sa page, comme Parcours et Stats.
-39. **Écrans morts de Parcours.** `distances` et `add-shot` (`index.html`) contiennent des liens `href="#home"`, `#distances`, `#add-shot` et `data-goto` qu'aucun code ne traite (Stats ne traite `data-goto` que dans `#page-stats`) : un clic change seulement `location.hash`, désormais ignoré par Wedging tant qu'il n'est pas affiché. À supprimer ou à brancher avec le point 6.
+39. **Résolu.** Écrans `distances` et `add-shot` retirés d'`index.html` (164 lignes) ; aucun script ne les référençait. Le CSS propre à ces écrans, s'il en reste dans `parcours-ui.css`, n'a pas été recherché (voir "Bugs résolus").
+
 40. **Sélecteurs encore non préfixés par page.** `gym.js` : `.gym-view`, `.sheet.is-open`, `.sheet-overlay.is-open` et des ids génériques (`sheet-overlay`, `sheet-close`, `keypad-sheet-close`...). `wedging.js` : `#app`, `.wg-toast`. `menu.js` : `#backBtn`, `#headerTitle`, `.nav_back-label`. Aucune collision aujourd'hui (Parcours utilise `.modal-sheet`, pas `.sheet`), mais un nouveau module qui réutilise ces noms les casserait.
 
 **Quatrième passe : gabarits HTML de `putting.js` et `gym.js`, `sg-data.js`, CSS**
@@ -396,56 +390,53 @@ Les gabarits ont été contrôlés par script (IDs, balises, `onclick`) et à l'
 42. **Dix boutons d'en-tête morts dans Gym.** Les `.gym-header__action` « Options » et « Réglages » n'ont aucun gestionnaire (`gym.js:18, 173, 205, 234, 329, 427, 565, 618, 659, 703`).
 43. **« Voir tous » des objectifs ramène à l'accueil Gym (à tester sur téléphone).** Le lien `href="#objectifs-grid"` (`gym.js:731`) change le hash et déclenche `popstate`. `gymActivateView('objectifs-grid')` ne connaît pas cette vue et retombe sur `gym-home`.
 44. **Résolu.** Messages de validation Wedging visibles dans la modale (voir "Bugs résolus", à vérifier sur téléphone).
-45. **`@keyframes fadeUp` défini deux fois.** Version complète dans `parcours-ui.css:1276`, version sans `from` dans `stats.css:792`. Stats est chargé après Parcours (`index.html` lignes 14 et 19) : la version incomplète gagne, et l'animation d'apparition de `.screen, .top-bar, .page-header` (`parcours-ui.css:1272`) n'a plus d'effet visible. Si le doublon de Stats est supprimé, cette règle non scopée animera tous les en-têtes de toutes les pages : la scoper en même temps.
+45. **Résolu.** Plus de doublon `fadeUp` : seul celui de `parcours-ui.css` reste. À vérifier à l'écran (**T**) : les en-têtes ne doivent pas glisser (voir "Bugs résolus").
+
 46. **Résolu.** Séparateur « OU » et boutons Apple / Google stylés (voir "Bugs résolus"). Les boutons restent sans action : point 17.
-47. **Règles globales dans `gym.css` (lignes 22 à 62).** `img { display: block }`, `ul, ol { list-style: none }`, `h1…p { margin: 0 }`, contour `:focus-visible` à l'accent Gym sur `input`, `button`, `select` et `[tabindex]`, scrollbar : tout s'applique à l'appli entière. `parcours-ui.css:1290` définit aussi `a:focus-visible` et `button:focus-visible` avec une autre couleur : `gym.css` est chargé après `parcours-ui.css` (`index.html`, lignes 14 et 16), donc le contour Gym l'emporte sur les boutons de tout le monde. Les puces des textes légaux sont préservées par `menu.css:563`.
-48. **Marges en dur au lieu de `--app-page-top` et `--app-padding-x`.** `putting.css` (107, 115, 799, 807, 1349, 1357), `stats.css` (167, 173) et `gym.css` (1760, 2945, 3218, 3442, 3478, plus les variantes `--cp-gap` de `#view-creer-programme`) répètent `calc(56px + env(safe-area-inset-top) + 16px)` et une media query à la main, contre la règle de "Marges des pages".
-49. **Gym : `.sheet` sans safe-area.** Le bas de `.sheet__body` est à 24 px fixes (`gym.css:1646`) : sur iPhone avec barre d'accueil, le dernier élément colle à l'indicateur.
+47. **Résolu.** Les règles globales de `gym.css` sont limitées à `#page-gym` via `:where()` (même spécificité qu'avant) (voir "Bugs résolus").
+
+48. **Résolu.** `putting.css` (6 emplacements) et `stats.css` (2) utilisent `--app-page-top` et `--app-padding-x`, media queries à la main retirées. Les écrans verrouillés de Gym gardent leur décalage vertical plus serré (exceptions déjà décrites dans "Marges des pages") (voir "Bugs résolus").
+
+49. **Résolu.** Le bas de `.sheet__body` ajoute `env(safe-area-inset-bottom)`. À vérifier sur iPhone (**T**) (voir "Bugs résolus").
+
 50. **Détails de gabarits.** `</div>` orphelin à `gym.js:747` (reste du wrapper retiré d'`index.html`, sans effet). Libellé anglais "All" dans les graphiques de Putting (`putting.js:135, 171, 215`). Registre mélangé : vouvoiement ("Vos objectifs", "Développez votre", "Suivez… votre performance") et tutoiement ("Configure ta séance", "t'affiner") dans la même appli, parfois le même écran.
-51. **CSS mort (candidats).** 98 classes ne sont référencées nulle part dans le JS ou le HTML : `putting.css` 46, `stats.css` 30, `gym.css` 21, `base.css` 1 (`wg-container`). À vérifier par recherche globale avant suppression, car certains noms sont construits dynamiquement.
+51. **Partiellement résolu.** Classes supprimées après recherche dans tous les scripts et dans `index.html` : `stats.css` 34, `putting.css` 47, `gym.css` 16. Gardées car construites par concaténation : `is-iron` (Stats), `chart-line--*` et `chart-readout__item--*` (Gym). Reste : `base.css` `wg-container` (à vérifier), le code JS mort (points 24 et 52) et `parcours-ui.css`.
+
 52. **Classes utilisées sans aucune règle CSS.** Hors écrans morts de Parcours (point 39) : `filter-chip-wrap` (`stats.js:403`), `insights_chart` (`stats.js:868`), `quick-entry_top` (`putting.js:3404`), `wg-insight-card-body` (`wedging.js:1247`), `session-actions__finish` et `session-actions__next` (`gym.js:541, 545`), `recap-set-pill__value` (`gym.js:5803`). À styler ou à retirer.
 
-53. **Champs de saisie sous 16 px : zoom automatique d'iOS au focus (à tester sur iPhone).** `auth.css` fixe déjà `font-size: 1rem` avec un commentaire sur ce point, mais les autres champs qui ouvrent le clavier natif sont plus petits : Gym (`.field input` 13 à 15 px, `.search-bar input` 14,5 px), Wedging (`.wg-input`, `.wg-textarea`, `.wg-select` 15 px), Putting (`.exercise-modal_input` 15 px, `.quick-session_bar-input` 13 px, `.quick-entry_infoinput` 14 px), et Stats (`#hist-search`, 13 px via `--fs-sm`, style inline à `index.html:619`). Les champs du Menu (`.field-list input`, `commun.css`) sont corrigés. Gym réduit même ses champs à 14 px sous 400 px et 13 px sous 360 px (`.field input`), et `.set-card__weight-input` tombe à 15 px sous 360 px. `user-scalable=no` est ignoré par iOS Safari : la page zoome au focus et reste zoomée. Correction : 16 px minimum sur ces champs.
-54. **Textes de 8 à 10 px.** 56 déclarations (`gym.css` 18, `putting.css` 12, `wedging.css` 11, `HomePage.css` 5, `parcours-ui.css` 5, `stats.css` 3, `commun.css` 2), dont des étiquettes à 8 et 9 px (`gym.css:2333`, `2838`, `HomePage.css:261`, `292`, `309`, `parcours-ui.css:1138`, `1245`). Gym réduit volontairement ses textes sur petits écrans : `.session-summary__label` passe à 9 px sous 400 px et 8 px sous 360 px, `.feature-card__desc` à 10 puis 9 px, `.choice__label` à 10 puis 9,5 px. Illisible pour beaucoup d'utilisateurs, surtout avec le zoom bloqué (point 25).
+53. **Partiellement résolu.** À 16 px : Menu (`.field-list input`), Gym (`.field input`, `.search-bar input`, `#view-creer-programme`, `.set-card__weight-input`), Putting (`.exercise-modal_input`, `.quick-session_bar-input` ; `.quick-entry_infoinput` n'est plus dans le JS) et Stats (`#hist-search`). Reste : Wedging (`.wg-input`, `.wg-textarea`, `.wg-select` à 15 px dans `wedging.css`). À tester sur iPhone (**T**), surtout l'écran verrouillé de création de programme Gym. `user-scalable=no` reste ignoré par iOS Safari.
+
+54. **Partiellement résolu.** `gym.css` et `putting.css` n'ont plus aucun texte sous 11 px (les réductions de Gym sous 400 et 360 px ne descendent plus sous 11 px). Reste, en déclarations de 8 à 10 px : `wedging.css` 7, `parcours-ui.css` 5, `HomePage.css` 3, `commun.css` 2, `stats.css` 1. À vérifier à l'écran (**T**) : les étiquettes de Gym et de Putting, plus larges.
+
 55. **Menu : en-tête sans safe-area (à tester en mode installé).** `#page-menu .nav_component` (`menu.css`) est collant avec `padding: 24px 0 20px` et ne tient pas compte de `env(safe-area-inset-top)`, contrairement aux en-têtes de `commun.css:36`. Avec `viewport-fit=cover`, le bouton retour peut passer sous l'encoche selon le style de barre d'état d'iOS.
-56. **Pas de balises iOS dans `<head>`.** Ni `theme-color` ni `apple-mobile-web-app-status-bar-style` : la couleur de barre d'état ne suit que le manifest (Android), et le comportement de la barre d'état sur iOS reste celui par défaut.
+56. **Résolu.** `theme-color` (`#050505`, comme le manifest), `mobile-web-app-capable`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style` (`black-translucent`) et `apple-mobile-web-app-title` ajoutés dans `<head>` (voir "Bugs résolus").
 
 57. **`parcours-ui.css` : classes génériques non scopées, utilisées par d'autres modules.** `.btn`, `.btn-primary`, `.icon-btn`, `.card`, `.stat-card`, `.history-item` (avec `:hover` et `:active`), `.progress-track`, `.progress-fill`, `.page-subtitle` et `.kpi-card` s'appliquent à toute l'appli (complète le point 37).
     - **Menu dépend de Parcours.** `menu.js:208, 487, 521` utilise `class="btn btn-primary"` et `menu.css` n'a aucune règle `.btn` : les boutons Valider et Enregistrer du Menu ne tiennent que grâce à `parcours-ui.css`. Retirer ou modifier ce fichier les casse.
     - **Fuites dans les autres modules.** `putting.js` utilise `.stat-card`, `.history-item` et `.page-subtitle`, `gym.js` `.progress-track`, `.progress-fill`, `.icon-btn` et `.btn`, `stats.js` `.card` et `.kpi-card`. Les règles scopées de ces modules l'emportent sur les conflits, mais les propriétés qu'elles ne redéfinissent pas viennent de Parcours : bordure et `transition` des barres de progression de Gym, `transform: scale(0.99)` au toucher et bordure au survol des lignes d'historique de Putting.
     - **Correction.** Préfixer ces règles par `#page-parcours`, et créer pour Menu ses propres règles de bouton (ou les déplacer dans `commun.css`).
-58. **`gym.css` : règles non scopées qui touchent Stats.** `.card--interactive` (`transition`, `:active { transform: scale(0.98) }`, `:hover` avec fond et bordure Gym, `gym.css:241-257`), `.kpi-card__value` (`gym.css:1399`) et `.chart-card__head` (`gym.css:2794`) s'appliquent aux cartes de Stats (`stats.js:597`, `350`, `868`). Concrètement, les cartes « Analyser mon jeu » rétrécissent à chaque appui et prennent le fond de survol de Gym. Les `.card { padding: 16px }` et `{ padding: 14px }` des media queries ≤ 400 px et ≤ 360 px de `gym.css` (lignes 224 à 232) sont aussi non scopées : sans effet aujourd'hui, car Stats donne un padding scopé à toutes ses cartes, mais le piège reste pour un futur module. Correction : préfixer par `.gym-app`.
+58. **Résolu.** Les règles `.card` (media queries), `.card--interactive` et `.chart-card__head` de `gym.css` sont limitées à `.gym-app` via `:where()`. `.kpi-card__value` n'était plus utilisé par Gym : supprimé (voir "Bugs résolus").
 
-59. **Survols « collants » sur écran tactile.** 7 règles `:hover` ne sont pas dans `@media (hover: hover)` : `stats.css` 5 (dont `.round-row:hover`), `putting.css` 1, `gym.css` 1 (`.gym-link:hover`, les 8 autres sont protégées). Sur téléphone, le style de survol reste affiché après un appui jusqu'au toucher suivant ailleurs.
+59. **Résolu.** Les `:hover` restants de `stats.css` (4), `putting.css` (1) et `gym.css` (1) sont dans `@media (hover: hover)`. Le `:focus-visible` de `.new-round_result` est séparé de son `:hover` (voir "Bugs résolus").
 
-60. **Cibles tactiles trop petites (accessibilité et appuis ratés).** Le minimum recommandé sur iOS est 44 px. Dans les CSS, ces boutons sont nettement en dessous :
-    - **Écran de saisie détaillée (Stats), contrôles de 30 px de haut** : `.saisie-detaillee_delete` (34 × 30), `.saisie-detaillee_holed`, `.saisie-detaillee_field`, `.saisie-detaillee_lie`, `.saisie-detaillee_group` et les lignes `.saisie-detaillee_shot-button` (`--sd-row: 30px`). La mise en page dense tient sans défilement, mais chaque appui demande de la précision.
-    - **Bon modèle déjà présent** : `.saisie-rapide_stepper-button` (Stats) a un visuel de 16 px mais une zone d'appui élargie à 40 px par `::after { inset: -12px }` (`stats.css:2042`). C'est la technique à reproduire sur les autres boutons de cette liste.
-    - **20 px** : `.quick-session_info-btn` (Putting) et `.quick-action-info` (Parcours).
-    - **22 px** : `.exercise-card_actions button` (Putting), des boutons de modification, de duplication et de suppression côte à côte avec 10 px d'écart, donc un risque réel de supprimer au lieu de dupliquer (`.wg-exercise-actions button` de Wedging est corrigé).
-    - **26 à 30 px** : les boutons des steppers (`.exercise-modal_stepper-controls button` en Putting), `.set-card__timer-btn` (30 px, 26 px sous 360 px), `.icon-btn--sm` (28 px), `.session-exercise-hero__arrow` (30 px), `.session-header__pause` (32 px), `.exercise-row__duration-clear` (22 px) et `.set-card__validate` (36 px sous 360 px) en Gym, les boutons de fermeture de modales et de popups (`.exercise-modal_close`, `.mini-popup_close`, `.saisie-detaillee_popup-close`) et `.keypad-sign-btn` (Menu).
-    - **32 à 34 px** : `.keypad-close` (Menu), `.track-reset-btn` et `.mode-btn` (Parcours), `.exercises-filter_button` (Putting), `.chart-card__info-btn` (Stats), `.session-header__back` (Gym).
-    - **32 à 34 px aussi** : `.session-holes-nav_item` (32 px) et `.session-attempt` (34 px, modifiable au toucher) en Putting.
-    Correction : garder le visuel et agrandir la zone d'appui (padding ou pseudo-élément `::before` de 44 px).
-61. **`max-height` en `vh` sans repli `dvh` sur les modales.** `gym.css` `.sheet` (78vh) et `putting.css` `.exercise-modal` (88vh) (`parcours-ui.css` et `wedging.css` sont corrigés). Dans Safari avec la barre d'adresse visible, `vh` correspond à la hauteur sans barre : la modale peut dépasser le haut de l'écran. Le reste de l'appli utilise déjà `dvh` avec repli.
+60. **Partiellement résolu.** Zone d'appui de 44 px ajoutée par `::after`, visuel inchangé : Stats (`.saisie-detaillee_delete`, `.saisie-detaillee_holed`, `.saisie-detaillee_popup-close`), Putting (`.exercise-card_actions button` avec écart porté à 22 px, steppers, croix de modales, `.quick-session_info-btn`, `.session-holes-nav_item`, `.session-attempt`), Gym (`.session-header__back`, `.session-header__pause`, `.session-exercise-hero__arrow`, `.set-card__timer-btn`, `.icon-btn--sm`, `.exercise-row__duration-clear`, `.set-card__validate`). `.chart-card__info-btn` et `.exercises-filter_button` étaient inutilisés : supprimés. Reste : les lignes empilées de la saisie détaillée de Stats (`.saisie-detaillee_field`, `_lie`, `_group`, `_shot-button`, 30 px : les agrandir demande de revoir une mise en page verrouillée sans défilement, **décision de design**), `.quick-action-info` et `.track-reset-btn`, `.mode-btn` (Parcours), `.keypad-sign-btn`, `.keypad-close` (Menu). À vérifier à l'écran (**T**) : pas de chevauchement entre boutons voisins.
+
+61. **Résolu.** `.sheet` (Gym) et `.exercise-modal` (Putting) ont un repli `dvh` (voir "Bugs résolus").
+
 62. **Résolu.** Utilitaires `.mt-*` de Wedging renommés selon leur valeur (voir "Bugs résolus").
 
 63. **Fusionné dans le point 35.**
 
-64. **Stats : jetons de couleur identiques à leur base, survols sans effet.** Dans le bloc de variables de `#page-stats` (`stats.css`), `--color-bg-card-hover` vaut `#131916` comme `--color-bg-card`, `--color-border-strong` vaut `--color-border`, et `--color-accent-dim` (`#8fd13f`) comme `--color-accent`. Conséquences visibles : `.round-row:hover` et `.new-round_result:hover` n'ont aucun effet. Restes d'un ancien thème : `--glass-bg` et `--glass-blur`, `--shadow-*` à `none`, `#screen-statistiques .stat-block__title::before { box-shadow: none }` et `.period-tab[aria-selected="true"]::after { box-shadow: none }` (règles sur des pseudo-éléments qui n'ont pas d'effet d'ombre), `.analysis-card--disabled:hover { transform: none }`. Correction : donner une vraie valeur aux jetons de survol, supprimer le reste.
+64. **Résolu.** `--color-bg-card-hover` vaut `#1a221d` (`.round-row:hover` et `.new-round_result:hover` ont un effet). Supprimés : `--color-accent-dim`, `--glass-*`, `--shadow-*`, les deux `box-shadow: none` sur pseudo-éléments et `.analysis-card--disabled:hover`. `--color-border-strong` est gardé (alias utilisé comme bordure). `stats.js:430` lit encore `--shadow-card-hover` (sans effet, voir `stats.js`) (voir "Bugs résolus").
 
-65. **Écarts avec les règles de design du projet** (pas de `radial-gradient` en hero, pas de `box-shadow` colorée, pas de glassmorphism, pas d'emoji décoratif).
-    - **Dégradé radial dans un hero.** `gym.css:466`, `.hero-photo::before { background: radial-gradient(120% 100% at 85% 15%, rgba(214, 255, 47, 0.10), transparent 55%) }` (classe utilisée 10 fois dans `gym.js`).
-    - **Ombre colorée.** Corrigée (halo des boutons orbitaux de l'accueil retiré).
-    - **Flou d'arrière-plan.** `backdrop-filter: blur()` sur `.sheet-overlay` (`gym.css:1590`, 2 px). `parcours-ui.css` est corrigé.
-    - **Emojis.** Aucun trouvé dans `index.html` ni dans les `.js`.
+65. **Résolu.** Le dégradé radial de `.hero-photo::before` (règle vide retirée) et le `backdrop-filter` de `.sheet-overlay` sont supprimés de `gym.css` (voir "Bugs résolus").
 
 **Vérifié sans problème**
 
 - Les 13 scripts concaténés dans l'ordre de `index.html` passent la syntaxe : aucune collision `let`, `const` ou `class` entre fichiers.
 - Aucune collision de noms globaux (fonctions, `const`, `let`) ni de clé `localStorage` entre fichiers ; les écouteurs globaux de `stats.js` (clics, `keydown`) et de `menu.js` sont filtrés par la page ou retirés à la fermeture des popups ; `importPuttingRoundFromStats` ne plante pas si Putting n'a jamais été ouvert.
 - Aucun ID dupliqué dans `index.html`, et tous les `onclick` du HTML pointent vers des fonctions existantes.
-- Les graphiques Chart.js sont détruits avant d'être recréés et gardés par `typeof Chart` (appli utilisable si le CDN tombe).
+- Les graphiques Chart.js sont détruits avant d'être recréés et gardés par `typeof Chart`.
 - Les écouteurs ajoutés par `stats.js` et `parcours-ui.js` sont retirés, de même que les `setInterval` de Gym.
 - Le texte renvoyé par l'API de golfs est échappé dans `stats.js`.
 - Aucun `console.log` oublié.
@@ -493,3 +484,8 @@ Les gabarits ont été contrôlés par script (IDs, balises, `onclick`) et à l'
 - **Wedging : `wedging.css` (points 44, 59, 60, 61, 62, 51).** `.wg-toast` passe à `z-index: 300` (au-dessus de `.wg-modal-overlay` à 200) : les messages de validation de la modale de création d'exercice s'affichent. Les utilitaires `.mt-*` portent maintenant leur vraie valeur (`.mt-6` = 6 px, `.mt-8` = 8 px, scopés par `:where(#page-wedging)`) ; `.mt-8`, `.mt-10` et `.mt-12` de `wedging.js` ont été renommés en `mt-6` / `mt-8` sans changement d'affichage. `.wg-modal` a un repli `88dvh`. Les 7 règles `:hover` restantes sont dans `@media (hover:hover)`. Zones d'appui portées à 44 px (pseudo-élément `::after`) sur `.wg-exercise-actions button` (écart de 22 px entre boutons), `.wg-stepper-controls button` et `.wg-modal-close`. 82 règles CSS mortes supprimées (65 classes sans référence dans le JS ni le HTML, aucune construction dynamique de nom trouvée) et le `@keyframes wgFadeIn` devenu orphelin. À vérifier sur téléphone : toast dans la modale (44), appui sur les boutons modifier / dupliquer / supprimer (60), `Wedging` complet pour s'assurer qu'aucun style n'a disparu (51).
 - **Petits CSS partagés (points 46, 48, 53, 65, 35 en partie).** `auth.css` : règles ajoutées pour `.auth_divider*`, `.auth_social` et `.auth_button.is-social` (séparateur « OU » et boutons Apple / Google, repris des jetons `--auth-*`). `vitesse.css` : marges via `--app-page-top` et `--app-padding-x`, media query supprimée. `commun.css` : champs `.field-list` du Menu et de Stats à 16 px (plus de zoom iOS au focus, à tester sur iPhone). `HomePage.css` : halo coloré des `.orbit-button` et variables `--glow` retirés. `base.css` : `@import` ne charge plus que Inter (Oswald et IBM Plex Mono n'étaient lues par aucune règle ; les variables `--font-display` et `--font-mono` de `putting.css:27-28` restent, sans effet).
 - **Parcours et Menu : `parcours-ui.css` et `menu.css` (points 37, 45, 55, 57, 59, 61, 65, 51 en partie).** `menu.css` : règles `.btn` et `.btn-primary` écrites pour `#page-menu` (Valider du pavé, Enregistrer, Envoyer ne dépendent plus de Parcours), en-tête avec `env(safe-area-inset-top)`, 2 `:hover` dans `@media (hover: hover)`. `parcours-ui.css` : `.btn`, `.btn-primary`, `.icon-btn`, `.card`, `.stat-card`, `.history-item`, `.progress-*`, `.page-subtitle`, `.kpi-card`, `.screen-view`, `input[type="range"]` et les règles `body.no-scroll` sont limités à `#page-parcours` par `:where()` (spécificité inchangée). L'animation `fadeUp` de `.screen, .top-bar, .page-header` est limitée à Parcours et le doublon de `stats.css` est supprimé : Parcours garde l'animation complète, les autres pages n'animent pas leurs en-têtes. 7 `:hover` dans `@media (hover: hover)`, repli `88dvh` sur `.modal-sheet`, 4 `backdrop-filter` supprimés, 5 classes sans référence retirées (`btn-row`, `fw-hole-number`, `kpi-value`, `quick-action-disabled`, `stat-icon`) avec leurs règles. À vérifier sur téléphone : animation d'ouverture de Parcours, boutons du Menu (pavé numérique, Enregistrer, Envoyer au support), cartes Stats et lignes d'historique Putting (plus de bordure ni de `scale(0.99)` hérités de Parcours), en-tête du Menu en mode installé.
+- **`commun.css` écrasé par une copie de `base.css` (dernier commit `075fe64`).** Les deux fichiers faisaient 7 136 octets, identiques : `.app-keypad`, `.app-keypad-value`, les en-têtes de page partagés et `.field-list` avaient disparu (pavé numérique et champs du Menu et de Stats sans style). Restauré depuis le commit `e921d90`, avec les champs `.field-list` à 16 px (correction du point 53 qui devait être dans ce commit). À surveiller : un fichier déposé par erreur à la place d'un autre ne se voit pas à l'écran avant la page concernée.
+- **Stats : `stats.css` (points 45, 48, 59, 60 en partie, 64, 51 en partie).** Marges de page par variables, jeton de survol réel, jetons morts retirés, 4 survols dans `@media (hover: hover)`, zones d'appui de 44 px sur les contrôles isolés de la saisie détaillée, 34 classes mortes supprimées (environ 250 lignes).
+- **Putting : `putting.css` (points 48, 53, 54, 59, 60 en partie, 61, 51 en partie).** Marges par variables, champs à 16 px, textes à 11 px minimum, survol tactile, zones d'appui de 44 px, repli `dvh` sur `.exercise-modal`, 47 classes mortes supprimées (dont les écrans de saisie rapide par trou qui n'existent plus dans `putting.js`).
+- **Gym : `gym.css` (points 47, 49, 53, 54, 58, 59, 60 en partie, 61, 65, 51 en partie).** Règles globales limitées à `#page-gym`, règles de cartes limitées à `.gym-app` (Stats ne reçoit plus le survol ni l'animation de `.card--interactive`), safe-area du bas des sheets, champs à 16 px, textes à 11 px minimum, dégradé radial et flou d'arrière-plan retirés, zones d'appui de 44 px, repli `dvh`, 16 classes mortes supprimées.
+- **`index.html`, `HomePage.js`, `HomePage.css`, `menu.js`, `vendor/` (points 6, 14, 15, 39, 53, 56).** Chart.js hébergé dans `vendor/chart.umd.min.js` (le paragraphe cdnjs de la politique de confidentialité de `menu.js` est retiré) ; panneau de l'accueil réduit à ses deux colonnes vivantes (grille à 2 colonnes, valeurs de départ neutres 0/5, 0 séance, "--") et `renderGolfStats` / `setStat` / `setProgressRing` supprimés de `HomePage.js` ; écran `home` de Parcours actif ; écrans `distances` et `add-shot` retirés ; balises iOS et `theme-color` ; champ de recherche de l'historique à 16 px.

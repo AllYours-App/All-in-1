@@ -8,6 +8,11 @@
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050505">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf App">
 <link rel="stylesheet" href="base.css?v=31">
 <link rel="stylesheet" href="commun.css?v=31">
 <link rel="stylesheet" href="HomePage.css?v=31">
@@ -19,7 +24,7 @@
 <link rel="stylesheet" href="stats.css?v=31">
 <link rel="stylesheet" href="menu.css?v=31">
 <link rel="stylesheet" href="auth.css?v=31">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="vendor/chart.umd.min.js?v=31"></script>
 </head>
 <body>
 
@@ -147,44 +152,16 @@
           <span class="progress-ring_wrapper">
             <svg class="progress-ring_svg" viewBox="0 0 22 22">
               <circle class="progress-ring_track" cx="11" cy="11" r="9"/>
-              <circle class="progress-ring_progress" cx="11" cy="11" r="9" data-progress="0.8"/>
+              <circle class="progress-ring_progress" cx="11" cy="11" r="9" data-progress="0"/>
             </svg>
-            <span class="progress-ring_text" data-stat="goal-ring">4/5</span>
+            <span class="progress-ring_text" data-stat="goal-ring">0/5</span>
           </span>
           <span class="column_label">Objectif semaine</span>
         </div>
-        <span class="column_value" data-stat="goal-value">4 séances</span>
+        <span class="column_value" data-stat="goal-value">0 séance</span>
         <span class="goal_progress-track">
-          <span class="goal_progress-fill" data-stat="goal-progress-fill" style="width: 80%;"></span>
+          <span class="goal_progress-fill" data-stat="goal-progress-fill" style="width: 0%;"></span>
         </span>
-      </div>
-
-      <div class="bottom-panel_column is-distance">
-        <div class="column_header">
-          <span class="column_icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 21V4"/>
-              <path d="M6 4l10 3.6-10 3.6"/>
-            </svg>
-          </span>
-          <span class="column_label">Distance moyenne</span>
-        </div>
-        <span class="column_value" data-stat="distance-value">247 m</span>
-        <span class="column_variation" data-stat="distance-variation">&uarr; +8 m</span>
-      </div>
-
-      <div class="bottom-panel_column is-index">
-        <div class="column_header">
-          <span class="column_icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="7.5"/>
-              <circle cx="12" cy="12" r="2.3"/>
-            </svg>
-          </span>
-          <span class="column_label">Index</span>
-        </div>
-        <span class="column_value" data-stat="index-value">12.4</span>
-        <span class="column_variation" data-stat="index-variation">&uarr; +0,3</span>
       </div>
 
       <div class="bottom-panel_column is-last-session">
@@ -199,8 +176,8 @@
           </span>
           <span class="column_label">Dernière séance</span>
         </div>
-        <span class="column_value" data-stat="last-session-value">Hier</span>
-        <span class="column_secondary" data-stat="last-session-secondary">Parcours</span>
+        <span class="column_value" data-stat="last-session-value">--</span>
+        <span class="column_secondary" data-stat="last-session-secondary"></span>
       </div>
 
     </div>
@@ -213,7 +190,7 @@
 <div id="page-parcours" class="app-page">
 <div class="app">
 
-  <div class="screen-view" data-screen="home">
+  <div class="screen-view active" data-screen="home">
 <div class="top-bar">
     <a class="back-link" href="javascript:void(0)" onclick="showPage('home')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -271,171 +248,6 @@
 
   <!-- Racine des modales Vent / Dénivelé (fonctionnalités réelles, voir parcours-ui.js) -->
   <div id="course-modal-root"></div>
-
-  <div class="screen-view" data-screen="distances">
-<div class="top-bar">
-    <a class="back-link" href="#home" data-goto="home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      Parcours
-    </a>
-    <h1 class="top-bar_title">Distances</h1>
-    <button class="icon-btn" aria-label="Plus d'options">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
-    </button>
-  </div>
-
-  <header class="page-header align-left">
-    <p class="eyebrow">PARCOURS</p>
-    <p class="page-subtitle">Vos statistiques de distance, coup par coup.</p>
-  </header>
-
-  <main class="screen">
-
-    <div class="empty-state">
-      <span class="icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"></path><path d="M4 12l4-4M4 12l4 4"></path><path d="M20 12l-4-4M20 12l-4 4"></path></svg>
-      </span>
-      <h4>Aucun coup enregistré</h4>
-      <p>Ajoutez votre premier coup pour voir apparaître ici vos statistiques de distance et votre historique.</p>
-    </div>
-
-  </main>
-
-  <div class="fab-cta">
-    <a class="btn btn-primary" href="#add-shot" data-goto="add-shot">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      Ajouter un coup
-    </a>
-  </div>
-  </div>
-
-
-  <div class="screen-view" data-screen="add-shot">
-<div class="top-bar">
-    <a class="back-link" href="#distances" data-goto="distances">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      Annuler
-    </a>
-    <h1 class="top-bar_title">Ajouter un coup</h1>
-  </div>
-
-  <header class="page-header align-left">
-    <p class="eyebrow">PARCOURS</p>
-    <p class="page-subtitle">Renseignez les détails de votre coup.</p>
-  </header>
-
-  <main class="screen">
-
-    <!-- CLUB -->
-    <div class="form-section">
-      <p class="form-label">Club</p>
-      <div class="dropdown" id="club-dropdown">
-        <div class="dropdown-trigger">
-          <span class="trigger-label placeholder">Sélectionner un club</span>
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="dropdown-menu" role="listbox">
-          <div class="dropdown-option"><span>Fer 7</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="dropdown-option"><span>Fer 8</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="dropdown-option"><span>Fer 9</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="dropdown-option"><span>Wedge 52°</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="dropdown-option"><span>Wedge 56°</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="dropdown-option"><span>Hybride</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DISTANCE -->
-    <div class="form-section">
-      <p class="form-label">Distance</p>
-      <div class="slider-field">
-        <div class="slider-value-row">
-          <span class="slider-value" id="distance-display" data-slider-value-for="distance-slider">100<span class="unit">m</span></span>
-        </div>
-        <input type="range" id="distance-slider" min="0" max="260" value="100" data-unit="m" />
-        <div class="slider-scale"><span>0 m</span><span>130 m</span><span>260 m</span></div>
-      </div>
-    </div>
-
-    <!-- VENT -->
-    <div class="form-section">
-      <p class="form-label">Vent</p>
-      <div class="segmented">
-        <button class="active">Aucun</button>
-        <button>Face</button>
-        <button>Arrière</button>
-        <button>Latéral</button>
-      </div>
-    </div>
-
-    <!-- DENIVELE -->
-    <div class="form-section">
-      <p class="form-label">Dénivelé</p>
-      <div class="segmented">
-        <button>Descente</button>
-        <button class="active">Plat</button>
-        <button>Montée</button>
-      </div>
-    </div>
-
-    <!-- RESULTAT -->
-    <div class="form-section">
-      <p class="form-label">Résultat</p>
-      <div class="select-grid cols-2">
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-          <span>Green</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle></svg>
-          <span>Bord de green</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 14c0-3 3.8-5 8.5-5s8.5 2 8.5 5-3.8 5-8.5 5-8.5-2-8.5-5z"></path><path d="M8.5 13.5h.01M12 15h.01M15.5 13.5h.01M11 12h.01"></path></svg>
-          <span>Bunker</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21c0-5 .5-9 3-12M10 21c0-6-.5-11 2-16M15 21c0-5 1-9 4-11"></path><path d="M3 21h18"></path></svg>
-          <span>Rough</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- POSITION FINALE -->
-    <div class="form-section">
-      <p class="form-label">Position finale</p>
-      <div class="select-grid">
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>
-          <span>Long</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"></circle></svg>
-          <span>Centre</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="6 13 12 19 18 13"></polyline></svg>
-          <span>Court</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="11 6 5 12 11 18"></polyline></svg>
-          <span>Gauche</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
-          <span>Droite</span>
-        </div>
-        <div class="select-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 14c0-3 3.8-5 8.5-5s8.5 2 8.5 5-3.8 5-8.5 5-8.5-2-8.5-5z"></path><path d="M8.5 13.5h.01M12 15h.01M15.5 13.5h.01M11 12h.01"></path></svg>
-          <span>Bunker</span>
-        </div>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" style="margin-top: 6px;" data-goto="distances">Enregistrer</button>
-
-  </main>
-  </div>
 
 </div>
 </div>
@@ -616,7 +428,7 @@
       <div class="filter-chip" style="width:100%;">
         <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="15" height="15"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input id="hist-search" type="search" placeholder="Rechercher un parcours..."
-          style="background:none;border:none;color:var(--color-text-primary);font-size:var(--fs-sm);flex:1;outline:none;">
+          style="background:none;border:none;color:var(--color-text-primary);font-size:16px;flex:1;outline:none;">
       </div>
     </section>
 
