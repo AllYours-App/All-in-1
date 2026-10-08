@@ -1,486 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 /* ===========================================================================
-   COMMUN — éléments UI partagés entre plusieurs modules
-   Chargé sur toutes les pages, après base.css et avant le CSS de chaque module.
+   BASE — reset, variables globales, layout partagé (shell, header, conteneurs)
+   Chargé sur TOUTES les pages, avant le CSS de chaque module.
    =========================================================================== */
 
-/* La largeur d'affichage (max-width, padding) est déjà centralisée dans
-   base.css (bloc "CONTENEURS PARTAGÉS"). Rien à dupliquer ici. */
+/* --------------------------- VARIABLES ------------------------------- */
+/* Toutes les variables CSS de l'app sont ici (règle : :root uniquement dans base.css).
+   Fusion des 4 blocs :root d'origine : commun / parcours / wedging / gym. */
+:root {
+  color-scheme: dark; /* fait passer les inputs/selects natifs en thème sombre, partout dans l'app */
 
-/* ---------------------------------------------------------------------------
-   HEADER FIXE — commun à tous les modules (putting, vitesse, stats, wedging,
-   gym, parcours). Structure et style identiques partout : barre fixe 56px,
-   back | titre | menu. Seuls le texte du titre et les couleurs changent.
+  /* ---- Commun (dimensions, breakpoints, couleurs home) ---- */
+  --app-max-width: 430px; /* Largeur max commune pour iPhone 14 Pro Max */
+  --app-min-width: 320px; /* Largeur min pour petits mobiles */
+  --app-padding: 20px; /* Padding horizontal commun */
+  --app-padding-small: 16px; /* Padding pour petits écrans */
+  --app-padding-x: var(--app-padding); /* Marge horizontale des pages (bascule sur --app-padding-small sous 360px, voir plus bas) */
+  --app-page-top: calc(56px + env(safe-area-inset-top) + 16px); /* Début du contenu sous le header fixe de 56px */
 
-   Les couleurs passent par 4 variables que chaque module renseigne avec ses
-   propres tokens (voir le bloc --app-header-* à ajouter dans chaque fichier
-   de module, scopé sous son #page-X) :
-     --app-header-bg             fond de la barre
-     --app-header-border         bordure basse de la barre
-     --app-header-text           couleur du titre / bouton menu
-     --app-header-text-secondary couleur du lien retour
-   --------------------------------------------------------------------------- */
-#page-putting .page-header,
-#page-vitesse .page-header,
-#page-stats .page-header,
-#page-wedging .wg-header,
-#page-gym .gym-header,
-#page-parcours .top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  max-width: var(--app-max-width);
-  margin: 0 auto;
-  height: 56px;
-  padding: 0 var(--app-padding);
-  padding-top: env(safe-area-inset-top);
-  background-color: var(--app-header-bg);
-  border-bottom: 1px solid var(--app-header-border);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  z-index: 20;
+  --breakpoint-small: 360px;
+  --breakpoint-medium: 400px;
+  --breakpoint-large: 430px;
+
+  --color-bg-card: rgba(7, 15, 22, 0.88);
+  --color-bg-card-strong: rgba(7, 15, 22, 0.92);
+  --color-bg-profile: rgba(7, 15, 22, 0.7);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.1);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.70);
+  --color-green: #B8FF3D;
+  --color-orange: #FFB347;
+  --color-blue: #4CC9FF;
+
+  --radius-pill: 999px;
+  --radius-card: 32px;
+  --radius-panel: 36px;
+  --shadow-capsule: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --color-border-panel: rgba(170, 170, 170, 0.7);
+
+  /* ---- Parcours (utilisées aussi par Vitesse, cf. var(--bg)/var(--text)/var(--border)) ---- */
+  --bg: #050505;
+  --card: #0B0F14;
+  --card-alt: #0F141B;
+  --border: #1A2330;
+  --text: #FFFFFF;
+  --text-secondary: #B6B6B6;
+  --text-muted: #6E7681;
+  --accent: #D7FF2F;
+  --accent-dim: rgba(215, 255, 47, 0.14);
+  --accent-dim-strong: rgba(215, 255, 47, 0.28);
+  --danger: #FF5A5F;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lift: 0 14px 34px rgba(0, 0, 0, 0.55);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 160ms;
+  --dur: 260ms;
+  --dur-slow: 420ms;
+
+  /* ---- Wedging ---- */
+  --wg-bg: #050505;
+  --wg-card: #0B0F14;
+  --wg-border: #1A2330;
+  --wg-text: #FFFFFF;
+  --wg-text-secondary: #B6B6B6;
+  --wg-accent: #D7FF2F;
+  --wg-danger: #FF5C5C;
+  --wg-radius: 20px;
+  --wg-radius-sm: 12px;
+  --wg-gap: 16px;
+  --wg-max-width: var(--app-max-width);
+  --wg-transition: .25s cubic-bezier(.4, 0, .2, 1);
+
+  /* ---- Gym ---- */
+  --gym-bg: #020817;
+  --gym-card: #071426;
+  --gym-card-hover: #0b1c33;
+  --gym-border: rgba(255, 255, 255, 0.08);
+  --gym-border-strong: rgba(255, 255, 255, 0.16);
+  --gym-text: #ffffff;
+  --gym-text-secondary: rgba(255, 255, 255, 0.70);
+  --gym-text-muted: rgba(255, 255, 255, 0.45);
+  --gym-accent: #d6ff2f;
+  --gym-accent-dim: rgba(214, 255, 47, 0.14);
+  --gym-accent-border: rgba(214, 255, 47, 0.55);
+  --gym-accent-text-on: #05130a;
+  --gym-success: #6bffa0;
+  --gym-danger: #ff5c5c;
+  --gym-radius-lg: 20px;
+  --gym-radius-md: 14px;
+  --gym-radius-sm: 10px;
+  --gym-radius-pill: 999px;
+  --gym-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --gym-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --gym-gap-xs: 8px;
+  --gym-gap-sm: 12px;
+  --gym-gap-md: 16px;
+  --gym-gap-lg: 24px;
+  --gym-gap-xl: 32px;
+  --gym-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gym-speed-fast: 160ms;
+  --gym-speed-base: 260ms;
+  --gym-speed-slow: 420ms;
+
+  /* ---- Menu ---- */
+  --mn-bg: #0a0d0a;
+  --mn-surface: #12160f;
+  --mn-surface-border: rgba(255, 255, 255, 0.07);
+  --mn-accent: #c6f135;
+  --mn-text-primary: #f5f7f2;
+  --mn-text-secondary: #9aa196;
+  --mn-text-tertiary: #6b7166;
+  --mn-accent-dim: rgba(198, 241, 53, 0.14);
+  --mn-radius-l: 24px;
+  --mn-radius-m: 18px;
+  --mn-radius-s: 12px;
+  --mn-space-page: var(--app-padding-x);
 }
 
 @media (max-width: 360px) {
-  #page-putting .page-header,
-  #page-vitesse .page-header,
-  #page-stats .page-header,
-  #page-wedging .wg-header,
-  #page-gym .gym-header,
-  #page-parcours .top-bar {
-    padding-inline: var(--app-padding-small);
+  :root {
+    --app-padding-x: var(--app-padding-small);
   }
 }
 
-/* Lien retour */
-#page-putting .page-header_back,
-#page-vitesse .page-header_back,
-#page-stats .page-header__back,
-#page-wedging .wg-back-btn,
-#page-gym .gym-header__back,
-#page-parcours .back-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-self: start;
-  grid-column: 1;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  color: var(--app-header-text-secondary);
-  cursor: pointer;
-}
+/* --------------------------- RESET GLOBAL ------------------------------- */
 
-#page-putting .page-header_back-icon,
-#page-vitesse .page-header_back-icon,
-#page-stats .page-header__back svg,
-#page-wedging .wg-back-btn svg,
-#page-gym .gym-header__back svg,
-#page-parcours .back-link svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-/* Titre, centré dans la colonne du milieu */
-#page-putting .page-header_title,
-#page-vitesse .page-header_title,
-#page-stats .page-header__title,
-#page-wedging .wg-title,
-#page-gym .gym-header__title,
-#page-parcours .top-bar_title {
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 46vw;
-  justify-self: center;
-  grid-column: 2;
-  color: var(--app-header-text);
+  padding: 0;
 }
 
-/* Bouton menu — rond 36px, identique dans tous les modules (parcours et wedging inclus). */
-#page-putting .page-header_menu,
-#page-vitesse .page-header_menu,
-#page-wedging .wg-icon-btn,
-#page-gym .gym-header__action,
-#page-parcours .top-bar .icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--app-header-border);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  justify-self: end;
-  grid-column: 3;
-  color: var(--app-header-text);
-  cursor: pointer;
+html, body {
+  height: 100%;
+  /* overscroll-behavior-y: none tout seul (sans -x) évite un bug connu de
+     Safari iOS : le raccourci overscroll-behavior:none combiné à height:100%
+     sur html+body peut supprimer le scroll réel, pas juste le rebond
+     (constaté sur Putting). On ne coupe donc que l'axe horizontal pour l'instant. */
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
 }
 
-#page-putting .page-header_menu-icon,
-#page-vitesse .page-header_menu-icon,
-#page-wedging .wg-icon-btn svg,
-#page-gym .gym-header__action svg,
-#page-parcours .top-bar .icon-btn svg {
-  width: 18px;
-  height: 18px;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Helvetica Neue", Arial, sans-serif;
+  background: #000;
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-/* ---------------------------------------------------------------------------
-   HEADER NON FIXE — titre centré (Menu / FAQ)
-   Même technique de centrage par grid 3 colonnes que le header fixe
-   ci-dessus, mais en flux normal (pas de position:fixed).
-   --------------------------------------------------------------------------- */
-#page-menu .nav_component {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-}
-
-#page-menu .nav_back-button {
-  grid-column: 1;
-  justify-self: start;
-}
-
-#page-menu .nav_title {
-  grid-column: 2;
-  justify-self: center;
-  text-align: center;
-}
-
-/* ---------------------------------------------------------------------------
-   BARRE DE NAVIGATION INFÉRIEURE — putting, wedging
-   Fixe en bas, décalée des bords gauche/droite, coins hauts arrondis.
-   Nombre d'onglets et libellés : définis dans le HTML de chaque module.
-   Variables à renseigner dans chaque #page-X :
-     --app-nav-bg          fond de la barre
-     --app-nav-border      bordure de la barre
-     --app-nav-text        couleur des onglets inactifs
-     --app-nav-active      couleur de l'onglet actif
-     --app-nav-active-bg   fond de l'onglet actif
-     --app-nav-z           z-index (optionnel, 5 par défaut)
-   --------------------------------------------------------------------------- */
-#page-putting,
-#page-stats,
-#page-wedging {
-  /* Espace réservé sous le contenu bas (barre nav, FAB) : juste de quoi passer
-     au-dessus de l'indicateur iOS, min. 6px sur les appareils sans zone de sécurité */
-  --app-safe-bottom: max(6px, calc(env(safe-area-inset-bottom) - 20px));
-  /* Marge FAB : par rapport aux bords de l'écran (bas) et par rapport à la barre nav */
-  --app-fab-gap: 16px;
-  /* Hauteur totale de la barre nav : bordure + padding haut + onglet + padding bas */
-  --app-nav-h: calc(1px + 3px + 44px + var(--app-safe-bottom));
-}
-
-#page-putting .bottom-nav,
-#page-wedging .wg-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: var(--app-padding);
-  right: var(--app-padding);
-  max-width: calc(var(--app-max-width) - 2 * var(--app-padding));
-  margin: 0 auto;
-  display: flex;
-  gap: 4px;
-  padding: 3px 4px var(--app-safe-bottom);
-  background-color: var(--app-nav-bg);
-  border: 1px solid var(--app-nav-border);
-  border-bottom: none;
-  border-radius: 18px 18px 0 0;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
-  z-index: var(--app-nav-z, 5);
-}
-
-@media (max-width: 360px) {
-  #page-putting .bottom-nav,
-  #page-wedging .wg-bottom-nav {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-  }
-}
-
-/* Onglet : la couleur est portée par l'onglet, icône et libellé en héritent */
-#page-putting .bottom-nav_item,
-#page-wedging .wg-bottom-nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  height: 44px;
-  padding: 0 4px;
+button {
+  font: inherit;
+  color: inherit;
   background: none;
   border: none;
-  border-right: 2px solid rgba(255, 255, 255, 0.1);
-  color: var(--app-nav-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: 0;
-  text-align: center;
-  text-transform: none;
-  text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  /* appearance:none fusionné depuis le reset gym.css d'origine */
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-#page-putting .bottom-nav_item:last-child,
-#page-wedging .wg-bottom-nav-item:last-child {
-  border-right: none;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-#page-putting .bottom-nav_item.is-active,
-#page-wedging .wg-bottom-nav-item.active {
-  color: var(--app-nav-active);
-  background-color: var(--app-nav-active-bg);
+/* ============ SHELL — bascule entre Home / Parcours / Wedging / ... ============ */
+
+.app-page {
+  display: none;
 }
 
-#page-putting .bottom-nav_icon,
-#page-wedging .wg-bottom-nav-item svg {
+.app-page.active {
   display: block;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
 }
 
-/* Si l'icône putting est un conteneur, le svg à l'intérieur le remplit */
-#page-putting .bottom-nav_icon svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* ---------------------------------------------------------------------------
-   BOUTONS FLOTTANTS RONDS (FAB) — putting, stats
-   Même design partout : rond 64px, icône + libellé en majuscules.
-   Position : marge --app-fab-gap par rapport aux bords gauche/droite (comme la
-   barre nav et le header) et au bord bas. Quand une barre nav est affichée
-   (putting, onglet parcours), le groupe se cale au-dessus d'elle : voir la
-   règle .fab-group[data-fab="parcours"] dans putting.css.
-   Variables à renseigner dans chaque #page-X :
-     --app-fab-bg     fond du bouton
-     --app-fab-text   couleur de l'icône et du libellé
-     --app-fab-z      z-index (optionnel, 10 par défaut)
-   --------------------------------------------------------------------------- */
-#page-putting .fab-group,
-#page-stats .fab-row {
-  position: fixed;
-  left: var(--app-padding);
-  right: var(--app-padding);
-  bottom: calc(var(--app-safe-bottom) + var(--app-fab-gap));
-  max-width: calc(var(--app-max-width) - 2 * var(--app-padding));
+/* --------------------- CONTENEURS PARTAGÉS (plusieurs modules) --------------------- */
+/* Largeur max + centrage uniquement. Pas de padding horizontal ici : chaque bloc
+   de contenu (main, .screen, .gym-main, .wg-*, etc.) porte son propre padding,
+   sinon il s'additionne avec celui des conteneurs parents (espace noir sur les côtés). */
+.app-page,
+.gym-app,
+.wg-container,
+#page-stats,
+#page-putting,
+#page-vitesse,
+#page-stats .app,
+#page-putting .app,
+#page-vitesse .app,
+#app-root,
+#app-root-vitesse {
+  max-width: var(--app-max-width);
   margin: 0 auto;
-  padding: 0;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-  z-index: var(--app-fab-z, 10);
 }
 
-@media (max-width: 360px) {
-  #page-putting .fab-group,
-  #page-stats .fab-row {
-    left: var(--app-padding-small);
-    right: var(--app-padding-small);
-  }
-}
-
-/* Bouton : la couleur et la typo sont portées par le bouton, icône et libellé en héritent */
-#page-putting .fab-button,
-#page-stats .fab {
-  pointer-events: auto;
-  display: flex;
+/* ---------- Écran "Remets ton téléphone en mode portrait" ----------
+   Masqué par défaut. Affiché seulement quand l'appli est installée (mode standalone),
+   en paysage et sur une hauteur de téléphone : dans l'onglet d'un navigateur, la rotation ne peut pas être verrouillée,
+   et l'écran ne doit jamais apparaître. */
+.orientation-lock_component {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  width: 64px;
-  height: 64px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background-color: var(--app-fab-bg);
-  color: var(--app-fab-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 8.5px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0;
+  gap: 16px;
+  padding: 24px;
+  background: var(--wg-bg, #050505);
+  color: var(--color-text-primary);
   text-align: center;
-  text-transform: uppercase;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
 }
-
-#page-putting .fab-button_icon,
-#page-stats .fab svg {
-  display: block;
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
+.orientation-lock_text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
 }
-
-/* ---------------------------------------------------------------------------
-   Volontairement NON mutualisés :
-   - wg-fab et fab-cta (boutons d'action pleine largeur, pas les FAB ronds) : valeurs
-     réellement différentes d'un module à l'autre (16px/20px en dur, z-index
-     différents). À passer par des variables si on veut les standardiser.
-   --------------------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------------------
-   PAVÉ NUMÉRIQUE — clavier numérique réutilisable (distance finale, rayon de
-   validation, etc.). Généré côté JS par appKeypad() (commun.js).
-   Couleurs communes à tous les modules : mêmes tokens --wg-* partout
-   (définis en :root dans base.css), donc pas de variables --app-keypad-*
-   à renseigner par module, contrairement au header/nav ci-dessus.
-   Ajouter le sélecteur #page-X ci-dessous à chaque module qui l'adopte.
-   --------------------------------------------------------------------------- */
-:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu, #page-stats) .app-keypad-value {
-  font-size: 32px;
-  font-weight: 700;
-  text-align: center;
-  color: var(--wg-accent);
-  margin: 8px 0 16px;
-}
-
-:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu, #page-stats) .app-keypad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-:is(#page-wedging, #page-putting, #page-parcours, #page-gym, #page-menu, #page-stats) .app-keypad button {
-  background: var(--wg-bg);
-  border: 1px solid var(--wg-border);
-  color: var(--wg-text);
-  border-radius: var(--wg-radius-sm);
-  padding: 16px 0;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-/* ---------------------------------------------------------------------------
-   BLOCS "field-list" — cartes de champs/réglages, partagées entre le module
-   Menu (réglages, radars, driver...) et le module Stats (écran "Saisie
-   détaillée", ex. sac de golf). Couleurs sur les tokens --mn-* (base.css).
-   --------------------------------------------------------------------------- */
-#page-menu .field-list,
-#page-stats .field-list {
-  background: var(--mn-surface);
-  border: 1px solid var(--mn-surface-border);
-  border-radius: var(--mn-radius-m);
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-#page-menu .field-list h3,
-#page-stats .field-list h3 {
-  margin: 0 0 10px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--mn-text-secondary);
-}
-
-#page-menu .field-row,
-#page-stats .field-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 12px 0;
-  border-top: 1px solid var(--mn-surface-border);
-}
-
-#page-menu .field-row:first-of-type,
-#page-stats .field-row:first-of-type {
-  border-top: none;
-  padding-top: 4px;
-}
-
-#page-menu .field-row .label,
-#page-stats .field-row .label {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--mn-text-primary);
-}
-
-#page-menu .field-row .val,
-#page-stats .field-row .val {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--mn-text-secondary);
-}
-
-#page-menu .field-list input[type="number"],
-#page-menu .field-list input[type="text"],
-#page-menu .field-list select,
-#page-stats .field-list input[type="number"],
-#page-stats .field-list input[type="text"],
-#page-stats .field-list select {
-  background: var(--mn-bg);
-  border: 1px solid var(--mn-surface-border);
-  color: var(--mn-text-primary);
-  border-radius: var(--mn-radius-s);
-  padding: 9px 10px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-#page-menu .field-list input[type="number"]:focus,
-#page-menu .field-list input[type="text"]:focus,
-#page-menu .field-list select:focus,
-#page-stats .field-list input[type="number"]:focus,
-#page-stats .field-list input[type="text"]:focus,
-#page-stats .field-list select:focus {
-  outline: none;
-  border-color: var(--mn-accent);
-}
-
-#page-menu .field-list .val button,
-#page-stats .field-list .val button {
-  color: var(--mn-accent);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-#page-menu .w-full,
-#page-stats .w-full {
-  width: 100%;
-}
-
-#page-menu .w-70,
-#page-stats .w-70 {
-  width: 70px;
-}
-
-/* ---------------------------------------------------------------------------
-   Headers fixes : l'animation globale `.screen { fadeUp both }` (parcours-ui.css)
-   laisse un transform: translateY(0) sur .screen une fois terminée. Un ancêtre
-   transformé devient le bloc conteneur des position:fixed, donc le header
-   défile avec la page. `backwards` = même animation, sans transform résiduel.
-   --------------------------------------------------------------------------- */
-#page-stats .screen,
-#page-putting .screen,
-#page-vitesse .screen {
-  animation-fill-mode: backwards;
+@media (display-mode: standalone) and (orientation: landscape) and (max-height: 500px) {
+  .orientation-lock_component { display: flex; }
 }

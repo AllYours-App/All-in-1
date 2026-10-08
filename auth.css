@@ -215,6 +215,49 @@
   outline-offset: 2px;
 }
 
+/* ---------- Séparateur « OU » et boutons sociaux ---------- */
+
+.auth_divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.auth_divider-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--auth-border);
+}
+
+.auth_divider-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--auth-text-muted);
+}
+
+.auth_social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth_button.is-social {
+  justify-content: center;
+  height: 3.75rem;
+  background-color: var(--auth-field);
+  border: 1px solid var(--auth-border);
+  border-radius: var(--auth-radius-pill);
+  color: var(--auth-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.auth_button.is-social:active {
+  opacity: 0.85;
+}
+
 /* ---------- Pied de page ---------- */
 
 .auth_switch {

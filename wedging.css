@@ -44,10 +44,7 @@
   --app-nav-z:50;
 }
 
-#page-wedging button,
-#page-wedging input,
-#page-wedging select,
-#page-wedging textarea{
+#page-wedging button, #page-wedging input, #page-wedging select, #page-wedging textarea{
   font-family:inherit;
   -webkit-appearance:none;
   appearance:none;
@@ -57,28 +54,17 @@
    ceux qui utilisent .wg-topbar (statique, pages d'analyse / sessions
    d'exercice) n'en ont pas besoin, d'où un décalage ciblé sur le frère
    qui suit .wg-header plutôt qu'un padding-top global sur #page-wedging. */
-#page-wedging .wg-header + * {
+#page-wedging .wg-header + *{
   margin-top: var(--app-page-top);
 }
 
 /* flow-root : empêche la marge ci-dessus de remonter hors de la page (sinon bande noire sous le header,
    le fond de #page-wedging ne la recouvrant plus). */
-#page-wedging.active {
+#page-wedging.active{
   display: flow-root;
 }
 
-/* a{} et button{} : déjà couverts par le reset global de base.css */
-
-.wg-container{
-  margin:0 auto;
-  padding:0 var(--app-padding-x);
-}
-
-@media (min-width: 480px) {
-  .wg-container{
-    max-width:var(--wg-max-width);
-  }
-}
+/* a{} et button{}
 
 /* ---------- Header ---------- */
 /* Structure + position fixe : voir commun.css (#page-wedging .wg-header).
@@ -148,10 +134,6 @@
   text-transform:uppercase;
   color:var(--wg-text);
 }
-.wg-nav-card-desc{
-  font-size:12px;
-  color:var(--wg-text-secondary);
-}
 .wg-nav-card.active{
   border-color:var(--wg-accent);
   background:var(--wg-accent-dim);
@@ -174,17 +156,6 @@
   text-transform:uppercase;
   margin:0;
 }
-.wg-section-title{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:14px;
-  font-weight:600;
-  letter-spacing:.03em;
-  text-transform:uppercase;
-  margin:0 0 4px;
-}
-.wg-section-title svg{width:15px;height:15px;color:var(--wg-text-secondary);cursor:help;}
 .wg-section-desc{
   color:var(--wg-text-secondary);
   font-size:13px;
@@ -217,62 +188,6 @@
   .wg-range-grid{grid-template-columns:repeat(2,1fr);}
   /* .wg-nav-cards : règle venant du media query mixte d'origine (était mélangée avec Home) */
   .wg-nav-cards{grid-template-columns:1fr;}
-}
-
-/* ---------- Distance finale ---------- */
-.wg-distance-box{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:var(--wg-bg);
-  border:1px solid var(--wg-border);
-  border-radius:var(--wg-radius-sm);
-  padding:18px 20px;
-}
-.wg-distance-value{
-  font-size:36px;
-  font-weight:700;
-  color:var(--wg-accent);
-}
-.wg-distance-unit{
-  font-size:16px;
-  color:var(--wg-text-secondary);
-  margin-left:6px;
-}
-.wg-edit-btn{
-  width:40px;height:40px;
-  border-radius:var(--wg-radius-sm);
-  border:1px solid var(--wg-accent);
-  color:var(--wg-accent);
-  background:transparent;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;
-}
-
-/* ---------- Green interactif ---------- */
-.wg-green-wrap{width:100%;}
-.wg-green-svg{width:100%;height:auto;display:block;}
-.wg-green-zone{
-  cursor:pointer;
-  fill:rgba(255,255,255,0.02);
-  stroke:rgba(255,255,255,0.15);
-  stroke-width:1;
-  transition:fill var(--wg-transition);
-}
-.wg-green-zone:hover{fill:rgba(143,209,63,0.10);}
-.wg-green-zone.active{fill:rgba(143,209,63,0.35);stroke:var(--wg-accent);}
-.wg-green-label{
-  fill:#FFFFFF;
-  font-size:20px;
-  font-weight:700;
-  pointer-events:none;
-  text-anchor:middle;
-  dominant-baseline:middle;
-}
-.wg-green-legend{
-  color:var(--wg-text-secondary);
-  font-size:12px;
-  margin-top:12px;
 }
 
 /* ---------- Boutons ---------- */
@@ -322,7 +237,7 @@
   margin-bottom:4px;
   font-weight:600;
 }
-.wg-input,.wg-select,.wg-textarea{
+.wg-input, .wg-textarea{
   width:100%;
   background:var(--wg-bg);
   border:1px solid var(--wg-border);
@@ -333,7 +248,7 @@
   outline:none;
   transition:border-color var(--wg-transition);
 }
-.wg-input:focus,.wg-select:focus,.wg-textarea:focus{border-color:var(--wg-accent);}
+.wg-input:focus, .wg-textarea:focus{border-color:var(--wg-accent);}
 .wg-input-btn{text-align:left;cursor:pointer;}
 .wg-textarea{resize:vertical;min-height:80px;}
 .wg-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -345,14 +260,6 @@
   max-width:var(--wg-max-width);margin:0 auto 14px;padding:0 var(--app-padding-x);
 }
 .wg-toolbar-title{font-size:14px;font-weight:700;letter-spacing:1px;}
-.wg-select-inline{
-  background:var(--wg-card);
-  border:1px solid var(--wg-border);
-  color:var(--wg-text);
-  border-radius:var(--wg-radius-sm);
-  padding:8px 10px;
-  font-size:13px;
-}
 .wg-exercise-card{
   background:var(--wg-card);
   border:1px solid var(--wg-border);
@@ -364,30 +271,7 @@
   cursor:pointer;
   transition:border-color var(--wg-transition);
 }
-.wg-exercise-card:hover{border-color:var(--wg-accent);}
-.wg-exercise-thumb{
-  width:56px;height:56px;
-  border-radius:var(--wg-radius-sm);
-  background:var(--wg-accent-dim);
-  border:1px solid var(--wg-border);
-  flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--wg-accent);
-}
-.wg-exercise-thumb svg{width:24px;height:24px;}
-.wg-exercise-body{flex:1;min-width:0;}
-.wg-exercise-title{font-size:15px;font-weight:700;margin:0 0 4px;}
-.wg-exercise-desc{font-size:12.5px;color:var(--wg-text-secondary);margin:0 0 10px;}
-.wg-tags{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
-.wg-tag{
-  border:1px solid var(--wg-border);
-  border-radius:8px;
-  padding:3px 8px;
-  font-size:11px;
-  color:var(--wg-text-secondary);
-}
-.wg-tag-date{font-size:11px;color:var(--wg-text-secondary);margin-left:auto;}
-.wg-chevron{color:var(--wg-text-secondary);flex-shrink:0;}
+@media (hover:hover){.wg-exercise-card:hover{border-color:var(--wg-accent);}}
 
 .wg-empty-state{
   text-align:center;
@@ -395,24 +279,6 @@
   font-size:13.5px;
   padding:40px 20px;
 }
-
-/* ---------- Historique ---------- */
-.wg-filters{
-  display:flex;gap:8px;
-  max-width:var(--wg-max-width);margin:0 auto 16px;padding:0 var(--app-padding-x);
-  overflow-x:auto;
-}
-.wg-filter-btn{
-  background:var(--wg-card);
-  border:1px solid var(--wg-border);
-  color:var(--wg-text-secondary);
-  border-radius:999px;
-  padding:8px 16px;
-  font-size:12.5px;
-  white-space:nowrap;
-  cursor:pointer;
-}
-.wg-filter-btn.active{border-color:var(--wg-accent);background:var(--wg-accent-dim);color:var(--wg-accent);}
 .wg-history-item{
   background:var(--wg-card);
   border:1px solid var(--wg-border);
@@ -423,21 +289,7 @@
   gap:12px;
 }
 .wg-history-bar{width:4px;align-self:stretch;border-radius:4px;background:var(--wg-accent);flex-shrink:0;}
-.wg-history-info{flex:0 0 auto;min-width:64px;}
 .wg-history-mid{flex:1;display:flex;flex-direction:column;gap:6px;}
-.wg-history-right{flex:1;display:flex;flex-direction:column;gap:4px;align-items:flex-end;text-align:right;}
-.wg-history-date{font-size:11.5px;color:var(--wg-text-secondary);}
-.wg-history-main{font-size:16px;font-weight:700;}
-.wg-history-sub{font-size:10.5px;color:var(--wg-text-secondary);}
-.wg-history-count-row{
-  display:flex;align-items:center;gap:8px;
-  max-width:var(--wg-max-width);margin:0 auto;padding:0 var(--app-padding-x);
-  font-size:13px;color:var(--wg-text-secondary);
-}
-.wg-filters-row{
-  display:flex;gap:8px;overflow-x:auto;
-}
-.wg-inline-icon svg{width:14px;height:14px;color:var(--wg-accent);vertical-align:-2px;}
 
 /* ---------- Pages d'analyse (Distance / Dispersion / Historique) ---------- */
 .wg-topbar{
@@ -450,42 +302,6 @@
 .wg-eyebrow{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--wg-accent);font-weight:600;margin:0 0 6px;}
 .wg-page-title{font-size:26px;font-weight:700;margin:0 0 8px;line-height:1.2;}
 .wg-page-subtitle{font-size:13.5px;color:var(--wg-text-secondary);margin:0 0 20px;line-height:1.4;}
-.wg-title-icon svg{width:16px;height:16px;color:var(--wg-accent);cursor:default;}
-
-/* ---------- Graphique en barres (Distance finale moyenne) ---------- */
-.wg-bar-chart{overflow-x:auto;}
-.wg-bar-chart-track{display:flex;align-items:flex-end;gap:8px;height:200px;padding:20px 2px 0;min-width:560px;}
-.wg-bar-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;height:100%;}
-.wg-bar-value{
-  font-size:10px;background:var(--wg-bg);border:1px solid var(--wg-border);
-  border-radius:999px;padding:3px 7px;margin-bottom:6px;color:var(--wg-text);white-space:nowrap;
-}
-.wg-bar{width:60%;min-width:22px;background:var(--wg-accent);border-radius:4px;min-height:4px;}
-.wg-bar-axis-label{font-size:9.5px;color:var(--wg-text-secondary);margin-top:8px;text-align:center;white-space:nowrap;}
-
-/* ---------- Donut (répartition des distances) ---------- */
-.wg-donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
-.wg-donut{width:132px;height:132px;border-radius:50%;position:relative;flex-shrink:0;}
-.wg-donut-center{
-  position:absolute;inset:16px;background:var(--wg-card);border-radius:50%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-}
-.wg-legend{display:flex;flex-direction:column;gap:8px;flex:1;min-width:150px;}
-.wg-legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--wg-text);}
-.wg-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.wg-legend-pct{margin-left:auto;color:var(--wg-text-secondary);}
-
-/* ---------- Meilleure distance ---------- */
-.wg-best-row{display:flex;gap:16px;align-items:center;}
-.wg-best-thumb{
-  width:64px;height:64px;border-radius:var(--wg-radius-sm);
-  background:var(--wg-accent-dim);border:1px solid var(--wg-border);
-  display:flex;align-items:center;justify-content:center;color:var(--wg-accent);flex-shrink:0;
-}
-.wg-best-thumb svg{width:28px;height:28px;}
-.wg-best-value{font-size:26px;font-weight:700;margin:0;}
-.wg-best-sub{font-size:13px;font-weight:400;color:var(--wg-text-secondary);}
-.wg-best-diff{color:var(--wg-accent);font-weight:700;font-size:12.5px;margin:4px 0 0;}
 
 /* ---------- Filtres à puces (dispersion) ---------- */
 .wg-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
@@ -496,22 +312,6 @@
   border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:pointer;
 }
 .wg-chip.active{background:var(--wg-accent-dim);color:var(--wg-accent);border-color:var(--wg-accent);font-weight:600;}
-
-/* ---------- Stats sous forme de 3 colonnes (dispersion) ---------- */
-.wg-analysis-stats{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
-  max-width:var(--wg-max-width);margin:0 auto 20px;padding:0 var(--app-padding-x);
-}
-.wg-analysis-stats .wg-kpi-card{padding:12px;}
-.wg-analysis-stats .wg-kpi-label{font-size:10px;margin-bottom:6px;}
-.wg-analysis-stats .wg-kpi-value{font-size:16px;}
-@media (max-width:400px){
-  .wg-analysis-stats{grid-template-columns:1fr 1fr;}
-  .wg-analysis-stats .wg-kpi-card:last-child{grid-column:1/-1;}
-}
-
-/* ---------- Radar (répartition des coups par zone) ---------- */
-.wg-radar-wrap{display:flex;justify-content:center;}
 #page-wedging svg.wg-radar-svg{width:100%;max-width:none;height:auto;}
 .wg-radar-grid{fill:none;stroke:var(--wg-border);stroke-width:1;}
 .wg-radar-axis{stroke:var(--wg-border);stroke-width:1;}
@@ -520,43 +320,6 @@
 .wg-radar-label-num{fill:#FFFFFF;font-size:11px;font-weight:700;text-anchor:middle;}
 .wg-radar-label-name{fill:var(--wg-text-secondary);font-size:8.5px;text-anchor:middle;}
 .wg-radar-value{fill:var(--wg-accent);font-size:9.5px;font-weight:700;text-anchor:middle;}
-
-/* ---------- KPI / Dashboard ---------- */
-.wg-kpi-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  max-width:var(--wg-max-width);
-  margin:0 auto 20px;
-  padding:0 var(--app-padding-x);
-}
-.wg-kpi-card{
-  background:var(--wg-card);
-  border:1px solid var(--wg-border);
-  border-radius:var(--wg-radius);
-  padding:16px;
-}
-.wg-kpi-label{font-size:11.5px;color:var(--wg-text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px;}
-.wg-kpi-value{font-size:22px;font-weight:700;color:var(--wg-accent);}
-.wg-kpi-value.wg-kpi-plain{color:var(--wg-text);}
-.wg-kpi-sub{font-size:11px;color:var(--wg-text-secondary);margin-top:4px;}
-
-/* ---------- Session / résultats ---------- */
-.wg-stat-row{
-  display:flex;justify-content:space-between;
-  padding:10px 0;
-  border-bottom:1px solid var(--wg-border);
-  font-size:14px;
-}
-.wg-stat-row:last-child{border-bottom:none;}
-.wg-stat-row span:last-child{font-weight:700;}
-.wg-status-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:6px 14px;border-radius:999px;
-  font-size:13px;font-weight:700;
-}
-.wg-status-pill.success{background:var(--wg-accent-dim);color:var(--wg-accent);}
-.wg-status-pill.fail{background:rgba(255,92,92,.12);color:var(--wg-danger);}
 
 canvas.wg-chart{width:100%;height:220px;display:block;}
 
@@ -575,7 +338,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   opacity:0;
   pointer-events:none;
   transition:opacity var(--wg-transition), transform var(--wg-transition);
-  z-index:100;
+  z-index:300;
   white-space:nowrap;
 }
 .wg-toast.show{
@@ -583,20 +346,13 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   transform:translate(-50%,0);
 }
 
-/* ---------- Tabs internes (Parcours: Distance / Dispersion / SG) ---------- */
-.wg-tabpanel{display:none;}
-.wg-tabpanel.active{display:block;}
-
-.wg-fade-in{animation:wgFadeIn .3s ease both;}
-@keyframes wgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-
 /* ==========================================================================
    Fusion fonctionnalités "ancienne version" — nouveaux composants
    ========================================================================== */
 
 /* ---------- Utilitaires ---------- */
-.mt-6{margin-top:6px;} .mt-8{margin-top:6px;} .mt-10{margin-top:8px;} .mt-12{margin-top:8px;}
-.mb-6{margin-bottom:6px;} .mb-8{margin-bottom:8px;} .mb-10{margin-bottom:10px;} .mb-70{margin-bottom:70px;}
+:where(#page-wedging) .mt-6{margin-top:6px;} :where(#page-wedging) .mt-8{margin-top:8px;}
+:where(#page-wedging) .mb-6{margin-bottom:6px;} :where(#page-wedging) .mb-8{margin-bottom:8px;} :where(#page-wedging) .mb-10{margin-bottom:10px;} :where(#page-wedging) .mb-70{margin-bottom:70px;}
 .wg-text-center{text-align:center;}
 .wg-text-muted{display:block;font-size:12.5px;color:var(--wg-text-secondary);overflow-wrap:break-word;word-break:break-word;}
 .wg-text-muted-sm{font-size:11px;color:var(--wg-text-secondary);}
@@ -627,9 +383,10 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-stepper{background:var(--wg-bg);border:1px solid var(--wg-border);border-radius:var(--wg-radius-sm);padding:10px 14px;}
 .wg-stepper-controls{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
 .wg-stepper-controls button{
-  width:26px;height:26px;border-radius:50%;border:1px solid var(--wg-border);background:transparent;
+  position:relative;width:26px;height:26px;border-radius:50%;border:1px solid var(--wg-border);background:transparent;
   color:var(--wg-accent);font-size:16px;line-height:1;padding:0;cursor:pointer;
 }
+.wg-stepper-controls button::after{content:"";position:absolute;inset:-9px;}
 .wg-stepper-value{font-size:15px;font-weight:700;}
 
 /* ---------- Popup générique (overlay + carte) ---------- */
@@ -638,13 +395,14 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   display:flex;align-items:flex-end;justify-content:center;
 }
 .wg-modal{
-  width:100%;max-width:var(--wg-max-width);max-height:88vh;overflow-y:auto;
+  width:100%;max-width:var(--wg-max-width);max-height:88vh;max-height:88dvh;overflow-y:auto;
   background:var(--wg-card);border:1px solid var(--wg-border);
   border-radius:24px 24px 0 0;padding:20px;
 }
 .wg-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .wg-modal-head h3{margin:0;font-size:16px;}
-.wg-modal-close{background:none;border:none;color:var(--wg-text-secondary);width:28px;height:28px;cursor:pointer;}
+.wg-modal-close{position:relative;background:none;border:none;color:var(--wg-text-secondary);width:28px;height:28px;cursor:pointer;}
+.wg-modal-close::after{content:"";position:absolute;inset:-8px;}
 .wg-modal-close svg{width:16px;height:16px;}
 
 /* Clavier numérique (.app-keypad) déplacé dans commun.css */
@@ -654,16 +412,16 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-wheel{width:100%;max-width:220px;height:auto;display:block;}
 #page-wedging svg.wg-wheel{width:100%;max-width:220px;height:auto;display:block;}
 .wg-wheel-sector{fill:rgba(255,255,255,0.09);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;transition:fill .2s;}
-.wg-wheel-sector:hover{fill:rgba(143,209,63,.22);}
+@media (hover:hover){.wg-wheel-sector:hover{fill:rgba(143,209,63,.22);}}
 .wg-wheel-sector--in{fill:rgba(143,209,63,0.16);}
-.wg-wheel-sector--in:hover{fill:rgba(143,209,63,.32);}
+@media (hover:hover){.wg-wheel-sector--in:hover{fill:rgba(143,209,63,.32);}}
 .wg-wheel-sector--out{fill:rgba(255,120,120,0.14);}
-.wg-wheel-sector--out:hover{fill:rgba(255,120,120,.28);}
+@media (hover:hover){.wg-wheel-sector--out:hover{fill:rgba(255,120,120,.28);}}
 .wg-wheel-center{fill:rgba(255,255,255,.14);stroke:rgba(255,255,255,.35);stroke-width:2;cursor:pointer;}
-.wg-wheel-center:hover{fill:rgba(143,209,63,.22);}
+@media (hover:hover){.wg-wheel-center:hover{fill:rgba(143,209,63,.22);}}
 .wg-wheel-center.selected{fill:rgba(143,209,63,.45);}
 .wg-wheel-hole{fill:rgba(143,209,63,.16);stroke:var(--wg-accent);stroke-width:1.5;cursor:pointer;transition:fill .2s;}
-.wg-wheel-hole:hover{fill:rgba(143,209,63,.34);}
+@media (hover:hover){.wg-wheel-hole:hover{fill:rgba(143,209,63,.34);}}
 .wg-wheel-pole{stroke:#FFFFFF;stroke-width:2.5;stroke-linecap:round;}
 .wg-wheel-flag{fill:var(--wg-accent);}
 .wg-wheel-ball{fill:var(--wg-accent);stroke:#0b0f0c;stroke-width:1.5;}
@@ -683,10 +441,11 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   border:1px solid var(--wg-accent);border-radius:999px;padding:3px 10px;
   font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;
 }
-.wg-exercise-actions{display:flex;gap:10px;}
-.wg-exercise-actions button{background:none;border:none;color:var(--wg-text-secondary);width:22px;height:22px;cursor:pointer;}
+.wg-exercise-actions{display:flex;gap:22px;}
+.wg-exercise-actions button{position:relative;background:none;border:none;color:var(--wg-text-secondary);width:22px;height:22px;cursor:pointer;}
+.wg-exercise-actions button::after{content:"";position:absolute;inset:-11px;}
 .wg-exercise-actions button svg{width:16px;height:16px;}
-.wg-exercise-actions button:hover{color:var(--wg-accent);}
+@media (hover:hover){.wg-exercise-actions button:hover{color:var(--wg-accent);}}
 
 /* ---------- Bouton flottant "Lancer l'exercice" ---------- */
 .wg-fab{position:fixed;left:var(--app-padding);right:var(--app-padding);bottom:calc(var(--app-safe-bottom) + var(--app-fab-gap));max-width:calc(var(--app-max-width) - 2 * var(--app-padding));margin:0 auto;z-index:40;}
@@ -694,7 +453,6 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 /* ---------- Écran de session (attempts, ladder, résultats) ---------- */
 .wg-session-title{text-align:center;font-size:18px;font-weight:700;margin:16px 20px 4px;}
 .wg-session-subtitle{text-align:center;font-size:17px;font-weight:700;color:var(--wg-text);margin:0 20px 14px;}
-.wg-success-distance{font-size:12.5px;font-weight:600;color:var(--wg-accent);text-align:center;margin-bottom:10px;}
 .wg-attempts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .wg-attempt-btn{
   background:var(--wg-bg);border:1px solid var(--wg-border);border-radius:var(--wg-radius-sm);
@@ -709,8 +467,8 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   flex:1;background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text);
   border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;
 }
-.wg-result-btn.success.active,.wg-result-btn.success:active{background:var(--wg-accent);border-color:var(--wg-accent);color:#0b0f0c;}
-.wg-result-btn.fail.active,.wg-result-btn.fail:active{border-color:rgba(224,87,74,.35);color:var(--wg-danger);}
+.wg-result-btn.success.active, .wg-result-btn.success:active{background:var(--wg-accent);border-color:var(--wg-accent);color:#0b0f0c;}
+.wg-result-btn.fail.active, .wg-result-btn.fail:active{border-color:rgba(224,87,74,.35);color:var(--wg-danger);}
 .wg-bottom-stats-bar{
   display:flex;justify-content:space-around;text-align:center;
   background:var(--wg-card);border:1px solid var(--wg-border);border-radius:var(--wg-radius);

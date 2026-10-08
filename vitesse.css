@@ -27,12 +27,6 @@
 #page-vitesse main.screen {
   max-width: var(--app-max-width);
   margin: 0 auto;
-  padding: calc(56px + env(safe-area-inset-top) + 16px) var(--app-padding);
-}
-
-@media (max-width: 360px) {
-  #page-vitesse main.screen {
-    padding: calc(56px + env(safe-area-inset-top) + 16px) var(--app-padding-small);
-  }
+  padding: var(--app-page-top) var(--app-padding-x);
 }
 

@@ -133,7 +133,6 @@
   border-radius: 50%;
   background: rgba(7, 15, 22, 0.9);
   border: 2px solid var(--accent);
-  box-shadow: 0 0 4px var(--glow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -195,19 +194,16 @@
 .orbit-button.is-putting,
 .orbit-button.is-stats {
   --accent: var(--color-green);
-  --glow: rgba(184, 255, 61, 0.8);
 }
 
 .orbit-button.is-gym,
 .orbit-button.is-wedging {
   --accent: var(--color-orange);
-  --glow: rgba(255, 179, 71, 0.8);
 }
 
 .orbit-button.is-parcours,
 .orbit-button.is-vitesse {
   --accent: var(--color-blue);
-  --glow: rgba(76, 201, 255, 0.8);
 }
 
 /* ============ PANNEAU INFERIEUR ============ */

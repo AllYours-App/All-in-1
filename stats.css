@@ -789,9 +789,6 @@ html {
   animation: none;
 }
 
-@keyframes fadeUp {
-  to { opacity: 1; transform: translateY(0); }
-}
 /* ==========================================================================
    CHARTS — conteneurs et habillage des graphiques Chart.js
    ========================================================================== */

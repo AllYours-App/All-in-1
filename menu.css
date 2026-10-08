@@ -33,7 +33,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 24px 0 20px;
+  padding: calc(24px + env(safe-area-inset-top)) 0 20px; /* safe-area : le bouton retour ne passe pas sous l'encoche */
   background: var(--mn-bg);
 }
 
@@ -168,10 +168,12 @@
   display: inline-block;
 }
 
-#page-menu .profile_index:hover {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
+@media (hover: hover) {
+  #page-menu .profile_index:hover {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
 }
 
 /* ==========================================================================
@@ -196,8 +198,10 @@
   transition: border-color 0.15s ease;
 }
 
-#page-menu .menu_item:hover {
-  border-color: color-mix(in srgb, var(--mn-accent) 30%, transparent);
+@media (hover: hover) {
+  #page-menu .menu_item:hover {
+    border-color: color-mix(in srgb, var(--mn-accent) 30%, transparent);
+  }
 }
 
 #page-menu .menu_icon-wrapper {
@@ -354,6 +358,38 @@
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+/* Boutons propres au Menu (Valider du pavé, Enregistrer, Envoyer) : ne dépendent plus de parcours-ui.css */
+#page-menu .btn {
+  border: none;
+  border-radius: 999px;
+  padding: 15px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+#page-menu .btn:active {
+  transform: scale(0.97);
+}
+
+#page-menu .btn-primary {
+  background: var(--mn-accent);
+  color: #050505;
+}
+
+@media (hover: hover) {
+  #page-menu .btn-primary:hover {
+    opacity: 0.92;
+  }
 }
 
 #page-menu .menu-save-btn {

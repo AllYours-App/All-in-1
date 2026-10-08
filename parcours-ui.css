@@ -19,7 +19,7 @@
   padding: 0; /* .page-header et .screen portent déjà leur padding horizontal (--app-padding-x) */
 }
 
-/* a{} et button{} : déjà couverts par le reset global de base.css */
+/* a {} et button {} : déjà couverts par le reset global de base.css */
 
 ::selection {
   background: var(--accent-dim-strong);
@@ -46,11 +46,13 @@
   transition: color var(--dur-fast) var(--ease);
 }
 
+@media (hover: hover) {
 .back-link:hover {
   color: var(--text);
 }
+}
 
-.icon-btn {
+:where(#page-parcours) .icon-btn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -64,14 +66,16 @@
   transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.icon-btn svg {
+:where(#page-parcours) .icon-btn svg {
   width: 16px;
   height: 16px;
 }
 
-.icon-btn:hover {
+@media (hover: hover) {
+:where(#page-parcours) .icon-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
 }
 
 .page-header {
@@ -83,7 +87,7 @@
   text-align: left;
 }
 
-.page-subtitle {
+:where(#page-parcours) .page-subtitle {
   color: var(--text-secondary);
   font-size: 14.5px;
   margin: 8px 0 0;
@@ -112,7 +116,7 @@
    Cards
    -------------------------------------------------------------------------- */
 
-.card {
+:where(#page-parcours) .card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -153,8 +157,10 @@
   transform: scale(0.97);
 }
 
+@media (hover: hover) {
 .quick-action-btn:hover {
   border-color: rgba(215, 255, 47, 0.3);
+}
 }
 
 .quick-action-icon {
@@ -171,12 +177,6 @@
 .quick-action-icon svg {
   width: 20px;
   height: 20px;
-}
-
-.quick-action-btn.quick-action-disabled {
-  opacity: 0.45;
-  cursor: default;
-  pointer-events: none;
 }
 
 .quick-action-info {
@@ -210,13 +210,13 @@ body.no-scroll {
   padding-bottom: 0;
 }
 
-body.no-scroll .app {
+body.no-scroll :where(#page-parcours) .app {
   height: 100vh;
   height: 100dvh;
   min-height: 0;
 }
 
-body.no-scroll .screen-view.active {
+body.no-scroll :where(#page-parcours) .screen-view.active {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -230,7 +230,7 @@ body.no-scroll #page-parcours .screen-view.active .top-bar {
   padding: 14px var(--app-padding-x) 4px;
 }
 
-body.no-scroll .screen-view.active .screen {
+body.no-scroll :where(#page-parcours) .screen-view.active .screen {
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -254,8 +254,7 @@ body.no-scroll .screen-view.active .screen {
   position: static;
 }
 
-.track-block #green-root,
-.track-block #fairway-root {
+.track-block #green-root, .track-block #fairway-root {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -280,7 +279,6 @@ body.no-scroll .screen-view.active .screen {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(4px);
 }
 
 .track-reset-corner {
@@ -293,9 +291,11 @@ body.no-scroll .screen-view.active .screen {
   height: 16px;
 }
 
+@media (hover: hover) {
 .track-reset-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
 }
 
 /* Rail haut-droit : "−" dans l'angle, "+" à sa gauche (même ligne), crayon en dessous */
@@ -320,8 +320,7 @@ body.no-scroll .screen-view.active .screen {
   gap: 8px;
 }
 
-.track-rail > *,
-.track-rail-row > * {
+.track-rail > *, .track-rail-row > * {
   pointer-events: auto;
 }
 
@@ -341,7 +340,6 @@ body.no-scroll .screen-view.active .screen {
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   padding: 5px 9px;
-  backdrop-filter: blur(4px);
   white-space: nowrap;
 }
 
@@ -352,9 +350,7 @@ body.no-scroll .screen-view.active .screen {
   font-size: 12px;
 }
 
-.mode-btn.mode-btn-offgreen,
-.mode-btn.track-unit-btn,
-.mode-btn.track-skip-btn {
+.mode-btn.mode-btn-offgreen, .mode-btn.track-unit-btn, .mode-btn.track-skip-btn {
   width: auto;
   height: auto;
   border-radius: var(--radius-pill);
@@ -365,8 +361,7 @@ body.no-scroll .screen-view.active .screen {
   white-space: nowrap;
 }
 
-.mode-btn.mode-btn-offgreen,
-.mode-btn.track-skip-btn {
+.mode-btn.mode-btn-offgreen, .mode-btn.track-skip-btn {
   text-transform: uppercase;
 }
 
@@ -417,7 +412,6 @@ body.no-scroll .screen-view.active .screen {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(4px);
   transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
 
@@ -444,18 +438,9 @@ body.no-scroll .screen-view.active .screen {
   background: var(--color-blue);
 }
 
-/* KPI cards */
-
-.kpi-card .kpi-value .unit {
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-weight: 500;
-  margin-left: 3px;
-}
-
 /* Stat cards row of 3 */
 
-.stat-card {
+:where(#page-parcours) .stat-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -467,23 +452,12 @@ body.no-scroll .screen-view.active .screen {
   gap: 6px;
 }
 
-.stat-card .stat-icon {
-  width: 26px;
-  height: 26px;
-  color: var(--accent);
-}
-
-.stat-card .stat-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.stat-card .stat-value {
+:where(#page-parcours) .stat-card .stat-value {
   font-size: 15px;
   font-weight: 700;
 }
 
-.stat-card .stat-label {
+:where(#page-parcours) .stat-card .stat-label {
   font-size: 11px;
   color: var(--text-muted);
   line-height: 1.3;
@@ -493,7 +467,7 @@ body.no-scroll .screen-view.active .screen {
    History list
    -------------------------------------------------------------------------- */
 
-.history-item {
+:where(#page-parcours) .history-item {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -505,19 +479,21 @@ body.no-scroll .screen-view.active .screen {
   transition: border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
-.history-item:active {
+:where(#page-parcours) .history-item:active {
   transform: scale(0.99);
 }
 
-.history-item:hover {
+@media (hover: hover) {
+:where(#page-parcours) .history-item:hover {
   border-color: rgba(215, 255, 47, 0.25);
+}
 }
 
 /* --------------------------------------------------------------------------
    Badges / progress bars
    -------------------------------------------------------------------------- */
 
-.progress-track {
+:where(#page-parcours) .progress-track {
   height: 8px;
   background: var(--card-alt);
   border: 1px solid var(--border);
@@ -525,20 +501,20 @@ body.no-scroll .screen-view.active .screen {
   overflow: hidden;
 }
 
-.progress-fill {
+:where(#page-parcours) .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, rgba(215, 255, 47, 0.6), var(--accent));
   border-radius: var(--radius-pill);
   transition: width var(--dur-slow) var(--ease);
 }
 
-.progress-row {
+:where(#page-parcours) .progress-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.progress-labels {
+:where(#page-parcours) .progress-labels {
   display: flex;
   justify-content: space-between;
   font-size: 12.5px;
@@ -549,7 +525,7 @@ body.no-scroll .screen-view.active .screen {
    Buttons
    -------------------------------------------------------------------------- */
 
-.btn {
+:where(#page-parcours) .btn {
   border: none;
   border-radius: var(--radius-pill);
   padding: 15px 22px;
@@ -564,22 +540,19 @@ body.no-scroll .screen-view.active .screen {
   transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
 
-.btn:active {
+:where(#page-parcours) .btn:active {
   transform: scale(0.97);
 }
 
-.btn-primary {
+:where(#page-parcours) .btn-primary {
   background: var(--accent);
   color: #050505;
 }
 
-.btn-primary:hover {
+@media (hover: hover) {
+:where(#page-parcours) .btn-primary:hover {
   opacity: 0.92;
 }
-
-.btn-row .btn {
-  width: auto;
-  flex: 1;
 }
 
 /* Segmented control */
@@ -654,14 +627,13 @@ body.no-scroll .screen-view.active .screen {
   background: var(--accent-dim);
 }
 
-.select-card.selected svg,
-.select-card.selected span {
+.select-card.selected svg, .select-card.selected span {
   color: var(--accent);
 }
 
 /* Slider (distance / dénivelé) */
 
-input[type="range"] {
+:where(#page-parcours) input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
@@ -671,7 +643,7 @@ input[type="range"] {
   outline: none;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+:where(#page-parcours) input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
@@ -682,7 +654,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-input[type="range"]::-moz-range-thumb {
+:where(#page-parcours) input[type="range"]::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -716,7 +688,6 @@ input[type="range"]::-moz-range-thumb {
   position: fixed;
   inset: 0;
   background: rgba(2, 3, 2, 0.72);
-  backdrop-filter: blur(6px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -733,6 +704,7 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   max-width: 520px;
   max-height: 88vh;
+  max-height: 88dvh;
   overflow-y: auto;
   background: var(--card);
   border: 1px solid var(--border);
@@ -751,8 +723,7 @@ input[type="range"]::-moz-range-thumb {
   to { transform: translateY(0); opacity: 1; }
 }
 
-.modal-overlay.no-anim,
-.modal-overlay.no-anim .modal-sheet {
+.modal-overlay.no-anim, .modal-overlay.no-anim .modal-sheet {
   animation: none;
 }
 
@@ -815,8 +786,7 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.03em;
 }
 
-.input-box input[type="number"],
-.input-box .input-box-value {
+.input-box input[type="number"], .input-box .input-box-value {
   background: transparent;
   border: none;
   color: var(--text);
@@ -911,8 +881,7 @@ input[type="range"]::-moz-range-thumb {
   font-size: 12.5px;
 }
 
-.data-table caption,
-.data-table .table-title {
+.data-table caption, .data-table .table-title {
   text-align: left;
   color: var(--text);
   font-size: 13px;
@@ -920,8 +889,7 @@ input[type="range"]::-moz-range-thumb {
   margin: 4px 0 8px;
 }
 
-.data-table th,
-.data-table td {
+.data-table th, .data-table td {
   padding: 8px 6px;
   text-align: center;
   border-bottom: 1px solid var(--border);
@@ -937,8 +905,7 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.03em;
 }
 
-.data-table td.col-left,
-.data-table th.col-left {
+.data-table td.col-left, .data-table th.col-left {
   text-align: left;
 }
 
@@ -987,26 +954,11 @@ input[type="range"]::-moz-range-thumb {
   transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
+@media (hover: hover) {
 .elev-reset-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
-
-/* --------------------------------------------------------------------------
-   Fairway — suivi des mises en jeu sur 18 trous
-   -------------------------------------------------------------------------- */
-
-.fw-hole-number .label {
-  display: block;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-
-.fw-hole-number .value {
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .fw-visual {
@@ -1257,11 +1209,11 @@ input[type="range"]::-moz-range-thumb {
    Screen routing (single-file version)
    -------------------------------------------------------------------------- */
 
-.screen-view {
+:where(#page-parcours) .screen-view {
   display: none;
 }
 
-.screen-view.active {
+:where(#page-parcours) .screen-view.active {
   display: block;
 }
 
@@ -1269,7 +1221,7 @@ input[type="range"]::-moz-range-thumb {
    Fade-in on load
    -------------------------------------------------------------------------- */
 
-.screen, .top-bar, .page-header {
+:where(#page-parcours) .screen, :where(#page-parcours) .top-bar, :where(#page-parcours) .page-header {
   animation: fadeUp var(--dur-slow) var(--ease) both;
 }
 
@@ -1287,10 +1239,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Focus visibility */
-a:focus-visible,
-button:focus-visible,
-.dropdown-trigger:focus-visible,
-.select-card:focus-visible {
+a:focus-visible, button:focus-visible, .dropdown-trigger:focus-visible, .select-card:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
