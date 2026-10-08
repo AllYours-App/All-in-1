@@ -951,9 +951,9 @@ function fwSkipHole() {
   renderFairway();
 }
 
-function resetFairwayRound() {
+async function resetFairwayRound() {
   const hasData = fwHoles.some((h) => h.shots.length > 0 || h.skipped);
-  if (hasData && !confirm("Effacer le parcours en cours et recommencer à zéro ?")) return;
+  if (hasData && !(await appConfirm("Effacer le parcours en cours et recommencer à zéro ?", { confirmLabel: "Effacer", danger: true }))) return;
   fwHoles = fwDefaultHoles();
   fwMode = "plus";
   fwLastLogged = null;
@@ -1128,9 +1128,9 @@ function grSkipHole() {
   renderGreen();
 }
 
-function resetGreenRound() {
+async function resetGreenRound() {
   const hasData = grHoles.some((h) => h.marks.length > 0 || h.skipped);
-  if (hasData && !confirm("Effacer les greens enregistrés et recommencer à zéro ?")) return;
+  if (hasData && !(await appConfirm("Effacer les greens enregistrés et recommencer à zéro ?", { confirmLabel: "Effacer", danger: true }))) return;
   grHoles = grDefaultHoles();
   grMode = "plus";
   grOffNext = false;

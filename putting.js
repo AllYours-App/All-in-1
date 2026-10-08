@@ -1819,8 +1819,8 @@ function duplicateCombine(id) {
   updateExerciseSelectBar();
 }
 
-function deleteCombine(id) {
-  if (!confirm('Supprimer cet exercice ?')) return;
+async function deleteCombine(id) {
+  if (!(await appConfirm('Supprimer cet exercice ?', { confirmLabel: 'Supprimer', danger: true }))) return;
   puttingCombines = puttingCombines.filter(function (c) { return c.id !== id; });
   if (selectedCombineId === id) selectedCombineId = null;
   savePuttingState();
@@ -1869,9 +1869,9 @@ function enterExerciseFlow(title) {
   window.scrollTo(0, 0);
 }
 
-function exitExerciseFlow(event) {
+async function exitExerciseFlow(event) {
   if (event) event.preventDefault();
-  if (exerciseFlowScreen === 'session' && !confirm('Quitter sans enregistrer cette séance ?')) return;
+  if (exerciseFlowScreen === 'session' && !(await appConfirm('Quitter sans enregistrer cette séance ?', { confirmLabel: 'Quitter', cancelLabel: 'Rester' }))) return;
   if (exerciseFlowScreen === 'session' && activeSession && activeSession.holes.some(function (h) { return h.results.length > 0; }) && String(activeCombineId).indexOf('quick-') !== 0) {
     saveResumableSession();
   } else {
@@ -2104,12 +2104,12 @@ function toggleQuickStatsInfo() {
 }
 
 // Passe de 9 à 18 trous (ou l'inverse) en cours d'exercice
-function setQuickHolesCount(n) {
+async function setQuickHolesCount(n) {
   const c = getCombineById(activeCombineId);
   if (!c || c.holesCount === n) return;
   if (n < c.holesCount) {
     const hasResults = activeSession.holes.slice(n).some(function (h) { return h.results.length > 0; });
-    if (hasResults && !confirm('Les trous ' + (n + 1) + ' à ' + c.holesCount + ' seront supprimés. Continuer ?')) return;
+    if (hasResults && !(await appConfirm('Les trous ' + (n + 1) + ' à ' + c.holesCount + ' seront supprimés. Continuer ?', { confirmLabel: 'Supprimer', danger: true }))) return;
     c.previewRows = c.previewRows.slice(0, n);
     activeSession.holes = activeSession.holes.slice(0, n);
     if (activeHoleIndex >= n) activeHoleIndex = n - 1;
@@ -2374,9 +2374,9 @@ function finishCombineSession() {
   renderCombineRecapScreen();
 }
 
-function editSessionField(field, label) {
+async function editSessionField(field, label) {
   const session = viewingSessionId ? puttingSessions.find(function (s) { return s.id === viewingSessionId; }) : activeSession;
-  const v = prompt(label, session[field] || '');
+  const v = await appPrompt(label, session[field] || '', { multiline: field === 'notes', confirmLabel: 'Enregistrer' });
   if (v === null) return;
   session[field] = v;
   if (viewingSessionId) savePuttingState();
@@ -2468,8 +2468,8 @@ function retryCombineSession() {
   startCombine(id);
 }
 
-function deleteViewedSession() {
-  if (!confirm('Supprimer cette séance ?')) return;
+async function deleteViewedSession() {
+  if (!(await appConfirm('Supprimer cette séance ?', { confirmLabel: 'Supprimer', danger: true }))) return;
   const combineId = puttingSessions.find(function (s) { return s.id === viewingSessionId; }).combineId;
   puttingSessions = puttingSessions.filter(function (s) { return s.id !== viewingSessionId; });
   savePuttingState();
@@ -2797,11 +2797,11 @@ function setPreviewRowClock(idx, v) {
 function saveCreativeCombine() {
   const f = puttingCreativeForm;
   if (!f.name || !f.name.trim()) {
-    alert('Donne un nom à cet exercice avant de le sauvegarder.');
+    appAlert('Donne un nom à cet exercice avant de le sauvegarder.');
     return;
   }
   if (f.puttMin == null || f.puttMax == null) {
-    alert('Renseigne la distance min et la distance max.');
+    appAlert('Renseigne la distance min et la distance max.');
     return;
   }
   if (editingCombineId !== null) {
@@ -3057,12 +3057,12 @@ function handleMainHeaderBack(event) {
   showPage('home');
 }
 
-function setParcoursHoles(n) {
+async function setParcoursHoles(n) {
   const f = newParcoursForm;
   if (f.holesCount === n) return;
   if (n < f.holesCount) {
     const hasData = f.rows.slice(n).some(function (r) { return r.m || r.clock !== null || r.putts !== null; });
-    if (hasData && !confirm('Les trous ' + (n + 1) + ' à ' + f.holesCount + ' seront supprimés. Continuer ?')) return;
+    if (hasData && !(await appConfirm('Les trous ' + (n + 1) + ' à ' + f.holesCount + ' seront supprimés. Continuer ?', { confirmLabel: 'Supprimer', danger: true }))) return;
   }
   const oldRows = f.rows;
   f.holesCount = n;
@@ -3271,7 +3271,7 @@ function backToParcoursEntry() {
 function saveNewParcours() {
   const f = newParcoursForm;
   if (!parcoursAllHolesComplete(f)) {
-    alert('Merci de renseigner la distance et le résultat de chaque trou avant d\'enregistrer.');
+    appAlert('Merci de renseigner la distance et le résultat de chaque trou avant d\'enregistrer.');
     return;
   }
   const rows = f.rows;

@@ -484,3 +484,100 @@
 #page-vitesse .screen {
   animation-fill-mode: backwards;
 }
+
+/* ---------------------------------------------------------------------------
+   Popups de l'appli (appConfirm / appAlert / appPrompt, voir commun.js).
+   z-index 9000 : au-dessus des modales et sheets de tous les modules.
+   Champs à 16 px : pas de zoom iOS au focus.
+   --------------------------------------------------------------------------- */
+.app-dialog_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top)) var(--app-padding-x) calc(16px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.app-dialog {
+  width: 100%;
+  max-width: 340px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  font-family: inherit;
+}
+
+.app-dialog_message {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 1.4;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.app-dialog_input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+textarea.app-dialog_input {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.app-dialog_input:focus {
+  border-color: var(--accent);
+}
+
+.app-dialog_actions {
+  display: flex;
+  gap: 10px;
+}
+
+.app-dialog_btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app-dialog_btn.is-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #050505;
+}
+
+.app-dialog_btn.is-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #050505;
+}
+
+.app-dialog_btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

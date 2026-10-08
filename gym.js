@@ -2576,13 +2576,13 @@ function gymResetProgramProgress(program) {
  * était actif, non terminé, et avait de la progression, celle-ci est
  * réinitialisée après confirmation de la personne.
  */
-function gymSetActiveProgram(programId) {
+async function gymSetActiveProgram(programId) {
   const next = gymGetProgram(programId);
   if (!next) return;
 
   const previous = gymGetActiveProgram();
   if (previous && previous.id !== programId && !gymIsProgramFinished(previous) && gymHasMeaningfulProgress(previous)) {
-    const ok = confirm(`« ${previous.name} » n'est pas terminé. Le définir comme programme en cours réinitialisera sa progression. Continuer ?`);
+    const ok = await appConfirm(`« ${previous.name} » n'est pas terminé. Le définir comme programme en cours réinitialisera sa progression. Continuer ?`);
     if (!ok) return;
     gymResetProgramProgress(previous);
   }
@@ -2594,8 +2594,8 @@ function gymSetActiveProgram(programId) {
 /**
  * Supprime un programme (et toutes ses séances) après confirmation.
  */
-function gymDeleteProgram(programId) {
-  if (!confirm("Supprimer ce programme et toutes ses séances ? Cette action est irréversible.")) return;
+async function gymDeleteProgram(programId) {
+  if (!(await appConfirm("Supprimer ce programme et toutes ses séances ? Cette action est irréversible.", { confirmLabel: "Supprimer", danger: true }))) return;
   const index = GYM_DATA.programs.findIndex((p) => p.id === programId);
   if (index === -1) return;
   GYM_DATA.programs.splice(index, 1);
@@ -2607,10 +2607,10 @@ function gymDeleteProgram(programId) {
  * Supprime une séance d'un programme après confirmation, puis renumérote
  * et redéverrouille séquentiellement les séances restantes.
  */
-function gymDeleteSession(programId, sessionId) {
+async function gymDeleteSession(programId, sessionId) {
   const program = gymGetProgram(programId);
   if (!program) return;
-  if (!confirm("Supprimer cette séance ? Cette action est irréversible.")) return;
+  if (!(await appConfirm("Supprimer cette séance ? Cette action est irréversible.", { confirmLabel: "Supprimer", danger: true }))) return;
 
   program.sessions = program.sessions.filter((s) => s.id !== sessionId);
 
@@ -5431,10 +5431,10 @@ function gymRenderDualChart(points, series, selected) {
 
   document.getElementById("btn-next-series").addEventListener("click", goToNextExercise);
 
-  document.getElementById("btn-finish-session").addEventListener("click", () => {
+  document.getElementById("btn-finish-session").addEventListener("click", async () => {
     const totalSets = state.exercises.reduce((sum, e) => sum + e.sets.length, 0);
     const validSets = state.exercises.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).length, 0);
-    if (validSets < totalSets && !confirm("Il reste des séries non validées. Terminer la séance maintenant ?")) return;
+    if (validSets < totalSets && !(await appConfirm("Il reste des séries non validées. Terminer la séance maintenant ?", { confirmLabel: "Terminer", cancelLabel: "Continuer la séance" }))) return;
     finalizeSession();
   });
 

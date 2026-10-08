@@ -82,3 +82,117 @@ function appSafeSetItem(key, value) {
     return false;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   POPUPS DE L'APPLI — remplacent confirm(), alert() et prompt() natifs, qui
+   jurent avec le design et s'affichent mal dans une appli installée.
+   Elles renvoient une Promise : on les attend avec `await` dans une fonction
+   `async`.
+     await appConfirm(message, { confirmLabel, cancelLabel, danger })  -> true | false
+     await appAlert(message, { okLabel })                              -> undefined
+     await appPrompt(label, valeurInitiale, { multiline })             -> texte | null
+   Le message passe par textContent : aucun HTML interprété (un nom de
+   programme saisi par la personne ne peut pas casser la popup).
+   Échap et un appui sur le fond = annuler.
+   --------------------------------------------------------------------------- */
+function appDialog(opts) {
+  return new Promise(function (resolve) {
+    var previousFocus = document.activeElement;
+    var overlay = document.createElement('div');
+    overlay.className = 'app-dialog_overlay';
+
+    var box = document.createElement('div');
+    box.className = 'app-dialog';
+    box.setAttribute('role', opts.kind === 'alert' ? 'alertdialog' : 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-labelledby', 'app-dialog-message');
+
+    var message = document.createElement('p');
+    message.className = 'app-dialog_message';
+    message.id = 'app-dialog-message';
+    message.textContent = opts.message;
+    box.appendChild(message);
+
+    var input = null;
+    if (opts.kind === 'prompt') {
+      input = document.createElement(opts.multiline ? 'textarea' : 'input');
+      if (!opts.multiline) input.type = 'text';
+      input.className = 'app-dialog_input';
+      input.value = opts.defaultValue || '';
+      input.maxLength = opts.multiline ? 2000 : 200;
+      input.setAttribute('aria-labelledby', 'app-dialog-message');
+      box.appendChild(input);
+    }
+
+    var actions = document.createElement('div');
+    actions.className = 'app-dialog_actions';
+    var cancelBtn = null;
+    if (opts.kind !== 'alert') {
+      cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'app-dialog_btn';
+      cancelBtn.textContent = opts.cancelLabel || 'Annuler';
+      actions.appendChild(cancelBtn);
+    }
+    var okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.className = 'app-dialog_btn ' + (opts.danger ? 'is-danger' : 'is-primary');
+    okBtn.textContent = opts.confirmLabel || (opts.kind === 'alert' ? 'OK' : 'Continuer');
+    actions.appendChild(okBtn);
+    box.appendChild(actions);
+    overlay.appendChild(box);
+
+    var closed = false;
+    function close(result) {
+      if (closed) return;
+      closed = true;
+      document.removeEventListener('keydown', onKey, true);
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (previousFocus && previousFocus.focus) { try { previousFocus.focus(); } catch (e) { /* élément disparu */ } }
+      resolve(result);
+    }
+    function accept() {
+      if (opts.kind === 'prompt') close(input.value);
+      else if (opts.kind === 'alert') close(undefined);
+      else close(true);
+    }
+    function cancel() {
+      if (opts.kind === 'prompt') close(null);
+      else if (opts.kind === 'alert') close(undefined);
+      else close(false);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); return; }
+      if (e.key === 'Enter' && input && !opts.multiline && document.activeElement === input) {
+        e.preventDefault(); accept(); return;
+      }
+      if (e.key === 'Tab') {
+        // garde le focus dans la popup
+        var items = box.querySelectorAll('input, textarea, button');
+        if (!items.length) return;
+        var first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    okBtn.addEventListener('click', accept);
+    if (cancelBtn) cancelBtn.addEventListener('click', cancel);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) cancel(); });
+    document.addEventListener('keydown', onKey, true);
+
+    document.body.appendChild(overlay);
+    if (input) { input.focus(); input.select(); } else { (cancelBtn || okBtn).focus(); }
+  });
+}
+
+function appConfirm(message, options) {
+  return appDialog(Object.assign({ kind: 'confirm', message: message }, options || {}));
+}
+
+function appAlert(message, options) {
+  return appDialog(Object.assign({ kind: 'alert', message: message }, options || {}));
+}
+
+function appPrompt(label, defaultValue, options) {
+  return appDialog(Object.assign({ kind: 'prompt', message: label, defaultValue: defaultValue }, options || {}));
+}

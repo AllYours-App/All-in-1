@@ -121,7 +121,7 @@ menu.js
 auth.js             (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=33`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=33` par le numéro suivant dans toutes les balises).
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`. Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=34`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=34` par le numéro suivant dans toutes les balises).
 
 ### Dépendances externes
 
@@ -194,6 +194,8 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 ### `commun.js`
 `appKeypad(pressFn, backspaceFn, clearFn, extraKey)` : génère le HTML d'un pavé numérique. Les boutons appellent par nom des fonctions globales via `onclick`. Utilisé par `menu.js`, `parcours-ui.js`, `putting.js`, `wedging.js` et `stats.js` (popup distance restante / pénalité de la saisie détaillée, fonctions globales préfixées `statsSd`). Gym a son propre pavé.
 
+`appConfirm(message, { confirmLabel, cancelLabel, danger })`, `appAlert(message)` et `appPrompt(label, valeurInitiale, { multiline })` : popups de l'appli qui remplacent `confirm()`, `alert()` et `prompt()` natifs. Elles renvoient une Promise (`true` / `false`, rien, texte / `null`) : à attendre avec `await` dans une fonction `async`. Le message passe par `textContent` (aucun HTML interprété). Échap et un appui sur le fond annulent. Styles `.app-dialog_*` dans `commun.css` (z-index 9000). Plus aucun dialogue natif dans le code.
+
 `appEscapeHtml(valeur)` : échappe `& < > " '` ; à utiliser pour tout texte saisi par la personne avant de l'injecter dans un gabarit HTML (y compris dans un attribut `value="..."` ou un `<textarea>`). `appSafeSetItem(clé, valeur)` : écrit dans le `localStorage` et renvoie `true` ou `false` ; en cas d'échec (stockage plein ou indisponible), elle affiche une alerte à l'écran (au plus une toutes les 8 secondes) au lieu d'ignorer l'erreur. Les modules l'utilisent à la place des `try { localStorage.setItem(...) } catch {}` : `gym.js`, `putting.js`, `wedging.js` (`WedgeStorage`) et `parcours-ui.js` (Fairway, Green, captures). `menu.js` (`saveMenuState`) y passe désormais. Reste à y rediriger `stats.js` (`persistRounds`, indicateurs) et son ancien helper d'échappement (`esc`).
 
 ### `base.css`, `commun.css`
@@ -202,7 +204,7 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 **Marges des pages (modèle : Putting).** Deux variables dans `base.css` : `--app-padding-x` (20 px, 16 px sous 360 px) pour la marge horizontale, et `--app-page-top` (56 px + safe-area + 16 px) pour le début du contenu sous le header fixe. Toute nouvelle page ou tout nouveau bloc de page les utilise, sans valeur en dur. Exceptions volontaires : les écrans de Gym et de Parcours verrouillés à la hauteur de l'écran (accueil Gym, création de programme, accueil Parcours) gardent un décalage vertical plus serré. `.screen` de `parcours-ui.css` est limité à `#page-parcours` (via `:where()`, spécificité inchangée) : il s'appliquait aussi à Stats et doublait sa marge.
 
 ### `chart.umd.min.js`
-Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=33`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
+Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=34`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
 
 ### `sg-data.js` et `strokes-gained.js`
 Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence `SG_BASELINES` (lies `tee`, `fairway`, `rough`, `sand`, `recovery`, `green` ; yards sauf `green` en pieds), extraites du dépôt `dgtaillie/python_strokes_gained`. `strokes-gained.js` convertit les mètres, interpole (`sgExpected`) et calcule le SG d'un coup (`sgShot`). Aucune dépendance au DOM. C'est le seul endroit où vivent des tables SG : `putting.js`, `wedging.js` et `stats.js` l'appellent. Sous 10 yd (9,1 m), les tables fairway / rough / sand sont plafonnées à leur valeur à 10 yd (la source n'a pas de points plus courts).
@@ -276,7 +278,7 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 
 ## Suivi des bugs
 
-État au **8 octobre 2026**, commit `9b0ae23` du dépôt (dernier commit publié). Les corrections hors Stats sont livrées avec `index.html` en `?v=33` (voir "Bugs résolus"). **`stats.js` et `stats.css` sont en cours de modification hors dépôt : les numéros de ligne de Stats ci-dessous peuvent bouger, et chaque point de Stats est à revérifier après le prochain dépôt.** Aucun test sur un vrai téléphone.
+État au **8 octobre 2026**, commit `9b0ae23` du dépôt (dernier commit publié). Les corrections hors Stats sont livrées avec `index.html` en `?v=34` (voir "Bugs résolus"). **`stats.js` et `stats.css` sont en cours de modification hors dépôt : les numéros de ligne de Stats ci-dessous peuvent bouger, et chaque point de Stats est à revérifier après le prochain dépôt.** Aucun test sur un vrai téléphone.
 
 Légende : **T** = à vérifier sur téléphone ; **D** = décision du propriétaire avant toute modification. Les numéros de points sont stables : les anciens renvois (« point 20 », « point 53 »...) restent valables.
 
@@ -314,7 +316,6 @@ Légende : **T** = à vérifier sur téléphone ; **D** = décision du propriét
 
 #### `gym.js`
 - **42. Dix boutons d'en-tête sans action** : `.gym-header__action` "Options" / "Réglages" (l. 18, 173, 205, 234, 329, 427, 565, 618, 659, 703). **D** : câbler ou retirer.
-- **27. Quatre dialogues natifs** (`confirm` / `alert` / `prompt`), dont "Il reste des séries non validées" et le changement de programme en cours.
 - **40. Sélecteurs non préfixés par page** : `.gym-view`, `.sheet.is-open`, `.sheet-overlay.is-open` et ids génériques (`sheet-overlay`, `sheet-close`, `keypad-sheet-close`...). Aucune collision aujourd'hui.
 - **38. Verrous de scroll** `gym-home-locked` / `gym-view-fit` posés par `gym.js`, retirés par `app-shell.js` : un module qui verrouille le scroll doit se retirer lui-même en quittant sa page.
 - **66. Reprise de séance automatique (D, design).** Le brouillon est repris sans demander ; seul le délai de 12 h ou la fin de séance l'efface. Ajouter "Reprendre / Recommencer" si ce comportement gêne.
@@ -325,7 +326,6 @@ Légende : **T** = à vérifier sur téléphone ; **D** = décision du propriét
 
 #### `putting.js`
 - **41. Deux boutons "⋯" sans action** (l. 17, `#headerRightBtn`, et l. 26). **D**.
-- **27. Onze dialogues natifs.**
 - **5. Noms globaux génériques** : `root`. `id="headerRightBtn"` aussi présent dans `wedging.js`, sans effet.
 - **7. Taille** : 3739 lignes, 175 Ko.
 
@@ -341,7 +341,6 @@ Légende : **T** = à vérifier sur téléphone ; **D** = décision du propriét
 - **5 et 40.** `backBtn`, `headerTitle`, `STORAGE_KEY` ; sélecteurs `#backBtn`, `#headerTitle`, `.nav_back-label`.
 
 #### `parcours-ui.js`
-- **27. Deux dialogues natifs.**
 - **38. `no-scroll`** posé par un `MutationObserver` et retiré par `showPage` : propriétaire unique à définir.
 - **20.** Les unités (l. 42 et 69) restent volontairement silencieuses.
 
@@ -362,7 +361,7 @@ Légende : **T** = à vérifier sur téléphone ; **D** = décision du propriét
 #### Transverse
 - **10. Données uniquement locales (D).** Vider le cache, changer de téléphone ou désinstaller efface tout. Limite d'environ 5 Mo par domaine : `gym-history`, `putting_sessions` et `golfStatsRounds` grossissent à chaque séance.
 - **12. Pas de service worker (D).** `manifest.webmanifest` existe, pas le service worker : l'appli ne se charge pas sans réseau.
-- **13. Aucun outillage (D).** Pas de `package.json`, de lint, de tests ni de build ; `?v=33` à changer à la main dans 25 balises. Recommandé : ESLint (`no-undef`, `no-redeclare`, `no-unused-vars`), puis Vite.
+- **13. Aucun outillage (D).** Pas de `package.json`, de lint, de tests ni de build ; `?v=34` à changer à la main dans 25 balises. Recommandé : ESLint (`no-undef`, `no-redeclare`, `no-unused-vars`), puis Vite.
 - **50. Registre mélangé (D).** Vouvoiement ("Vos objectifs", "Développez votre") et tutoiement ("Configure ta séance", "t'affiner") dans la même appli, parfois le même écran.
 - **11. Aucun suivi d'erreurs en production** : ajouter un outil du type Sentry avant la mise en ligne publique, et le déclarer dans la politique de confidentialité.
 
@@ -373,22 +372,23 @@ Corrigés dans le code, jamais testés sur un vrai appareil :
 - **Gym** : recharger l'appli en pleine séance (36), lien "Voir tous" des objectifs (43), bottom sheets avec safe-area sur iPhone (49), étiquettes plus larges (54).
 - **Wedging** : toast dans la modale de création d'exercice (44), boutons modifier / dupliquer / supprimer, aucun style disparu après la suppression de 82 règles (51).
 - **Menu** : en-tête en mode installé avec encoche (55), boutons Valider / Enregistrer / Envoyer au support (57), pavé numérique.
+- **Popups de l'appli (point 27)** : les 15 anciens dialogues natifs ont été remplacés. Supprimer un exercice, une séance, un programme ; quitter une séance Putting sans enregistrer ; réduire le nombre de trous d'un parcours ; terminer une séance Gym avec des séries non validées ; changer de programme Gym en cours ; effacer le Fairway ou le Green ; modifier Lieu, Vitesse du green et Notes d'une séance Putting. Vérifier : popup centrée et lisible, au-dessus de la modale ouverte, Échap / appui sur le fond = annuler, clavier qui n'écrase pas la popup de saisie.
 - **Corrections de la version 33** : champs Wedging à 16 px sans zoom iOS (53) ; textes passés à 11 px (accueil, barre du bas de Wedging, jauges et barres SG de Wedging, pastilles "Hors green" / unité / Skip de Parcours) : aucun débordement ni retour à la ligne ; zones d'appui de 44 px sur la croix et le bouton ± du pavé du Menu, sur le bouton "i" des actions rapides et sur le bouton de remise à zéro de Parcours (60) : pas de tap pris à un bouton voisin.
 - **Stats et Putting** : cartes Stats et lignes d'historique Putting sans bordure ni `scale(0.99)` hérités de Parcours, champs à 16 px sans zoom iOS (53), zones d'appui de 44 px (59, 60).
 
 ### Décisions du propriétaire avant modification
-1 et 9 (authentification et session), 2 et 3 (une seule saisie de parties, un seul stockage), 7 et 26 (poids, PNG), 8 (textes légaux), 10 (sauvegarde des données), 12 (service worker), 13 (outillage et `?v=33`), 17, 41 et 42 (câbler ou retirer les boutons morts), 25 (zoom), 50 (tutoiement ou vouvoiement), 60 (saisie détaillée de Stats), 66 (reprise de séance Gym).
+1 et 9 (authentification et session), 2 et 3 (une seule saisie de parties, un seul stockage), 7 et 26 (poids, PNG), 8 (textes légaux), 10 (sauvegarde des données), 12 (service worker), 13 (outillage et `?v=34`), 17, 41 et 42 (câbler ou retirer les boutons morts), 25 (zoom), 50 (tutoiement ou vouvoiement), 60 (saisie détaillée de Stats), 66 (reprise de séance Gym).
 
 ### Ordre de correction conseillé
 1. `stats.js` : 29, 30, 31, 32, 33 dans la même lecture (après la fin des modifications en cours). Le brouillon de 29 reprend le mécanisme de Gym.
 2. Décision sur les boutons morts, puis une correction par fichier (`auth.js`, `putting.js`, `gym.js`).
 3. `stats.js` : `appSafeSetItem` (20) et `appEscapeHtml` (19), puis suppression de son ancien helper `esc`.
 4. CSS : 37 (`stats.css`), puis 54 (textes SVG de Wedging, étiquettes de carte de Parcours) et 60 (`.mode-btn`) en regardant le rendu.
-5. Nettoyage (24, 52, 51, 64, 27) en dernier, avec recherche globale du nom avant suppression.
+5. Nettoyage (24, 52, 64) en dernier, avec recherche globale du nom avant suppression.
 
 ### Bugs résolus (par module)
 
-Points résolus : 6, 14, 15, 16, 18, 21, 22, 34, 36, 39, 43, 44, 45, 46, 47, 48, 49, 51, 53, 55, 56, 57, 58, 59, 61, 62, 63, 65. Partiellement résolus (le reste est dans "Bugs restants") : 19 et 20 (reste `stats.js`), 24, 35, 37, 50, 52, 54, 60, 64.
+Points résolus : 6, 14, 15, 16, 18, 21, 22, 27, 34, 36, 39, 43, 44, 45, 46, 47, 48, 49, 51, 53, 55, 56, 57, 58, 59, 61, 62, 63, 65. Partiellement résolus (le reste est dans "Bugs restants") : 19 et 20 (reste `stats.js`), 24, 35, 37, 50, 52, 54, 60, 64.
 
 #### Navigation et cloisonnement entre modules
 
@@ -402,7 +402,7 @@ Points résolus : 6, 14, 15, 16, 18, 21, 22, 34, 36, 39, 43, 44, 45, 46, 47, 48,
 #### `index.html`, accueil, Menu, Chart.js
 - **Écran "Remets ton téléphone en mode portrait" affiché partout.** `.orientation-lock_component` (`index.html`) n'avait aucune règle CSS : il s'affichait en clair sur toutes les pages. Règles ajoutées à la fin de `base.css` : masqué par défaut, visible seulement en mode installé (`display-mode: standalone`), en paysage et sur une hauteur de téléphone (500 px max). `index.html` référençait aussi `manifest.webmanifest`, absent du dépôt : ajouté, avec `"orientation": "portrait"` (verrouille la rotation sur Android à l'installation ; iOS ignore ce réglage et l'écran de secours prend le relais).
 - **`index.html`, `HomePage.js`, `HomePage.css`, `menu.js`, `chart.umd.min.js` (points 6, 14, 15, 39, 53, 56).** Chart.js hébergé à la racine (`chart.umd.min.js`) (le paragraphe cdnjs de la politique de confidentialité de `menu.js` est retiré) ; panneau de l'accueil réduit à ses deux colonnes vivantes (grille à 2 colonnes, valeurs de départ neutres 0/5, 0 séance, "--") et `renderGolfStats` / `setStat` / `setProgressRing` supprimés de `HomePage.js` ; écran `home` de Parcours actif ; écrans `distances` et `add-shot` retirés ; balises iOS et `theme-color` ; champ de recherche de l'historique à 16 px.
-- **Chart.js introuvable (graphiques de Stats vides).** `index.html` chargeait `vendor/chart.umd.min.js`, mais le fichier a été déposé à la racine du dépôt : la requête échouait (404) et aucun graphique de Stats ne se dessinait (le code teste `typeof Chart`, donc sans message d'erreur). `index.html` charge maintenant `chart.umd.min.js` (racine), et le paramètre de version passe à `?v=33` dans les 25 balises. Si le fichier est un jour déplacé dans `vendor/`, remettre l'ancien chemin dans `index.html`.
+- **Chart.js introuvable (graphiques de Stats vides).** `index.html` chargeait `vendor/chart.umd.min.js`, mais le fichier a été déposé à la racine du dépôt : la requête échouait (404) et aucun graphique de Stats ne se dessinait (le code teste `typeof Chart`, donc sans message d'erreur). `index.html` charge maintenant `chart.umd.min.js` (racine), et le paramètre de version passe à `?v=34` dans les 25 balises. Si le fichier est un jour déplacé dans `vendor/`, remettre l'ancien chemin dans `index.html`.
 
 #### Stats
 - **Stats : "Mes indicateurs" modifiable.** Bouton "Modifier" ouvrant un popup avec 35 indicateurs classés par groupe (Score, Driving, Approche, Petit jeu, Putting, Strokes gained), dont "Tentatives de birdie à 7 m" et "à 3 m". Sélection libre, enregistrée dans `golfStatsKpis`. Valeurs par défaut inchangées.
@@ -424,6 +424,9 @@ Points résolus : 6, 14, 15, 16, 18, 21, 22, 34, 36, 39, 43, 44, 45, 46, 47, 48,
 - **Clavier natif dans Gym (objectifs).** Le champ "Cible" du popup "Nouvel objectif" ouvre maintenant le pavé de Gym.
 - **Gym : séance en cours perdue au rechargement (point 36), dates figées (point 34), lien "Voir tous" des objectifs (point 43), image Force (point 16).** La séance active enregistre son brouillon (`gym-session-draft`) et le reprend à la réouverture ; `gymToday()` remplace `GYM_TODAY` ; "Voir tous" fait défiler jusqu'à la grille sans toucher au hash ; les programmes Force chargent `ProgrammeForce-1.webp`. Vérifié en simulation (jsdom, hors dépôt) : séance ouverte, série validée, chrono lancé puis mis en pause, rechargement complet de la page, séance rouverte avec la série validée et le temps écoulé conservés. Pas de test sur téléphone.
 - **Gym et Wedging : textes saisis injectés sans échappement (point 19).** Noms de programmes, d'exercices et d'objectifs, descriptions : `appEscapeHtml` (nouveau dans `commun.js`). Un nom contenant `"`, `<img ...>` ou `</textarea>` s'affiche tel quel au lieu de casser la page ou d'exécuter du code. Vérifié en simulation sur le détail d'un programme Gym et sur la liste d'exercices Wedging.
+
+#### Dialogues natifs remplacés (point 27, version 34)
+- **`confirm()`, `alert()`, `prompt()` remplacés par des popups de l'appli** (`appConfirm`, `appAlert`, `appPrompt` dans `commun.js`, styles dans `commun.css`) : 9 appels dans `putting.js` (suppression d'exercice et de séance, sortie de séance, réduction du nombre de trous en exercice rapide et en nouveau parcours, saisie de Lieu / Vitesse du green / Notes, deux messages de validation de formulaire), 4 dans `gym.js` (changement de programme en cours, suppression de programme et de séance, fin de séance avec séries non validées), 2 dans `parcours-ui.js` (remise à zéro Fairway et Green). Les fonctions concernées sont devenues `async` ; tous leurs appels viennent d'un `onclick` ou d'un écouteur, aucun ne dépend de leur valeur de retour (vérifié). Les boutons de confirmation destructive sont en rouge et libellés ("Supprimer", "Effacer"). Vérifié en simulation (jsdom, hors dépôt) : OK / annuler / Échap / appui sur le fond, HTML du message non interprété, saisie texte et multiligne, et trois flux réels (remise à zéro du Fairway, suppression d'un exercice Putting confirmée et annulée). Reste à tester sur téléphone (**T**).
 
 #### Menu et Putting : helpers partagés (version 33)
 - **Menu : écritures et échappement (points 19 et 20, en partie).** `saveMenuState` écrit par `appSafeSetItem` : stockage plein ou indisponible, une alerte s'affiche au lieu d'une erreur en console. `escapeHtml` de `menu.js` supprimé, ses 16 appels passent par `appEscapeHtml`. Vérifié en simulation (jsdom, hors dépôt) : écriture de `golfAppState`, alerte affichée quand `setItem` échoue, chargement des 8 pages sans erreur. Reste : `stats.js`.
@@ -451,7 +454,7 @@ Points résolus : 6, 14, 15, 16, 18, 21, 22, 34, 36, 39, 43, 44, 45, 46, 47, 48,
 - **Textes sous 11 px (point 54, en partie).** Passés à 11 px : `HomePage.css` (`.orbit-button_subtitle`, `.column_secondary`, `.column_label`), `commun.css` (`#page-wedging .wg-bottom-nav-item`), `wedging.css` (`.wg-badge-progress`, `.wg-gauge-axis`, `.wg-gauge-value`, `.wg-sg-bar-label`), `parcours-ui.css` (pastilles "Hors green", unité et Skip). Restent les textes SVG de Wedging, les étiquettes de carte de Parcours et `.fab` de Stats.
 - **Zones d'appui de 44 px (point 60, en partie).** Par `::after`, visuel inchangé : `.keypad-close` et `.keypad-sign-btn` (`menu.css`), `.quick-action-info` et `.track-reset-btn` (`parcours-ui.css`). Reste `.mode-btn` et la saisie détaillée de Stats.
 - **Classe CSS morte (point 51).** `.wg-container` retirée de `base.css` (aucune référence dans le JS ni le HTML).
-- **Version des fichiers : `?v=33`** dans les 25 balises de `index.html`.
+- **Version des fichiers : `?v=34`** dans les 25 balises de `index.html`.
 - **Pertes de données silencieuses (point 20, en partie).** Gym, Putting, Wedging et Parcours (Fairway, Green, captures) écrivent par `appSafeSetItem` : stockage plein ou indisponible, une alerte s'affiche. Vérifié en simulation avec un `setItem` qui échoue.
 - **Code mort et petits défauts (points 24, 50, 52).** Supprimés : `setWedgeExercisesSort`, `setWedgeExReviewLimit`, `gymOnReady`, `DISTANCE_BUCKET_LABELS`, `svgColumnChart`, `setParcoursRowPutts`, `setParcoursRowClock`. `</div>` orphelin retiré du gabarit de `gym.js`. "All" devient "Toutes" dans les graphiques de Putting. Cinq classes sans règle CSS retirées (voir point 52).
 
