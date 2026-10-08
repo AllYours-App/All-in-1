@@ -171,7 +171,7 @@
 }
 
 .orbit-button_subtitle {
-  font-size: 8.5px;
+  font-size: 11px;
   line-height: 1.25;
   max-width: 72px;
   opacity: 0.75;
@@ -254,7 +254,7 @@
 }
 
 .column_secondary {
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 1px;
   opacity: 0.65;
   color: var(--color-text-secondary);
@@ -285,7 +285,7 @@
 }
 
 .column_label {
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.2;
   color: var(--color-text-secondary);
   white-space: nowrap;

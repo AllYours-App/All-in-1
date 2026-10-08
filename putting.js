@@ -1563,7 +1563,7 @@ function renderCompareCard(group) {
       '<button type="button" class="compare-card_reset" onclick="resetCompareSelection(\'' + group + '\')">Effacer</button>' +
     '</div>' +
     '<div class="compare-table">' +
-      '<div class="compare-table_row compare-table_head"><span></span><span><i class="cmp-dot"></i>' + escHtml(rA.name) + '<br><small>' + dateOf(rA) + '</small></span><span><i class="cmp-dot is-b"></i>' + escHtml(rB.name) + '<br><small>' + dateOf(rB) + '</small></span></div>' +
+      '<div class="compare-table_row compare-table_head"><span></span><span><i class="cmp-dot"></i>' + appEscapeHtml(rA.name) + '<br><small>' + dateOf(rA) + '</small></span><span><i class="cmp-dot is-b"></i>' + appEscapeHtml(rB.name) + '<br><small>' + dateOf(rB) + '</small></span></div>' +
       rows.map(function (row) { return '<div class="compare-table_row"><span>' + row[0] + '</span><span>' + row[1] + '</span><span>' + row[2] + '</span></div>'; }).join('') +
     '</div>';
 }
@@ -1765,7 +1765,7 @@ function renderExerciseList() {
       <div class="exercise-card ${isSelected ? 'is-selected' : ''}" onclick="toggleExerciseSelect(${c.id})">
         <div class="exercise-card_head">
           <span class="exercise-card_title-wrap">
-            <b>${escHtml(c.name)}</b>
+            <b>${appEscapeHtml(c.name)}</b>
             ${inProgress ? `<span class="exercise-card_badge" onclick="event.stopPropagation();resumeSession()">En cours</span>` : ''}
           </span>
           ${isSelected ? `
@@ -2084,10 +2084,6 @@ function quickIcon(cls, paths) {
   return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 }
 
-function escHtml(t) {
-  return String(t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-}
-
 // Images de putt en arrière-plan : une image par catégorie de pente (8 au total)
 const QUICK_PUTT_IMAGE_DIR = 'images/'; // dossier ou URL de base des images (avec "/" final)
 const QUICK_PUTT_IMAGE_EXT = '.webp';   // extension des fichiers
@@ -2193,7 +2189,7 @@ function renderQuickSessionScreen() {
   const currentResult = hole.results[targetIndex];
   const st = quickSessionStats(activeSession);
 
-  const esc = escHtml;
+  const esc = appEscapeHtml;
   const icon = quickIcon;
   const { pin: pinPaths, flag: flagPaths, star: starPaths, bars: barsPaths, distance: distancePaths, slope: slopePaths, putter: putterPaths, target: targetPaths, trophy: trophyPaths } = QUICK_ICON_PATHS;
   const isDetail = c.entryMode === 'complete';
@@ -2871,7 +2867,7 @@ function renderExerciseModal() {
 
         <div class="exercise-modal_fieldset">
           <label class="exercise-modal_label" for="creative-name-input">Titre</label>
-          <input type="text" class="exercise-modal_input" id="creative-name-input" placeholder="Titre de l'exercice" value="${escHtml(f.name)}" oninput="updateCreativeName(this.value)">
+          <input type="text" class="exercise-modal_input" id="creative-name-input" placeholder="Titre de l'exercice" value="${appEscapeHtml(f.name)}" oninput="updateCreativeName(this.value)">
         </div>
 
         <div class="exercise-modal_grid">
@@ -3352,7 +3348,7 @@ function renderNewParcoursRecapScreen() {
   if (!root) return;
   const f = newParcoursForm;
   const st = parcoursSessionStats(f.rows);
-  const esc = escHtml;
+  const esc = appEscapeHtml;
 
   root.innerHTML = `
     <div>
@@ -3432,7 +3428,7 @@ function renderNewParcoursModal() {
   const row = rows[idx];
   const st = parcoursSessionStats(rows);
   const allDone = parcoursAllHolesComplete(f);
-  const esc = escHtml;
+  const esc = appEscapeHtml;
   const icon = quickIcon;
   const { pin: pinPaths, flag: flagPaths, star: starPaths, bars: barsPaths, distance: distancePaths, slope: slopePaths, putter: putterPaths, target: targetPaths, trophy: trophyPaths } = QUICK_ICON_PATHS;
 
@@ -3624,7 +3620,7 @@ function renderParcoursHistory() {
     return `
       <div class="history-item" onclick="openRoundDetail(${r.id})" role="button" tabindex="0">
         <div class="history-item_content">
-          <div class="history-item_title">${escHtml(r.name)}</div>
+          <div class="history-item_title">${appEscapeHtml(r.name)}</div>
           <div class="history-item_meta">${dateLabel} &middot; ${r.holesCount} trous &middot; ${modeLabel} &middot; ${r.totalPutts} putts</div>
         </div>
         <div class="history-item_right">
@@ -3687,7 +3683,7 @@ function renderRoundDetailScreen(r) {
   const st = parcoursSessionStats(r.holes || []);
   const dateLabel = new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const modeLabel = r.mode === 'complete' ? 'Détaillée' : 'Express';
-  const esc = escHtml;
+  const esc = appEscapeHtml;
 
   root.innerHTML = `
     <div>

@@ -244,7 +244,7 @@
   color:var(--wg-text);
   border-radius:var(--wg-radius-sm);
   padding:14px;
-  font-size:15px;
+  font-size:16px; /* 16 px minimum : iOS zoome la page au focus en dessous */
   outline:none;
   transition:border-color var(--wg-transition);
 }
@@ -439,7 +439,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 .wg-badge-progress{
   display:inline-block;flex-shrink:0;background:var(--wg-accent-dim);color:var(--wg-accent);
   border:1px solid var(--wg-accent);border-radius:999px;padding:3px 10px;
-  font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+  font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;
 }
 .wg-exercise-actions{display:flex;gap:22px;}
 .wg-exercise-actions button{position:relative;background:none;border:none;color:var(--wg-text-secondary);width:22px;height:22px;cursor:pointer;}
@@ -507,17 +507,17 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 }
 
 /* ---------- Jauges (Distance finale moyenne par palier) ---------- */
-.wg-gauge-axis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--wg-text-secondary);margin-bottom:10px;}
+.wg-gauge-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--wg-text-secondary);margin-bottom:10px;}
 .wg-gauge-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .wg-gauge-label{width:44px;flex-shrink:0;font-size:11.5px;color:var(--wg-text-secondary);}
 .wg-gauge-track{flex:1;height:20px;background:var(--wg-bg);border:1px solid var(--wg-border);border-radius:999px;position:relative;overflow:visible;}
 .wg-gauge-fill{height:100%;background:var(--wg-accent);border-radius:999px;}
 .wg-gauge-fill--empty{width:0;}
-.wg-gauge-value{position:absolute;top:50%;transform:translate(6px,-50%);font-size:10.5px;color:var(--wg-text);white-space:nowrap;}
+.wg-gauge-value{position:absolute;top:50%;transform:translate(6px,-50%);font-size:11px;color:var(--wg-text);white-space:nowrap;}
 
 /* ---------- SG (barres centrées sur zéro) ---------- */
 .wg-sg-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.wg-sg-bar-label{width:70px;flex-shrink:0;font-size:10.5px;color:var(--wg-text-secondary);}
+.wg-sg-bar-label{width:70px;flex-shrink:0;font-size:11px;color:var(--wg-text-secondary);}
 .wg-sg-bar-track{flex:1;height:16px;background:var(--wg-bg);border:1px solid var(--wg-border);border-radius:8px;position:relative;overflow:hidden;}
 .wg-sg-bar-center{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--wg-border);}
 .wg-sg-bar-fill{position:absolute;top:0;bottom:0;border-radius:4px;}

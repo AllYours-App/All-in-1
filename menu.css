@@ -456,6 +456,17 @@
   cursor: pointer;
 }
 
+/* Zone d'appui de 44 px, visuel inchangé */
+#page-menu .keypad-close {
+  position: relative;
+}
+
+#page-menu .keypad-close::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
 #page-menu .keypad-close svg {
   width: 16px;
   height: 16px;
@@ -473,6 +484,13 @@
   margin-right: 8px;
   cursor: pointer;
   vertical-align: middle;
+  position: relative;
+}
+
+#page-menu .keypad-sign-btn::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 /* ==========================================================================

@@ -199,6 +199,13 @@
   text-transform: none;
 }
 
+/* Zone d'appui de 44 px, visuel inchangé */
+.quick-action-info::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+}
+
 /* --------------------------------------------------------------------------
    Home — tout doit tenir sur l'écran, sans défilement vertical ni horizontal
    -------------------------------------------------------------------------- */
@@ -292,6 +299,13 @@ body.no-scroll :where(#page-parcours) .screen-view.active .screen {
 }
 
 @media (hover: hover) {
+/* Zone d'appui de 44 px, visuel inchangé (le bouton est déjà en position absolue) */
+.track-reset-btn::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
 .track-reset-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
@@ -355,7 +369,7 @@ body.no-scroll :where(#page-parcours) .screen-view.active .screen {
   height: auto;
   border-radius: var(--radius-pill);
   padding: 5px 8px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;

@@ -39,13 +39,10 @@ let wedgeDistances = {};    // { clubId: [{ id, label, value }, ...] } — un we
 let driverSettings = { length: null, weight: null };
 
 function saveMenuState() {
-  try {
-    localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify({
-      userProfile, settings, radars, golfBag, driverSettings, personalDistances, wedgeDistances,
-    }));
-  } catch (e) {
-    console.error("Erreur d'écriture du localStorage", e);
-  }
+  // appSafeSetItem (commun.js) prévient la personne si le stockage est plein ou indisponible
+  appSafeSetItem(MENU_STORAGE_KEY, JSON.stringify({
+    userProfile, settings, radars, golfBag, driverSettings, personalDistances, wedgeDistances,
+  }));
 }
 
 function loadMenuState() {
@@ -63,11 +60,6 @@ function loadMenuState() {
   } catch (e) {
     console.error("Erreur de lecture du localStorage", e);
   }
-}
-
-// Échappe une saisie libre avant injection dans innerHTML ou dans un attribut
-function escapeHtml(str) {
-  return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 function toNumberOrNull(raw) {
@@ -117,7 +109,7 @@ function updateFirstName(value) {
 let menuKeypadPopup = null; // { title, target, value, decimal, allowSign, unit }
 
 function keypadAttrs({ title, target, value, decimal = false, sign = false, unit = '' }) {
-  return `data-title="${escapeHtml(title)}" data-target="${escapeHtml(target)}" data-value="${escapeHtml(value)}" data-unit="${escapeHtml(unit)}"${decimal ? ' data-decimal' : ''}${sign ? ' data-sign' : ''}`;
+  return `data-title="${appEscapeHtml(title)}" data-target="${appEscapeHtml(target)}" data-value="${appEscapeHtml(value)}" data-unit="${appEscapeHtml(unit)}"${decimal ? ' data-decimal' : ''}${sign ? ' data-sign' : ''}`;
 }
 
 // Bouton numérique : affiche `text` (par défaut la valeur, ou « — » si vide)
@@ -195,14 +187,14 @@ function menuKeypadHtml() {
     <div class="keypad-overlay" onclick="closeMenuKeypad()">
       <div class="keypad-sheet" onclick="event.stopPropagation()">
         <div class="keypad-head">
-          <h3 class="keypad-title">${escapeHtml(p.title)}</h3>
+          <h3 class="keypad-title">${appEscapeHtml(p.title)}</h3>
           <button type="button" class="keypad-close" onclick="closeMenuKeypad()" aria-label="Fermer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
         <div class="app-keypad-value">
           ${p.allowSign ? `<button type="button" class="keypad-sign-btn" onclick="menuKeypadSign()">${p.value.startsWith('-') ? '\u2212' : '+'}</button>` : ''}
-          ${displayVal}${p.unit ? ' ' + escapeHtml(p.unit) : ''}
+          ${displayVal}${p.unit ? ' ' + appEscapeHtml(p.unit) : ''}
         </div>
         ${appKeypad('menuKeypadPress', 'menuKeypadBackspace', 'menuKeypadClear', extraKey)}
         <button type="button" class="btn btn-primary" onclick="confirmMenuKeypad()">Valider</button>
@@ -244,7 +236,7 @@ function topRowHtml(showLogout = false) {
           </div>
         </div>
         <div class="profile_info">
-          <h2 class="profile_name"><input type="text" class="profile_name-input" value="${escapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ajouter mon prénom" aria-label="Prénom" oninput="updateFirstName(this.value)"></h2>
+          <h2 class="profile_name"><input type="text" class="profile_name-input" value="${appEscapeHtml(userProfile.firstName)}" maxlength="20" placeholder="Ajouter mon prénom" aria-label="Prénom" oninput="updateFirstName(this.value)"></h2>
           <button type="button" class="profile_index" id="profileIndex" ${indexAttrs} onclick="openMenuKeypad(this)">${indexLabel()}</button>
         </div>
       </div>
@@ -288,7 +280,7 @@ function radarOffsetRowHtml(r, label, key) {
 function radarBlockHtml(r) {
   return `
         <div class="field-row"><span class="label">
-          <input type="text" class="w-full" value="${escapeHtml(r.label)}" aria-label="Nom du radar" onchange="renameRadar('${r.id}',this)">
+          <input type="text" class="w-full" value="${appEscapeHtml(r.label)}" aria-label="Nom du radar" onchange="renameRadar('${r.id}',this)">
         </span></div>
         ${radarOffsetRowHtml(r, 'Écart Club Speed', 'clubOffset')}
         ${radarOffsetRowHtml(r, 'Écart Ball Speed', 'ballOffset')}
@@ -542,7 +534,7 @@ function wedgeDistanceRowsHtml(c, unit) {
     <div class="field-row"><span class="label">${c.name}</span></div>
     ${entries.map(e => `
       <div class="field-row wedge-distance-row"><span class="label">
-        <input type="text" value="${escapeHtml(e.label)}" aria-label="Nom de la distance" onchange="updateWedgeDistanceLabel('${c.id}','${e.id}',this)">
+        <input type="text" value="${appEscapeHtml(e.label)}" aria-label="Nom de la distance" onchange="updateWedgeDistanceLabel('${c.id}','${e.id}',this)">
       </span><span class="val">
         ${numButton({ title: e.label, target: `wedgeDistance:${c.id}:${e.id}`, value: e.value, unit })} ${unit}
         ${entries.length > 1 ? `<button type="button" onclick="removeWedgeDistance('${c.id}','${e.id}')">Suppr.</button>` : ''}
@@ -611,7 +603,7 @@ function warnMenuLegalPlaceholders() {
 
 // Échappe le texte, puis remplace les jetons {{clé}} par les valeurs de MENU_LEGAL (échappées aussi)
 function menuLegalText(str) {
-  return escapeHtml(str).replace(/\{\{(\w+)\}\}/g, (_, key) => escapeHtml(MENU_LEGAL[key] ?? ""));
+  return appEscapeHtml(str).replace(/\{\{(\w+)\}\}/g, (_, key) => appEscapeHtml(MENU_LEGAL[key] ?? ""));
 }
 
 // Affiche l'écran en haut de page (les écrans d'aide sont longs)
@@ -666,7 +658,7 @@ function renderHelpScreen() {
     </div>
     <div class="field-list">
       <h3>Application</h3>
-      ${menuHelpRow("À propos", "apropos", `Version ${escapeHtml(MENU_LEGAL.appVersion)} `)}
+      ${menuHelpRow("À propos", "apropos", `Version ${appEscapeHtml(MENU_LEGAL.appVersion)} `)}
     </div>
   `);
 }
@@ -711,14 +703,14 @@ function renderFaqScreen(back = backToHelp, label = "Aide") {
     <div class="faq_component">
       ${MENU_FAQ.map(group => `
       <section class="faq_group">
-        <h3 class="faq_group-title">${escapeHtml(group.title)}</h3>
+        <h3 class="faq_group-title">${appEscapeHtml(group.title)}</h3>
         ${group.items.map(([q, a]) => `
         <details class="faq_item">
           <summary class="faq_question">
-            <span>${escapeHtml(q)}</span>
+            <span>${appEscapeHtml(q)}</span>
             <svg class="faq_chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
           </summary>
-          <p class="faq_answer">${escapeHtml(a)}</p>
+          <p class="faq_answer">${appEscapeHtml(a)}</p>
         </details>`).join("")}
       </section>`).join("")}
     </div>
@@ -749,7 +741,7 @@ function menuSetContactMessage(value) {
 
 function renderContactScreen(back = backToHelp, label = "Aide") {
   enterScreen(() => renderContactScreen(back, label), "Contact", back, label);
-  const email = escapeHtml(MENU_LEGAL.contactEmail);
+  const email = appEscapeHtml(MENU_LEGAL.contactEmail);
   menuPaintPage(`
     <div class="contact_component">
       <p class="contact_text">Une question, un problème ou une idée ? Écrivez-nous : votre application de messagerie s'ouvrira avec le message prêt à envoyer.</p>
@@ -759,7 +751,7 @@ function renderContactScreen(back = backToHelp, label = "Aide") {
       </label>
       <label class="contact_field">
         <span class="contact_label">Message</span>
-        <textarea class="contact_textarea" maxlength="2000" placeholder="Décrivez votre demande" oninput="menuSetContactMessage(this.value)">${escapeHtml(menuContactDraft.message)}</textarea>
+        <textarea class="contact_textarea" maxlength="2000" placeholder="Décrivez votre demande" oninput="menuSetContactMessage(this.value)">${appEscapeHtml(menuContactDraft.message)}</textarea>
       </label>
       <p class="contact_error" id="contactError" role="alert"></p>
       <button type="button" class="btn btn-primary" onclick="menuSendContactMessage()">Envoyer</button>
@@ -992,7 +984,7 @@ function renderDataScreen(back, label) {
         </div>` : `
         <button type="button" class="data_button is-outline-danger" onclick="askDeleteMenuData()">Supprimer mon compte et mes données</button>`}
       </section>
-      <p class="data_text">Vous pouvez aussi demander l'accès à vos données ou leur effacement par e-mail à ${escapeHtml(MENU_LEGAL.contactEmail)}. Nous répondons dans un délai d'un mois.</p>
+      <p class="data_text">Vous pouvez aussi demander l'accès à vos données ou leur effacement par e-mail à ${appEscapeHtml(MENU_LEGAL.contactEmail)}. Nous répondons dans un délai d'un mois.</p>
     </div>
   `);
 }
@@ -1059,8 +1051,8 @@ function renderAboutScreen(back = backToHelp, label = "Aide") {
   menuPaintPage(`
     <div class="field-list">
       <h3>Application</h3>
-      <div class="field-row"><span class="label">Nom</span><span class="val">${escapeHtml(MENU_LEGAL.appName)}</span></div>
-      <div class="field-row"><span class="label">Version</span><span class="val">${escapeHtml(MENU_LEGAL.appVersion)}</span></div>
+      <div class="field-row"><span class="label">Nom</span><span class="val">${appEscapeHtml(MENU_LEGAL.appName)}</span></div>
+      <div class="field-row"><span class="label">Version</span><span class="val">${appEscapeHtml(MENU_LEGAL.appVersion)}</span></div>
     </div>
     <article class="legal_component">
       <section class="legal_section">
