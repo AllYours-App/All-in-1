@@ -107,7 +107,7 @@
   /* ---------- Layout ---------- */
   --container-max: var(--app-max-width);
   --header-height: 88px;
-  --bottom-safe: 100px;
+  --bottom-safe: 112px; /* réserve sous le contenu : bouton rond de 80 px + marge de 16 px + zone sûre */
 }
 
 /* ---------- Breakpoints (référence — utilisés en media queries dans layout.css) ----------
@@ -1182,14 +1182,6 @@ html {
 #page-stats .round-row__delete svg { width: 18px; height: 18px; }
 @media (hover: hover) {
   #page-stats .round-row__delete:hover { color: var(--color-negative); }
-}
-
-/* Bouton rond "Nouveau parcours" : libellé à 11 px (8,5 px dans commun.css, partagé avec Putting).
-   Le rond passe à 80 px pour que "PARCOURS" reste dans le cercle sur la 2e ligne. */
-#page-stats .fab {
-  width: 80px;
-  height: 80px;
-  font-size: var(--fs-2xs);
 }
 
 /* Accueil : carte "Partie en cours" (brouillon à reprendre) */

@@ -258,7 +258,20 @@ body.no-scroll :where(#page-parcours) .screen-view.active .screen {
 }
 
 .track-info-corner {
-  position: static;
+  /* relative (et non static) : la zone d'appui ::after se cale sur le "i" lui-même.
+     En static, elle se calait sur tout le coin et passait par-dessus le bouton Skip. */
+  position: relative;
+}
+
+/* Zone d'appui du "i" : 44 px, sans descendre sur le bouton Skip placé juste dessous (écart de 6 px) */
+.track-info-corner::after {
+  inset: -12px -12px -3px -12px;
+}
+
+/* Skip toujours au-dessus de la zone d'appui du "i" */
+.track-skip-btn {
+  position: relative;
+  z-index: 1;
 }
 
 .track-block #green-root, .track-block #fairway-root {
