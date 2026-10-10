@@ -2216,10 +2216,6 @@ body.gym-home-locked {
   border: 1.5px solid var(--gym-border);
 }
 
-.set-card.is-terminee {
-  border-color: var(--gym-accent-border);
-}
-
 .set-card__top {
   display: flex;
   align-items: center;
@@ -2239,10 +2235,17 @@ body.gym-home-locked {
   font-weight: 800;
 }
 
-.set-card.is-en-cours .set-card__number,
-.set-card.is-terminee .set-card__number {
+.set-card.is-en-cours .set-card__number {
   border-color: var(--gym-accent-border);
   color: var(--gym-accent);
+}
+
+/* Série terminée : pastille numérotée pleine (même langage que le bouton du chrono),
+   cadres de la carte et des champs inchangés */
+.set-card.is-terminee .set-card__number {
+  background: var(--gym-accent);
+  border-color: var(--gym-accent);
+  color: var(--gym-accent-text-on);
 }
 
 .set-card__label {
@@ -2382,10 +2385,6 @@ body.gym-home-locked {
   padding: 8px 10px;
 }
 
-.set-card.is-terminee .set-card__weight-row {
-  border-color: var(--gym-accent-border);
-}
-
 .set-card__weight-input {
   flex: 1;
   min-width: 0;
@@ -2431,10 +2430,6 @@ body.gym-home-locked {
   border: 1.5px solid var(--gym-border-strong);
   border-radius: var(--gym-radius-sm);
   padding: 8px 10px;
-}
-
-.set-card.is-terminee .set-card__reps-row {
-  border-color: var(--gym-accent-border);
 }
 
 .set-card__reps-value {
@@ -3362,8 +3357,7 @@ body.gym-view-fit .gym-app {
   transition: border-color var(--gym-speed-fast) var(--gym-ease);
 }
 
-.set-card__timer.is-running,
-.set-card.is-terminee .set-card__timer {
+.set-card__timer.is-running {
   border-color: var(--gym-accent-border);
 }
 
