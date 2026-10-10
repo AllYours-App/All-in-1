@@ -184,7 +184,9 @@
   background:var(--wg-accent-dim);
   color:var(--wg-accent);
 }
-@media (max-width:360px){
+/* Seuil à 330 px : un Android courant fait 360 px de large et doit garder 4 colonnes de distances
+   et les deux cartes Parcours / Exercices côte à côte ; seuls les très petits écrans (320 px) se replient. */
+@media (max-width:330px){
   .wg-range-grid{grid-template-columns:repeat(2,1fr);}
   /* .wg-nav-cards : règle venant du media query mixte d'origine (était mélangée avec Home) */
   .wg-nav-cards{grid-template-columns:1fr;}
