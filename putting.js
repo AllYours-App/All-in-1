@@ -3342,6 +3342,18 @@ function importPuttingRoundFromStats(data) {
 }
 window.importPuttingRoundFromStats = importPuttingRoundFromStats;
 
+// Suppression côté Stats (point 31) : retire la partie importée dont le statsKey vaut l'identifiant de la partie Stats.
+// Passe par la mémoire de ce module (puttingRounds) pour ne pas être écrasée au prochain savePuttingState().
+function removePuttingRoundFromStats(statsKey) {
+  if (!statsKey) return 0;
+  const before = puttingRounds.length;
+  puttingRounds = puttingRounds.filter(function (r) { return r.statsKey !== statsKey; });
+  const removed = before - puttingRounds.length;
+  if (removed) savePuttingState(); // enregistre + rafraîchit les analyses et l'accueil
+  return removed;
+}
+window.removePuttingRoundFromStats = removePuttingRoundFromStats;
+
 // --- Récap de fin de session (même esprit que le récap de l'exercice rapide) ---
 function renderNewParcoursRecapScreen() {
   const root = document.getElementById('parcours-entry-root');

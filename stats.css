@@ -123,7 +123,6 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
 }
 
 #page-stats {
@@ -182,6 +181,26 @@ html {
 
 @media (hover: hover) {
   #page-stats .page-header__back:hover { opacity: 0.7; }
+}
+
+/* Action à droite de l'en-tête (saisies : Terminer la partie), zone d'appui de 44 px */
+#page-stats .page-header__action {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-xs);
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  #page-stats .page-header__action:hover { opacity: 0.7; }
 }
 
 #page-stats .page-header__title-group {
@@ -907,7 +926,7 @@ html {
   background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 #page-stats .analyse-filter_label {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -1140,11 +1159,73 @@ html {
 
 #page-stats .round-row--table {
   display: grid;
-  grid-template-columns: 96px 1fr 64px 20px;
+  grid-template-columns: 96px 1fr 64px 44px;
   gap: var(--space-sm);
   align-items: center;
 }
 #page-stats .round-row--table .round-row__date { font-size: var(--fs-sm); color: var(--color-text-secondary); }
+
+/* Supprimer une partie : bouton de 44 px, icône de 18 px */
+#page-stats .round-row__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -10px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+#page-stats .round-row__delete svg { width: 18px; height: 18px; }
+@media (hover: hover) {
+  #page-stats .round-row__delete:hover { color: var(--color-negative); }
+}
+
+/* Bouton rond "Nouveau parcours" : libellé à 11 px (8,5 px dans commun.css, partagé avec Putting).
+   Le rond passe à 80 px pour que "PARCOURS" reste dans le cercle sur la 2e ligne. */
+#page-stats .fab {
+  width: 80px;
+  height: 80px;
+  font-size: var(--fs-2xs);
+}
+
+/* Accueil : carte "Partie en cours" (brouillon à reprendre) */
+#page-stats #dash-resume[hidden] { display: none; }
+#page-stats #dash-resume[hidden] + .section { margin-top: 0 !important; } /* le bloc SG reste collé au header quand la carte est masquée */
+#page-stats .resume-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+#page-stats .resume-card__title { font-size: var(--fs-md); font-weight: var(--fw-bold); }
+#page-stats .resume-card__meta {
+  margin-top: var(--space-2xs);
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+#page-stats .resume-card__actions { display: flex; gap: var(--space-sm); }
+#page-stats .resume-card__btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+#page-stats .resume-card__btn.is-primary {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: #0b0f0c;
+}
 
 /* ==========================================================================
    SPA — navigation entre écrans + panes internes

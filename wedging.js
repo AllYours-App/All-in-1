@@ -360,6 +360,21 @@ function importWedgeShotsFromStats(list) {
 }
 window.importWedgeShotsFromStats = importWedgeShotsFromStats;
 
+// Suppression côté Stats (point 31) : retire les coups importés d'une partie (statsKey = `${idPartie}:trou:coup`).
+function removeWedgeShotsFromStats(roundId) {
+  if (!roundId) return 0;
+  const prefix = roundId + ':';
+  const before = wedgeRounds.length;
+  wedgeRounds = wedgeRounds.filter(w => !(typeof w.statsKey === 'string' && w.statsKey.startsWith(prefix)));
+  const removed = before - wedgeRounds.length;
+  if (removed) {
+    persistWedgeRounds();
+    if (document.getElementById('app')) Router.render(); // la vue Wedging reste à jour même masquée
+  }
+  return removed;
+}
+window.removeWedgeShotsFromStats = removeWedgeShotsFromStats;
+
 function wedgeBucketFor(distance) { return Math.round(distance / 5) * 5; }
 function wedgeLimitedRounds() {
   const sorted = wedgeRounds.slice().sort((a, b) => b.id - a.id);

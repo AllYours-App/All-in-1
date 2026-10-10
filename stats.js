@@ -87,80 +87,6 @@
     avgGrossScore: null, avgGrossDelta: null, birdiesTotal: null, doubleBogeyPlus: null,
   };
 
-  // API: GET /api/stats/overview?period=30d&course=all&lie=all
-  // Écran "Statistiques" — onglet Multi (aperçu : score, fairway, greens, approches, putts)
-  const statsOverview = {
-    score: {
-      avgGross: null, avgGrossDelta: null, avgNet: null, avgNetDelta: null, avgToPar: null,
-      best: null, bestToPar: null, worst: null, worstToPar: null, played: null,
-      byDistance: [],
-      // Moyenne par partie (nombre de trous de chaque résultat)
-      perRound: { eagle: null, birdie: null, par: null, bogey: null, double: null, triple: null },
-      // Score moyen par type de trou (par 4 courts / longs = sous / au-dessus de la médiane des par 4)
-      byHoleType: { par3: null, par4: null, par5: null, par4Short: null, par4Long: null },
-      // Score moyen par portion de parcours (par trou)
-      bySegment: { front9: null, back9: null, first6: null, mid6: null, last6: null },
-    },
-    fairway: {
-      hitPct: null, leftPct: null, rightPct: null, avgDistanceHit: null, avgDistanceMiss: null, penaltyPct: null,
-      hitPar4: null, hitPar5: null, scoreAfterHit: null, scoreAfterMiss: null,
-    },
-    approach: {
-      girPct: null, proximity: null, under10: null, under20: null, over50: null,
-      zones: { center: null, top: null, left: null, right: null, bottom: null },
-      greenHitPct: null, girPar3: null, girPar4: null, girPar5: null,
-      // Nombre d'attaques de green par zone : 'Centre', 'Green-<dir>', 'Hors-<dir>', 'ND' (raté sans zone précisée)
-      zoneCounts: {},
-    },
-    approches: {
-      avgDistance: null, proximity: null, upDownPct: null, upDownBunker: null, upDownNonBunker: null,
-      byDistance: [],
-      proximityBands: [],
-      // [{ type: 'Approches' | 'S. Bunker', count: 0, upDownPct: 0 }]
-      byType: [],
-      // Approches de récupération (après green raté), 9 zones : 'Centre' + 8 directions
-      zoneCounts: { all: {}, nonBunker: {}, bunker: {} },
-    },
-    putts: {
-      perHole: null, perRound: null, perHoleGir: null, perHoleNonGir: null,
-      onePutt: null, twoPutt: null, threePlusPutt: null, avgFirstPuttDistance: null,
-      byDistance: [],
-    },
-  };
-
-  // API: GET /api/stats/trends?course=all&rounds=all
-  // Onglets Traditionnel et SG de "Statistiques" : une entrée par partie, ordre chronologique.
-  // Exemple : { date: '2026-09-12', course: 'Nom du parcours', avgDrive: 231, firPct: 57, girPct: 44,
-  //             putts: 32, puttsPerGir: 1.78, sg: { total: 0.4, driving: 0.1, approach: -0.2, shortGame: 0.3, putting: 0.2 } }
-  const trendRounds = [];
-
-  // API: GET /api/stats/par-club?tabs=driving&rounds=all&course=all&lie=all
-  // Écran "Par club". Chaque métrique = { All: valeur, '<club>': valeur } (null tant que non disponible).
-  const clubInsights = {
-    clubs: [], // clubs réellement joués (ordre du sac) ; vide → repli sur Menu > Mon sac de golf
-    metrics: {
-      sg: {}, distance: {}, fairways: {}, gir: {}, birdies: {}, scrambling: {}, upDown: {}, shotsPerRound: {},
-    },
-    // Putting : clés = tranches de distance (PUTT_BUCKETS)
-    putting: { sg: {}, makeRate: {}, threePutt: {}, puttsPerGir: {}, holesPer3Putt: {} },
-    // Attaques de green par club : { All: { 'Centre': n, 'Green-Long': n, 'Hors-Court': n, 'ND': n, ... }, '<club>': {...} }
-    zoneCounts: {},
-  };
-
-  // API: GET /api/stats/par-distance?rounds=all&course=all&lie=all
-  // Écran "Par distance". Tableaux de 11 valeurs, dans l'ordre de DISTANCE_BUCKETS.
-  const distanceInsights = {
-    sg: [], proximity: [], shotsPerRound: [],
-    // Attaques de green par tranche : { '<tranche>': { 'Centre': n, 'Green-Long': n, ... } }
-    zoneCounts: {},
-  };
-
-  // API: GET /api/stats/putting?range=20-rounds
-  const puttingPerformance = {
-    value: null, delta: null, compareLabel: 'vs période précédente',
-    points: [],
-  };
-
   // Note : la liste de parcours doit être alimentée dynamiquement (parcours réellement joués par l'utilisateur).
   const DEFAULT_FILTERS = {
     period: { key: 'period', icon: 'calendar', label: '30 derniers jours', options: ['7 derniers jours', '30 derniers jours', '90 derniers jours', 'Cette saison', 'Tout'] },
@@ -230,6 +156,7 @@
     search: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
     sort: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l3-3M17 20l-3-3"/></svg>`,
     close: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+    trash: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 7h16M9 7V4.5h6V7M6.5 7l.9 12.5h9.2L17.5 7M10 11v5M14 11v5"/></svg>`,
     check: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12.5l4.5 4.5L19 7"/></svg>`,
     arrowRight: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`,
     weather: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 20h8.5a3.5 3.5 0 00.3-7A5 5 0 006.4 14.3 3.1 3.1 0 007 20z"/><circle cx="17" cy="6.5" r="2.4"/><path d="M17 2v1M21.5 6.5h-1M12.5 6.5h1M20.2 3.3l-.7.7M13.8 3.3l.7.7"/></svg>`,
@@ -301,46 +228,6 @@
   }
 
   /* ========================================================================
-     4) COMPOSANT — Sparkline (mini graphique KPI)
-     ======================================================================== */
-
-  // Ne casse jamais l'écran si Chart.js n'a pas pu se charger (CDN bloqué,
-  // hors-ligne...) : le graphique est simplement ignoré, le reste de l'UI reste intact.
-  function createSparkline(canvas, values, positive) {
-    if (typeof Chart === 'undefined' || !canvas) return null;
-    const color = positive ? cssVar('--color-accent') : cssVar('--color-negative');
-    try {
-      return new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels: values.map((_, i) => i),
-        datasets: [{
-          data: values, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.35, fill: true,
-          backgroundColor: (ctx) => {
-            const { chartArea, ctx: c } = ctx.chart;
-            if (!chartArea) return 'transparent';
-            const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            gradient.addColorStop(0, hexToRgba(color, 0.35));
-            gradient.addColorStop(1, hexToRgba(color, 0));
-            return gradient;
-          },
-        }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        animation: { duration: 700, easing: 'easeOutQuart' },
-        interaction: { intersect: false },
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        scales: { x: { display: false }, y: { display: false } },
-      },
-      });
-    } catch (err) {
-      console.warn('Sparkline non créée :', err);
-      return null;
-    }
-  }
-
-  /* ========================================================================
      5) COMPOSANT — KPI Card
      ======================================================================== */
 
@@ -400,7 +287,7 @@
 
   function renderFilterBar(root, filters, onChange) {
     root.innerHTML = filters.map((f) => `
-      <div class="filter-chip-wrap" style="position:relative; flex:1 1 0; min-width:0;">
+      <div style="position:relative; flex:1 1 0; min-width:0;">
         <button type="button" class="analyse-filter${FILTER_TITLES[f.key] === 'Période' ? ' is-active' : ''}" data-key="${f.key}" aria-haspopup="listbox" aria-expanded="false">
           <span class="analyse-filter_label">${FILTER_TITLES[f.key] || f.key}</span>
           <span class="analyse-filter_value"><span class="filter-value-text" data-label>${chipValue(f.label)}</span>${icon('chevronDown')}</span>
@@ -427,7 +314,7 @@
           ...(wrap === root.lastElementChild && filters.length > 2 ? { right: '0' } : { left: '0' }),
           background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-md)', padding: '6px', zIndex: 'var(--z-dropdown)',
-          minWidth: '160px', boxShadow: 'var(--shadow-card-hover)',
+          minWidth: '160px',
         });
         dropdown.innerHTML = f.options.map((opt) => `
           <button type="button" class="filter-dropdown__opt" style="display:block;width:100%;text-align:left;
@@ -471,8 +358,8 @@
           <div class="round-row" role="button" tabindex="0" data-id="${r.id}">
             <div class="round-row__thumb" style="display:flex;align-items:center;justify-content:center;color:var(--color-text-tertiary);">${icon('flag')}</div>
             <div class="round-row__info">
-              <div class="round-row__course">${esc(r.course)}</div>
-              <div class="round-row__location">${esc((r.city || '').split(',')[0])}</div>
+              <div class="round-row__course">${appEscapeHtml(r.course)}</div>
+              <div class="round-row__location">${appEscapeHtml((r.city || '').split(',')[0])}</div>
             </div>
             <div class="round-row__stat"><div class="round-row__stat-value">${r.fir}/${r.firTotal}</div><div class="round-row__stat-label">FIR</div></div>
             <div class="round-row__stat"><div class="round-row__stat-value">${r.gir}/${r.holeCount}</div><div class="round-row__stat-label">GIR</div></div>
@@ -490,7 +377,7 @@
     }
   }
 
-  function renderRoundTable(container, rounds, onSelect) {
+  function renderRoundTable(container, rounds, onSelect, onDelete) {
     const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR');
     container.innerHTML = rounds.length ? `
       <div class="round-list">
@@ -498,11 +385,13 @@
           <div class="round-row round-row--table" role="button" tabindex="0" data-id="${r.id}">
             <div class="round-row__date">${fmtDate(r.date)}</div>
             <div class="round-row__info">
-              <div class="round-row__course">${esc(r.course)}</div>
-              <div class="round-row__location">${esc(r.city)}</div>
+              <div class="round-row__course">${appEscapeHtml(r.course)}</div>
+              <div class="round-row__location">${appEscapeHtml(r.city)}</div>
             </div>
             <div class="round-row__score"><div class="round-row__score-value">${fmt(r.score)}</div>${scoreDiffHtml(r.vsPar)}</div>
-            <div class="round-row__chevron">${icon('chevronRight')}</div>
+            ${onDelete
+    ? `<button type="button" class="round-row__delete" data-delete-id="${r.id}" aria-label="Supprimer cette partie">${icon('trash')}</button>`
+    : `<div class="round-row__chevron">${icon('chevronRight')}</div>`}
           </div>
         `).join('')}
       </div>
@@ -511,6 +400,11 @@
       container.querySelectorAll('[data-id]').forEach((row) => {
         const round = rounds.find((r) => r.id === row.dataset.id);
         row.addEventListener('click', () => onSelect(round));
+      });
+    }
+    if (onDelete) {
+      container.querySelectorAll('[data-delete-id]').forEach((btn) => {
+        btn.addEventListener('click', (e) => { e.stopPropagation(); onDelete(btn.dataset.deleteId); });
       });
     }
   }
@@ -856,7 +750,7 @@
       }
       return `
         <div class="insights_bar-row">
-          <div class="insights_bar-label">${esc(r.label)}</div>
+          <div class="insights_bar-label">${appEscapeHtml(r.label)}</div>
           <div class="insights_bar-track">${centered ? '<div class="insights_bar-center"></div>' : ''}${fill}</div>
           <div class="insights_bar-value${empty ? ' is-empty' : ''}">${empty ? '--' : `${format(r.value)}${unit}`}</div>
         </div>
@@ -865,7 +759,7 @@
 
     const caption = opts.caption ? `<div class="chart-card__unit">${opts.caption}</div>` : '';
     return `
-      <article class="card chart-card insights_chart">
+      <article class="card chart-card">
         <div class="chart-card__head"><div class="chart-card__titles"><div class="chart-card__title">${title}</div>${caption}</div></div>
         <div class="insights_bar-chart">${axisHtml}${rowsHtml}</div>
       </article>
@@ -877,7 +771,7 @@
 
   // Groupe de puces cliquables ({ value, label }) ; `selected` = valeurs actives.
   function chipGroupHtml(items, selected, attr) {
-    return items.map((it) => `<button type="button" class="insights_chip" aria-pressed="${selected.includes(it.value)}" ${attr || 'data-value'}="${esc(it.value)}">${esc(it.label)}</button>`).join('');
+    return items.map((it) => `<button type="button" class="insights_chip" aria-pressed="${selected.includes(it.value)}" ${attr || 'data-value'}="${appEscapeHtml(it.value)}">${appEscapeHtml(it.label)}</button>`).join('');
   }
 
   // Sélection multiple avec "Tous" exclusif : cliquer une valeur l'ajoute / la retire, au moins une reste active.
@@ -1150,6 +1044,14 @@
   const pctR = (n, total) => rnd(share(n, total), 0);
   const notNull = (v) => v !== null && v !== undefined;
   const bump = (obj, key) => { obj[key] = (obj[key] || 0) + 1; };
+  // Fairway : se joue sur un par 4 ou 5. Par inconnu (parcours saisi à la main) : le trou ne compte que si un fairway
+  // a été saisi, sinon il gonflerait le dénominateur du pourcentage.
+  const fairwayApplies = (par, fairway) => par === 4 || par === 5 || (par === null && Boolean(fairway));
+  // Score brut : seules les parties de 18 trous se comparent entre elles (un 42 sur 9 trous n'est pas un 42 sur 18)
+  const FULL_ROUND = 18;
+  const grossRounds = (totals) => totals.filter((t) => t.gross !== null && t.holeCount === FULL_ROUND);
+  // Écart au par ramené à 18 trous, pour moyenner des parties de 9 trous ou arrêtées en route avec celles de 18
+  const vsPar18 = (t) => (t.vsPar === null || !t.holeCount ? null : rnd(t.vsPar * FULL_ROUND / t.holeCount, 1));
   // Variation récente : moyenne des (jusqu'à) 5 dernières valeurs moins la moyenne des 5 précédentes
   function recentDelta(values, decimals) {
     if (values.length < 2) return null;
@@ -1165,11 +1067,63 @@
     } catch (err) { return []; }
   }
   function persistRounds() {
-    try { localStorage.setItem(ROUNDS_KEY, JSON.stringify(savedRounds)); } catch (err) { console.warn('Parties non enregistrées :', err); }
+    return appSafeSetItem(ROUNDS_KEY, JSON.stringify(savedRounds));
   }
   let savedRounds = loadSavedRounds();
   let dataVersion = 0;
   let expandedCache = { version: -1, list: [] };
+
+  /* ---------- Brouillon de la partie en cours (point 29) ----------
+     Les deux saisies l'écrivent à chaque changement : un rechargement, une fermeture de l'appli ou un déchargement
+     par iOS ne fait plus perdre la partie. Effacé à l'enregistrement ; ignoré au-delà de 24 h.
+     Modèles : `gym-session-draft` (gym.js), `resumableSession` (putting.js). */
+  const DRAFT_KEY = 'golfStatsRoundDraft';
+  const DRAFT_MAX_AGE = 24 * 60 * 60 * 1000;
+  const DRAFT_SCREENS = ['saisie-rapide', 'saisie-detaillee'];
+
+  // La partie en cours, réduite à ce qu'il faut pour la reconstruire (pas le profil complet du parcours)
+  function serializeRound(round) {
+    return {
+      courseName: round.courseName || null, city: (round.course && round.course.city) || '',
+      tee: round.tee || null, mode: round.mode || null, weather: round.weather || null, wind: round.wind || null,
+      startHole: round.startHole || 1, holeCount: round.holeCount || round.holes.length, holes: round.holes,
+    };
+  }
+  const restoreRound = (d) => ({ ...d, course: d.city ? { city: d.city } : null });
+
+  function loadDraft() {
+    try {
+      const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (!d || !DRAFT_SCREENS.includes(d.screen) || !d.round || !Array.isArray(d.round.holes) || !d.round.holes.length) return null;
+      if (!(Date.now() - d.savedAt < DRAFT_MAX_AGE)) { clearDraft(); return null; }
+      return d;
+    } catch (err) { return null; }
+  }
+  function saveDraft(screenName, round, state) {
+    appSafeSetItem(DRAFT_KEY, JSON.stringify({ screen: screenName, savedAt: Date.now(), round: serializeRound(round), ...state }));
+  }
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (err) { /* stockage indisponible : rien à effacer */ }
+  }
+
+  // Fin de partie anticipée (point 30), confirmation commune aux deux saisies.
+  // Renvoie le nombre de trous à enregistrer (les trous suivants sont écartés), ou 0 si la personne annule.
+  async function askFinishRound(played, total) {
+    if (!played) { await appAlert('Saisis au moins un trou avant de terminer la partie.'); return 0; }
+    const message = played < total
+      ? `Terminer la partie après ${played} trou${played > 1 ? 's' : ''} ? Les trous suivants ne seront pas comptés.`
+      : 'Enregistrer la partie ? Les informations non saisies ne seront pas comptées.';
+    return (await appConfirm(message, { confirmLabel: 'Terminer' })) ? played : 0;
+  }
+
+  // Verrou de défilement des popups (point 38) : chacun restitue la valeur d'origine de body à sa fermeture
+  const scrollLock = { count: 0, previous: '' };
+  function lockScroll() {
+    if (scrollLock.count++ === 0) { scrollLock.previous = document.body.style.overflow; document.body.style.overflow = 'hidden'; }
+  }
+  function unlockScroll() {
+    if (scrollLock.count > 0 && --scrollLock.count === 0) document.body.style.overflow = scrollLock.previous;
+  }
 
   // Partie terminée (round + round.entries, voir finishRound des deux saisies) → enregistrement normalisé
   function buildSavedRound(round) {
@@ -1255,12 +1209,28 @@
     round._saved = true;
     const saved = buildSavedRound(round);
     savedRounds.push(saved);
-    persistRounds();
+    // Brouillon effacé seulement si la partie est bien écrite (stockage plein : on le garde)
+    if (persistRounds()) clearDraft();
     dataVersion++;
     // Un échec de synchro ne doit jamais empêcher l'enregistrement de la partie dans Stats
     try { syncRoundToModules(saved); } catch (err) { console.warn('Synchro Wedging/Putting impossible :', err); }
   }
   document.addEventListener('stats:round-finished', (e) => saveFinishedRound(e.detail));
+
+  // Suppression d'une partie enregistrée (point 31) : retire aussi ses copies dans Putting (`statsKey` = id)
+  // et dans Wedging (`statsKey` commence par `${id}:`), sinon elles resteraient dans leurs analyses.
+  function deleteSavedRound(id) {
+    const before = savedRounds.length;
+    savedRounds = savedRounds.filter((r) => r.id !== id);
+    if (savedRounds.length === before) return false;
+    persistRounds();
+    dataVersion++;
+    try {
+      if (typeof window.removePuttingRoundFromStats === 'function') window.removePuttingRoundFromStats(id);
+      if (typeof window.removeWedgeShotsFromStats === 'function') window.removeWedgeShotsFromStats(id);
+    } catch (err) { console.warn('Nettoyage Wedging/Putting impossible :', err); }
+    return true;
+  }
 
   /* ---------- Parties "enrichies" : un trou = H, un coup = S (détaillé uniquement) ---------- */
   function startLieOf(list, k) {
@@ -1407,7 +1377,7 @@
     const scored = r.holes.every((h) => h.score !== null);
     const gross = scored ? sumOf(r.holes.map((h) => h.score)) : null;
     const parKnown = r.holes.every((h) => h.par !== null);
-    const eligible = r.holes.filter((h) => h.par !== 3);
+    const eligible = r.holes.filter((h) => fairwayApplies(h.par, h.fairway));
     return {
       id: r.id, date: r.date, course: r.course, city: r.city, holeCount: r.holes.length,
       gross, vsPar: gross !== null && parKnown ? gross - sumOf(r.holes.map((h) => h.par)) : null,
@@ -1462,7 +1432,7 @@
     return DEFAULT_KPI_KEYS.slice();
   }
   function persistKpiKeys() {
-    try { localStorage.setItem(KPI_KEY, JSON.stringify(selectedKpiKeys)); } catch (err) { console.warn('Indicateurs non enregistrés :', err); }
+    return appSafeSetItem(KPI_KEY, JSON.stringify(selectedKpiKeys));
   }
 
   let selectedKpiKeys = loadKpiKeys();
@@ -1485,10 +1455,10 @@
     }).filter(notNull)), 1);
 
     const totals = recent.map(roundTotals);
-    const gross = totals.filter((t) => t.gross !== null).map((t) => t.gross);
-    const vsPar = totals.filter((t) => t.vsPar !== null).map((t) => t.vsPar);
+    const gross = grossRounds(totals).map((t) => t.gross);
+    const vsPar = totals.map(vsPar18).filter(notNull);
 
-    const fw = holes.filter((h) => h.par !== 3 && h.fairway);
+    const fw = holes.filter((h) => h.fairway && fairwayApplies(h.par, h.fairway));
     const tee = holes.map((h) => h.shots.find((S) => S.cat === 'driving')).filter(Boolean);
     const girHoles = holes.filter((h) => h.gir !== null);
     const atk = holes.filter((h) => h.attackInfo).map((h) => h.attack).filter((S) => S && S.after !== null && attackReached(S));
@@ -1624,15 +1594,16 @@
     ensureKpiPicker();
     renderKpiPicker();
     kpiPickerTrigger = trigger || null;
-    document.body.style.overflow = 'hidden';
+    if (!kpiPickerEl.classList.contains('is-open')) lockScroll();
     document.addEventListener('keydown', onKpiPickerKeydown);
     kpiPickerEl.classList.add('is-open');
     kpiPickerEl.querySelector('[data-kp-close]').focus();
   }
 
   function closeKpiPicker() {
+    if (!kpiPickerEl || !kpiPickerEl.classList.contains('is-open')) return;
     kpiPickerEl.classList.remove('is-open');
-    document.body.style.overflow = '';
+    unlockScroll();
     document.removeEventListener('keydown', onKpiPickerKeydown);
     if (kpiPickerTrigger) kpiPickerTrigger.focus();
   }
@@ -1657,8 +1628,8 @@
   function computeRoundsSummary() {
     const rounds = expandedRounds();
     const totals = rounds.map(roundTotals);
-    const withGross = totals.filter((t) => t.gross !== null);
-    const vsPars = totals.filter((t) => t.vsPar !== null).map((t) => t.vsPar);
+    const withGross = grossRounds(totals);
+    const vsPars = totals.map(vsPar18).filter(notNull);
     const best = withGross.length ? withGross.reduce((a, b) => (b.gross < a.gross ? b : a)) : null;
     const holes = rounds.flatMap((r) => r.holes).filter((h) => h.score !== null && h.par !== null);
     return {
@@ -1686,7 +1657,7 @@
 
     /* Score */
     const totals = rounds.map(roundTotals);
-    const withGross = totals.filter((t) => t.gross !== null);
+    const withGross = grossRounds(totals);
     const best = withGross.length ? withGross.reduce((a, b) => (b.gross < a.gross ? b : a)) : null;
     const worst = withGross.length ? withGross.reduce((a, b) => (b.gross > a.gross ? b : a)) : null;
     const scored = holes.filter((h) => h.score !== null && h.par !== null);
@@ -1698,7 +1669,7 @@
     const score = {
       avgGross: rnd(meanOf(withGross.map((t) => t.gross)), 1), avgGrossDelta: recentDelta(withGross.map((t) => t.gross), 1),
       avgNet: null, avgNetDelta: null,
-      avgToPar: rnd(meanOf(totals.filter((t) => t.vsPar !== null).map((t) => t.vsPar)), 1),
+      avgToPar: rnd(meanOf(totals.map(vsPar18).filter(notNull)), 1),
       best: best ? best.gross : null, bestToPar: best ? best.vsPar : null,
       worst: worst ? worst.gross : null, worstToPar: worst ? worst.vsPar : null,
       played: rounds.length, byDistance: [],
@@ -1719,7 +1690,7 @@
     };
 
     /* Fairway */
-    const fw = holes.filter((h) => h.par !== 3 && h.fairway);
+    const fw = holes.filter((h) => h.fairway && fairwayApplies(h.par, h.fairway));
     const fwPct = (hs) => pctR(hs.filter((h) => h.fairway === FIR_HIT).length, hs.length);
     const tee = holes.map((h) => h.shots.find((S) => S.cat === 'driving')).filter(Boolean);
     const teeDist = (list) => rnd(meanOf(list.map((S) => S.travel).filter(notNull)), 0);
@@ -1834,7 +1805,7 @@
   function trendRoundOf(r) {
     const hs = r.holes;
     const tee = hs.map((h) => h.shots.find((S) => S.cat === 'driving')).filter((S) => S && S.travel !== null);
-    const fw = hs.filter((h) => h.par !== 3 && h.fairway);
+    const fw = hs.filter((h) => h.fairway && fairwayApplies(h.par, h.fairway));
     const girH = hs.filter((h) => h.gir !== null);
     const pH = hs.filter((h) => h.putts !== null);
     const girP = hs.filter((h) => h.gir === true && h.putts !== null);
@@ -1875,7 +1846,7 @@
       metrics.sg[key] = okShots.length ? rnd(perRoundSg(sumOf(okShots.map((S) => S.sg))), 2) : null;
       metrics.distance[key] = rnd(meanOf(ks.filter((S) => S.cat !== 'putting' && S.travel !== null).map((S) => S.travel)), 1);
 
-      const drv = ks.filter((S) => S.cat === 'driving' && S.hole.fairway && S.hole.par !== 3);
+      const drv = ks.filter((S) => S.cat === 'driving' && S.hole.fairway && fairwayApplies(S.hole.par, S.hole.fairway));
       metrics.fairways[key] = pctR(drv.filter((S) => S.hole.fairway === FIR_HIT).length, drv.length);
 
       const atk = ks.filter((S) => S.hole.attack === S && S.hole.attackInfo);
@@ -2002,7 +1973,56 @@
   }
 
   // Recalculé à chaque affichage : SG, KPI, 6 dernières parties
+  // Libellé "il y a 2 h" du dernier enregistrement du brouillon
+  function agoLabel(ms) {
+    const min = Math.max(0, Math.round((Date.now() - ms) / 60000));
+    if (min < 1) return "à l'instant";
+    if (min < 60) return `il y a ${min} min`;
+    return `il y a ${Math.round(min / 60)} h`;
+  }
+
+  // Carte "Partie en cours" (point 29) : visible tant qu'un brouillon existe
+  function renderResumeCard() {
+    const root = document.getElementById('dash-resume');
+    if (!root) return;
+    const d = loadDraft();
+    if (!d) { root.innerHTML = ''; root.hidden = true; return; }
+    const total = d.round.holes.length;
+    const hole = d.round.holes[Math.min(Math.max(Number(d.idx) || 0, 0), total - 1)];
+    const meta = [d.round.courseName || 'Parcours sans nom', `Trou ${hole.number} sur ${total}`, d.screen === 'saisie-detaillee' ? 'Saisie détaillée' : 'Saisie rapide', agoLabel(d.savedAt)];
+    root.hidden = false;
+    root.innerHTML = `
+      <div class="card resume-card">
+        <div class="resume-card__text">
+          <div class="resume-card__title">Partie en cours</div>
+          <div class="resume-card__meta">${meta.map(appEscapeHtml).join(' · ')}</div>
+        </div>
+        <div class="resume-card__actions">
+          <button type="button" class="resume-card__btn is-primary" data-resume>Reprendre</button>
+          <button type="button" class="resume-card__btn" data-resume-discard>Abandonner</button>
+        </div>
+      </div>`;
+    root.querySelector('[data-resume]').addEventListener('click', resumeDraft);
+    root.querySelector('[data-resume-discard]').addEventListener('click', discardDraft);
+  }
+
+  function resumeDraft() {
+    const d = loadDraft();
+    if (!d) { renderResumeCard(); return; }
+    currentRound = restoreRound(d.round);
+    showScreen(d.screen); // 1ʳᵉ ouverture : l'init charge d'abord une partie vierge, restore() la remplace aussitôt
+    const api = d.screen === 'saisie-detaillee' ? saisieDetaillee : saisieRapide;
+    if (api) api.restore(d);
+  }
+
+  async function discardDraft() {
+    if (!(await appConfirm('Abandonner la partie en cours ? Ce qui a été saisi sera perdu.', { confirmLabel: 'Abandonner', danger: true }))) return;
+    clearDraft();
+    renderResumeCard();
+  }
+
   function renderDashboard() {
+    renderResumeCard();
     const data = computeDashboard();
     const sg = data.strokesGained;
     const hasTotal = sg.total !== null && sg.total !== undefined;
@@ -2166,7 +2186,7 @@
       const withData = played.filter((c) => Object.values(zc[c] || {}).some((n) => n > 0));
       const counts = clubState.greenClubs.includes('All') ? (zc.All || {}) : sumZoneCounts(clubState.greenClubs.map((c) => zc[c]));
       dispersion = `
-        <article class="card chart-card insights_chart">
+        <article class="card chart-card">
           <div class="chart-card__head"><div><div class="chart-card__title">Dispersion sur le green</div><div class="chart-card__unit">(% des attaques)</div></div></div>
           <div class="insights_chips" data-green-clubs>${chipGroupHtml([{ value: 'All', label: 'Tous' }, ...withData.map((c) => ({ value: c, label: c }))], clubState.greenClubs)}</div>
           ${renderZoneWheel(counts, 'green17')}
@@ -2213,7 +2233,7 @@
       ${renderBarChart('Strokes gained', rows(d.sg), { centered: true, format: fmtSG, caption: '(Vs Tour)' })}
       ${renderBarChart('Proximité médiane', rows(d.proximity), { unit: ' m', format: (v) => v.toFixed(1), caption: '(m)' })}
       ${renderBarChart('Coups par partie', rows(d.shotsPerRound))}
-      <article class="card chart-card insights_chart">
+      <article class="card chart-card">
         <div class="chart-card__head"><div><div class="chart-card__title">Dispersion sur le green</div><div class="chart-card__unit">(% des attaques)</div></div></div>
         <div class="insights_chips" data-green-buckets>${chipGroupHtml([{ value: 'All', label: 'Toutes' }, ...DISTANCE_BUCKETS.map((b) => ({ value: b, label: b }))], distanceState.buckets)}</div>
         ${renderZoneWheel(counts, 'green17')}
@@ -2482,10 +2502,18 @@
       return list;
     }
 
+    async function confirmDeleteRound(id) {
+      const r = roundListData().find((x) => x.id === id);
+      const label = r ? `${r.course} du ${new Date(r.date).toLocaleDateString('fr-FR')}` : 'cette partie';
+      const ok = await appConfirm(`Supprimer ${label} ? Les coups copiés dans Putting et Wedging seront supprimés aussi. Cette action est irréversible.`, { confirmLabel: 'Supprimer', danger: true });
+      if (!ok || !deleteSavedRound(id)) return;
+      refreshHistorique();
+    }
+
     function render() {
       const list = getFilteredSorted();
       const visible = list.slice(0, visibleCount);
-      renderRoundTable(document.getElementById('hist-roundTable'), visible);
+      renderRoundTable(document.getElementById('hist-roundTable'), visible, null, confirmDeleteRound);
       document.getElementById('hist-loadMore').style.display = visibleCount >= list.length ? 'none' : 'inline-flex';
     }
 
@@ -2567,6 +2595,17 @@
      2) on filtre cette liste localement à chaque frappe,
      3) au choix d'un parcours, on charge son profil (par, handicap, distances par départ). */
   const COURSE_API = 'https://api.flyawaygolf.com/v2';
+  const COURSE_API_TIMEOUT = 10000; // ms : sans réponse, la recherche passe en erreur et le parcours se saisit à la main
+
+  async function fetchCourseJson(url) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), COURSE_API_TIMEOUT);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } finally { clearTimeout(timer); }
+  }
   let nearbyCourses = [];
   let nearbyStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
   let nearbyError = '';
@@ -2574,7 +2613,6 @@
   let courseError = '';
   let courseToken = 0; // invalide la réponse d'un chargement devenu obsolète
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // Comparaison sans accents ni majuscules ("evian" trouve "Évian")
   const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -2620,9 +2658,7 @@
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          const res = await fetch(`${COURSE_API}/golfs?lat=${latitude}&long=${longitude}&limit=100`);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const json = await res.json();
+          const json = await fetchCourseJson(`${COURSE_API}/golfs?lat=${latitude}&long=${longitude}&limit=100`);
           nearbyCourses = (json.data && json.data.golfs && json.data.golfs.items) || [];
           nearbyStatus = 'ready';
         } catch (err) {
@@ -2653,9 +2689,9 @@
     if (!list) return;
     const matches = findCourses();
     list.innerHTML = matches.map((c) => `
-      <li><button type="button" class="new-round_result" data-course-slug="${esc(c.slug)}">
-        <span class="new-round_result-name">${esc(c.name)}</span>
-        ${c.city ? `<span class="new-round_result-city">${esc(c.city)}</span>` : ''}
+      <li><button type="button" class="new-round_result" data-course-slug="${appEscapeHtml(c.slug)}">
+        <span class="new-round_result-name">${appEscapeHtml(c.name)}</span>
+        ${c.city ? `<span class="new-round_result-city">${appEscapeHtml(c.city)}</span>` : ''}
       </button></li>`).join('');
     list.hidden = !matches.length;
     refreshCourseStatus();
@@ -2702,9 +2738,7 @@
     renderCourseResults(); // liste masquée : le parcours choisi n'est plus une suggestion
 
     try {
-      const res = await fetch(`${COURSE_API}/golfs/profile/${encodeURIComponent(slug)}`);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const json = await res.json();
+      const json = await fetchCourseJson(`${COURSE_API}/golfs/profile/${encodeURIComponent(slug)}`);
       if (token !== courseToken) return; // l'utilisateur a modifié le champ entre-temps
       const mapped = mapCourseProfile(json.data);
       newRound.course = { ...mapped, name: mapped.name || picked.name, city: picked.city || mapped.city };
@@ -2768,7 +2802,7 @@
             <label class="new-round_field is-course">
               <span class="new-round_field-icon">${icon('search')}</span>
               <span class="new-round_field-text">
-                <input class="new-round_field-input" name="course" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Rechercher un parcours" aria-label="Rechercher un parcours" value="${esc(newRound.courseQuery)}">
+                <input class="new-round_field-input" name="course" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Rechercher un parcours" aria-label="Rechercher un parcours" value="${appEscapeHtml(newRound.courseQuery)}">
                 <span class="new-round_field-bottom" data-course-status></span>
               </span>
               <span class="new-round_field-chevron">${icon('chevronDown')}</span>
@@ -2877,20 +2911,24 @@
     if (nearbyStatus === 'error') nearbyStatus = 'idle'; // la réouverture retente la recherche
     renderNewRound();
     newRoundTrigger = trigger || null;
-    document.body.style.overflow = 'hidden';
+    if (!newRoundEl.classList.contains('is-open')) lockScroll();
     document.addEventListener('keydown', onNewRoundKeydown);
     newRoundEl.classList.add('is-open');
     newRoundEl.querySelector('[data-nr-close]').focus();
   }
 
   function closeNewRound() {
+    if (!newRoundEl || !newRoundEl.classList.contains('is-open')) return;
     newRoundEl.classList.remove('is-open');
-    document.body.style.overflow = '';
+    unlockScroll();
     document.removeEventListener('keydown', onNewRoundKeydown);
     if (newRoundTrigger) newRoundTrigger.focus();
   }
 
-  function startNewRound() {
+  async function startNewRound() {
+    // Une partie en cours (brouillon) serait remplacée : confirmation d'abord
+    if (loadDraft() && !(await appConfirm('Une partie est déjà en cours. La remplacer par une nouvelle ?', { confirmLabel: 'Remplacer', danger: true }))) return;
+    clearDraft();
     // À brancher : POST /api/rounds avec currentRound pour créer la partie
     const startHole = Number(newRound.start);
     const holeCount = Number(newRound.count);
@@ -2969,6 +3007,7 @@
     const fairwayCard = fairwayRoot && fairwayRoot.closest('.saisie-rapide_card');
     const fairwayOptions = [...screen.querySelectorAll('[role="radio"]')];
     const [prevBtn, nextBtn] = screen.querySelectorAll('.saisie-rapide_nav-button');
+    const finishBtn = q('[data-finish-round]');
 
     /* ---------- État ---------- */
     let round = null;    // partie en cours (currentRound)
@@ -2997,6 +3036,30 @@
       renderHole();
     }
 
+    /* ---------- Brouillon (point 29) ---------- */
+    const hasEntryData = (e) => e.score !== null || e.putts !== null || e.fairway !== null || e.green !== null;
+    function persistDraft() {
+      if (!round || round._saved || !entries.some(hasEntryData)) return; // rien de saisi : on ne remplace pas un brouillon existant
+      saveDraft('saisie-rapide', round, { idx, entries });
+    }
+
+    // Reprise : entrées relues avec validation (le brouillon vient du stockage local)
+    function restoreEntry(raw) {
+      const e = raw && typeof raw === 'object' ? raw : {};
+      const int = (v, min, max) => (Number.isInteger(v) && v >= min && v <= max ? v : null);
+      return {
+        score: int(e.score, 1, PAD_MAX), putts: int(e.putts, 0, 9),
+        fairway: typeof e.fairway === 'string' ? e.fairway : null, green: typeof e.green === 'string' ? e.green : null,
+      };
+    }
+    function restore(d) {
+      round = ensureRound();
+      entries = round.holes.map((_, i) => restoreEntry(d.entries && d.entries[i]));
+      round.entries = entries;
+      idx = Number.isInteger(d.idx) ? Math.min(Math.max(d.idx, 0), round.holes.length - 1) : 0;
+      renderHole();
+    }
+
     /* ---------- Affichage ---------- */
     function renderBadge() {
       if (!badgeEl) return;
@@ -3011,7 +3074,7 @@
       entries.forEach((e, i) => {
         const par = round.holes[i].par;
         if (e.score !== null && par !== null) { vsPar += e.score - par; vsParHoles++; }
-        if (e.fairway !== null && par !== 3) { firHoles++; if (e.fairway === FAIRWAY_HIT) fir++; }
+        if (e.fairway !== null && fairwayApplies(par, e.fairway)) { firHoles++; if (e.fairway === FAIRWAY_HIT) fir++; }
         if (e.green !== null) { girHoles++; if (isOnGreen(e.green)) gir++; }
         if (e.putts !== null) { putts += e.putts; puttsHoles++; }
       });
@@ -3047,7 +3110,7 @@
     }
 
     // Met à jour résumé + bouton après chaque saisie
-    function refresh() { renderStats(); renderNav(); }
+    function refresh() { renderStats(); renderNav(); persistDraft(); }
 
     function renderHole() {
       const hole = round.holes[idx];
@@ -3072,6 +3135,7 @@
       renderGreenWheel();
       renderStats();
       renderNav();
+      persistDraft();
     }
 
     // Libellé d'un choix de fairway (sert de valeur enregistrée)
@@ -3195,14 +3259,29 @@
       renderHole();
     }
 
-    function finishRound() {
+    // count : nombre de trous à enregistrer (fin anticipée) ; sans valeur = tous les trous de la partie
+    function finishRound(count) {
+      if (round._saved) return;
       // À brancher : POST /api/rounds avec round (round.entries contient la saisie de chaque trou)
-      document.dispatchEvent(new CustomEvent('stats:round-finished', { detail: round }));
+      const n = count || round.holes.length;
+      const detail = n === round.holes.length ? round
+        : { ...round, holeCount: n, holes: round.holes.slice(0, n), entries: entries.slice(0, n) };
+      document.dispatchEvent(new CustomEvent('stats:round-finished', { detail }));
+      round._saved = true;
       showScreen('dashboard');
+    }
+
+    // Terminer la partie ici (point 30) : les trous jusqu'au dernier score saisi sont enregistrés
+    async function finishEarly() {
+      if (!round || round._saved) return;
+      const played = entries.reduce((n, e, i) => (e.score !== null ? i + 1 : n), 0);
+      const count = await askFinishRound(played, round.holes.length);
+      if (count) finishRound(count);
     }
 
     if (prevBtn) prevBtn.addEventListener('click', () => go(-1));
     if (nextBtn) nextBtn.addEventListener('click', () => go(1));
+    if (finishBtn) finishBtn.addEventListener('click', finishEarly);
 
     /* ---------- Pavé numérique du score ---------- */
     const pad = { el: null, value: '', fresh: false };
@@ -3333,7 +3412,7 @@
       });
     }
 
-    saisieRapide = { load };
+    saisieRapide = { load, restore };
     load();
   }
 
@@ -3446,6 +3525,39 @@
       fairways = round.holes.map(() => null);
       idx = 0;
       sel = 0;
+      setHeader(false);
+      popupRoot.innerHTML = '';
+      renderAll();
+    }
+
+    /* ---------- Brouillon (point 29) ---------- */
+    const holeTouched = (i) => fairways[i] !== null
+      || holes[i].some((s) => s.club !== null || s.distance !== null || s.penalty > 0 || s.result !== null || s.green !== null);
+    function persistDraft() {
+      if (!round || round._saved || !holes.some((_, i) => holeTouched(i))) return; // rien de saisi : on ne remplace pas un brouillon existant
+      saveDraft('saisie-detaillee', round, { idx, sel, holes, fairways });
+    }
+
+    // Reprise : coups relus avec validation (le brouillon vient du stockage local)
+    function restoreShot(raw, first) {
+      const s = raw && typeof raw === 'object' ? raw : {};
+      const text = (v) => (typeof v === 'string' && v ? v : null);
+      return {
+        club: text(s.club), lie: LIES.includes(s.lie) ? s.lie : (first ? 'Tee' : null),
+        distance: Number.isFinite(s.distance) && s.distance >= 0 ? Math.min(999.9, s.distance) : null,
+        penalty: Number.isInteger(s.penalty) && s.penalty >= 0 && s.penalty <= 9 ? s.penalty : 0,
+        result: text(s.result), green: text(s.green),
+      };
+    }
+    function restore(d) {
+      round = ensureRound();
+      holes = round.holes.map((_, i) => {
+        const list = d.holes && Array.isArray(d.holes[i]) ? d.holes[i].slice(0, SD_MAX_SHOTS) : [];
+        return list.length ? list.map((s, k) => restoreShot(s, k === 0)) : [blankShot(true)];
+      });
+      fairways = round.holes.map((_, i) => (['Gauche', 'Centre', 'Droite'].includes(d.fairways && d.fairways[i]) ? d.fairways[i] : null));
+      idx = Number.isInteger(d.idx) ? Math.min(Math.max(d.idx, 0), round.holes.length - 1) : 0;
+      sel = Number.isInteger(d.sel) ? Math.min(Math.max(d.sel, 0), holes[idx].length - 1) : 0;
       setHeader(false);
       popupRoot.innerHTML = '';
       renderAll();
@@ -3613,14 +3725,14 @@
       let fir = 0, gir = 0, putts = 0, puttsHoles = 0, vsParTotal = 0, vsParHoles = 0;
       holes.forEach((_, i) => {
         const h = holeSummary(i);
-        if (round.holes[i].par !== 3 && h.fairway === FAIRWAY_HIT) fir++;
+        if (fairwayApplies(round.holes[i].par, h.fairway) && h.fairway === FAIRWAY_HIT) fir++;
         if (h.gir) gir++;
         if (h.putts !== null) { putts += h.putts; puttsHoles++; }
         // Score total par rapport au par : trous rentrés dont le par est connu
         if (h.score !== null && round.holes[i].par !== null) { vsParTotal += h.score - round.holes[i].par; vsParHoles++; }
       });
-      // FIR sur les trous hors par 3 (par inconnu = compté), GIR sur tous les trous, putts = total de la partie
-      const firTotal = round.holes.filter((h) => h.par !== 3).length;
+      // FIR sur les par 4 et 5 (par inconnu : seulement si un fairway est saisi), GIR sur tous les trous, putts = total de la partie
+      const firTotal = round.holes.filter((h, i) => fairwayApplies(h.par, fairways[i])).length;
       setText(d('fir'), `${fir}/${firTotal}`);
       setText(d('gir'), `${gir}/${round.holes.length}`);
       setText(d('putts'), puttsHoles ? String(putts) : '--');
@@ -3672,6 +3784,7 @@
       renderGreenWheel();
       renderStats();
       renderNav();
+      persistDraft();
     }
 
     // Après toute modification : balle rentrée → retire les coups vides en trop ;
@@ -3832,7 +3945,7 @@
       if (!keypad) return;
       if (keypad.field === 'penalty') keypad.value = key; // un seul chiffre (0 à 9)
       else if (keypad.value === '0') keypad.value = key;  // pas de zéro en tête
-      else if (/\.\d$/.test(keypad.value) || keypad.value.replace('.', '').length >= 5) return; // 1 décimale max, 5 chiffres max
+      else if (/\.\d$/.test(keypad.value) || (!keypad.value.includes('.') && keypad.value.length >= 3)) return; // 1 décimale max, 3 chiffres avant la virgule
       else keypad.value += key;
       keypadDisplay();
     };
@@ -3846,7 +3959,7 @@
     window.statsSdKeypadConfirm = () => {
       if (!keypad || !round) return;
       const v = parseFloat(keypad.value);
-      if (keypad.field === 'distance') shot().distance = Number.isNaN(v) ? null : Math.max(0, round1(v));
+      if (keypad.field === 'distance') shot().distance = Number.isNaN(v) ? null : Math.min(999.9, Math.max(0, round1(v)));
       else shot().penalty = Number.isNaN(v) ? 0 : Math.min(9, Math.max(0, Math.trunc(v)));
       keypad = null;
       renderResultPopup(false);
@@ -3867,15 +3980,31 @@
       renderAll();
     }
 
-    function finishRound() {
+    // count : nombre de trous à enregistrer (fin anticipée) ; sans valeur = tous les trous de la partie
+    function finishRound(count) {
+      if (round._saved) return;
       // À brancher : POST /api/rounds avec round (round.entries contient la saisie de chaque trou)
       round.entries = holes.map((_, i) => holeSummary(i));
-      document.dispatchEvent(new CustomEvent('stats:round-finished', { detail: round }));
+      const n = count || round.holes.length;
+      const detail = n === round.holes.length ? round
+        : { ...round, holeCount: n, holes: round.holes.slice(0, n), entries: round.entries.slice(0, n) };
+      document.dispatchEvent(new CustomEvent('stats:round-finished', { detail }));
+      round._saved = true;
       showScreen('dashboard');
+    }
+
+    // Terminer la partie ici (point 30) : les trous jusqu'au dernier trou rentré sont enregistrés
+    async function finishEarly() {
+      if (!round || round._saved) return;
+      const played = holes.reduce((n, _, i) => (holeSummary(i).holed ? i + 1 : n), 0);
+      const count = await askFinishRound(played, round.holes.length);
+      if (count) finishRound(count);
     }
 
     prevBtn.addEventListener('click', () => go(-1));
     nextBtn.addEventListener('click', () => go(1));
+    const finishBtn = screen.querySelector('[data-finish-round]');
+    if (finishBtn) finishBtn.addEventListener('click', finishEarly);
 
     // Fonds d'image (mêmes images que la saisie rapide)
     findImage(GREEN_BG_BASE).then((url) => {
@@ -3893,7 +4022,7 @@
     });
     findImage(FAIRWAY_BG_BASE).then((url) => { if (url) fairwayRoot.style.backgroundImage = `url("${url}")`; });
 
-    saisieDetaillee = { load };
+    saisieDetaillee = { load, restore };
     load();
   }
 
@@ -3971,6 +4100,7 @@
       let wasActive = statsPage.classList.contains('active');
       new MutationObserver(() => {
         const nowActive = statsPage.classList.contains('active');
+        if (!nowActive && wasActive) { closeNewRound(); closeKpiPicker(); } // pas de verrou de défilement laissé hors de Stats
         if (nowActive && !wasActive && initialized.has(currentScreen) && SCREEN_REFRESH[currentScreen]) SCREEN_REFRESH[currentScreen]();
         wasActive = nowActive;
       }).observe(statsPage, { attributes: true, attributeFilter: ['class'] });
