@@ -5,6 +5,20 @@
    =========================================================================== */
 
 /* ---------------------------------------------------------------------------
+   THÈME — sombre (par défaut) ou clair. Le thème clair est défini dans
+   theme-light.css et s'active avec <html data-theme="light">. Le réglage est
+   enregistré dans golfAppState.settings.theme (Menu > Apparence) ; un petit
+   script dans le <head> d'index.html le pose avant le premier affichage.
+   --------------------------------------------------------------------------- */
+function applyAppTheme(theme) {
+  const isLight = theme === "light";
+  document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
+  // Couleur de la barre du navigateur (Android, Safari)
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", isLight ? "#f2f5ef" : "#050505");
+}
+
+/* ---------------------------------------------------------------------------
    PAVÉ NUMÉRIQUE — clavier numérique réutilisable (distance finale, rayon de
    validation, etc.). Nécessite les classes .app-keypad / .app-keypad-value
    (voir commun.css). Couleurs communes à tous les modules (tokens --wg-*

@@ -40,7 +40,7 @@ function renderPuttingTab() {
   <!-- Barre nav parcours / exercices -->
   <div class="putting_tabs">
     <a href="#" class="putting_tab is-active" data-tab="parcours" onclick="selectPuttingTab(event, 'parcours')">
-      <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
+      <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h13l-2.5 4L17 12H4"/></svg>
       <div class="putting_tab-text">
         <div class="putting_tab-title">Parcours</div>
       </div>
@@ -383,7 +383,7 @@ function renderPuttingTab() {
   <!-- Barre nav parcours / exercices -->
   <div class="putting_tabs">
     <a href="#" class="putting_tab" data-tab="parcours" onclick="selectPuttingTab(event, 'parcours')">
-      <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
+      <svg class="putting_tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h13l-2.5 4L17 12H4"/></svg>
       <div class="putting_tab-text">
         <div class="putting_tab-title">Parcours</div>
       </div>
@@ -484,7 +484,7 @@ function renderPuttingTab() {
 <!-- Boutons flottants -->
 <div class="fab-group" data-fab="parcours">
   <button class="fab-button" onclick="openNewParcoursModal()">
-    <svg class="fab-button_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/></svg>
+    <svg class="fab-button_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h13l-2.5 4L17 12H4"/></svg>
     <span class="fab-button_text">Nouveau<br>parcours</span>
   </button>
   <button class="fab-button" onclick="startQuickExercise()">
@@ -2070,7 +2070,7 @@ let quickStatsInfoOpen = false;
 // Icônes et helper partagés par l'écran Exercice rapide et l'écran Nouveau parcours
 const QUICK_ICON_PATHS = {
   pin: '<path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/>',
-  flag: '<path d="M6 21V4a1 1 0 0 1 1-1h1v6h5l-3-3"/>',
+  flag: '<path d="M4 21V4"/><path d="M4 4h13l-2.5 4L17 12H4"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
   bars: '<path d="M5 21V10"/><path d="M12 21V4"/><path d="M19 21v-7"/>',
   distance: '<path d="M4 12h16"/><path d="M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>',

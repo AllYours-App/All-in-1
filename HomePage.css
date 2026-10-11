@@ -89,17 +89,6 @@
   height: 20px;
 }
 
-.profile_indicator {
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-green);
-  border: 2px solid rgba(7, 15, 22, 0.9);
-}
-
 /* ============ BOUTONS CIRCULAIRES ============ */
 
 .orbit-buttons_wrapper {

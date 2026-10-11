@@ -20,6 +20,7 @@ let settings = {
   speedUnit: "mph",
   distanceUnit: "m", // "ft" = yards (voir MENU_M_TO_YD)
   defaultRadarId: "radar_default",
+  theme: "dark", // "dark" ou "light" (voir applyAppTheme dans commun.js)
 };
 
 let radars = [
@@ -247,6 +248,7 @@ function topRowHtml(showLogout = false) {
 /* ==========================================================================
    Écran Menu (paramètres)
    ========================================================================== */
+const THEME_OPTIONS = [['dark', 'Sombre'], ['light', 'Clair']];
 const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
 const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'KPH']];
 const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'KPH']];
@@ -302,6 +304,10 @@ function renderMenuTab() {
       <h3>Profil</h3>
       <div class="field-row field-row-link" onclick="renderGolfBagScreen()"><span class="label">Mon sac de golf</span><span class="val">${nbClubs} club${nbClubs > 1 ? 's' : ''} &#8250;</span></div>
       <div class="field-row field-row-link" onclick="renderDistancesScreen()"><span class="label">Mes distances</span><span class="val">&#8250;</span></div>
+    </div>
+    <div class="field-list">
+      <h3>Apparence</h3>
+      ${settingSelectRow('Thème', 'theme', THEME_OPTIONS)}
     </div>
     <div class="field-list">
       <h3>Conditions de référence</h3>
@@ -374,6 +380,7 @@ function updateMenuSetting(key, value) {
     convertStoredDistances(settings.distanceUnit, value);
   }
   settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
+  if (key === 'theme') applyAppTheme(value);
   saveMenuState();
 }
 
@@ -1102,6 +1109,7 @@ window.MenuData = {
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   loadMenuState();
+  applyAppTheme(settings.theme); // met aussi à jour la couleur de la barre du navigateur
   warnMenuLegalPlaceholders();
   menuBackBtn.addEventListener('click', () => backTarget());
   renderMenuTab();

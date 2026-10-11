@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Golf App</title>
 <script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
+<script>try{var st=(JSON.parse(localStorage.getItem("golfAppState"))||{}).settings;if(st&&st.theme==="light"){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f2f5ef")}}catch(e){}</script>
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,18 +14,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Golf App">
-<link rel="stylesheet" href="base.css?v=39">
-<link rel="stylesheet" href="commun.css?v=39">
-<link rel="stylesheet" href="HomePage.css?v=39">
-<link rel="stylesheet" href="parcours-ui.css?v=39">
-<link rel="stylesheet" href="wedging.css?v=39">
-<link rel="stylesheet" href="gym.css?v=39">
-<link rel="stylesheet" href="putting.css?v=39">
-<link rel="stylesheet" href="vitesse.css?v=39">
-<link rel="stylesheet" href="stats.css?v=39">
-<link rel="stylesheet" href="menu.css?v=39">
-<link rel="stylesheet" href="auth.css?v=39">
-<script src="chart.umd.min.js?v=39"></script>
+<link rel="stylesheet" href="base.css?v=40">
+<link rel="stylesheet" href="commun.css?v=40">
+<link rel="stylesheet" href="HomePage.css?v=40">
+<link rel="stylesheet" href="parcours-ui.css?v=40">
+<link rel="stylesheet" href="wedging.css?v=40">
+<link rel="stylesheet" href="gym.css?v=40">
+<link rel="stylesheet" href="putting.css?v=40">
+<link rel="stylesheet" href="vitesse.css?v=40">
+<link rel="stylesheet" href="stats.css?v=40">
+<link rel="stylesheet" href="menu.css?v=40">
+<link rel="stylesheet" href="auth.css?v=40">
+<link rel="stylesheet" href="theme-light.css?v=40">
+<script src="chart.umd.min.js?v=40"></script>
 </head>
 <body>
 
@@ -56,7 +58,6 @@
         <circle cx="12" cy="8" r="3.4"/>
         <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>
       </svg>
-      <span class="profile_indicator"></span>
     </button>
 
     <!-- BOUTONS CIRCULAIRES -->
@@ -133,8 +134,9 @@
       <button class="orbit-button is-wedging" type="button" onclick="showPage('wedging')">
         <span class="orbit-button_icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 3l-6.5 13"/>
-            <path d="M12.5 16L5 19.5c-.7.4-.3 1.5.5 1.5H12c1.3 0 2.3-1 2.2-2.3z"/>
+            <path d="M17.5 2.5l-5 12.2"/>
+            <path d="M12.5 14.7L4 20.2c-.6.4-.3 1.3.4 1.3h9.6c.7 0 1.3-.5 1.4-1.1l.5-3.2c.1-.6-.3-1.1-.9-1.3z"/>
+            <path d="M6.5 18.7l2.6 1.4M9.2 17.3l2.6 1.4"/>
           </svg>
         </span>
         <span class="orbit-button_title">Wedging</span>
@@ -1060,18 +1062,18 @@
     }
   } catch (e) {}
 </script>
-<script src="app-shell.js?v=39"></script>
-<script src="commun.js?v=39"></script>
-<script src="sg-data.js?v=39"></script>
-<script src="strokes-gained.js?v=39"></script>
-<script src="HomePage.js?v=39"></script>
-<script src="parcours-ui.js?v=39"></script>
-<script src="wedging.js?v=39"></script>
-<script src="gym.js?v=39"></script>
-<script src="putting.js?v=39"></script>
-<script src="vitesse.js?v=39"></script>
-<script src="stats.js?v=39"></script>
-<script src="menu.js?v=39"></script>
-<script src="auth.js?v=39"></script>
+<script src="app-shell.js?v=40"></script>
+<script src="commun.js?v=40"></script>
+<script src="sg-data.js?v=40"></script>
+<script src="strokes-gained.js?v=40"></script>
+<script src="HomePage.js?v=40"></script>
+<script src="parcours-ui.js?v=40"></script>
+<script src="wedging.js?v=40"></script>
+<script src="gym.js?v=40"></script>
+<script src="putting.js?v=40"></script>
+<script src="vitesse.js?v=40"></script>
+<script src="stats.js?v=40"></script>
+<script src="menu.js?v=40"></script>
+<script src="auth.js?v=40"></script>
 </body>
 </html>

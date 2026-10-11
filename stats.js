@@ -140,15 +140,16 @@
     chevronDown: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 9l6 6 6-6"/></svg>`,
     trendUp: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 16l6-6 4 4 6-8"/><path d="M14 6h6v6"/></svg>`,
     trendDown: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 8l6 6 4-4 6 8"/><path d="M14 18h6v-6"/></svg>`,
-    club: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M18.5 3L11.5 17"/><path d="M11.5 17c-3.5.2-6.3 1.4-6.8 3-.2.8.6 1.3 2 1.3 3.2 0 5.7-1.4 6.3-3.2z"/></svg>`,
+    club: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M19 2.5L12 14.5"/><path d="M12 14.5c-4.6-.6-8.2.9-8.8 3.6-.5 2.2 2.1 3.8 6.1 3.6 4.1-.2 6.9-2 6.9-4.1 0-1.4-1.1-2.6-4.2-3.1z"/><path d="M7 18.6c1.3.7 3.3.8 5 .3"/></svg>`,
+    iron: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M18 2.5l-5 12.2"/><path d="M13 14.7l-8.3 1.5a1 1 0 0 0-.8 1.2l.7 3.4c.1.5.6.9 1.1.9h8.2c.6 0 1.2-.5 1.3-1.1l.9-5.1z"/><path d="M6.4 18h6.4M6.9 20.3h5.6"/></svg>`,
     flag: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg>`,
     bowl: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M10 21V5"/><path d="M10 5l6 2.2-6 2.2"/><ellipse cx="10" cy="20" rx="6.5" ry="2"/></svg>`,
-    wedge: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M19 3l-6.5 13"/><path d="M12.5 16L5 19.5c-.7.4-.3 1.5.5 1.5H12c1.3 0 2.3-1 2.2-2.3z"/></svg>`,
+    wedge: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M17.5 2.5l-5 12.2"/><path d="M12.5 14.7L4 20.2c-.6.4-.3 1.3.4 1.3h9.6c.7 0 1.3-.5 1.4-1.1l.5-3.2c.1-.6-.3-1.1-.9-1.3z"/><path d="M6.5 18.7l2.6 1.4M9.2 17.3l2.6 1.4"/></svg>`,
     putter: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M17 3l-4 15"/><path d="M6 21v-1.6c0-.8.6-1.4 1.4-1.4H15c.8 0 1.4.6 1.4 1.4V21z"/></svg>`,
     target: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>`,
     bird: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 008-8V7a4 4 0 00-7.3-2.3L2 20"/><path d="M20 7l2 .5-2 .5"/><path d="M10 18v3M14 17.8V21"/><path d="M7 18a6 6 0 003.8-10.6"/></svg>`,
-    bag: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M8.5 8.5c0-.8 1.5-1.3 3.5-1.3s3.5.5 3.5 1.3L14.5 20.5a1 1 0 01-1 .9h-3a1 1 0 01-1-.9z"/><path d="M10 7.5L9 3M12.5 7.2V2.5M15 7.5l1-4"/><path d="M9.2 14h5.6"/></svg>`,
-    arc: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M3 19C6 7 15 4 21 9"/><path d="M17 9.5l4-.5-1.5-3.8"/><circle cx="4.5" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg>`,
+    bag: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7.5 10h9l-1 10.2a1.3 1.3 0 0 1-1.3 1.2h-4.4a1.3 1.3 0 0 1-1.3-1.2z"/><path d="M10 10L8.6 3.2"/><path d="M12 10V2.2"/><path d="M14 10l1.4-6.8"/><circle cx="8.4" cy="2.9" r="1.1"/><circle cx="12" cy="2" r="1.1"/><circle cx="15.6" cy="2.9" r="1.1"/><path d="M8.2 14.5h7.6"/><path d="M16.5 11.5c2.2.6 3 2.4 2.5 5"/></svg>`,
+    arc: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="5" cy="14" r="2"/><path d="M18 16V4"/><path d="M18 4l4 2-4 2"/><path d="M3 20.5h18"/><path d="M5.5 18.5L3 20.5l2.5 2M18.5 18.5l2.5 2-2.5 2"/></svg>`,
     bars: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 20V11"/><path d="M12 20V6"/><path d="M19 20v-7"/></svg>`,
     calendar: `<svg viewBox="0 0 24 24" ${STROKE}><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>`,
     sliders: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></svg>`,
@@ -3488,7 +3489,7 @@
       { value: 'court_gauche', label: 'Court gauche' }, { value: 'court', label: 'Court' }, { value: 'court_droite', label: 'Court droite' },
     ];
     const resultLabel = (v) => (RESULTS.find((r) => r.value === v) || {}).label || '--';
-    const ICON_OF = { wood: icon('club'), iron: icon('club'), putter: icon('putter') };
+    const ICON_OF = { wood: icon('club'), iron: icon('iron'), putter: icon('putter') };
 
     /* ---------- État ---------- */
     let round = null;   // partie en cours (currentRound)
