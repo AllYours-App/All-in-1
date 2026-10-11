@@ -1,0 +1,3458 @@
+/* --------------------------- PARTIE : GYM --------------------------------- */
+/* ==========================================================================
+   GYM — Design tokens
+   ========================================================================== */
+
+/* Variables --gym-* déplacées dans base.css (bloc :root commun) */
+/* ==========================================================================
+   GYM — Base / Reset
+   ========================================================================== */
+
+/* box-sizing / marges html,body : déjà couverts par le reset global de base.css */
+
+.gym-app {
+  background: var(--gym-bg);
+  color: var(--gym-text);
+  font-family: var(--gym-font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
+}
+
+:where(#page-gym) img {
+  max-width: 100%;
+  display: block;
+}
+
+:where(#page-gym) input,
+:where(#page-gym) select,
+:where(#page-gym) textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* button{} et a{} : déjà couverts par le reset global de base.css
+   (appearance:none / -webkit-appearance:none fusionnés dans le button{} de base.css) */
+
+:where(#page-gym) ul,
+:where(#page-gym) ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+:where(#page-gym) :is(h1, h2, h3, h4, p) {
+  margin: 0;
+}
+
+:where(#page-gym) input:focus-visible,
+:where(#page-gym) button:focus-visible,
+:where(#page-gym) select:focus-visible,
+:where(#page-gym) [tabindex]:focus-visible {
+  outline: 2px solid var(--gym-accent);
+  outline-offset: 2px;
+}
+
+:where(#page-gym) ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+:where(#page-gym) ::-webkit-scrollbar-thumb {
+  background: var(--gym-border-strong);
+  border-radius: var(--gym-radius-pill);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- App shell ---------------------------------------------------------- */
+
+.gym-app {
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 40px;
+}
+
+@media (min-width: 480px) {
+  .gym-app {
+    max-width: var(--app-max-width);
+  }
+}
+
+/* Structure + position fixe du header : voir commun.css (#page-gym .gym-header).
+   Couleurs pilotées par les variables --app-header-* définies ci-dessus. */
+#page-gym {
+  --app-header-bg: var(--gym-bg);
+  --app-header-border: var(--gym-border);
+  --app-header-text: var(--gym-text);
+  --app-header-text-secondary: var(--gym-text);
+}
+
+.gym-main {
+  padding: var(--app-page-top) var(--app-padding-x) 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 400px) {
+  .gym-main {
+    padding: var(--app-page-top) var(--app-padding-x) 80px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-main {
+    padding: var(--app-page-top) var(--app-padding-x) 70px;
+    gap: 16px;
+  }
+}
+
+.gym-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gym-accent);
+}
+
+.gym-title-xl {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.gym-subtitle {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--gym-text-secondary);
+  max-width: 60ch;
+}
+
+.gym-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 400px) {
+  .gym-eyebrow {
+    font-size: 11px;
+  }
+  
+  .gym-title-xl {
+    font-size: 28px;
+  }
+  
+  .gym-subtitle {
+    font-size: 14px;
+  }
+  
+  .gym-section-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-eyebrow {
+    font-size: 11px;
+  }
+  
+  .gym-title-xl {
+    font-size: 24px;
+  }
+  
+  .gym-subtitle {
+    font-size: 13px;
+  }
+  
+  .gym-section-title {
+    font-size: 16px;
+  }
+}
+
+.gym-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gym-gap-md);
+}
+
+.gym-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gym-text-secondary);
+  transition: color var(--gym-speed-fast) var(--gym-ease);
+}
+
+@media (hover: hover) {
+  .gym-link:hover {
+    color: var(--gym-text);
+  }
+}
+
+.gym-link svg {
+  width: 16px;
+  height: 16px;
+}
+/* ==========================================================================
+   GYM — Composants UI réutilisables
+   ========================================================================== */
+
+/* ---- Carte de base ------------------------------------------------------- */
+
+.gym-app .card {
+  background: var(--gym-card);
+  border: 1px solid var(--gym-border);
+  border-radius: var(--gym-radius-lg);
+  padding: var(--gym-gap-lg);
+}
+
+@media (max-width: 400px) {
+  :where(.gym-app) .card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  :where(.gym-app) .card {
+    padding: 14px;
+  }
+}
+
+:where(.gym-app) .card--interactive {
+  transition: border-color var(--gym-speed-base) var(--gym-ease),
+    background var(--gym-speed-base) var(--gym-ease),
+    transform var(--gym-speed-fast) var(--gym-ease);
+}
+
+:where(.gym-app) .card--interactive:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  :where(.gym-app) .card--interactive:hover {
+    border-color: var(--gym-border-strong);
+    background: var(--gym-card-hover);
+  }
+}
+
+.card--accent {
+  border-color: var(--gym-accent-border);
+  background: linear-gradient(180deg, rgba(214, 255, 47, 0.06), var(--gym-card));
+}
+
+/* ---- Boutons -------------------------------------------------------------- */
+
+.gym-app .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 17px 24px;
+  border-radius: var(--gym-radius-pill);
+  transition: transform var(--gym-speed-fast) var(--gym-ease),
+    filter var(--gym-speed-fast) var(--gym-ease),
+    background var(--gym-speed-fast) var(--gym-ease);
+  width: 100%;
+}
+
+@media (max-width: 400px) {
+  .gym-app .btn {
+    padding: 15px 20px;
+    font-size: 14px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-app .btn {
+    padding: 13px 16px;
+    font-size: 13px;
+    gap: 6px;
+  }
+}
+
+.gym-app .btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.gym-app .btn:active {
+  transform: scale(0.97);
+}
+
+.gym-app .btn-primary {
+  background: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+}
+
+@media (hover: hover) {
+  .gym-app .btn-primary:hover {
+    filter: brightness(1.08);
+  }
+}
+
+.gym-app .btn-secondary {
+  background: transparent;
+  border: 1px solid var(--gym-border-strong);
+  color: var(--gym-text);
+}
+
+@media (hover: hover) {
+  .gym-app .btn-secondary:hover {
+    border-color: var(--gym-accent-border);
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.gym-app .btn-danger {
+  background: transparent;
+  border: 1px solid rgba(255, 92, 92, 0.4);
+  color: var(--gym-danger);
+}
+
+@media (hover: hover) {
+  .gym-app .btn-danger:hover {
+    border-color: var(--gym-danger);
+    background: rgba(255, 92, 92, 0.08);
+  }
+}
+
+.gym-app .btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gym-gap-sm);
+}
+
+.gym-app .btn-grid .btn {
+  width: auto;
+  font-size: 13px;
+  padding: 15px 10px;
+  text-align: center;
+}
+
+/* ---- Vignette image (thumb) ---------------------------------------------- */
+
+.thumb {
+  position: relative;
+  border-radius: var(--gym-radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(155deg, #142033 0%, #0a1220 60%, #060c17 100%);
+  border: 1px solid var(--gym-border);
+}
+
+.thumb svg {
+  width: 44%;
+  height: 44%;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.thumb--sm {
+  width: 64px;
+  height: 64px;
+}
+
+@media (max-width: 400px) {
+  .thumb--sm {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 360px) {
+  .thumb--sm {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* ---- Hero avec image de fond ---------------------------------------------- */
+
+.hero-photo {
+  position: relative;
+  border-radius: var(--gym-radius-lg);
+  overflow: hidden;
+  min-height: 220px;
+  background: linear-gradient(150deg, #16233a 0%, #0a1424 55%, #050b16 100%);
+  border: 1px solid var(--gym-border);
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(2, 8, 23, 0.92) 0%, rgba(2, 8, 23, 0.15) 65%);
+}
+
+.hero-photo__silhouette {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 58%;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.14);
+}
+
+.hero-photo__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-photo__content {
+  position: relative;
+  z-index: 1;
+  padding: var(--gym-gap-lg);
+  width: 100%;
+}
+
+/* ---- Icônes en cercle ------------------------------------------------------ */
+
+.icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--gym-radius-pill);
+  background: var(--gym-accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-circle svg {
+  width: 24px;
+  height: 24px;
+  color: var(--gym-accent);
+}
+
+.icon-circle--sm {
+  width: 40px;
+  height: 40px;
+}
+
+.icon-circle--sm svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 400px) {
+  .icon-circle {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .icon-circle svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .icon-circle--sm {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .icon-circle--sm svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .icon-circle {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .icon-circle svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .icon-circle--sm {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .icon-circle--sm svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ---- Ligne de liste (thumb + texte + chevron) ------------------------------ */
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gym-gap-md);
+  width: 100%;
+  text-align: left;
+}
+
+.list-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list-row__title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.list-row__meta {
+  font-size: 13px;
+  color: var(--gym-text-secondary);
+}
+
+.list-row__chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--gym-text-muted);
+  flex-shrink: 0;
+}
+
+@media (max-width: 400px) {
+  .list-row {
+    gap: 10px;
+  }
+  
+  .list-row__title {
+    font-size: 15px;
+  }
+  
+  .list-row__meta {
+    font-size: 12px;
+  }
+  
+  .list-row__chevron {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .list-row {
+    gap: 8px;
+  }
+  
+  .list-row__title {
+    font-size: 14px;
+  }
+  
+  .list-row__meta {
+    font-size: 11px;
+  }
+  
+  .list-row__chevron {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ---- Barre de progression -------------------------------------------------- */
+
+.gym-app .progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: var(--gym-radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress-track--thin {
+  height: 6px;
+}
+
+.gym-app .progress-fill {
+  height: 100%;
+  border-radius: var(--gym-radius-pill);
+  background: var(--gym-accent);
+  width: 0%;
+  transition: width var(--gym-speed-slow) var(--gym-ease);
+}
+
+/* ---- Anneau de progression circulaire (objectifs) -------------------------- */
+
+.ring {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring circle {
+  fill: none;
+  stroke-width: 4.5;
+}
+
+.ring circle.ring__track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.ring circle.ring__fill {
+  stroke: var(--gym-accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--gym-speed-slow) var(--gym-ease);
+}
+
+.ring__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring__icon svg {
+  width: 20px;
+  height: 20px;
+  color: var(--gym-accent);
+  transform: none;
+}
+
+/* ---- Badges de statut ------------------------------------------------------- */
+
+.gym-app .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: var(--gym-radius-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gym-app .badge svg {
+  width: 13px;
+  height: 13px;
+}
+
+@media (max-width: 400px) {
+  .gym-app .badge {
+    font-size: 11px;
+    padding: 5px 10px;
+    gap: 5px;
+  }
+  
+  .gym-app .badge svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gym-app .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  
+  .gym-app .badge svg {
+    width: 11px;
+    height: 11px;
+  }
+}
+
+.badge--done {
+  color: var(--gym-accent);
+  border: 1px solid var(--gym-accent-border);
+  background: var(--gym-accent-dim);
+}
+
+.badge--current {
+  color: var(--gym-accent-text-on);
+  background: var(--gym-accent);
+}
+
+.badge--upcoming {
+  color: var(--gym-text-secondary);
+  border: 1px solid var(--gym-border-strong);
+}
+
+.badge--locked {
+  color: var(--gym-text-muted);
+  border: 1px solid var(--gym-border);
+}
+
+.badge--tag {
+  color: var(--gym-text-secondary);
+  border: 1px solid var(--gym-border-strong);
+  font-weight: 600;
+}
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.delta--up {
+  color: var(--gym-accent);
+}
+
+.delta--down {
+  color: var(--gym-text-secondary);
+}
+
+/* ---- Onglets / tabs pill ---------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: var(--gym-gap-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: var(--gym-radius-pill);
+  border: 1px solid var(--gym-border-strong);
+  color: var(--gym-text-secondary);
+  transition: all var(--gym-speed-fast) var(--gym-ease);
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+.tab.is-active {
+  background: var(--gym-accent);
+  border-color: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+}
+
+.tabs--split {
+  background: transparent;
+}
+
+.tabs--split .tab {
+  flex: 1;
+  text-align: center;
+}
+
+/* ---- Sélecteurs en grille (objectif / catégorie) --------------------------- */
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gym-gap-sm);
+}
+
+@media (max-width: 400px) {
+  .choice-grid {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .choice-grid {
+    gap: 4px;
+  }
+}
+
+.choice-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 6px;
+  border-radius: var(--gym-radius-md);
+  border: 1px solid var(--gym-border-strong);
+  background: transparent;
+  transition: all var(--gym-speed-fast) var(--gym-ease);
+  text-align: center;
+}
+
+@media (max-width: 400px) {
+  .choice {
+    padding: 12px 4px;
+    gap: 6px;
+  }
+  
+  .choice svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .choice__label {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .choice {
+    padding: 10px 3px;
+    gap: 4px;
+  }
+  
+  .choice svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .choice__label {
+    font-size: 11px;
+  }
+}
+
+.choice svg {
+  width: 22px;
+  height: 22px;
+  color: var(--gym-text-secondary);
+  transition: color var(--gym-speed-fast) var(--gym-ease);
+}
+
+.choice__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gym-text-secondary);
+}
+
+.choice.is-active {
+  border-color: var(--gym-accent);
+  background: var(--gym-accent-dim);
+  box-shadow: inset 0 0 0 1px var(--gym-accent);
+}
+
+.choice.is-active svg,
+.choice.is-active .choice__label {
+  color: var(--gym-text);
+}
+
+.choice.is-active svg {
+  color: var(--gym-accent);
+}
+
+.choice--radio {
+  position: relative;
+  padding-top: 18px;
+  padding-bottom: 16px;
+}
+
+.choice__radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gym-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.choice.is-active .choice__radio {
+  border-color: var(--gym-accent);
+}
+
+.choice__radio::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gym-accent);
+  transform: scale(0);
+  transition: transform var(--gym-speed-fast) var(--gym-ease);
+}
+
+.choice.is-active .choice__radio::after {
+  transform: scale(1);
+}
+
+/* ---- Étapes numérotées (créer programme / séance) -------------------------- */
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gym-gap-md);
+}
+
+.step__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gym-gap-sm);
+}
+
+.step__number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step__heading {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.step__hint {
+  font-size: 13.5px;
+  color: var(--gym-text-secondary);
+  margin-top: 2px;
+}
+
+@media (max-width: 400px) {
+  .step {
+    gap: 12px;
+  }
+  
+  .step__head {
+    gap: 10px;
+  }
+  
+  .step__number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  
+  .step__heading {
+    font-size: 16px;
+  }
+  
+  .step__hint {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .step {
+    gap: 10px;
+  }
+  
+  .step__head {
+    gap: 8px;
+  }
+  
+  .step__number {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+  
+  .step__heading {
+    font-size: 15px;
+  }
+  
+  .step__hint {
+    font-size: 11.5px;
+  }
+}
+
+/* ---- Champs de formulaire --------------------------------------------------- */
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--gym-gap-sm);
+  border: 1px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-md);
+  padding: 16px 18px;
+  background: transparent;
+  transition: border-color var(--gym-speed-fast) var(--gym-ease);
+}
+
+@media (max-width: 400px) {
+  .field {
+    padding: 14px 14px;
+  }
+  
+  .field input,
+  .field select {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .field {
+    padding: 12px 12px;
+  }
+  
+  .field input,
+  .field select {
+    font-size: 16px;
+  }
+  
+  .field svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.field:focus-within {
+  border-color: var(--gym-accent);
+}
+
+.field svg {
+  width: 20px;
+  height: 20px;
+  color: var(--gym-text-muted);
+  flex-shrink: 0;
+}
+
+.field input,
+.field select {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 16px; /* 16 px minimum : évite le zoom auto d'iOS au focus */
+  min-width: 0;
+}
+
+.field input::placeholder {
+  color: var(--gym-text-muted);
+}
+
+/* Pavé numérique (bottom sheet) : l'icône Effacer est un SVG sans taille propre,
+   sans cette règle elle s'étire sur toute la touche */
+#keypad-grid button svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+}
+
+/* Champs readonly ouvrant le pavé numérique (voir gymOpenKeypad) */
+.gym-app input[readonly] {
+  cursor: pointer;
+  caret-color: transparent;
+}
+
+.field__suffix {
+  font-size: 13.5px;
+  color: var(--gym-text-secondary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ---- Ligne d'exercice (créer séance) ---------------------------------------- */
+
+.exercise-row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: var(--gym-gap-sm);
+  align-items: center;
+  padding: var(--gym-gap-md) 0;
+  border-bottom: 1px solid var(--gym-border);
+}
+
+@media (max-width: 400px) {
+  .exercise-row {
+    gap: 8px;
+  }
+  
+  .exercise-row__name {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .exercise-row {
+    gap: 6px;
+    padding: 10px 0;
+  }
+  
+  .exercise-row__name {
+    font-size: 13px;
+  }
+  
+  .exercise-row__stat label {
+    font-size: 11px;
+  }
+  
+  .select-chip {
+    padding: 8px 8px;
+    font-size: 12px;
+  }
+}
+
+.exercise-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.exercise-row__info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exercise-row__name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.exercise-row__stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gym-gap-md);
+  grid-column: 1 / -1;
+}
+
+.exercise-row__stat {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exercise-row__stat label {
+  font-size: 11.5px;
+  color: var(--gym-text-secondary);
+  font-weight: 600;
+}
+
+.select-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border: 1px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  padding: 9px 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: transparent;
+}
+
+.select-chip svg {
+  width: 14px;
+  height: 14px;
+  color: var(--gym-text-muted);
+}
+
+.gym-app .icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gym-text-muted);
+  transition: color var(--gym-speed-fast) var(--gym-ease), background var(--gym-speed-fast) var(--gym-ease);
+}
+
+.gym-app .icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.gym-app .icon-btn:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (hover: hover) {
+  .gym-app .icon-btn:hover {
+    color: var(--gym-danger);
+  }
+}
+
+.icon-btn--sm {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.icon-btn--sm svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---- Résumé (créer programme) ----------------------------------------------- */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gym-gap-sm);
+  text-align: center;
+}
+
+@media (max-width: 400px) {
+  .summary-grid {
+    gap: 6px;
+  }
+  
+  .summary-item svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .summary-item__label {
+    font-size: 11px;
+  }
+  
+  .summary-item__value {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-grid {
+    gap: 4px;
+  }
+  
+  .summary-item svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .summary-item__label {
+    font-size: 11px;
+  }
+  
+  .summary-item__value {
+    font-size: 13px;
+  }
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-item svg {
+  width: 20px;
+  height: 20px;
+  color: var(--gym-accent);
+}
+
+.summary-item__label {
+  font-size: 12px;
+  color: var(--gym-text-secondary);
+  font-weight: 600;
+}
+
+.summary-item__value {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* ---- Comment ça marche (objectifs) ------------------------------------------ */
+
+.howto {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gym-gap-xs);
+}
+
+.howto__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  text-align: center;
+}
+
+.howto__step span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gym-text-secondary);
+  line-height: 1.3;
+}
+
+.howto__arrow {
+  width: 14px;
+  height: 14px;
+  color: var(--gym-text-muted);
+  margin-top: 19px;
+  flex-shrink: 0;
+}
+
+/* ---- Barre de recherche ------------------------------------------------------ */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-pill);
+  padding: 13px 18px;
+}
+
+.search-bar svg {
+  width: 18px;
+  height: 18px;
+  color: var(--gym-text-muted);
+  flex-shrink: 0;
+}
+
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  min-width: 0;
+}
+
+.search-bar input::placeholder {
+  color: var(--gym-text-muted);
+}
+
+/* ---- Divulgation / filtre avancé -------------------------------------------- */
+
+.disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gym-text-secondary);
+  border: 1px dashed var(--gym-border-strong);
+  border-radius: var(--gym-radius-md);
+}
+
+.disclosure svg {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--gym-speed-base) var(--gym-ease);
+}
+
+.disclosure.is-open svg {
+  transform: rotate(180deg);
+}
+
+/* ---- Groupement mensuel (historique) ----------------------------------------- */
+
+.month-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gym-gap-sm);
+}
+
+.month-group__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gym-text-secondary);
+}
+
+/* ---- Bottom sheet (sélection d'exercice) ------------------------------------ */
+
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 23, 0.7);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--gym-speed-base) var(--gym-ease);
+}
+
+.sheet-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--gym-card);
+  border: 1px solid var(--gym-border);
+  border-bottom: none;
+  border-radius: var(--gym-radius-lg) var(--gym-radius-lg) 0 0;
+  max-height: 78vh;
+  max-height: 78dvh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform var(--gym-speed-slow) var(--gym-ease);
+  z-index: 41;
+}
+
+.sheet.is-open {
+  transform: translateY(0);
+}
+
+.sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--gym-radius-pill);
+  background: var(--gym-border-strong);
+  margin: 12px auto 4px;
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid var(--gym-border);
+}
+
+.sheet__title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.sheet__body {
+  overflow-y: auto;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sheet__row {
+  display: flex;
+  align-items: center;
+  gap: var(--gym-gap-md);
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  border-radius: var(--gym-radius-md);
+  transition: background var(--gym-speed-fast) var(--gym-ease);
+}
+
+.sheet__row:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ---- Squelette de chargement -------------------------------------------------- */
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gym-gap-md);
+  padding: var(--gym-gap-sm) 0;
+}
+
+.skeleton-block {
+  border-radius: var(--gym-radius-sm);
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 70%
+  );
+  background-size: 200% 100%;
+  animation: gym-shimmer 1.4s infinite;
+}
+
+@keyframes gym-shimmer {
+  0% { background-position: 180% 0; }
+  100% { background-position: -20% 0; }
+}
+
+/* ---- Animations d'entrée ------------------------------------------------------ */
+
+.gym-anim-in {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: gym-fade-up var(--gym-speed-slow) var(--gym-ease) forwards;
+}
+
+@keyframes gym-fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gym-stagger > * {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: gym-fade-up var(--gym-speed-slow) var(--gym-ease) forwards;
+}
+
+.gym-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.gym-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.gym-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.gym-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.gym-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.gym-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.gym-stagger > *:nth-child(n+7) { animation-delay: 340ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gym-anim-in,
+  .gym-stagger > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   GYM — Page d'accueil (hero + cartes fonctionnalités + démarrage rapide)
+   Tient sur un écran mobile sans défilement : la vue prend 100% de la
+   hauteur d'écran et se répartit en flex (header fixe, reste flexible).
+   ========================================================================== */
+
+#view-gym-home:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Empêche le body de défiler tant que l'accueil (écran fixe) est affiché.
+   La classe est posée/retirée par gymActivateView() en JS (gym.js). */
+body.gym-home-locked {
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Le header est fixed (commun.css) : plus besoin de flex:0 0 auto ici. */
+
+#view-gym-home .gym-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: calc(56px + env(safe-area-inset-top) + 10px) var(--app-padding-x) 14px; /* écran verrouillé à la hauteur : décalage vertical resserré */
+  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- Hero -------------------------------------------------------------- */
+
+.home-hero {
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0 calc(-1 * var(--app-padding-x)); /* pleine largeur : compense le padding de .gym-main */
+  padding: 0 var(--app-padding-x) 14px;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.home-hero .gym-title-xl {
+  font-size: 20px;
+}
+
+.home-hero .gym-subtitle {
+  font-size: 12px;
+}
+
+/* Emplacement de l'image de fond : ajouter background-image ici */
+.home-hero__media {
+  position: absolute;
+  inset: 0;
+  background-color: var(--gym-bg);
+  background-image: url('../../images/FondGymHeader.webp');
+  background-size: cover;
+  background-position: right center;
+}
+
+.home-hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(2, 8, 23, 0.55) 0%, rgba(2, 8, 23, 0.15) 32%, rgba(2, 8, 23, 0.4) 75%, var(--gym-bg) 100%),
+    linear-gradient(90deg, var(--gym-bg) 0%, rgba(2, 8, 23, 0.35) 42%, transparent 75%);
+}
+
+.home-hero__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 78%;
+}
+
+.home-hero__highlight {
+  color: var(--gym-accent);
+}
+
+.home-hero__bar {
+  width: 28px;
+  height: 3px;
+  border-radius: var(--gym-radius-pill);
+  background: var(--gym-accent);
+}
+
+/* ---- Grille des 4 cartes fonctionnalités -------------------------------- */
+
+.feature-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 6px;
+}
+
+@media (max-width: 400px) {
+  .feature-grid {
+    gap: 6px;
+  }
+  
+  .feature-card {
+    padding: 10px;
+  }
+  
+  .feature-card__title {
+    font-size: 11px;
+  }
+  
+  .feature-card__desc {
+    font-size: 11px;
+  }
+  
+  .feature-card__icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .feature-grid {
+    gap: 4px;
+  }
+  
+  .feature-card {
+    padding: 8px;
+  }
+  
+  .feature-card__title {
+    font-size: 11px;
+  }
+  
+  .feature-card__desc {
+    font-size: 11px;
+  }
+  
+  .feature-card__icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .feature-card__arrow {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .feature-card__arrow svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  padding: 10px;
+}
+
+/* Emplacement de l'image de fond : ajouter background-image ici */
+.feature-card__media {
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+}
+
+.feature-card__media--programmes { background-image: url('../../images/FondBoutonProgrammes.webp'); background-size: cover; background-position: center; }
+.feature-card__media--exercices { background-image: url('../../images/FondBoutonExercices.webp'); background-size: cover; background-position: center; }
+.feature-card__media--historique { background-image: url('../../images/FondBoutonHistorique.webp'); background-size: cover; background-position: center; }
+.feature-card__media--progression { background-image: url('../../images/FondBoutonProgression.webp'); background-size: cover; background-position: center; }
+
+.feature-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--gym-card) 0%, rgba(7, 20, 38, 0.82) 45%, var(--gym-card) 100%);
+}
+
+.feature-card__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+}
+
+.feature-card__icon {
+  width: 20px;
+  height: 20px;
+  color: var(--gym-accent);
+  flex-shrink: 0;
+}
+
+.feature-card__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.feature-card__bar {
+  width: 18px;
+  height: 2px;
+  background: var(--gym-accent);
+  border-radius: var(--gym-radius-pill);
+  flex-shrink: 0;
+}
+
+.feature-card__title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.feature-card__desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--gym-text-secondary);
+  flex: 1;
+  min-height: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feature-card__arrow {
+  align-self: flex-end;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--gym-radius-pill);
+  border: 1.5px solid var(--gym-accent-border);
+  color: var(--gym-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--gym-speed-fast) var(--gym-ease);
+}
+
+.feature-card__arrow svg {
+  width: 11px;
+  height: 11px;
+}
+
+@media (hover: hover) {
+  .feature-card:hover .feature-card__arrow {
+    background: var(--gym-accent-dim);
+  }
+}
+
+/* ---- Prochaine séance ---------------------------------------------------- */
+
+.home-next-session {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.next-session__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.next-session__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.next-session__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.next-session__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.next-session__title {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.next-session__meta {
+  font-size: 11px;
+  color: var(--gym-text-secondary);
+}
+
+.next-session__arrow {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--gym-radius-pill);
+  border: 1.5px solid var(--gym-accent-border);
+  color: var(--gym-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.next-session__arrow svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* ---- Démarrer rapidement ------------------------------------------------ */
+
+.home-quickstart {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+}
+
+.quickstart__row {
+  display: flex;
+  align-items: stretch;
+  margin-top: 8px;
+}
+
+.quickstart__item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  min-width: 0;
+  transition: opacity var(--gym-speed-fast) var(--gym-ease);
+}
+
+.quickstart__item:first-child {
+  padding-left: 0;
+}
+
+.quickstart__item:last-child {
+  padding-right: 0;
+}
+
+@media (hover: hover) {
+  .quickstart__item:hover {
+    opacity: 0.8;
+  }
+}
+
+.quickstart__divider {
+  width: 1px;
+  background: var(--gym-border);
+  flex-shrink: 0;
+}
+
+.quickstart__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--gym-radius-pill);
+  border: 1.5px solid var(--gym-accent-border);
+  color: var(--gym-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quickstart__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.quickstart__label {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--gym-text);
+}
+
+/* ==========================================================================
+   GYM — Vue : Séance en cours (nouveau design)
+   ========================================================================== */
+
+.session-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---- Header : retour, titre, minuteur ----------------------------------- */
+
+.session-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+}
+
+.session-header__back {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gym-text);
+  transition: background var(--gym-speed-fast) var(--gym-ease);
+}
+
+.session-header__back svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (hover: hover) {
+  .session-header__back:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.session-header__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-header__name {
+  font-size: 17px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-header__meta {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gym-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-header__timer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-header__timer-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--gym-accent);
+  flex-shrink: 0;
+}
+
+.session-header__timer-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.session-header__timer-value {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-header__pause {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gym-border-strong);
+  color: var(--gym-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.session-header__pause svg {
+  width: 14px;
+  height: 14px;
+}
+
+.session-main {
+  flex: 1 1 auto;
+  padding: 18px var(--app-padding-x) 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- Exercice courant : photo de fond + navigation ------------------------ */
+
+.session-exercise-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-exercise-hero__nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.session-exercise-hero__arrow {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gym-accent-border);
+  color: var(--gym-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--gym-speed-fast) var(--gym-ease);
+}
+
+.session-exercise-hero__arrow svg {
+  width: 15px;
+  height: 15px;
+}
+
+.session-exercise-hero__arrow:disabled {
+  opacity: 0.3;
+}
+
+.session-exercise-hero__title {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+/* ---- Résumé séries / répétitions / repos ---------------------------------- */
+
+.session-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 6px;
+  text-align: center;
+}
+
+@media (max-width: 400px) {
+  .session-summary {
+    gap: 6px 4px;
+  }
+
+  .session-summary__icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .session-summary__label {
+    font-size: 11px;
+  }
+
+  .session-summary__value {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .session-summary {
+    gap: 4px 3px;
+  }
+
+  .session-summary__icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .session-summary__label {
+    font-size: 11px;
+  }
+
+  .session-summary__value {
+    font-size: 12px;
+  }
+}
+
+.session-summary__item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-summary__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--gym-accent);
+  flex-shrink: 0;
+}
+
+.session-summary__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.session-summary__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.session-summary__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--gym-text-secondary);
+}
+
+.session-summary__value {
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---- Liste des séries ------------------------------------------------------ */
+
+.session-sets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.set-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1.5px solid var(--gym-border);
+}
+
+.set-card__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.set-card__number {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gym-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.set-card.is-en-cours .set-card__number {
+  border-color: var(--gym-accent-border);
+  color: var(--gym-accent);
+}
+
+/* Série terminée : pastille numérotée pleine (même langage que le bouton du chrono),
+   cadres de la carte et des champs inchangés */
+.set-card.is-terminee .set-card__number {
+  background: var(--gym-accent);
+  border-color: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+}
+
+.set-card__label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.set-card__status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gym-text-muted);
+}
+
+.set-card__status svg {
+  width: 15px;
+  height: 15px;
+}
+
+.set-card.is-terminee .set-card__status {
+  color: var(--gym-accent);
+}
+
+.set-card.is-en-cours .set-card__status {
+  color: var(--gym-text-secondary);
+}
+
+.set-card.is-en-cours .set-card__status svg {
+  color: var(--gym-accent);
+}
+
+.set-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.set-card__inputs {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+@media (max-width: 400px) {
+  .set-card__inputs {
+    gap: 8px;
+  }
+
+  .set-card__weight-row {
+    padding: 6px 8px;
+  }
+
+  .set-card__weight-input {
+    font-size: 16px;
+  }
+
+  .set-card__unit {
+    font-size: 11px;
+  }
+
+  .set-card__reps-value {
+    font-size: 16px;
+  }
+
+  .set-card__validate {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 360px) {
+  .set-card__inputs {
+    gap: 6px;
+  }
+
+  .set-card__weight-row {
+    padding: 5px 6px;
+  }
+
+  .set-card__weight-input {
+    font-size: 16px;
+  }
+
+  .set-card__unit {
+    font-size: 11px;
+  }
+
+  .set-card__reps-value {
+    font-size: 15px;
+  }
+
+  .set-card__validate {
+    width: 36px;
+    height: 36px;
+  }
+
+  .set-card__validate svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.set-card__field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.set-card__field--weight {
+  flex: 1.2;
+}
+
+.set-card__field--reps {
+  flex: 1;
+}
+
+.set-card__field-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--gym-text-secondary);
+}
+
+.set-card__weight-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  padding: 8px 10px;
+}
+
+.set-card__weight-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--gym-text);
+  font-size: 18px;
+  font-weight: 800;
+  font-family: inherit;
+}
+
+.set-card__weight-input::placeholder {
+  color: var(--gym-text-muted);
+  font-weight: 700;
+}
+
+.set-card__unit {
+  font-size: 12px;
+  color: var(--gym-text-secondary);
+  flex-shrink: 0;
+}
+
+.set-card__valid-dot {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--gym-text-muted);
+}
+
+.set-card.is-terminee .set-card__valid-dot {
+  color: var(--gym-accent);
+}
+
+.set-card__valid-dot svg {
+  width: 100%;
+  height: 100%;
+}
+
+.set-card__reps-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  padding: 8px 10px;
+}
+
+.set-card__reps-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gym-text);
+}
+
+.set-card__validate {
+  align-self: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 92, 92, 0.4);
+  color: var(--gym-danger);
+  transition: border-color var(--gym-speed-fast) var(--gym-ease), color var(--gym-speed-fast) var(--gym-ease), background var(--gym-speed-fast) var(--gym-ease);
+}
+
+.set-card__validate svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.set-card__validate.is-valid {
+  border-color: var(--gym-accent-border);
+  color: var(--gym-accent);
+  background: var(--gym-accent-dim);
+}
+
+/* ---- Actions basses --------------------------------------------------------- */
+
+.session-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto; /* collé en bas d'écran s'il y a peu de séries, sinon après la dernière carte */
+  padding-top: 8px;
+}
+
+/* Barre posée juste après <main class="session-main"> (structure actuelle de gym.js) : elle n'hérite pas du padding
+   de .session-main, donc elle porte la même marge horizontale que le reste des pages et sa marge basse. */
+.session-main + .session-actions {
+  flex: 0 0 auto;
+  padding: 8px var(--app-padding-x) calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.session-main {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+#session-content {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 400px) {
+  .session-actions {
+    gap: 8px;
+  }
+
+  .gym-app .session-actions .btn {
+    padding: 14px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .session-actions {
+    gap: 6px;
+  }
+
+  .gym-app .session-actions .btn {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .gym-app .session-actions .btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.gym-app .session-actions .btn {
+  width: auto;
+  flex: 1;
+  padding: 15px 16px;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   GYM — Récap de séance (détail poids/répétitions par exercice)
+   ========================================================================== */
+
+.recap-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recap-exercise__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recap-exercise__sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recap-set-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--gym-radius-pill);
+  border: 1.5px solid var(--gym-border-strong);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gym-text-secondary);
+}
+
+.recap-set-pill.is-valid {
+  border-color: var(--gym-accent-border);
+  background: var(--gym-accent-dim);
+  color: var(--gym-text);
+}
+
+.recap-set-pill.is-invalid {
+  opacity: 0.55;
+}
+
+.recap-set-pill__index {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.recap-set-pill__icon {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  display: flex;
+  color: var(--gym-accent);
+}
+
+.recap-set-pill.is-invalid .recap-set-pill__icon {
+  color: var(--gym-text-muted);
+}
+
+.recap-set-pill__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 360px) {
+  .recap-set-pill {
+    padding: 6px 9px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+}
+
+/* ==========================================================================
+   GYM — Graphiques (page Progression)
+   ========================================================================== */
+
+:where(.gym-app) .chart-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--gym-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-dot {
+  fill: var(--gym-bg);
+  stroke: var(--gym-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-axis-label {
+  fill: var(--gym-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ---- Graphe double axe (page Progression) -------------------------------------- */
+
+#view-progression {
+  --chart-a: var(--gym-accent);
+  --chart-b: #f5a524;
+}
+
+.chart-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gym-text-secondary);
+  margin-bottom: 8px;
+  min-height: 18px;
+}
+
+.chart-readout__item--a { color: var(--chart-a); }
+.chart-readout__item--b { color: var(--chart-b); }
+
+.chart-grid {
+  stroke: var(--gym-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-guide {
+  stroke: var(--gym-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-line--a { stroke: var(--chart-a); }
+.chart-line--b { stroke: var(--chart-b); }
+.chart-dot--a { stroke: var(--chart-a); }
+.chart-dot--b { stroke: var(--chart-b); }
+.chart-dot--a.is-selected { fill: var(--chart-a); }
+.chart-dot--b.is-selected { fill: var(--chart-b); }
+.chart-axis-label--a { fill: var(--chart-a); }
+.chart-axis-label--b { fill: var(--chart-b); }
+
+.chart-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.tab.is-active--b {
+  background: var(--chart-b);
+  border-color: var(--chart-b);
+  color: #1a1200;
+}
+
+.tab.is-disabled {
+  opacity: 0.4;
+}
+
+/* ==========================================================================
+   GYM — Application single-page (gestion de l'affichage des vues)
+   ========================================================================== */
+
+.gym-view {
+  display: block;
+}
+
+.gym-view[hidden] {
+  display: none;
+}
+
+/* ==========================================================================
+   GYM — Créer un programme : écran adaptatif (remplit la hauteur, sans défilement)
+   Scopé sur #view-creer-programme pour ne pas toucher aux autres vues.
+
+   Principe, dans l'ordre du fichier :
+     1. Base compacte (tient sur les écrans les plus petits).
+     2. Écrans hauts (> 660px) : marges, tailles et vignette grandissent en continu
+        avec la hauteur (dvh), entre 660px et 930px.
+     3. Largeur : correctifs sous 380 / 360 / 340px.
+     4. Écrans bas (<= 660px) : resserrement par paliers 660 / 610 / 560 / 480px.
+   Dans tous les cas, l'espace restant est réparti entre les cartes (flex-grow) :
+   la vue occupe exactement la hauteur visible, sans la dépasser.
+   ========================================================================== */
+
+/* .gym-app a min-height:100vh (qui inclut les barres du navigateur sur mobile) et
+   40px de padding-bas : d'où du vide scrollable sous le contenu. Ici on colle à la
+   hauteur réellement visible (dvh). Classe posée par gymActivateView() (gym.js). */
+body.gym-view-fit .gym-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 0; /* le bas est déjà géré par le padding de .gym-main */
+}
+
+/* La vue prend toute la hauteur visible ; .gym-main absorbe l'espace libre. */
+#view-creer-programme:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#view-creer-programme .gym-main {
+  flex: 1 0 auto;
+  padding: calc(56px + env(safe-area-inset-top) + 10px) var(--app-padding-x) calc(14px + env(safe-area-inset-bottom));
+  gap: 10px;
+}
+
+#view-creer-programme .gym-main > * {
+  flex-shrink: 0;
+}
+
+/* Répartition de l'espace libre : le contenu reste centré dans chaque carte */
+#view-creer-programme .gym-main > .card {
+  flex-grow: 0.8;
+}
+
+#view-creer-programme .gym-main > .step--inline {
+  flex-grow: 0.3;
+}
+
+#view-creer-programme .gym-main > .cp-goal {
+  flex-grow: 2;
+}
+
+#view-creer-programme .gym-main > .cp-row {
+  flex-grow: 0.8;
+}
+
+#view-creer-programme .step {
+  justify-content: center;
+}
+
+/* Les tuiles d'objectif absorbent la hauteur gagnée par leur carte */
+#view-creer-programme #objectif-grid {
+  flex: 1 1 auto;
+}
+
+/* ---- En-tête de page ------------------------------------------------------ */
+
+.cp-intro {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.cp-intro__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#view-creer-programme .cp-hero {
+  width: 110px;
+  height: 110px;
+  min-height: 0;
+  flex-shrink: 0;
+}
+
+/* ---- Cartes / étapes ------------------------------------------------------- */
+
+#view-creer-programme .card {
+  padding: 12px 14px;
+}
+
+#view-creer-programme .step {
+  gap: 8px;
+}
+
+#view-creer-programme .step__head {
+  align-items: center;
+  gap: 8px;
+}
+
+#view-creer-programme .step__number {
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  margin-top: 0;
+}
+
+#view-creer-programme .step__heading {
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* Titre : intitulé et champ sur une seule ligne */
+#view-creer-programme .step--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+#view-creer-programme .step--inline .step__head {
+  flex-shrink: 0;
+}
+
+#view-creer-programme .step--inline .step__heading {
+  white-space: nowrap;
+}
+
+#view-creer-programme .step--inline .field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- Champs ---------------------------------------------------------------- */
+
+#view-creer-programme .field {
+  padding: 7px 12px;
+  gap: 8px;
+}
+
+#view-creer-programme .field svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Le conteneur de l'icône ne doit pas ajouter de hauteur (interligne) */
+#view-creer-programme .field > span:first-child {
+  display: flex;
+}
+
+#view-creer-programme .field input {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+#view-creer-programme .field__suffix {
+  font-size: 12.5px;
+}
+
+/* ---- Objectif : l'indicateur radio passe dans le coin pour gagner en hauteur --- */
+
+#view-creer-programme .choice-grid {
+  gap: 6px;
+}
+
+#view-creer-programme .choice--radio {
+  padding: 8px 4px;
+  gap: 4px;
+}
+
+#view-creer-programme .choice svg {
+  width: 20px;
+  height: 20px;
+}
+
+#view-creer-programme .choice__label {
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+
+#view-creer-programme .choice__radio {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 12px;
+  height: 12px;
+}
+
+#view-creer-programme .choice__radio::after {
+  width: 6px;
+  height: 6px;
+}
+
+/* ---- Séances par semaine + Durée : côte à côte ------------------------------ */
+
+#view-creer-programme .cp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+#view-creer-programme .cp-row .card {
+  min-width: 0;
+}
+
+/* Pas de flèches +/- (desktop) : elles mangent la place du chiffre */
+#view-creer-programme .cp-row input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+#view-creer-programme .cp-row input[type="number"]::-webkit-inner-spin-button,
+#view-creer-programme .cp-row input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ---- Récapitulatif ---------------------------------------------------------- */
+
+#view-creer-programme .cp-recap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+#view-creer-programme .cp-recap__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#view-creer-programme .icon-circle {
+  width: 24px;
+  height: 24px;
+}
+
+#view-creer-programme .icon-circle svg {
+  width: 14px;
+  height: 14px;
+}
+
+#view-creer-programme .summary-grid {
+  gap: 6px;
+}
+
+#view-creer-programme .summary-item {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: 4px;
+  row-gap: 2px;
+}
+
+#view-creer-programme .summary-item > span:first-child {
+  display: flex;
+}
+
+#view-creer-programme .summary-item svg {
+  width: 12px;
+  height: 12px;
+}
+
+#view-creer-programme .summary-item__label {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+#view-creer-programme .summary-item__value {
+  flex-basis: 100%;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   2. Écrans hauts (> 660px) : tout grandit en continu avec la hauteur.
+   Chaque valeur part de la base compacte à 660px et atteint son maximum à
+   930px (interpolation linéaire sur 100dvh, bornée par clamp). Les pentes sont
+   calibrées pour que la croissance totale reste sous la hauteur gagnée : le
+   contenu ne dépasse jamais, et le flex répartit le petit reste.
+   ========================================================================== */
+
+@supports (height: 100dvh) {
+  @media (min-height: 661px) {
+    #view-creer-programme {
+      --cp-x: calc(100dvh - 660px); /* hauteur gagnée au-dessus de 660px */
+      --cp-gap: clamp(8px, calc(8px + var(--cp-x) * 0.0444), 20px);
+      --cp-pad-y: clamp(12px, calc(12px + var(--cp-x) * 0.0296), 20px);
+      --cp-step-gap: clamp(8px, calc(8px + var(--cp-x) * 0.0185), 13px);
+      --cp-field-y: clamp(7px, calc(7px + var(--cp-x) * 0.0185), 12px);
+      --cp-choice-y: clamp(8px, calc(8px + var(--cp-x) * 0.0222), 14px);
+      --cp-btn-y: clamp(13px, calc(13px + var(--cp-x) * 0.0148), 17px);
+      --cp-hero: clamp(76px, calc(76px + var(--cp-x) * 0.1778), 124px);
+      --cp-text: clamp(14px, calc(14px + var(--cp-x) * 0.0111), 17px);
+      --cp-badge: clamp(20px, calc(20px + var(--cp-x) * 0.0148), 24px);
+      --cp-icon: clamp(20px, calc(20px + var(--cp-x) * 0.0222), 26px);
+      --cp-circle: clamp(24px, calc(24px + var(--cp-x) * 0.0222), 30px);
+    }
+
+    #view-creer-programme .gym-main {
+      gap: var(--cp-gap);
+      padding-top: calc(56px + env(safe-area-inset-top) + var(--cp-gap));
+      padding-bottom: calc(var(--cp-gap) + env(safe-area-inset-bottom));
+    }
+
+    #view-creer-programme .cp-row {
+      gap: var(--cp-gap);
+    }
+
+    #view-creer-programme .cp-intro__text {
+      gap: var(--cp-step-gap);
+    }
+
+    #view-creer-programme .cp-hero {
+      width: var(--cp-hero);
+      height: var(--cp-hero);
+    }
+
+    #view-creer-programme .gym-title-xl {
+      font-size: clamp(24px, calc(24px + var(--cp-x) * 0.0148), 28px);
+    }
+
+    #view-creer-programme .card {
+      padding-top: var(--cp-pad-y);
+      padding-bottom: var(--cp-pad-y);
+    }
+
+    #view-creer-programme .step,
+    #view-creer-programme .cp-recap {
+      gap: var(--cp-step-gap);
+    }
+
+    #view-creer-programme .step__head {
+      gap: calc(var(--cp-step-gap) + 2px);
+    }
+
+    #view-creer-programme .step__number {
+      width: var(--cp-badge);
+      height: var(--cp-badge);
+      font-size: clamp(11px, calc(11px + var(--cp-x) * 0.0074), 13px);
+    }
+
+    #view-creer-programme .step__heading {
+      font-size: var(--cp-text);
+    }
+
+    #view-creer-programme .field {
+      padding-top: var(--cp-field-y);
+      padding-bottom: var(--cp-field-y);
+    }
+
+    #view-creer-programme .field input {
+      font-size: 16px;
+    }
+
+    /* Ligne Titre : intitulé et champ partagent la largeur, ils grandissent moins */
+    #view-creer-programme .step--inline .step__heading,
+    #view-creer-programme .step--inline .field input {
+      font-size: 16px;
+    }
+
+    #view-creer-programme .choice--radio {
+      padding-top: var(--cp-choice-y);
+      padding-bottom: var(--cp-choice-y);
+    }
+
+    #view-creer-programme .choice svg {
+      width: var(--cp-icon);
+      height: var(--cp-icon);
+    }
+
+    #view-creer-programme .icon-circle {
+      width: var(--cp-circle);
+      height: var(--cp-circle);
+    }
+
+    #view-creer-programme .icon-circle svg {
+      width: calc(var(--cp-circle) * 0.58);
+      height: calc(var(--cp-circle) * 0.58);
+    }
+
+    #view-creer-programme .summary-item svg {
+      width: clamp(12px, calc(12px + var(--cp-x) * 0.0074), 14px);
+      height: clamp(12px, calc(12px + var(--cp-x) * 0.0074), 14px);
+    }
+
+    #view-creer-programme .summary-item__label {
+      font-size: clamp(11px, calc(11px + var(--cp-x) * 0.0056), 12.5px);
+    }
+
+    #view-creer-programme .summary-item__value {
+      font-size: var(--cp-text);
+    }
+
+    #view-creer-programme .btn {
+      padding-top: var(--cp-btn-y);
+      padding-bottom: var(--cp-btn-y);
+    }
+  }
+
+  @media (min-height: 661px) and (min-width: 401px) {
+    #view-creer-programme .gym-title-xl {
+      font-size: clamp(24px, calc(24px + var(--cp-x) * 0.0296), 32px);
+    }
+  }
+}
+
+/* ==========================================================================
+   3. Adaptation à la LARGEUR
+   ========================================================================== */
+
+@media (max-width: 380px) {
+  /* Séances / Durée : pas de place pour l'icône, texte et marges resserrés */
+  #view-creer-programme .cp-row .field {
+    padding-left: 10px;
+    padding-right: 10px;
+    gap: 6px;
+  }
+
+  #view-creer-programme .cp-row .field > span:first-child {
+    display: none;
+  }
+
+  #view-creer-programme .cp-row .field__suffix {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  #view-creer-programme .gym-title-xl {
+    font-size: 24px;
+  }
+
+  /* Titre : champ sans icône, intitulé un peu plus petit */
+  #view-creer-programme .step--inline {
+    gap: 10px;
+  }
+
+  #view-creer-programme .step--inline .step__heading {
+    font-size: 13px;
+  }
+
+  #view-creer-programme .step--inline .field input {
+    font-size: 16px;
+  }
+
+  #view-creer-programme .step--inline .field > span:first-child {
+    display: none;
+  }
+
+  /* "Hypertrophie" doit tenir dans un quart de la largeur */
+  #view-creer-programme .choice__label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 340px) {
+  #view-creer-programme .gym-main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #view-creer-programme .card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #view-creer-programme .choice-grid {
+    gap: 4px;
+  }
+
+  #view-creer-programme .choice--radio {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  #view-creer-programme .choice__label {
+    font-size: 11px;
+  }
+}
+
+/* ==========================================================================
+   4. Écrans BAS (<= 660px) : resserrement par paliers (chaque palier
+   s'ajoute au précédent)
+   ========================================================================== */
+
+/* <= 660px (ex. iPhone en Safari avec barres affichées) */
+@media (max-height: 660px) {
+  #view-creer-programme .gym-main {
+    gap: 8px;
+  }
+
+  #view-creer-programme .cp-hero {
+    width: 76px;
+    height: 76px;
+  }
+
+  #view-creer-programme .gym-title-xl {
+    font-size: 24px;
+  }
+
+  #view-creer-programme .btn {
+    padding: 13px 20px;
+  }
+}
+
+/* <= 610px : plus de vignette, titre sur une seule ligne */
+@media (max-height: 610px) {
+  #view-creer-programme .cp-hero {
+    display: none;
+  }
+
+  #view-creer-programme .cp-intro__text {
+    gap: 4px;
+  }
+
+  #view-creer-programme .gym-title-xl {
+    font-size: 20px;
+  }
+}
+
+/* <= 560px (ex. iPhone SE, petits Android) : tout est resserré */
+@media (max-height: 560px) {
+  #view-creer-programme .gym-main {
+    gap: 6px;
+    padding-top: calc(56px + env(safe-area-inset-top) + 6px);
+  }
+
+  #view-creer-programme .gym-eyebrow {
+    display: none;
+  }
+
+  #view-creer-programme .card {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #view-creer-programme .step {
+    gap: 6px;
+  }
+
+  #view-creer-programme .choice--radio {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 3px;
+  }
+
+  #view-creer-programme .field {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  #view-creer-programme .btn {
+    padding: 11px 20px;
+  }
+}
+
+/* <= 480px (très petits écrans, ex. iPhone SE 1re génération en Safari) */
+@media (max-height: 480px) {
+  #view-creer-programme .gym-main {
+    gap: 4px;
+    padding-top: calc(56px + env(safe-area-inset-top) + 4px);
+  }
+
+  #view-creer-programme .card {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+
+/* ---- Durée d'un exercice de gainage (créer séance) --------------------------- */
+
+.exercise-row__stat--wide {
+  grid-column: 1 / -1;
+}
+
+.select-chip:disabled {
+  opacity: 0.4;
+}
+
+.exercise-row__duration {
+  justify-content: flex-start;
+}
+
+.exercise-row__duration-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--gym-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.exercise-row__duration-input::placeholder {
+  color: var(--gym-text-muted);
+}
+
+.exercise-row__duration-unit {
+  font-size: 12px;
+  color: var(--gym-text-secondary);
+}
+
+.exercise-row__duration-clear {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gym-text-muted);
+}
+
+.exercise-row__duration-clear svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---- Chrono par série (séance en cours, exercices chronométrés) -------------- */
+
+.set-card__field--timer {
+  flex: 1.5;
+}
+
+.set-card__timer {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 100%;
+  border: 1.5px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  padding: 6px 12px 6px 6px;
+  transition: border-color var(--gym-speed-fast) var(--gym-ease);
+}
+
+.set-card__timer.is-running {
+  border-color: var(--gym-accent-border);
+}
+
+.set-card__timer-btn {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gym-accent);
+  color: var(--gym-accent-text-on);
+  border: 1.5px solid var(--gym-accent);
+}
+
+.set-card__timer-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.set-card__timer-btn:disabled {
+  background: transparent;
+  border-color: var(--gym-border-strong);
+  color: var(--gym-text-muted);
+}
+
+.set-card__timer.is-running .set-card__timer-btn {
+  background: transparent;
+  color: var(--gym-accent);
+}
+
+.set-card__timer-value {
+  position: relative;
+  z-index: 1;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--gym-text);
+}
+
+.set-card__timer.is-held .set-card__timer-value {
+  color: var(--gym-text-secondary);
+}
+
+.set-card__timer-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--gym-accent);
+  transition: width 200ms linear;
+}
+
+@media (max-width: 400px) {
+  .set-card__timer {
+    gap: 8px;
+    padding: 5px 8px 5px 5px;
+  }
+
+  .set-card__timer-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .set-card__timer-value {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .set-card__timer-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .set-card__timer-value {
+    font-size: 15px;
+  }
+}
+
+/* ---- Zones d'appui de 44 px (le visuel des boutons ne change pas) ------------ */
+.session-header__back,
+.session-header__pause,
+.session-exercise-hero__arrow,
+.icon-btn--sm,
+.exercise-row__duration-clear,
+.set-card__validate { position: relative; }
+.session-header__back::after { content: ""; position: absolute; inset: -5px; }
+.session-header__pause::after { content: ""; position: absolute; inset: -6px; }
+.session-exercise-hero__arrow::after,
+.set-card__timer-btn::after { content: ""; position: absolute; inset: -7px; }
+.icon-btn--sm::after { content: ""; position: absolute; inset: -8px; }
+.exercise-row__duration-clear::after { content: ""; position: absolute; inset: -9px; }
+.set-card__validate::after { content: ""; position: absolute; inset: -4px; }

@@ -1,0 +1,3029 @@
+/* ===========================================================================
+   PARTIE : STATS (regles scopees sous #page-stats)
+   =========================================================================== */
+
+/* ==========================================================================
+   DESIGN SYSTEM — GOLF STATS
+   Univers premium / performance / data analytics (Trackman, Arccos, Tesla UI)
+   ========================================================================== */
+
+#page-stats {
+
+  /* ---------- Couleurs — fonds ---------- */
+  --color-bg-base: #0b0f0c;
+  --color-bg-elevated: #10150f;
+  --color-bg-card: #131916;
+  --color-bg-card-hover: #1a221d; /* survol : un cran plus clair que --color-bg-card (#131916) */
+
+  /* ---------- Couleurs — accent (vert lime) ---------- */
+  --color-accent: #8fd13f;
+  --color-accent-bright: #8fd13f;
+  --color-accent-10: rgba(143, 209, 63, 0.12);
+  --color-accent-15: rgba(143, 209, 63, 0.12);
+  --color-accent-25: rgba(143, 209, 63, 0.25);
+
+  /* ---------- Couleurs — texte ---------- */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #9aa39a;
+  --color-text-tertiary: #6b736b;
+  --color-text-disabled: #6b736b;
+
+  /* ---------- Couleurs — bordures ---------- */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.06);
+  --color-border-accent: #8fd13f;
+
+  /* ---------- Couleurs — état ---------- */
+  --color-negative: #e0574a;
+  --color-negative-10: rgba(224, 87, 74, 0.16);
+  --color-danger: #b3503f;
+  --color-positive: var(--color-accent);
+  --color-positive-10: var(--color-accent-10);
+
+  /* ---------- Typographie ---------- */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: 'Inter', monospace;
+
+  --fs-2xs: 0.6875rem;   /* 11px */
+  --fs-xs: 0.75rem;      /* 12px */
+  --fs-sm: 0.8125rem;    /* 13px */
+  --fs-base: 0.9375rem;  /* 15px */
+  --fs-md: 1rem;         /* 16px */
+  --fs-lg: 1.25rem;      /* 20px */
+  --fs-xl: 1.5rem;       /* 24px */
+  --fs-2xl: 2rem;        /* 32px */
+  --fs-3xl: 2.5rem;      /* 40px */
+  --fs-4xl: 3rem;        /* 48px */
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.1;
+  --lh-normal: 1.4;
+  --lh-relaxed: 1.6;
+
+  --ls-tight: 0;
+  --ls-normal: 0;
+  --ls-wide: 0.03em;
+  --ls-wider: 0.05em;
+
+  /* ---------- Espacements ---------- */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 40px;
+  --space-4xl: 56px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* ---------- Transitions / animations ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --duration-chart: 900ms;
+
+  /* ---------- Z-index ---------- */
+  --z-base: 1;
+  --z-sticky: 10;
+  --z-header: 20;
+  --z-fab: 30;
+  --z-dropdown: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  /* ---------- Layout ---------- */
+  --container-max: var(--app-max-width);
+  --header-height: 88px;
+  --bottom-safe: 112px; /* réserve sous le contenu : bouton rond de 80 px + marge de 16 px + zone sûre */
+}
+
+/* ---------- Breakpoints (référence — utilisés en media queries dans layout.css) ----------
+   --bp-mobile:  0 - 599px  (défaut)
+   --bp-tablet:  600px - 959px
+   --bp-desktop: 960px+
+--------------------------------------------------------------------------- */
+/* ==========================================================================
+   LAYOUT — reset, structure globale, header, grilles, responsive
+   ========================================================================== */
+
+/* box-sizing:border-box déjà couvert par le reset universel * {} de base.css */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+#page-stats {
+  margin: 0 auto;
+  font-family: var(--font-family);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+#page-stats {
+  min-height: 100vh;
+  min-height: 100dvh;
+  touch-action: manipulation;
+}
+
+#page-stats img { max-width: 100%; display: block; }
+#page-stats button { font-family: inherit; }
+#page-stats a { color: inherit; text-decoration: none; }
+
+/* Focus visible — accessibilité clavier */
+#page-stats :focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Conteneur principal ---------- */
+#page-stats .app {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--app-page-top) var(--app-padding-x) var(--bottom-safe);
+  position: relative;
+}
+
+/* Accueil Stats : le premier bloc suit directement l'espacement ci-dessus (pas de marge en plus) */
+#page-stats .app > .section:first-of-type { margin-top: 0 !important; }
+
+#page-stats {
+  --app-header-bg: var(--color-bg-base);
+  --app-header-border: var(--color-border);
+  --app-header-text: var(--color-text-primary);
+  --app-header-text-secondary: var(--color-text-primary);
+  --app-fab-bg: var(--color-accent);
+  --app-fab-text: var(--color-bg-base);
+  --app-fab-z: var(--z-fab);
+}
+
+/* Structure + position fixe : voir commun.css (#page-stats .page-header).
+   Ne reste ici que les extras propres à stats. */
+#page-stats .page-header__back {
+  padding: var(--space-xs);
+  margin: calc(var(--space-xs) * -1);
+  border-radius: var(--radius-full);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  #page-stats .page-header__back:hover { opacity: 0.7; }
+}
+
+/* Action à droite de l'en-tête (saisies : Terminer la partie), zone d'appui de 44 px */
+#page-stats .page-header__action {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-xs);
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  #page-stats .page-header__action:hover { opacity: 0.7; }
+}
+
+#page-stats .page-header__title-group {
+  flex: 1;
+  text-align: center;
+}
+
+/* ---------- Sections ---------- */
+#page-stats .section {
+  margin-top: var(--space-md);
+}
+
+#page-stats .section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+#page-stats .section__title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: var(--fw-bold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+#page-stats .section__link {
+  font-size: var(--fs-sm);
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--fw-medium);
+}
+/* Titres de section avec icône (accueil Stats) */
+#page-stats .section__title--icon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--fs-lg);
+  letter-spacing: 0;
+  text-transform: none;
+}
+#page-stats .section__title--icon svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+#page-stats .section__header:has(.section__title--icon) { align-items: center; }
+#page-stats button.section__link {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+#page-stats .section__link svg { width: 14px; height: 14px; }
+
+/* Accueil Stats : plus d'air entre les blocs (le 1er reste collé au header) */
+#page-stats #screen-dashboard .section { margin-top: var(--space-xl); }
+
+/* ---------- Grilles ---------- */
+#page-stats .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+/* ---------- Utilitaires ---------- */
+#page-stats .text-center { text-align: center; }
+#page-stats .visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   RESPONSIVE — app mobile uniquement (pas de variante tablette/desktop :
+   la grille KPI reste fixée à 2 colonnes quelle que soit la largeur)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  #page-stats *, #page-stats *::before, #page-stats *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* ==========================================================================
+   CARDS — composants carte réutilisables
+   ========================================================================== */
+
+#page-stats .card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+#page-stats .card--interactive { cursor: pointer; }
+
+/* ---------- Icône ronde (outline accent) ---------- */
+#page-stats .icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent-10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+#page-stats .icon-badge svg { width: 18px; height: 18px; }
+
+/* ==========================================================================
+   STROKES GAINED — carte hero du dashboard
+   Gauche : SG total · Droite : 5 catégories avec barre de progression
+   ========================================================================== */
+
+#page-stats .sg-card {
+  padding: var(--space-md);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: var(--space-md);
+}
+
+#page-stats .sg-card__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding-right: var(--space-md);
+  border-right: 1px solid var(--color-border);
+}
+#page-stats .sg-card__main .icon-badge { width: 44px; height: 44px; }
+#page-stats .sg-card__main .icon-badge svg { width: 20px; height: 20px; }
+
+#page-stats .sg-card__total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-stats .sg-card__label,
+#page-stats .sg-card__sub {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+#page-stats .sg-card__sub { color: var(--color-text-primary); }
+#page-stats .sg-card__value {
+  font-size: 2.5rem;
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  line-height: var(--lh-tight);
+}
+
+#page-stats .sg-card__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+#page-stats .sg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+#page-stats .sg-item__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+#page-stats .sg-item__label {
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#page-stats .sg-item__value {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+#page-stats .sg-item__bar {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+#page-stats .sg-item__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+#page-stats .sg-item--neg .sg-item__value { color: var(--color-negative); }
+#page-stats .sg-item--neg .sg-item__bar span { background: var(--color-negative); }
+
+/* ==========================================================================
+   MES INDICATEURS — grille 2 colonnes, pastille à gauche, titre + valeur à droite
+   ========================================================================== */
+
+#page-stats #dash-kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+
+#page-stats .kpi-card {
+  padding: var(--space-md) var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+#page-stats .kpi-card .icon-badge { width: 36px; height: 36px; }
+#page-stats .kpi-card .icon-badge svg { width: 16px; height: 16px; }
+
+#page-stats .kpi-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+#page-stats .kpi-card__title {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+}
+#page-stats .kpi-card__value {
+  font-size: 1.75rem;
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  line-height: 1;
+}
+#page-stats .kpi-card__value sup {
+  font-size: 0.55em;
+  font-weight: var(--fw-semibold);
+  margin-left: 2px;
+}
+
+/* Aucun indicateur sélectionné */
+#page-stats .kpi-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--space-md);
+  font-size: var(--fs-sm);
+  text-align: center;
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* ==========================================================================
+   MODIFIER LES INDICATEURS — liste à cocher du popup
+   (réutilise .new-round_overlay / .new-round_modal pour le cadre)
+   ========================================================================== */
+
+#page-stats .kpi-picker_list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+#page-stats .kpi-picker_item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+#page-stats .kpi-picker_item[aria-checked="true"] {
+  border-color: var(--color-border-accent);
+  background: var(--color-accent-10);
+}
+#page-stats .kpi-picker_icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+#page-stats .kpi-picker_icon svg { width: 100%; height: 100%; display: block; }
+#page-stats .kpi-picker_item[aria-checked="true"] .kpi-picker_icon { color: var(--color-accent); }
+#page-stats .kpi-picker_title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-sm);
+}
+#page-stats .kpi-picker_check {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  color: transparent;
+}
+#page-stats .kpi-picker_check svg { width: 14px; height: 14px; }
+#page-stats .kpi-picker_item[aria-checked="true"] .kpi-picker_check {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0f0c;
+}
+/* Le bouton "Terminer" reste visible pendant le défilement de la liste */
+#page-stats .kpi-picker_cta {
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+}
+
+#page-stats .kpi-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .kpi-card__trend--good { color: var(--color-positive); }
+#page-stats .kpi-card__trend--bad { color: var(--color-negative); }
+#page-stats .kpi-card__trend svg { width: 12px; height: 12px; }
+
+/* ==========================================================================
+   ANALYSER MON JEU — liste de cartes lien pleine largeur
+   Pastille · titre + description · flèche
+   ========================================================================== */
+
+#page-stats #dash-analysesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+#page-stats .analysis-card {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+#page-stats .analysis-card__icon { width: 44px; height: 44px; }
+#page-stats .analysis-card__icon svg { width: 20px; height: 20px; }
+
+#page-stats .analysis-card__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+#page-stats .analysis-card__title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+}
+#page-stats .analysis-card__desc {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--color-text-secondary);
+}
+
+#page-stats .analysis-card__arrow {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#page-stats .analysis-card__arrow svg { width: 16px; height: 16px; }
+
+/* ==========================================================================
+   HISTORICAL LIST — historique des rounds (liste compacte)
+   ========================================================================== */
+
+#page-stats .round-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-bg-card);
+}
+
+#page-stats .round-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+#page-stats .round-row:last-child { border-bottom: none; }
+@media (hover: hover) {
+  #page-stats .round-row:hover { background: var(--color-bg-card-hover); }
+}
+
+#page-stats .round-row__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-bg-elevated);
+}
+
+#page-stats .round-row__info {
+  flex: 1;
+  min-width: 0;
+}
+#page-stats .round-row__course {
+  font-size: 0.875rem;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#page-stats .round-row__location {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-stats .round-row__stat {
+  text-align: center;
+  min-width: 40px;
+}
+#page-stats .round-row__stat-value {
+  font-size: var(--fs-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--fw-medium);
+}
+#page-stats .round-row__stat-label {
+  font-size: 0.625rem;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+}
+
+#page-stats .round-row__score {
+  text-align: right;
+  min-width: 56px;
+}
+#page-stats .round-row__score-value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .round-row__score-diff {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .round-row__score-diff--pos { color: var(--color-negative); } /* +N = au-dessus du par = rouge */
+#page-stats .round-row__score-diff--neg { color: var(--color-positive); }
+
+#page-stats .round-row__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+/* Accueil : chaque parcours devient une carte individuelle */
+#page-stats #dash-historyList .round-list {
+  gap: var(--space-sm);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+#page-stats #dash-historyList .round-row {
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+/* !important : la couleur de la vignette est posée en inline par renderRoundList */
+#page-stats #dash-historyList .round-row__thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-10);
+  color: var(--color-accent) !important;
+}
+#page-stats #dash-historyList .round-row__thumb svg { width: 18px; height: 18px; }
+#page-stats #dash-historyList .round-row__stat,
+#page-stats #dash-historyList .round-row__score {
+  min-width: 0;
+  padding-left: var(--space-xs);
+  border-left: 1px solid var(--color-border);
+  text-align: center;
+}
+#page-stats #dash-historyList .round-row__stat-value {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+#page-stats #dash-historyList .round-row__score-value { font-size: var(--fs-md); }
+
+/* ==========================================================================
+   STAT MINI-CARD — utilisé dans bandeaux de résumé (historique, par distance)
+   ========================================================================== */
+
+#page-stats .mini-stat {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+#page-stats .mini-stat__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent-10);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#page-stats .mini-stat__icon svg { width: 14px; height: 14px; }
+
+#page-stats .mini-stat__label {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-stats .mini-stat__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+}
+
+#page-stats .mini-stat__delta {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .mini-stat__delta--pos { color: var(--color-positive); }
+#page-stats .mini-stat__delta--neg { color: var(--color-negative); }
+
+/* ==========================================================================
+   ANIMATIONS D'ENTRÉE
+   ========================================================================== */
+
+#page-stats .fade-up {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
+/* ==========================================================================
+   CHARTS — conteneurs et habillage des graphiques Chart.js
+   ========================================================================== */
+
+#page-stats .chart-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+#page-stats .chart-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+#page-stats .chart-card__title {
+  font-size: 0.9375rem;
+  font-weight: var(--fw-semibold);
+}
+#page-stats .chart-card__unit {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+#page-stats .chart-card__legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+}
+#page-stats .chart-card__legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  position: relative;
+}
+
+/* ---------- Zone de tracé ---------- */
+#page-stats .chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+#page-stats .chart-canvas-wrap--sm { height: 200px; }
+
+/* ---------- Stat row sous le graphique (progression / moyenne / etc.) ---------- */
+#page-stats .chart-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-lg);
+}
+
+#page-stats .chart-stats-row__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+#page-stats .chart-stats-row__label {
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+}
+#page-stats .chart-stats-row__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .chart-stats-row__value--accent { color: var(--color-accent); }
+#page-stats .chart-stats-row__sub {
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+}
+
+#page-stats .chart-progression {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .chart-progression svg { width: 16px; height: 16px; }
+/* ==========================================================================
+   STATS — segmented control, filtres, maps, tableaux de distance
+   ========================================================================== */
+
+/* ---------- Segmented Control (MULTI / TRADITIONNEL / SG) ---------- */
+#page-stats .segmented {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--seg-count, 3), 1fr);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+#page-stats .segmented__thumb { display: none; }
+
+#page-stats .segmented__btn {
+  border: none;
+  background: var(--color-bg-elevated);
+  padding: 9px 10px;
+  font-size: 0.78125rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#page-stats .segmented__btn[aria-selected="true"] {
+  background: var(--color-accent);
+  color: #0b0f0c;
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- FilterBar ---------- */
+#page-stats .filter-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+/* Boutons de tri : style repris du putting */
+#page-stats .analyse-filter {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 8px;
+  cursor: pointer;
+}
+#page-stats .analyse-filter.is-active {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+#page-stats .analyse-filter_label {
+  font-size: var(--fs-2xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+#page-stats .analyse-filter.is-active .analyse-filter_label { color: var(--color-accent); }
+#page-stats .analyse-filter_value {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  max-width: 100%;
+  min-width: 0;
+}
+#page-stats .analyse-filter_value svg { width: 14px; height: 14px; color: var(--color-text-secondary); flex-shrink: 0; }
+#page-stats .filter-value-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#page-stats .filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 0.78125rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#page-stats .filter-chip svg:first-child { width: 15px; height: 15px; color: var(--color-accent); flex-shrink: 0; }
+
+/* ---------- Sous-section avec accent gauche (variante compacte) ---------- */
+#page-stats .stat-block {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+#page-stats .stat-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+#page-stats .stat-block__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.9375rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .stat-block__title svg { width: 16px; height: 16px; color: var(--color-text-tertiary); }
+
+/* ---------- Grille de mini-stats à l'intérieur d'un bloc ---------- */
+#page-stats .stat-block__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+/* 5 tuiles : 3 sur la première ligne, 2 qui se partagent toute la seconde (pas de case vide) */
+#page-stats .stat-block__metrics--5 { grid-template-columns: repeat(6, 1fr); }
+#page-stats .stat-block__metrics--5 > .metric { grid-column: span 2; }
+#page-stats .stat-block__metrics--5 > .metric:nth-child(n + 4) { grid-column: span 3; }
+
+#page-stats .metric {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-stats .metric__label {
+  font-size: 0.6875rem;
+  color: var(--color-text-tertiary);
+  line-height: var(--lh-tight);
+}
+#page-stats .metric__value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+#page-stats .metric__delta {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+}
+#page-stats .metric__delta--pos { color: var(--color-positive); }
+#page-stats .metric__delta--neg { color: var(--color-negative); }
+
+/* ---------- Tableau de données (distance / score / putts) ---------- */
+#page-stats .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+#page-stats .data-table th {
+  text-align: left;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-tertiary);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  padding: var(--space-xs) var(--space-2xs);
+  border-bottom: 1px solid var(--color-border);
+}
+#page-stats .data-table td {
+  padding: var(--space-sm) var(--space-2xs);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+#page-stats .data-table tr:last-child td { border-bottom: none; }
+#page-stats .data-table td:not(:first-child), #page-stats .data-table th:not(:first-child) { text-align: right; }
+
+/* ==========================================================================
+   FAIRWAY MAP — schéma dispersion fairway (SVG)
+   ========================================================================== */
+
+#page-stats .field-map__label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+#page-stats .field-map__label-value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+#page-stats .field-map__label-caption {
+  font-size: var(--fs-2xs);
+  opacity: 0.85;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+#page-stats .field-map__side-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+#page-stats .field-map__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+}
+#page-stats .field-map__row:last-child { border-bottom: none; }
+#page-stats .field-map__row-label { color: var(--color-text-secondary); }
+#page-stats .field-map__row-value { font-weight: var(--fw-semibold); }
+
+#page-stats .field-map-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+@media (min-width: 640px) {
+  #page-stats .field-map-layout { grid-template-columns: 1.1fr 1fr; align-items: center; }
+}
+
+/* ---------- Légende à points colorés (dispersion approches) ---------- */
+#page-stats .dot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+  font-size: var(--fs-2xs);
+  color: var(--color-text-secondary);
+}
+#page-stats .dot-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+#page-stats .dot-legend__dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ==========================================================================
+   HISTORIQUE — barre de résumé + filtres tri
+   ========================================================================== */
+
+#page-stats .summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+@media (min-width: 640px) {
+  #page-stats .summary-strip { grid-template-columns: repeat(6, 1fr); }
+}
+
+#page-stats .sort-bar {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#page-stats .sort-bar::-webkit-scrollbar { display: none; }
+
+#page-stats .sort-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 0.78125rem;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+#page-stats .sort-chip[aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0f0c;
+  font-weight: var(--fw-bold);
+}
+#page-stats .sort-chip svg { width: 13px; height: 13px; }
+
+#page-stats .round-row--table {
+  display: grid;
+  grid-template-columns: 96px 1fr 64px 44px;
+  gap: var(--space-sm);
+  align-items: center;
+}
+#page-stats .round-row--table .round-row__date { font-size: var(--fs-sm); color: var(--color-text-secondary); }
+
+/* Supprimer une partie : bouton de 44 px, icône de 18 px */
+#page-stats .round-row__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -10px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+#page-stats .round-row__delete svg { width: 18px; height: 18px; }
+@media (hover: hover) {
+  #page-stats .round-row__delete:hover { color: var(--color-negative); }
+}
+
+/* Accueil : carte "Partie en cours" (brouillon à reprendre) */
+#page-stats #dash-resume[hidden] { display: none; }
+#page-stats #dash-resume[hidden] + .section { margin-top: 0 !important; } /* le bloc SG reste collé au header quand la carte est masquée */
+#page-stats .resume-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+#page-stats .resume-card__title { font-size: var(--fs-md); font-weight: var(--fw-bold); }
+#page-stats .resume-card__meta {
+  margin-top: var(--space-2xs);
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+#page-stats .resume-card__actions { display: flex; gap: var(--space-sm); }
+#page-stats .resume-card__btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+#page-stats .resume-card__btn.is-primary {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: #0b0f0c;
+}
+
+/* ==========================================================================
+   SPA — navigation entre écrans + panes internes
+   (aucune barre de nav ajoutée : la bascule se fait via les éléments déjà
+   présents dans les maquettes — back buttons, cartes, segmented control)
+   ========================================================================== */
+
+#page-stats .screen { display: none; }
+#page-stats .screen.is-active { display: block; }
+
+/* Panes internes à l'écran "Par distance" (Multi / Traditionnel / SG) */
+#page-stats .pane { display: none; }
+#page-stats .pane.is-active { display: block; }
+
+/* Carte "Par club" : aucun écran dédié dans le périmètre livré → non interactive */
+#page-stats .analysis-card--disabled { cursor: default; }
+#page-stats .analysis-card--disabled .analysis-card__arrow { opacity: 0.3; }
+
+/* ==========================================================================
+   SAISIE RAPIDE — écran de saisie par trou (score, putts, fairway, green)
+   ========================================================================== */
+
+/* ---------- Bouton Valider ---------- */
+#page-stats .qr-submit {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: #0b0f0c;
+  font-size: 0.875rem;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   NOUVEAU PARCOURS — popup de paramétrage avant saisie (Client-First)
+   ========================================================================== */
+
+#page-stats .new-round_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: rgba(4, 8, 6, 0.72);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-base) var(--ease-out),
+              visibility 0s linear var(--duration-base);
+}
+#page-stats .new-round_overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+#page-stats .new-round_modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 2 * var(--space-md));
+  max-height: calc(100dvh - 2 * var(--space-md));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  color-scheme: dark; /* sélecteurs natifs en thème sombre */
+  transform: translateY(12px) scale(0.98);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+#page-stats .new-round_overlay.is-open .new-round_modal { transform: none; }
+
+/* ---------- En-tête ---------- */
+#page-stats .new-round_header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+#page-stats .new-round_icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+}
+#page-stats .new-round_icon svg { width: 20px; height: 20px; }
+#page-stats .new-round_heading { flex: 1; min-width: 0; }
+#page-stats .new-round_title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+#page-stats .new-round_subtitle {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_close {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  #page-stats .new-round_close:hover { color: var(--color-text-primary); }
+}
+#page-stats .new-round_close svg { width: 22px; height: 22px; }
+
+/* ---------- Formulaire ---------- */
+#page-stats .new-round_form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+#page-stats .new-round_group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+#page-stats .new-round_label {
+  font-size: 0.78125rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg) var(--space-md);
+}
+
+/* ---------- Champ (ligne cliquable avec sélecteur natif) ---------- */
+#page-stats .new-round_field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_field:focus-within { border-color: var(--color-border-accent); }
+#page-stats .new-round_field-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  color: var(--color-text-primary);
+}
+#page-stats .new-round_field-icon svg { width: 100%; height: 100%; }
+#page-stats .new-round_field-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-stats .new-round_field-top,
+#page-stats .new-round_field-bottom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#page-stats .new-round_field-top {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+#page-stats .new-round_field-bottom {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_field-bottom:empty { display: none; }
+#page-stats .new-round_field-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+#page-stats .new-round_field-chevron svg { width: 100%; height: 100%; display: block; }
+#page-stats .new-round_field-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px; /* évite le zoom auto d'iOS */
+}
+#page-stats .new-round_field-select:focus-visible { outline: none; }
+
+/* Champ de recherche (parcours) */
+#page-stats .new-round_search { position: relative; }
+#page-stats .new-round_field-input {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 16px; /* évite le zoom automatique d'iOS au focus */
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+#page-stats .new-round_field-input::placeholder { color: var(--color-text-tertiary); }
+#page-stats .new-round_field.is-course .new-round_field-bottom { font-size: var(--fs-sm); }
+
+/* Suggestions de parcours */
+#page-stats .new-round_results {
+  list-style: none;
+  margin: var(--space-xs) 0 0;
+  padding: var(--space-2xs);
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+}
+#page-stats .new-round_result {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  #page-stats .new-round_result:hover { background: var(--color-bg-card-hover); }
+}
+#page-stats .new-round_result:focus-visible { background: var(--color-bg-card-hover); }
+#page-stats .new-round_result-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+#page-stats .new-round_result-city { font-size: var(--fs-xs); color: var(--color-text-secondary); }
+
+/* ---------- Départ (pastilles de couleur) ---------- */
+#page-stats .new-round_tee-list {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+#page-stats .new-round_tee {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_tee-ring {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_tee-dot {
+  width: 22px;
+  height: 22px;
+  background: var(--tee-color);
+  border: 2px solid var(--tee-edge, transparent);
+  border-radius: var(--radius-full);
+}
+#page-stats .new-round_tee:disabled { opacity: 0.3; cursor: not-allowed; }
+#page-stats .new-round_tee[aria-checked="true"] { color: var(--color-text-primary); }
+#page-stats .new-round_tee[aria-checked="true"] .new-round_tee-ring {
+  border: 2px solid var(--color-accent);
+}
+
+/* ---------- Premier trou (1* / 10*) et nombre de trous (9 / 18) ---------- */
+#page-stats .new-round_pill-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-xs);
+}
+#page-stats .new-round_pill {
+  min-height: 40px;
+  padding: var(--space-xs);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out);
+}
+#page-stats .new-round_pill[aria-checked="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0f0c;
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- Bouton principal ---------- */
+#page-stats .new-round_cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: #0b0f0c;
+  font-size: 0.875rem;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+#page-stats .new-round_cta svg { width: 20px; height: 20px; }
+
+/* Petits écrans : colonnes étroites, on retire les chevrons de la grille */
+@media (max-width: 400px) {
+  #page-stats .new-round_grid .new-round_field-chevron { display: none; }
+}
+
+/* ==========================================================================
+   SAISIE RAPIDE — écran de saisie par trou (Client-First)
+   Tout tient sur un écran : header fixe, hauteur 100dvh, pas de défilement
+   ========================================================================== */
+
+#page-stats .saisie-rapide_component {
+  --qr-border: var(--color-border);
+  --qr-blue: var(--color-text-secondary);
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none; /* plein écran : plus de plafond --container-max */
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding:
+    calc(56px + env(safe-area-inset-top) + var(--space-xs))
+    calc(var(--space-2xs) + env(safe-area-inset-right))
+    calc(env(safe-area-inset-bottom) + var(--space-sm))
+    calc(var(--space-2xs) + env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow: hidden;
+}
+
+/* ---------- Carte ---------- */
+#page-stats .saisie-rapide_card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-lg);
+}
+#page-stats .saisie-rapide_card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+#page-stats .saisie-rapide_card-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+}
+#page-stats .saisie-rapide_card-icon svg { width: 17px; height: 17px; }
+#page-stats .saisie-rapide_card-title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+/* ---------- Trou + score ---------- */
+#page-stats .saisie-rapide_hole-card {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+#page-stats .saisie-rapide_hole-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_hole-meta {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--qr-blue);
+  white-space: nowrap;
+}
+#page-stats .saisie-rapide_hole-score {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-xs);
+  margin: calc(var(--space-2xs) * -1);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_hole-score:active { background: var(--color-accent-15); }
+#page-stats .saisie-rapide_hole-score-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_score-badge {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+/* Pas encore de score : pastille vide en pointillés */
+#page-stats .saisie-rapide_score-badge.is-empty {
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px dashed var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* ---------- Zones fairway / green ---------- */
+#page-stats .saisie-rapide_map { width: 100%; }
+#page-stats .saisie-rapide_map.is-fairway {
+  overflow: hidden;
+  background: center / cover no-repeat; /* l'image (FondFairwaySaisieRapide) est posée par stats.js */
+  aspect-ratio: 905 / 160;
+  min-height: 64px;
+  max-height: 84px;
+  border: 1px solid var(--qr-border);
+  border-radius: var(--radius-md);
+}
+/* Encadré du green : la zone est un conteneur ; l'image (::before) est centrée, la plus grande possible
+   et à coins arrondis ; le SVG cliquable la recouvre exactement (green = 50 % de l'image, trou = 5 %,
+   zones hors green jusqu'au bord de l'image).
+   Variables posées par stats.js : --qr-green-bg (image), --qr-green-ratio (largeur / hauteur de l'image).
+   --qr-green-bottom : marge basse. */
+#page-stats .saisie-rapide_map.is-green {
+  --qr-green-ratio: 1;
+  --qr-green-img-w: min(100cqw, 100cqh * var(--qr-green-ratio)); /* largeur de l'image affichée */
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: var(--qr-green-bottom, 0px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+}
+#page-stats .saisie-rapide_map.is-green::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--qr-green-img-w);
+  aspect-ratio: var(--qr-green-ratio);
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-md);
+  background: var(--qr-green-bg) center / cover no-repeat;
+}
+
+/* Par 3 : pas de fairway */
+#page-stats .saisie-rapide_card.is-na { opacity: 0.4; }
+#page-stats .saisie-rapide_card.is-na .saisie-rapide_choice { cursor: default; }
+
+/* ---------- Roue du green (reprise de Wedging) ---------- */
+#page-stats .saisie-rapide_wheel {
+  position: relative; /* au-dessus de l'image (::before) */
+  display: block;
+  flex-shrink: 0;
+  width: var(--qr-green-img-w);
+  height: calc(var(--qr-green-img-w) / var(--qr-green-ratio));
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+#page-stats .saisie-rapide_wheel-sector {
+  fill: rgba(255, 255, 255, 0.09);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: fill var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_wheel-sector.is-outer { fill: transparent; }
+#page-stats .saisie-rapide_wheel-sector.is-selected { fill: rgba(143, 209, 63, 0.3); }
+#page-stats .saisie-rapide_wheel-center {
+  fill: rgba(255, 255, 255, 0.14);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: fill var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_wheel-center.is-selected { fill: rgba(143, 209, 63, 0.45); }
+#page-stats .saisie-rapide_wheel-ball { fill: var(--color-accent); stroke: #0B0F14; stroke-width: 1.5; pointer-events: none; }
+
+/* ---------- Choix directionnels (fairway) ---------- */
+#page-stats .saisie-rapide_choice-list {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+#page-stats .saisie-rapide_choice {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_choice-list.is-divided .saisie-rapide_choice + .saisie-rapide_choice {
+  border-left: 1px solid var(--color-border-strong);
+}
+#page-stats .saisie-rapide_choice-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+#page-stats .saisie-rapide_choice-icon svg { width: 18px; height: 18px; }
+#page-stats .saisie-rapide_choice[aria-checked="true"] .saisie-rapide_choice-icon {
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
+
+/* ---------- Ligne Green | Putts + Résumé ---------- */
+#page-stats .saisie-rapide_split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-sm);
+}
+#page-stats .saisie-rapide_split > .saisie-rapide_card { min-height: 0; padding-inline: var(--space-sm); }
+#page-stats .saisie-rapide_side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+#page-stats .saisie-rapide_side > .saisie-rapide_card { padding-inline: var(--space-sm); }
+#page-stats .saisie-rapide_side > .is-live { flex: 1; min-height: 0; }
+
+/* ---------- Putts : un chiffre + flèches ---------- */
+#page-stats .saisie-rapide_stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#page-stats .saisie-rapide_stepper-button {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_stepper-button:active { background: var(--color-accent); color: var(--color-bg-base); }
+#page-stats .saisie-rapide_stepper-button svg { width: 9px; height: 9px; }
+#page-stats .saisie-rapide_stepper-button::after { content: ''; position: absolute; inset: -12px; } /* zone de toucher élargie */
+#page-stats .saisie-rapide_stepper-value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+
+/* ---------- Résumé live (en colonne) ---------- */
+#page-stats .saisie-rapide_live-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+#page-stats .saisie-rapide_live-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-accent); }
+#page-stats .saisie-rapide_live-title {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_stat-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#page-stats .saisie-rapide_stat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+#page-stats .saisie-rapide_stat + .saisie-rapide_stat { border-top: 1px solid var(--color-border); }
+#page-stats .saisie-rapide_stat-label {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--qr-blue);
+}
+#page-stats .saisie-rapide_stat-value {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+#page-stats .saisie-rapide_stat-value.is-accent { color: var(--color-accent); }
+
+/* ---------- Navigation entre les trous ---------- */
+#page-stats .saisie-rapide_nav {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* minmax(0,…) : colonnes égales, indépendantes du texte */
+  gap: var(--space-sm);
+  width: 100%;
+  /* index.html ignore les touches à moins de 16 px du bord (anti swipe-retour iOS) :
+     les boutons doivent démarrer au-delà, soit 4 px de marge d'écran + 16 px ici */
+  padding-inline: var(--space-md);
+  box-sizing: border-box;
+}
+#page-stats .saisie-rapide_nav-button {
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-elevated);
+  font-size: 0.875rem;
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_nav-button svg { width: 18px; height: 18px; flex-shrink: 0; }
+#page-stats .saisie-rapide_nav-button.is-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0f0c;
+}
+#page-stats .saisie-rapide_nav-button { -webkit-tap-highlight-color: transparent; }
+/* "Enregistrer" : masqué tant que tous les trous ne sont pas complets (la place reste réservée) */
+#page-stats .saisie-rapide_nav-button.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+#page-stats .saisie-rapide_nav-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---------- Pavé numérique du score (feuille en bas d'écran) ---------- */
+#page-stats .saisie-rapide_pad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-base) var(--ease-out),
+              visibility 0s linear var(--duration-base);
+}
+#page-stats .saisie-rapide_pad-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+#page-stats .saisie-rapide_pad {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+  border-radius: 24px 24px 0 0;
+  transform: translateY(24px);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+#page-stats .saisie-rapide_pad-overlay.is-open .saisie-rapide_pad { transform: none; }
+
+#page-stats .saisie-rapide_pad-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+#page-stats .saisie-rapide_pad-heading { min-width: 0; }
+#page-stats .saisie-rapide_pad-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+#page-stats .saisie-rapide_pad-sub {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--qr-blue, #86A9E8);
+}
+#page-stats .saisie-rapide_pad-close {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#page-stats .saisie-rapide_pad-close svg { width: 22px; height: 22px; }
+
+#page-stats .saisie-rapide_pad-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+#page-stats .saisie-rapide_pad-value {
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+#page-stats .saisie-rapide_pad-keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+#page-stats .saisie-rapide_pad-key {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-rapide_pad-key:active { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg-base); }
+#page-stats .saisie-rapide_pad-key svg { width: 24px; height: 24px; }
+#page-stats .saisie-rapide_pad-result {
+  min-height: 1.2em;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* ==========================================================================
+   SAISIE DÉTAILLÉE — saisie coup par coup (Client-First)
+   Tout tient sur un écran : hauteur 100dvh, pas de défilement.
+   Les encadrés Green / Fairway réutilisent les classes saisie-rapide_*.
+   ========================================================================== */
+
+#page-stats #screen-saisie-detaillee { --sd-handle: 20px; }
+
+/* ---------- En-tête masqué : un appui en haut de l'écran l'affiche ----------
+   `translate` (et non `transform`) pour ne pas écraser un éventuel transform de commun.css */
+#page-stats .saisie-detaillee_header-toggle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: calc(var(--z-header) - 1);
+  height: calc(env(safe-area-inset-top) + var(--sd-handle));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 2px;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  opacity: 0.7;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_header-toggle svg { width: 18px; height: 18px; }
+
+#page-stats #screen-saisie-detaillee .page-header {
+  translate: 0 -100%;
+  visibility: hidden;
+  transition: translate var(--duration-base) var(--ease-out),
+              visibility 0s linear var(--duration-base);
+}
+#page-stats #screen-saisie-detaillee.is-header-open .page-header {
+  translate: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* ---------- Composant ---------- */
+#page-stats .saisie-detaillee_component {
+  --qr-border: var(--color-border);
+  --qr-blue: var(--color-text-secondary);
+  --sd-sand: #D9BF8C;
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  /* Marges latérales minimales (4 px) : le contenu interactif reste à ≥ 16 px du bord
+     grâce au padding des cartes (index.html ignore les touches à moins de 16 px) */
+  padding:
+    calc(env(safe-area-inset-top) + var(--sd-handle))
+    calc(var(--space-2xs) + env(safe-area-inset-right))
+    var(--app-safe-bottom)
+    calc(var(--space-2xs) + env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  overflow: hidden;
+}
+#page-stats .saisie-detaillee_component > * { flex-shrink: 0; }
+
+/* ---------- Carte (compacte) ---------- */
+#page-stats .saisie-detaillee_card {
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+/* ---------- Pastille icône ---------- */
+#page-stats .saisie-detaillee_icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+}
+#page-stats .saisie-detaillee_icon svg { width: 14px; height: 14px; }
+#page-stats .saisie-detaillee_icon.is-iron { border-color: var(--color-text-primary); color: var(--color-text-primary); }
+
+/* ---------- Stats du trou ---------- */
+#page-stats .saisie-detaillee_stats {
+  flex-direction: row;
+  gap: 0;
+  padding: 0;
+  min-height: 112px;
+  overflow: hidden;
+}
+#page-stats .saisie-detaillee_hole {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--qr-border);
+}
+#page-stats .saisie-detaillee_hole-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-xs) var(--space-sm);
+}
+/* 6e espace : score total, sous le détail du trou */
+#page-stats .saisie-detaillee_hole-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-top: 1px solid var(--color-border-strong);
+}
+#page-stats .saisie-detaillee_hole-score-label {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+#page-stats .saisie-detaillee_hole-score-value {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+#page-stats .saisie-detaillee_hole-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}
+#page-stats .saisie-detaillee_hole-meta {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--qr-blue);
+  white-space: nowrap;
+}
+#page-stats .saisie-detaillee_stats-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+#page-stats .saisie-detaillee_stat-list {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+#page-stats .saisie-detaillee_stat {
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 var(--space-xs);
+}
+#page-stats .saisie-detaillee_stat:nth-child(even) { border-left: 1px solid var(--color-border-strong); }
+#page-stats .saisie-detaillee_stat:nth-child(n+3) { border-top: 1px solid var(--color-border-strong); }
+#page-stats .saisie-detaillee_stat-head {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-accent);
+}
+#page-stats .saisie-detaillee_stat-head svg { width: 12px; height: 12px; flex-shrink: 0; }
+#page-stats .saisie-detaillee_stat-label {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+#page-stats .saisie-detaillee_stat-value {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* ---------- Ligne Coups | Détail du coup ---------- */
+#page-stats .saisie-detaillee_split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  gap: var(--space-xs);
+}
+
+/* Liste des coups : sa hauteur suit celle du panneau de droite (contain: size),
+   elle défile en interne s'il y a beaucoup de coups */
+#page-stats .saisie-detaillee_shots {
+  contain: size;
+  min-height: 0;
+  gap: 6px;
+}
+#page-stats .saisie-detaillee_shots .saisie-rapide_card-icon { width: 22px; height: 22px; }
+#page-stats .saisie-detaillee_shots .saisie-rapide_card-icon svg { width: 12px; height: 12px; }
+#page-stats .saisie-detaillee_shot-list {
+  --sd-row: 30px;
+  --sd-badge: 18px;
+  --sd-gap: 4px;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sd-gap);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+#page-stats .saisie-detaillee_shot-list::-webkit-scrollbar { display: none; }
+
+#page-stats .saisie-detaillee_shot {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Trait vertical entre deux pastilles numérotées */
+#page-stats .saisie-detaillee_shot:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--sd-badge) / 2 - 0.5px);
+  top: calc((var(--sd-row) + var(--sd-badge)) / 2);
+  width: 1px;
+  height: calc(var(--sd-row) - var(--sd-badge) + var(--sd-gap));
+  background: var(--qr-border);
+}
+#page-stats .saisie-detaillee_shot-number {
+  position: relative;
+  z-index: 1;
+  width: var(--sd-badge);
+  height: var(--sd-badge);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--qr-blue);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-elevated);
+  font-size: 0.625rem;
+  font-weight: var(--fw-bold);
+}
+#page-stats .saisie-detaillee_shot-number.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
+#page-stats .saisie-detaillee_shot-button {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sd-row);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  border: 1px solid var(--qr-border);
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_shot-button[aria-current="true"] { border-color: var(--color-accent); }
+#page-stats .saisie-detaillee_shot-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+#page-stats .saisie-detaillee_shot-title,
+#page-stats .saisie-detaillee_shot-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#page-stats .saisie-detaillee_shot-title {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+#page-stats .saisie-detaillee_shot-sub {
+  font-size: 0.625rem;
+  line-height: 1.1;
+  color: var(--color-text-secondary);
+}
+#page-stats .saisie-detaillee_shot-chevron { width: 10px; height: 10px; flex-shrink: 0; color: var(--color-text-secondary); }
+#page-stats .saisie-detaillee_shot-chevron svg { width: 100%; height: 100%; display: block; }
+
+/* ---------- Panneau du coup sélectionné : chaque ligne = titre + contrôle ---------- */
+#page-stats .saisie-detaillee_detail { gap: 5px; }
+/* Actions en bas du panneau : poubelle à gauche, Holed à droite */
+#page-stats .saisie-detaillee_actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+#page-stats .saisie-detaillee_delete {
+  width: 34px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--qr-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_delete svg { width: 18px; height: 18px; }
+#page-stats .saisie-detaillee_holed {
+  min-width: 84px;
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-accent);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_holed[aria-pressed="true"] {
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
+/* Zone d'appui élargie (44 px) sans changer le visuel : la mise en page de la saisie
+   détaillée tient sans défilement, on ne peut pas grossir les boutons eux-mêmes */
+#page-stats .saisie-detaillee_delete,
+#page-stats .saisie-detaillee_holed,
+#page-stats .saisie-detaillee_popup-close { position: relative; }
+#page-stats .saisie-detaillee_delete::after,
+#page-stats .saisie-detaillee_holed::after {
+  content: '';
+  position: absolute;
+  inset: -6px -5px -8px; /* 6 px en haut = le padding du pied de panneau : aucun débordement sur la ligne du dessus */
+}
+#page-stats .saisie-detaillee_popup-close::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+#page-stats .saisie-detaillee_group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 30px;
+}
+#page-stats .saisie-detaillee_label {
+  flex: 0 0 64px; /* largeur fixe : les contrôles restent alignés d'une ligne à l'autre */
+  line-height: 1.1; /* "Distance restante" passe sur 2 lignes */
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--qr-blue);
+}
+
+/* Champ (club / distance / pénalité) */
+#page-stats .saisie-detaillee_field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 8px 0 3px;
+  border: 1px solid var(--qr-border);
+  border-radius: 8px;
+}
+#page-stats .saisie-detaillee_field.is-input { padding: 0 10px; gap: 4px; }
+#page-stats .saisie-detaillee_field .saisie-detaillee_icon { width: 24px; height: 24px; }
+#page-stats .saisie-detaillee_field-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+}
+#page-stats .saisie-detaillee_field-text.is-empty { color: var(--color-text-tertiary); }
+#page-stats .saisie-detaillee_field-chevron { width: 12px; height: 12px; flex-shrink: 0; color: var(--color-text-secondary); }
+#page-stats .saisie-detaillee_field-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px; /* évite le zoom auto d'iOS */
+}
+#page-stats .saisie-detaillee_input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  text-align: left;
+}
+#page-stats .saisie-detaillee_input::placeholder { color: var(--color-text-tertiary); }
+#page-stats .saisie-detaillee_input[readonly] { cursor: pointer; caret-color: transparent; }
+#page-stats .saisie-detaillee_unit {
+  font-size: var(--fs-md);
+  color: var(--color-text-secondary);
+}
+
+/* Lie : un seul bouton (icône + nom), chaque appui passe au lie suivant */
+#page-stats .saisie-detaillee_lie {
+  flex: 0 0 auto;
+  width: 96px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-primary);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_lie-icon { display: flex; flex-shrink: 0; }
+#page-stats .saisie-detaillee_lie-icon:empty { display: none; }
+#page-stats .saisie-detaillee_lie svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-accent); }
+#page-stats .saisie-detaillee_lie.is-rough svg { color: var(--qr-blue); }
+#page-stats .saisie-detaillee_lie.is-tee svg { color: var(--color-text-primary); }
+#page-stats .saisie-detaillee_lie.is-bunker svg { color: var(--sd-sand); }
+#page-stats .saisie-detaillee_lie:active { background: var(--color-accent-10); }
+
+/* ---------- Fairway : boutons posés sur l'image ---------- */
+#page-stats .saisie-detaillee_map-card {
+  min-height: 0;
+  gap: 6px;
+  padding: var(--space-xs) var(--space-sm);
+}
+#page-stats .saisie-detaillee_map-card .saisie-rapide_card-icon { width: 28px; height: 28px; }
+#page-stats .saisie-detaillee_fairway-stage { position: relative; }
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice-list {
+  position: absolute;
+  inset: 0;
+  align-items: stretch;
+}
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice {
+  justify-content: center;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice-icon {
+  width: 26px;
+  height: 26px;
+  background: rgba(11, 15, 12, 0.6);
+}
+#page-stats .saisie-detaillee_fairway-stage .saisie-rapide_choice-icon svg { width: 14px; height: 14px; }
+
+/* ---------- Green | Strokes gained (colonne), occupe la place restante ---------- */
+#page-stats .saisie-detaillee_maps {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-xs);
+}
+
+/* ---------- Strokes gained : colonne ---------- */
+#page-stats .saisie-detaillee_sg {
+  min-height: 0;
+  padding: var(--space-xs) 6px;
+}
+#page-stats .saisie-detaillee_sg-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#page-stats .saisie-detaillee_sg-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+#page-stats .saisie-detaillee_sg-item + .saisie-detaillee_sg-item { border-top: 1px solid var(--color-border-strong); }
+#page-stats .saisie-detaillee_sg-label {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: var(--qr-blue);
+}
+#page-stats .saisie-detaillee_sg-value {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+}
+
+/* Groupe masqué (Pénalité / Résultat selon le lie) : display:flex du groupe l'emporterait sur [hidden] */
+#page-stats .saisie-detaillee_group[hidden] { display: none; }
+#page-stats button.saisie-detaillee_field {
+  background: none;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Popup résultat (grille 3x3) ---------- */
+#page-stats .saisie-detaillee_popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(4, 8, 6, 0.72);
+}
+#page-stats .saisie-detaillee_popup {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+}
+#page-stats .saisie-detaillee_popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+#page-stats .saisie-detaillee_popup-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+#page-stats .saisie-detaillee_popup-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#page-stats .saisie-detaillee_popup-close svg { width: 14px; height: 14px; }
+#page-stats .saisie-detaillee_popup-confirm {
+  min-height: 44px;
+  padding: 0 var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+}
+#page-stats .saisie-detaillee_result-btn {
+  padding: 14px 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-stats .saisie-detaillee_result-btn.is-center {
+  border-color: var(--color-accent);
+  background: var(--color-accent-10);
+  color: var(--color-accent);
+  font-weight: var(--fw-bold);
+}
+#page-stats .saisie-detaillee_result-btn.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-bg-base);
+}
+
+/* ==========================================================================
+   INSIGHTS — écrans Par club, Par distance et Statistiques (Client-First)
+   Graphes en barres horizontales, puces de sélection, roue de dispersion.
+   ========================================================================== */
+
+#page-stats .insights_stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+/* ---------- Puces (onglets de catégorie, clubs, tranches de distance) ---------- */
+#page-stats .insights_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+#page-stats .insights_chip {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 0.78125rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#page-stats .insights_chip[aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0f0c;
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- Carte de graphe ---------- */
+
+#page-stats .insights_bar-chart {
+  --insights-label-w: 76px;
+  --insights-value-w: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Axe gradué : aligné sur la colonne centrale des lignes */
+#page-stats .insights_bar-axis,
+#page-stats .insights_bar-row {
+  display: grid;
+  grid-template-columns: var(--insights-label-w) 1fr var(--insights-value-w);
+  align-items: center;
+  column-gap: var(--space-sm);
+}
+#page-stats .insights_bar-ticks {
+  position: relative;
+  height: 14px;
+  font-size: var(--fs-2xs);
+  color: var(--color-text-tertiary);
+}
+#page-stats .insights_bar-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+#page-stats .insights_bar-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#page-stats .insights_bar-track {
+  position: relative;
+  height: 20px;
+}
+#page-stats .insights_bar-center {
+  position: absolute;
+  top: -3px; bottom: -3px; left: 50%;
+  width: 1px;
+  background: var(--color-border);
+}
+#page-stats .insights_bar-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  min-width: 3px;
+  border-radius: 4px;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+#page-stats .insights_bar-fill.is-pos { background: var(--color-accent); }
+#page-stats .insights_bar-fill.is-neg { background: var(--color-danger); }
+#page-stats .insights_bar-value {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  text-align: right;
+}
+#page-stats .insights_bar-value.is-empty { color: var(--color-text-disabled); }
+
+/* ---------- Sous-titres et états vides ---------- */
+#page-stats .insights_subtitle { margin-top: var(--space-xs); }
+#page-stats .insights_empty {
+  font-size: var(--fs-sm);
+  color: var(--color-text-tertiary);
+  padding: var(--space-md) 0;
+}
+
+/* ---------- Roue de dispersion (green / approches) ---------- */
+#page-stats .insights_wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+#page-stats .insights_wheel svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+#page-stats .insights_wheel-sector {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+#page-stats .insights_wheel-sector.is-on { fill: var(--color-accent); }
+#page-stats .insights_wheel-sector.is-off { fill: var(--color-text-primary); }
+#page-stats .insights_wheel-text {
+  fill: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  pointer-events: none;
+}
+#page-stats .insights_wheel-text.is-empty { fill: var(--color-text-tertiary); }
+#page-stats .insights_wheel-note {
+  font-size: var(--fs-xs);
+  color: var(--color-text-tertiary);
+}
+
+
+/* ==========================================================================
+   INSIGHTS — règles de design appliquées aux 3 écrans (Par club, Par distance, Statistiques)
+   Pas de lueur colorée, pas de dégradé radial de fond, pas de verre dépoli.
+   ========================================================================== */
+
+#screen-par-club,
+#screen-par-distance,
+#screen-statistiques {
+  background: var(--color-bg-base);
+  min-height: 100vh;
+}
+
+
+/* ==========================================================================
+   ÉCHELLE TYPOGRAPHIQUE — Par club, Par distance, Statistiques
+   Titre 15px · légende d'unité et sous-titre 12px · en-tête de tableau 11px · texte 13px.
+   Chaque titre, légende et sous-titre tient sur UNE ligne (ellipse en dernier recours).
+   ========================================================================== */
+
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) {
+  --type-title: var(--fs-base);
+  --type-caption: var(--fs-xs);
+  --type-label: var(--fs-2xs);
+  --type-body: var(--fs-sm);
+}
+
+/* Titre de bloc (Statistiques > Multi) : icône puis texte */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__header { min-width: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--space-xs);
+  font-size: var(--type-title);
+  line-height: var(--lh-tight);
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title svg,
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__title::before { flex-shrink: 0; }
+
+/* Titre de carte de graphe + légende d'unité */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__head,
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__head > div { min-width: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__title {
+  font-size: var(--type-title);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__unit {
+  font-size: var(--type-caption);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sous-titre dans un bloc : phrase courte, sans majuscules ni espacement */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .insights_subtitle {
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tuiles de métriques : marges réduites pour gagner de la place, valeur sur une ligne */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .stat-block__metrics { gap: var(--space-xs); }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric { padding: var(--space-xs); min-width: 0; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric__label {
+  font-size: var(--type-label);
+  overflow-wrap: anywhere;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric__value { white-space: nowrap; }
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .metric__sub {
+  font-size: var(--type-label);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+/* Tableaux : en-têtes sur une ligne, texte au même corps partout */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .data-table th {
+  font-size: var(--type-label);
+  white-space: nowrap;
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .data-table td { font-size: var(--type-body); }
+
+/* Titre de graphe suivi de son unité, sur la même ligne */
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__titles {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+:is(#screen-par-club, #screen-par-distance, #screen-statistiques) .chart-card__titles .chart-card__unit {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+/* Par club : Driving / Approach / Short Game / Putting sur une seule ligne */
+#page-stats #pc-tabs { flex-wrap: nowrap; }
+#page-stats #pc-tabs .insights_chip { flex: 1 1 auto; padding-inline: var(--space-xs); white-space: nowrap; }
+
+/* ==========================================================================
+   MULTI — marges latérales réduites de moitié, textes à gauche,
+   fairway et green repris de la saisie (mêmes images)
+   ========================================================================== */
+
+/* Textes alignés à gauche, valeurs sur UNE seule colonne : libellé 60 % / valeur 40 %,
+   identique pour les lignes de résumé (.field-map__row) et pour tous les tableaux à 2 colonnes (.data-table--kv) */
+#page-stats #st-pane-multi { --multi-label-col: 60%; }
+#page-stats #st-pane-multi .data-table th,
+#page-stats #st-pane-multi .data-table td,
+#page-stats #st-pane-multi .data-table td:not(:first-child),
+#page-stats #st-pane-multi .data-table th:not(:first-child) { text-align: left; }
+#page-stats #st-pane-multi .data-table--kv { table-layout: fixed; }
+#page-stats #st-pane-multi .data-table--kv th,
+#page-stats #st-pane-multi .data-table--kv td { padding-inline: 0; }
+#page-stats #st-pane-multi .data-table--kv th:first-child,
+#page-stats #st-pane-multi .data-table--kv td:first-child { width: var(--multi-label-col); }
+#page-stats #st-pane-multi .data-table--dist th,
+#page-stats #st-pane-multi .data-table--dist td { padding-inline: 0 var(--space-xs); }
+#page-stats #st-pane-multi .field-map__row {
+  display: grid;
+  grid-template-columns: var(--multi-label-col) minmax(0, 1fr);
+  gap: 0;
+  text-align: left;
+}
+
+/* Fairway / green : une seule colonne à toutes les largeurs, et min-width: 0 sur les enfants de la grille.
+   Sans ça, la hauteur minimale de l'image du fairway (min-height + aspect-ratio) imposait une largeur
+   minimale supérieure à l'écran et l'image dépassait à droite. */
+#page-stats #st-pane-multi .field-map-layout { grid-template-columns: minmax(0, 1fr); }
+#page-stats #st-pane-multi .field-map-layout > * { min-width: 0; }
+
+/* Fairway : étiquettes posées sur l'image de la saisie */
+#page-stats #st-pane-multi .multi-fairway_labels {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+#page-stats #st-pane-multi .multi-fairway_item { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+#page-stats #st-pane-multi .multi-fairway_value { font-size: var(--fs-md); font-weight: var(--fw-bold); }
+#page-stats #st-pane-multi .multi-fairway_caption { font-size: var(--fs-2xs); opacity: 0.9; }
+
+/* Green : même conteneur que la saisie (image centrée, proportions réelles) */
+/* Le green occupe toute la largeur disponible (plafonnée), hauteur déduite des proportions de l'image :
+   plus de bandes vides à gauche et à droite */
+#page-stats #st-pane-multi .saisie-rapide_map.is-green {
+  flex: none;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  aspect-ratio: var(--qr-green-ratio);
+  margin: 0 auto;
+}
+#page-stats #st-pane-multi .multi-green_overlay {
+  position: relative;
+  width: var(--qr-green-img-w);
+  height: calc(var(--qr-green-img-w) / var(--qr-green-ratio));
+}
+#page-stats #st-pane-multi .multi-wheel_sector {
+  fill: var(--color-accent);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 2;
+}
+#page-stats #st-pane-multi .multi-wheel_text {
+  fill: #fff;
+  font-size: 7.5px;
+  font-weight: var(--fw-semibold);
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.7);
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+#page-stats #st-pane-multi .multi-wheel_text.is-center { font-size: 6px; }
+#page-stats #st-pane-multi .multi-wheel_text.is-empty { fill: rgba(255, 255, 255, 0.7); }
+#page-stats #st-pane-multi .multi-wheel_note { font-size: var(--fs-xs); color: var(--color-text-tertiary); text-align: left; }
+

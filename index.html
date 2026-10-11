@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Golf App</title>
+<script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
+<script>try{var st=(JSON.parse(localStorage.getItem("golfAppState"))||{}).settings;if(st&&st.theme==="light"){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f2f5ef")}}catch(e){}</script>
+<link rel="icon" type="image/png" href="images/icon.png">
+<link rel="apple-touch-icon" href="images/icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050505">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf App">
+<link rel="stylesheet" href="core/base.css?v=40">
+<link rel="stylesheet" href="core/commun.css?v=40">
+<link rel="stylesheet" href="modules/home/HomePage.css?v=40">
+<link rel="stylesheet" href="modules/parcours/parcours-ui.css?v=40">
+<link rel="stylesheet" href="modules/wedging/wedging.css?v=40">
+<link rel="stylesheet" href="modules/gym/gym.css?v=40">
+<link rel="stylesheet" href="modules/putting/putting.css?v=40">
+<link rel="stylesheet" href="modules/vitesse/vitesse.css?v=40">
+<link rel="stylesheet" href="modules/stats/stats.css?v=40">
+<link rel="stylesheet" href="modules/menu/menu.css?v=40">
+<link rel="stylesheet" href="modules/auth/auth.css?v=40">
+<link rel="stylesheet" href="core/theme-light.css?v=40">
+<script src="vendor/chart.umd.min.js?v=40"></script>
+</head>
+<body>
+
+<!-- Écran de secours : affiché uniquement en paysage, sur téléphone, quand l'appli est installée (mode standalone) -->
+<div class="orientation-lock_component" aria-hidden="true">
+  <svg class="orientation-lock_icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="2" width="10" height="20" rx="2"></rect>
+    <line x1="11" y1="18" x2="13" y2="18"></line>
+  </svg>
+  <p class="orientation-lock_text">Remets ton téléphone en mode portrait</p>
+</div>
+
+<!-- ============================ PARTIE : HOME ============================ -->
+<div id="page-home" class="app-page">
+<div class="page-wrapper">
+  <main class="home-screen_component">
+
+    <!-- HEADER -->
+    <header class="home-screen_header">
+      <div class="header_text-group">
+        <h1 class="header_title">Bonjour<br><span class="header_title-highlight" data-user-firstname></span></h1>
+        <p class="header_subtitle">Quelle partie du jeu souhaitez-vous travailler aujourd'hui ?</p>
+      </div>
+    </header>
+
+    <!-- PROFIL -->
+    <button class="profile_button" type="button" aria-label="Ouvrir le profil" onclick="showPage('menu'); renderMenuTab();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="3.4"/>
+        <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>
+      </svg>
+    </button>
+
+    <!-- BOUTONS CIRCULAIRES -->
+    <div class="orbit-buttons_wrapper">
+
+      <div class="orbit-ring" aria-hidden="true"></div>
+
+      <button class="orbit-button is-putting" type="button" onclick="showPage('putting'); renderPuttingTab();">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 21V4"/>
+            <path d="M6 4l9 3.4-9 3.4"/>
+            <ellipse cx="6" cy="21" rx="4" ry="1.2"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Putting</span>
+        <span class="orbit-button_subtitle">Travaillez votre green</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-stats" type="button" onclick="showPage('stats')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 20V11"/>
+            <path d="M12 20V4"/>
+            <path d="M19 20v-7"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Stats</span>
+        <span class="orbit-button_subtitle">Analysez vos performances</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-gym" type="button" onclick="showPage('gym')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12h16"/>
+            <path d="M2.5 9.5v5"/>
+            <path d="M21.5 9.5v5"/>
+            <path d="M6 8v8"/>
+            <path d="M18 8v8"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Gym</span>
+        <span class="orbit-button_subtitle">Améliorez votre condition</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-parcours" type="button" onclick="showPage('parcours')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z"/>
+            <circle cx="12" cy="9.5" r="2.4"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Parcours</span>
+        <span class="orbit-button_subtitle">Progressez sur le parcours</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-vitesse" type="button" onclick="showPage('vitesse'); renderVitesseTab();">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15a8 8 0 0 1 16 0"/>
+            <line x1="12" y1="15" x2="16" y2="10"/>
+            <circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Vitesse</span>
+        <span class="orbit-button_subtitle">Gagnez en puissance</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+      <button class="orbit-button is-wedging" type="button" onclick="showPage('wedging')">
+        <span class="orbit-button_icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 2.5l-5 12.2"/>
+            <path d="M12.5 14.7L4 20.2c-.6.4-.3 1.3.4 1.3h9.6c.7 0 1.3-.5 1.4-1.1l.5-3.2c.1-.6-.3-1.1-.9-1.3z"/>
+            <path d="M6.5 18.7l2.6 1.4M9.2 17.3l2.6 1.4"/>
+          </svg>
+        </span>
+        <span class="orbit-button_title">Wedging</span>
+        <span class="orbit-button_subtitle">Améliorez votre approche</span>
+        <span class="orbit-button_chevron">&rsaquo;</span>
+      </button>
+
+    </div>
+
+    <!-- PANNEAU STATISTIQUES -->
+    <div class="bottom-panel_wrapper">
+
+      <div class="bottom-panel_column is-goal">
+        <div class="column_header">
+          <span class="progress-ring_wrapper">
+            <svg class="progress-ring_svg" viewBox="0 0 22 22">
+              <circle class="progress-ring_track" cx="11" cy="11" r="9"/>
+              <circle class="progress-ring_progress" cx="11" cy="11" r="9" data-progress="0"/>
+            </svg>
+            <span class="progress-ring_text" data-stat="goal-ring">0/5</span>
+          </span>
+          <span class="column_label">Objectif semaine</span>
+        </div>
+        <span class="column_value" data-stat="goal-value">0 séance</span>
+        <span class="goal_progress-track">
+          <span class="goal_progress-fill" data-stat="goal-progress-fill" style="width: 0%;"></span>
+        </span>
+      </div>
+
+      <div class="bottom-panel_column is-last-session">
+        <div class="column_header">
+          <span class="column_icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="5.5" width="16" height="14" rx="2.5"/>
+              <path d="M4 10h16"/>
+              <path d="M8 3.5v3"/>
+              <path d="M16 3.5v3"/>
+            </svg>
+          </span>
+          <span class="column_label">Dernière séance</span>
+        </div>
+        <span class="column_value" data-stat="last-session-value">--</span>
+        <span class="column_secondary" data-stat="last-session-secondary"></span>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+</div>
+
+<!-- ========================== PARTIE : PARCOURS =========================== -->
+<div id="page-parcours" class="app-page">
+<div class="app">
+
+  <div class="screen-view active" data-screen="home">
+<div class="top-bar">
+    <a class="back-link" href="javascript:void(0)" onclick="showPage('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Home
+    </a>
+    <h1 class="top-bar_title">Parcours</h1>
+    <button class="icon-btn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+    </button>
+  </div>
+
+  <main class="screen">
+
+    <!-- GREEN — affiché directement, toutes les marques visibles en même temps -->
+    <div class="track-block track-block-green">
+      <div id="green-root"></div>
+    </div>
+
+    <!-- FAIRWAY — affiché directement, toutes les marques visibles en même temps -->
+    <div class="track-block">
+      <div id="fairway-root"></div>
+    </div>
+
+    <!-- VENT / DENIVELE / DISTANCE — boutons en bas -->
+    <div class="quick-actions">
+      <button type="button" class="quick-action-btn" onclick="openWindCalc()">
+        <span class="quick-action-info" aria-label="Charte de vent" onclick="event.stopPropagation(); openWindInfo();">i</span>
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9a3 3 0 1 0-3-3"></path><path d="M3 13h13a3 3 0 1 1-3 3"></path><path d="M3 18h7a2 2 0 1 1-2 2"></path></svg>
+        </span>
+        Vent
+      </button>
+      <button type="button" class="quick-action-btn" onclick="openElevationCalc()">
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20l6.5-11 4 6 2.5-3.5L22 20z"></path></svg>
+        </span>
+        Dénivelé
+      </button>
+      <button type="button" class="quick-action-btn" onclick="openDistancesCalc()">
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.4"></circle><circle cx="18" cy="6" r="2.4"></circle><path d="M8 17C14 17 10 7 16 7"></path></svg>
+        </span>
+        Distance
+      </button>
+      <button type="button" class="quick-action-btn" onclick="openHistoryModal()">
+        <span class="quick-action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.5 8.5 0 005.8 6L3.5 8.5"></path><path d="M3.5 3.5v5h5"></path><path d="M12 8v4.5l3 1.8"></path></svg>
+        </span>
+        Historique
+      </button>
+    </div>
+
+  </main>
+  </div>
+
+  <!-- Racine des modales Vent / Dénivelé (fonctionnalités réelles, voir parcours-ui.js) -->
+  <div id="course-modal-root"></div>
+
+</div>
+</div>
+
+<!-- ============================ PARTIE : STATS ============================= -->
+<div id="page-stats" class="app-page">
+<!-- ======================================================================
+     ÉCRAN 1 — DASHBOARD STATS
+     ====================================================================== -->
+<section id="screen-dashboard" class="screen is-active">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" type="button" onclick="showPage('home')">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Home
+      </button>
+      <h1 class="page-header__title">STATS</h1>
+    </header>
+
+    <section class="section" id="dash-resume" hidden aria-label="Partie en cours"></section>
+
+    <section class="section">
+      <div id="dash-strokesGained" class="card sg-card fade-up" aria-label="Strokes gained"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title section__title--icon">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+          Mes indicateurs
+        </h2>
+        <button type="button" class="section__link" data-kpi-edit aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/></svg>
+          Modifier
+        </button>
+      </div>
+      <div id="dash-kpiGrid" class="grid-2" role="list" aria-label="Indicateurs clés de performance"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title section__title--icon">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M6 20v-6M12 20V6M18 20v-9"/></svg>
+          Analyser mon jeu
+        </h2>
+      </div>
+      <div id="dash-analysesGrid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title section__title--icon">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          Mes parcours
+        </h2>
+        <button type="button" class="section__link" data-goto="historique">
+          Voir tout
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div id="dash-historyList"></div>
+    </section>
+  </main>
+
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 2 — PAR CLUB
+     Onglets Driving / Approach / Short Game / Putting (sélection multiple),
+     filtres Time / Parcours / Lie, graphes en barres par club.
+     ====================================================================== -->
+<section id="screen-par-club" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">PAR CLUB</h1>
+    </header>
+
+    <section class="section" style="margin-top:var(--space-lg);">
+      <div id="pc-tabs" class="insights_chips" role="group" aria-label="Catégories de coups"></div>
+    </section>
+
+    <section class="section" style="margin-top:var(--space-md);">
+      <div id="pc-filters" class="filter-bar"></div>
+    </section>
+
+    <div id="pc-charts" class="insights_stack"></div>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 3 — PAR DISTANCE
+     Filtres Time / Parcours / Lie, graphes en barres par tranche de distance.
+     ====================================================================== -->
+<section id="screen-par-distance" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">PAR DISTANCE</h1>
+    </header>
+
+    <section class="section" style="margin-top:var(--space-lg);">
+      <div id="pd-filters" class="filter-bar"></div>
+    </section>
+
+    <div id="pd-charts" class="insights_stack"></div>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 4 — STATISTIQUES
+     Un seul écran ; le segmented control (Multi / Traditionnel / SG) change
+     le contenu affiché en dessous, il ne change pas d'écran.
+     ====================================================================== -->
+<section id="screen-statistiques" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">STATISTIQUES</h1>
+    </header>
+
+    <section class="section" style="margin-top:var(--space-lg);">
+      <div id="st-modeTabs" class="segmented" aria-label="Mode d'analyse"></div>
+    </section>
+
+    <!-- Pane "Multi" : aperçu -->
+    <div id="st-pane-multi" class="pane is-active">
+      <section class="section" style="margin-top:var(--space-md);">
+        <div id="st-multi-filters" class="filter-bar"></div>
+      </section>
+      <div id="st-multi-blocks" style="display:flex; flex-direction:column; gap:var(--space-md); margin-top:var(--space-md);"></div>
+    </div>
+
+    <!-- Pane "Traditionnel" : une courbe par statistique -->
+    <div id="st-pane-traditionnel" class="pane">
+      <section class="section" style="margin-top:var(--space-md);">
+        <div id="st-trad-filters" class="filter-bar"></div>
+      </section>
+      <div id="st-trad-charts" class="insights_stack"></div>
+    </div>
+
+    <!-- Pane "SG" : une courbe par catégorie de strokes gained -->
+    <div id="st-pane-sg" class="pane">
+      <section class="section" style="margin-top:var(--space-md);">
+        <div id="st-sg-filters" class="filter-bar"></div>
+      </section>
+      <div id="st-sg-charts" class="insights_stack"></div>
+    </div>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 5 — HISTORIQUE DES ROUNDS
+     ====================================================================== -->
+<section id="screen-historique" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">HISTORIQUE DES ROUNDS</h1>
+    </header>
+
+    <section class="section">
+      <div id="hist-summaryStrip" class="summary-strip"></div>
+    </section>
+
+    <section class="section">
+      <label class="visually-hidden" for="hist-search">Rechercher un parcours</label>
+      <div class="filter-chip" style="width:100%;">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="15" height="15"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="hist-search" type="search" placeholder="Rechercher un parcours..."
+          style="background:none;border:none;color:var(--color-text-primary);font-size:16px;flex:1;outline:none;">
+      </div>
+    </section>
+
+    <section class="section">
+      <div id="hist-sortBar" class="sort-bar"></div>
+    </section>
+
+    <section class="section">
+      <div id="hist-roundTable"></div>
+      <div class="text-center" style="margin-top:var(--space-md);">
+        <button id="hist-loadMore" type="button" class="filter-chip" style="margin:0 auto;">Charger plus de rounds</button>
+      </div>
+    </section>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 6 — PERFORMANCE PUTTING
+     ====================================================================== -->
+<section id="screen-putting" class="screen">
+  <main class="app">
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Putting
+      </button>
+      <div class="page-header__title-group">
+        <h1 class="page-header__title">STATS PERFORMANCE</h1>
+      </div>
+    </header>
+
+    <section class="section">
+      <div id="put-filters" class="filter-bar"></div>
+    </section>
+
+    <section class="section">
+      <article class="card chart-card fade-up">
+        <div class="chart-card__head">
+          <div>
+            <div style="font-size:var(--fs-md); font-weight:var(--fw-bold);">Putts moyens par round</div>
+            <div class="chart-card__unit">Évolution</div>
+          </div>
+          <div class="chart-card__legend">
+            <span class="chart-card__legend-dot"></span> Putts moyens
+          </div>
+        </div>
+
+        <div>
+          <div class="kpi-card__value" style="font-size:var(--fs-2xl);" data-count-to="1.69" id="put-value">0.00</div>
+          <div class="kpi-card__trend kpi-card__trend--good" id="put-delta"></div>
+        </div>
+
+        <div class="chart-canvas-wrap">
+          <canvas id="put-chart" role="img" aria-label="Évolution des putts moyens par round"></canvas>
+        </div>
+      </article>
+    </section>
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 7 — SAISIE RAPIDE (Client-First)
+     Les zones Fairway et Green sont volontairement vides : #qr-fairway-root / #qr-green-root
+     ====================================================================== -->
+<section id="screen-saisie-rapide" class="screen">
+  <main class="saisie-rapide_component">
+
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">SAISIE RAPIDE</h1>
+      <button class="page-header__action" type="button" data-finish-round>Terminer</button>
+    </header>
+
+    <!-- TROU + SCORE -->
+    <section class="saisie-rapide_card saisie-rapide_hole-card">
+      <div class="saisie-rapide_hole">
+        <h2 class="saisie-rapide_hole-title" data-qr="hole-number">Trou 1</h2>
+        <p class="saisie-rapide_hole-meta" data-qr="hole-meta"></p>
+      </div>
+      <div class="saisie-rapide_hole-score">
+        <span class="saisie-rapide_hole-score-label">Score</span>
+        <span class="saisie-rapide_score-badge is-empty" data-qr="hole-score">–</span>
+      </div>
+    </section>
+
+    <!-- FAIRWAY -->
+    <section class="saisie-rapide_card">
+      <div class="saisie-rapide_card-head">
+        <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4L5 20"/><path d="M14.5 4L19 20"/><path d="M12 7v2.5"/><path d="M12 12v2.5"/><path d="M12 17v3"/></svg></span>
+        <h2 class="saisie-rapide_card-title">Fairway</h2>
+      </div>
+
+      <div class="saisie-rapide_map is-fairway" id="qr-fairway-root"></div>
+
+      <div class="saisie-rapide_choice-list is-divided" role="radiogroup" aria-label="Fairway">
+        <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false">
+          <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></span>
+          <span class="saisie-rapide_choice-label">Gauche</span>
+        </button>
+        <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false">
+          <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg></span>
+          <span class="saisie-rapide_choice-label">Centre</span>
+        </button>
+        <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false">
+          <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
+          <span class="saisie-rapide_choice-label">Droite</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- GREEN | PUTTS + RÉSUMÉ LIVE -->
+    <div class="saisie-rapide_split">
+
+      <section class="saisie-rapide_card is-green-card">
+        <div class="saisie-rapide_card-head">
+          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>
+          <h2 class="saisie-rapide_card-title">Green en régulation</h2>
+        </div>
+        <div class="saisie-rapide_map is-green" id="qr-green-root"></div>
+      </section>
+
+      <div class="saisie-rapide_side">
+
+        <section class="saisie-rapide_card">
+          <h2 class="saisie-rapide_card-title">Putts</h2>
+          <div class="saisie-rapide_stepper">
+            <button class="saisie-rapide_stepper-button" type="button" data-qr-putts="-1" aria-label="Moins un putt">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="saisie-rapide_stepper-value" data-qr="putts-value" aria-live="polite">–</span>
+            <button class="saisie-rapide_stepper-button" type="button" data-qr-putts="1" aria-label="Plus un putt">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="saisie-rapide_card is-live">
+          <div class="saisie-rapide_live-head">
+            <svg class="saisie-rapide_live-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="4" width="4" height="17" rx="1"/><rect x="17" y="9" width="4" height="12" rx="1"/></svg>
+            <h2 class="saisie-rapide_live-title">Résumé live</h2>
+          </div>
+          <div class="saisie-rapide_stat-list">
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">Score</span><span class="saisie-rapide_stat-value is-accent">--</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">FIR</span><span class="saisie-rapide_stat-value">--</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">GIR</span><span class="saisie-rapide_stat-value">--</span></div>
+            <div class="saisie-rapide_stat"><span class="saisie-rapide_stat-label">Putts</span><span class="saisie-rapide_stat-value">--</span></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- NAVIGATION ENTRE LES TROUS -->
+    <div class="saisie-rapide_nav">
+      <button class="saisie-rapide_nav-button" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Trou précédent
+      </button>
+      <button class="saisie-rapide_nav-button is-primary" type="button">
+        Trou suivant
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+  </main>
+</section>
+
+<!-- ======================================================================
+     ÉCRAN 8 — SAISIE DÉTAILLÉE (Client-First)
+     L'encadré de gauche du bandeau du haut affiche le trou (numéro, par, distance, hcp).
+     Les encadrés Green / Fairway reprennent ceux de la saisie rapide (classes saisie-rapide_*).
+     ====================================================================== -->
+<section id="screen-saisie-detaillee" class="screen">
+
+  <!-- Indicateur : un appui en haut de l'écran affiche l'en-tête -->
+  <button class="saisie-detaillee_header-toggle" type="button" data-sd-header-toggle aria-label="Afficher l'en-tête" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+
+  <main class="saisie-detaillee_component">
+
+    <header class="page-header">
+      <button class="page-header__back" data-goto="dashboard" aria-label="Retour aux stats">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
+        Stats
+      </button>
+      <h1 class="page-header__title">SAISIE DÉTAILLÉE</h1>
+      <button class="page-header__action" type="button" data-finish-round>Terminer</button>
+    </header>
+
+    <!-- STATS DU TROU -->
+    <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_stats" aria-label="Stats du trou">
+      <div class="saisie-detaillee_hole">
+        <div class="saisie-detaillee_hole-info">
+          <h2 class="saisie-detaillee_hole-title" data-sd="hole-number">Trou 1</h2>
+          <p class="saisie-detaillee_hole-meta" data-sd="hole-meta"></p>
+        </div>
+        <div class="saisie-detaillee_hole-score">
+          <span class="saisie-detaillee_hole-score-label">Score</span>
+          <span class="saisie-detaillee_hole-score-value" data-sd="score">--</span>
+        </div>
+      </div>
+      <div class="saisie-detaillee_stats-body">
+        <div class="saisie-detaillee_stat-list">
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg>
+              <span class="saisie-detaillee_stat-label">FIR</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="fir">--</span>
+          </div>
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>
+              <span class="saisie-detaillee_stat-label">GIR</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="gir">--</span>
+          </div>
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21l6-17"/><path d="M14 4l3 1-.8 2.6L13 6.6"/><path d="M5.5 20.5h5"/></svg>
+              <span class="saisie-detaillee_stat-label">Putts</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="putts">--</span>
+          </div>
+          <div class="saisie-detaillee_stat">
+            <span class="saisie-detaillee_stat-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11"/><path d="M12 20V6"/><path d="M19 20v-7"/></svg>
+              <span class="saisie-detaillee_stat-label">SG</span>
+            </span>
+            <span class="saisie-detaillee_stat-value" data-sd="sg">--</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUPS | DÉTAIL DU COUP -->
+    <div class="saisie-detaillee_split">
+
+      <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_shots">
+        <div class="saisie-rapide_card-head">
+          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21l7-16"/><path d="M13 5l4 1.2-1 3.2-4.2-1.1"/></svg></span>
+          <h2 class="saisie-rapide_card-title">Coups</h2>
+        </div>
+        <ol class="saisie-detaillee_shot-list" data-sd="shot-list"></ol>
+      </section>
+
+      <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_detail">
+
+        <!-- Club -->
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Club</span>
+          <label class="saisie-detaillee_field">
+            <span class="saisie-detaillee_icon" data-sd="club-icon"></span>
+            <span class="saisie-detaillee_field-text" data-sd="club-text"></span>
+            <svg class="saisie-detaillee_field-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            <select class="saisie-detaillee_field-select" data-sd="club-select" aria-label="Club"></select>
+          </label>
+        </div>
+
+        <!-- Lie : un seul bouton, chaque appui passe au lie suivant -->
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Lie</span>
+          <button class="saisie-detaillee_lie" type="button" data-sd-lie-cycle data-sd="lie-button" aria-label="Lie : appuyer pour changer">
+            <span class="saisie-detaillee_lie-icon" data-sd="lie-icon"></span>
+            <span data-sd="lie-text">--</span>
+          </button>
+        </div>
+
+        <!-- Distance restante après le coup : pavé numérique de l'appli (popup) -->
+        <div class="saisie-detaillee_group">
+          <span class="saisie-detaillee_label">Distance restante</span>
+          <label class="saisie-detaillee_field is-input">
+            <input class="saisie-detaillee_input" data-sd="distance" type="text" inputmode="none" readonly autocomplete="off" placeholder="--" aria-label="Distance restante en mètres">
+            <span class="saisie-detaillee_unit">m</span>
+          </label>
+        </div>
+
+        <!-- Pénalité : pavé numérique de l'appli (masquée quand le lie est Green) -->
+        <div class="saisie-detaillee_group" data-sd="penalty-group">
+          <span class="saisie-detaillee_label">Pénalité</span>
+          <label class="saisie-detaillee_field is-input">
+            <input class="saisie-detaillee_input" data-sd="penalty" type="text" inputmode="none" readonly autocomplete="off" value="0" aria-label="Pénalité">
+          </label>
+        </div>
+
+        <!-- Résultat : remplace la pénalité quand le lie est Green, ouvre le popup 3x3 -->
+        <div class="saisie-detaillee_group" data-sd="result-group" hidden>
+          <span class="saisie-detaillee_label">Résultat</span>
+          <button class="saisie-detaillee_field" type="button" data-sd-result-open aria-haspopup="dialog" aria-label="Résultat du coup">
+            <span class="saisie-detaillee_field-text" data-sd="result-text">Choisir</span>
+            <svg class="saisie-detaillee_field-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <!-- Actions : supprimer le coup (gauche) | trou terminé (droite) -->
+        <div class="saisie-detaillee_actions">
+          <button class="saisie-detaillee_delete" type="button" data-sd-delete aria-label="Supprimer le coup">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <button class="saisie-detaillee_holed" type="button" data-sd-holed aria-pressed="false">Holed</button>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- FAIRWAY : les boutons sont posés sur l'image -->
+    <section class="saisie-rapide_card saisie-detaillee_map-card saisie-detaillee_fairway">
+      <div class="saisie-rapide_card-head">
+        <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4L5 20"/><path d="M14.5 4L19 20"/><path d="M12 7v2.5"/><path d="M12 12v2.5"/><path d="M12 17v3"/></svg></span>
+        <h2 class="saisie-rapide_card-title">Fairway</h2>
+      </div>
+      <div class="saisie-detaillee_fairway-stage">
+        <div class="saisie-rapide_map is-fairway" data-sd="fairway-root"></div>
+        <div class="saisie-rapide_choice-list" role="radiogroup" aria-label="Attaque fairway">
+          <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Gauche">
+            <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></span>
+            <span class="saisie-rapide_choice-label">Gauche</span>
+          </button>
+          <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Centre">
+            <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg></span>
+            <span class="saisie-rapide_choice-label">Centre</span>
+          </button>
+          <button class="saisie-rapide_choice" type="button" role="radio" aria-checked="false" data-sd-fairway="Droite">
+            <span class="saisie-rapide_choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
+            <span class="saisie-rapide_choice-label">Droite</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GREEN | STROKES GAINED (colonne à droite) -->
+    <div class="saisie-detaillee_maps">
+
+      <section class="saisie-rapide_card saisie-detaillee_map-card">
+        <div class="saisie-rapide_card-head">
+          <span class="saisie-rapide_card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg></span>
+          <h2 class="saisie-rapide_card-title">Green</h2>
+        </div>
+        <div class="saisie-rapide_map is-green" data-sd="green-root"></div>
+      </section>
+
+      <section class="saisie-rapide_card saisie-detaillee_card saisie-detaillee_sg" aria-label="Strokes gained">
+        <div class="saisie-detaillee_sg-list">
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">Driving</span><span class="saisie-detaillee_sg-value" data-sd="sg-driving">--</span></div>
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">A.G</span><span class="saisie-detaillee_sg-value" data-sd="sg-green">--</span></div>
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">App.</span><span class="saisie-detaillee_sg-value" data-sd="sg-approach">--</span></div>
+          <div class="saisie-detaillee_sg-item"><span class="saisie-detaillee_sg-label">Putts</span><span class="saisie-detaillee_sg-value" data-sd="sg-putting">--</span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- NAVIGATION ENTRE LES TROUS (calquée sur la saisie rapide) -->
+    <div class="saisie-rapide_nav">
+      <button class="saisie-rapide_nav-button" type="button" data-sd-nav="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Trou précédent
+      </button>
+      <button class="saisie-rapide_nav-button is-primary" type="button" data-sd-nav="1">
+        <span data-sd="next-label">Trou suivant</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Popup résultat du coup -->
+  <div data-sd="popup-root"></div>
+</section>
+
+</div>
+
+<!-- =========================== PARTIE : WEDGING ============================ -->
+<div id="page-wedging" class="app-page">
+  <div id="app"></div>
+</div>
+
+<!-- ============================ PARTIE : GYM ============================ -->
+<div id="page-gym" class="app-page gym-app">
+  <div class="gym-app" id="app-root-gym"></div>
+</div>
+
+<!-- ============================ PARTIE : VITESSE ============================ -->
+<div id="page-vitesse" class="app-page">
+  <div id="app-root-vitesse"></div>
+</div>
+
+<!-- ============================ PARTIE : PUTTING ============================ -->
+<div id="page-putting" class="app-page">
+  <div id="app-root"></div>
+</div>
+
+<!-- ============================ PARTIE : MENU ============================ -->
+<div id="page-menu" class="app-page">
+<div class="page_wrapper">
+
+  <header class="nav_component">
+    <button class="nav_back-button" type="button" id="backBtn">
+      <svg class="nav_back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="nav_back-label">Home</span>
+    </button>
+    <h1 class="nav_title" id="headerTitle">Menu</h1>
+  </header>
+
+  <main class="app_root" id="root"></main>
+
+</div>
+</div>
+
+<!-- ======================= PARTIE : AUTH (connexion + inscription) ======================= -->
+<div id="page-login" class="app-page active">
+  <section class="auth_component">
+
+    <div class="auth_background">
+      <img class="auth_background-image" data-auth-background alt="" decoding="async">
+      <div class="auth_background-overlay"></div>
+    </div>
+
+    <div class="auth_content">
+
+      <div class="auth_logo">
+        <svg class="auth_logo-icon" width="44" height="72" viewBox="0 0 44 72" fill="none" aria-hidden="true">
+          <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
+          <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
+        </svg>
+        <div class="auth_logo-text">GOLF</div>
+      </div>
+
+      <div class="auth_header is-login">
+        <h1 class="auth_heading">Bienvenue</h1>
+        <p class="auth_subheading">Connectez-vous pour retrouver votre progression.</p>
+      </div>
+
+      <form class="auth_form" data-auth-form="login" novalidate>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 7l9 6 9-6"/>
+          </svg>
+          <input class="auth_input" type="email" name="email" placeholder="Adresse e-mail" autocomplete="email" inputmode="email" required>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password" placeholder="Mot de passe" autocomplete="current-password" required>
+          <button class="auth_toggle" type="button" data-auth-toggle aria-label="Afficher le mot de passe">
+            <svg class="auth_toggle-icon is-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="auth_toggle-icon is-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7c2 0 3.8.7 5.3 1.7M22 12s-3.6 7-10 7c-2 0-3.8-.7-5.3-1.7"/>
+              <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+              <path d="M3 3l18 18"/>
+            </svg>
+          </button>
+        </label>
+
+        <button class="auth_forgot" type="button" data-auth-goto="forgot-password">Mot de passe oublié ?</button>
+
+        <p class="auth_error" data-auth-error role="alert"></p>
+
+        <button class="auth_button is-primary" type="submit">Se connecter</button>
+      </form>
+
+      <div class="auth_divider">
+        <div class="auth_divider-line"></div>
+        <div class="auth_divider-text">OU</div>
+        <div class="auth_divider-line"></div>
+      </div>
+
+      <div class="auth_social">
+        <button class="auth_button is-social" type="button" data-auth-provider="apple">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+          </svg>
+          <span>Continuer avec Apple</span>
+        </button>
+
+        <button class="auth_button is-social" type="button" data-auth-provider="google">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+          <span>Continuer avec Google</span>
+        </button>
+      </div>
+
+      <div class="auth_switch">
+        <span class="auth_switch-text">Pas encore de compte ?</span>
+        <button class="auth_switch-link" type="button" data-auth-goto="signup">Créer un compte</button>
+      </div>
+
+      <p class="auth_legal">
+        En continuant, vous acceptez nos
+        <a class="auth_legal-link" href="?legal=cgu" onclick="openHelpPage('cgu','login');return false;">conditions d'utilisation</a>
+        et notre
+        <a class="auth_legal-link" href="?legal=confidentialite" onclick="openHelpPage('confidentialite','login');return false;">politique de confidentialité</a>.
+      </p>
+
+    </div>
+  </section>
+</div>
+
+<div id="page-signup" class="app-page">
+  <section class="auth_component">
+
+    <div class="auth_background">
+      <img class="auth_background-image" data-auth-background alt="" decoding="async">
+      <div class="auth_background-overlay"></div>
+    </div>
+
+    <div class="auth_content">
+
+      <div class="auth_logo">
+        <svg class="auth_logo-icon" width="44" height="72" viewBox="0 0 44 72" fill="none" aria-hidden="true">
+          <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
+          <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
+        </svg>
+        <div class="auth_logo-text">GOLF</div>
+      </div>
+
+      <div class="auth_header">
+        <h1 class="auth_heading">Créer un compte</h1>
+        <p class="auth_subheading">Rejoignez-nous pour suivre votre progression.</p>
+      </div>
+
+      <form class="auth_form" data-auth-form="signup" novalidate>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 7l9 6 9-6"/>
+          </svg>
+          <input class="auth_input" type="email" name="email" placeholder="Adresse e-mail" autocomplete="email" inputmode="email" required>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password" placeholder="Mot de passe" autocomplete="new-password" required>
+          <button class="auth_toggle" type="button" data-auth-toggle aria-label="Afficher le mot de passe">
+            <svg class="auth_toggle-icon is-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="auth_toggle-icon is-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7c2 0 3.8.7 5.3 1.7M22 12s-3.6 7-10 7c-2 0-3.8-.7-5.3-1.7"/>
+              <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+              <path d="M3 3l18 18"/>
+            </svg>
+          </button>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password-confirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" required>
+        </label>
+
+        <p class="auth_error" data-auth-error role="alert"></p>
+
+        <button class="auth_button is-primary" type="submit">Créer mon compte</button>
+      </form>
+
+      <div class="auth_divider">
+        <div class="auth_divider-line"></div>
+        <div class="auth_divider-text">OU</div>
+        <div class="auth_divider-line"></div>
+      </div>
+
+      <div class="auth_social">
+        <button class="auth_button is-social" type="button" data-auth-provider="apple">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+          </svg>
+          <span>Continuer avec Apple</span>
+        </button>
+
+        <button class="auth_button is-social" type="button" data-auth-provider="google">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+          <span>Continuer avec Google</span>
+        </button>
+      </div>
+
+      <div class="auth_switch">
+        <span class="auth_switch-text">Déjà un compte ?</span>
+        <button class="auth_switch-link" type="button" data-auth-goto="login">Se connecter</button>
+      </div>
+
+      <p class="auth_legal">
+        En continuant, vous acceptez nos
+        <a class="auth_legal-link" href="?legal=cgu" onclick="openHelpPage('cgu','signup');return false;">conditions d'utilisation</a>
+        et notre
+        <a class="auth_legal-link" href="?legal=confidentialite" onclick="openHelpPage('confidentialite','signup');return false;">politique de confidentialité</a>.
+      </p>
+
+    </div>
+  </section>
+</div>
+
+<script>
+  // Bloque le swipe-retour depuis les bords et le zoom au pincement (iOS)
+  document.addEventListener('touchstart', function (e) {
+    var x = e.touches[0].clientX;
+    if (x < 16 || x > window.innerWidth - 16) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+
+  // Verrouille l'orientation en portrait, uniquement quand l'appli est installée (pas dans l'onglet du navigateur)
+  try {
+    var isInstalledApp = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    if (isInstalledApp && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait').catch(function () {});
+    }
+  } catch (e) {}
+</script>
+<script src="core/app-shell.js?v=40"></script>
+<script src="core/commun.js?v=40"></script>
+<script src="core/sg-data.js?v=40"></script>
+<script src="core/strokes-gained.js?v=40"></script>
+<script src="modules/home/HomePage.js?v=40"></script>
+<script src="modules/parcours/parcours-ui.js?v=40"></script>
+<script src="modules/wedging/wedging.js?v=40"></script>
+<script src="modules/gym/gym.js?v=40"></script>
+<script src="modules/putting/putting.js?v=40"></script>
+<script src="modules/vitesse/vitesse.js?v=40"></script>
+<script src="modules/stats/stats.js?v=40"></script>
+<script src="modules/menu/menu.js?v=40"></script>
+<script src="modules/auth/auth.js?v=40"></script>
+</body>
+</html>
