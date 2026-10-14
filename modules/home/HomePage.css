@@ -40,7 +40,8 @@
 
 .home-screen_header {
   position: absolute;
-  top: 24px;
+  /* Sous la barre d'état iOS (installée en plein écran) ; 24px conservés sur les appareils sans encoche */
+  top: max(24px, calc(env(safe-area-inset-top, 0px) + 12px));
   left: 24px;
   right: 24px;
   display: flex;
@@ -70,7 +71,7 @@
 
 .profile_button {
   position: absolute;
-  top: 24px;
+  top: max(24px, calc(env(safe-area-inset-top, 0px) + 12px));
   right: 24px;
   width: 48px;
   height: 48px;

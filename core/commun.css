@@ -31,9 +31,12 @@
   right: 0;
   max-width: var(--app-max-width);
   margin: 0 auto;
-  height: 56px;
+  /* box-sizing: border-box (reset global) : le padding-top de la zone de sécurité est inclus dans la hauteur.
+     Il faut donc l'ajouter aux 56px, sinon la zone utile se réduit à 56px - inset (6px sur iPhone 12 mini)
+     et le contenu du header remonte sous l'heure / le réseau / la batterie. */
+  height: calc(56px + env(safe-area-inset-top, 0px));
   padding: 0 var(--app-padding);
-  padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top, 0px);
   background-color: var(--app-header-bg);
   border-bottom: 1px solid var(--app-header-border);
   display: grid;
