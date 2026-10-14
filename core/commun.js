@@ -210,3 +210,245 @@ function appAlert(message, options) {
 function appPrompt(label, defaultValue, options) {
   return appDialog(Object.assign({ kind: 'prompt', message: label, defaultValue: defaultValue }, options || {}));
 }
+
+/* ---------------------------------------------------------------------------
+   PRÉFÉRENCES PAR MODULE — réglages d'affichage choisis depuis le menu "3 points"
+   des headers (Putting, Wedging, Parcours, Gym). Une seule clé localStorage,
+   golfModulePrefs, de la forme { putting: {...}, wedging: {...}, ... }.
+   Volontairement séparée de golfAppState (gérée par menu.js, qui la réécrit en
+   entier depuis sa propre copie en mémoire).
+     appPrefGet(module, clé, valeurParDéfaut)  -> valeur enregistrée ou défaut
+     appPrefSet(module, clé, valeur)           -> true | false (écriture via appSafeSetItem)
+   --------------------------------------------------------------------------- */
+var APP_PREFS_KEY = 'golfModulePrefs';
+
+function appPrefsRead() {
+  try {
+    var data = JSON.parse(localStorage.getItem(APP_PREFS_KEY) || '{}');
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function appPrefGet(module, key, fallback) {
+  var mod = appPrefsRead()[module];
+  if (mod && typeof mod === 'object' && Object.prototype.hasOwnProperty.call(mod, key) && mod[key] !== undefined) return mod[key];
+  return fallback;
+}
+
+function appPrefSet(module, key, value) {
+  var data = appPrefsRead();
+  if (!data[module] || typeof data[module] !== 'object' || Array.isArray(data[module])) data[module] = {};
+  data[module][key] = value;
+  return appSafeSetItem(APP_PREFS_KEY, JSON.stringify(data));
+}
+
+/* ---------------------------------------------------------------------------
+   BOTTOM SHEET — feuille qui monte du bas de l'écran, partagée par les menus
+   "3 points" des modules. Chaque module fournit ses entrées ; le rendu, la
+   fermeture (Échap, appui sur le fond, bouton Fermer) et l'accessibilité sont ici.
+   Tous les textes passent par textContent : un nom saisi par la personne (nom de
+   programme, de parcours...) ne peut pas injecter de HTML.
+
+     appSheet({ title, sections: [ { title, items: [ ... ] } ] })  -> fonction close()
+
+   Types d'entrées (items) :
+     { type: 'toggle',  label, hint, value: bool, onChange(valeur) }
+     { type: 'segment', label, hint, value, options: [{ value, label }], onChange(valeur) }
+     { type: 'action',  label, hint, selected: bool, danger: bool, keepOpen: bool, onClick() }
+     { type: 'reorder', label, hint, items: [{ key, label, visible }], onChange(items) }
+        -> liste dont chaque ligne a un oeil (afficher / masquer) et des flèches haut / bas ;
+           onChange reçoit la liste complète dans le nouvel ordre : [{ key, label, visible }]
+   Les toggles, segments et listes restent ouverts après un changement ; une action
+   ferme la feuille avant d'appeler onClick (sauf keepOpen: true).
+   Une seule feuille à la fois : en ouvrir une ferme la précédente.
+   --------------------------------------------------------------------------- */
+var appSheetCurrent = null;
+
+function appSheetEl(tag, className, text) {
+  var el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text != null) el.textContent = text;
+  return el;
+}
+
+function appSheet(config) {
+  if (appSheetCurrent) appSheetCurrent();
+  var previousFocus = document.activeElement;
+  var sections = (config && config.sections) || [];
+
+  var overlay = appSheetEl('div', 'app-sheet_overlay');
+  var sheet = appSheetEl('div', 'app-sheet');
+  sheet.setAttribute('role', 'dialog');
+  sheet.setAttribute('aria-modal', 'true');
+  sheet.setAttribute('aria-labelledby', 'app-sheet-title');
+  sheet.tabIndex = -1;
+
+  var handle = appSheetEl('div', 'app-sheet_handle');
+  handle.setAttribute('aria-hidden', 'true');
+  var head = appSheetEl('div', 'app-sheet_head');
+  var titleEl = appSheetEl('h2', 'app-sheet_title', (config && config.title) || 'Options');
+  titleEl.id = 'app-sheet-title';
+  var closeBtn = appSheetEl('button', 'app-sheet_close', 'Fermer');
+  closeBtn.type = 'button';
+  head.appendChild(titleEl);
+  head.appendChild(closeBtn);
+  var body = appSheetEl('div', 'app-sheet_body');
+  sheet.appendChild(handle);
+  sheet.appendChild(head);
+  sheet.appendChild(body);
+  overlay.appendChild(sheet);
+
+  var closed = false;
+  function close() {
+    if (closed) return;
+    closed = true;
+    appSheetCurrent = null;
+    document.removeEventListener('keydown', onKey, true);
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (previousFocus && previousFocus.focus) { try { previousFocus.focus(); } catch (e) { /* élément disparu */ } }
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+    if (e.key === 'Tab') {
+      var items = sheet.querySelectorAll('button');
+      if (!items.length) return;
+      var first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+
+  function rowText(item) {
+    var wrap = appSheetEl('span', 'app-sheet_row-text');
+    wrap.appendChild(appSheetEl('span', 'app-sheet_row-label', item.label));
+    if (item.hint) wrap.appendChild(appSheetEl('span', 'app-sheet_row-hint', item.hint));
+    return wrap;
+  }
+
+  function buildToggle(item) {
+    var row = appSheetEl('button', 'app-sheet_row app-sheet_row--toggle');
+    row.type = 'button';
+    row.setAttribute('role', 'switch');
+    row.setAttribute('aria-checked', item.value ? 'true' : 'false');
+    row.appendChild(rowText(item));
+    var track = appSheetEl('span', 'app-sheet_switch' + (item.value ? ' is-on' : ''));
+    track.appendChild(appSheetEl('span', 'app-sheet_switch-knob'));
+    row.appendChild(track);
+    row.addEventListener('click', function () {
+      item.value = !item.value;
+      if (item.onChange) item.onChange(item.value);
+      render();
+    });
+    return row;
+  }
+
+  function buildSegment(item) {
+    var wrap = appSheetEl('div', 'app-sheet_block');
+    wrap.appendChild(rowText(item));
+    var group = appSheetEl('div', 'app-sheet_segment');
+    group.setAttribute('role', 'radiogroup');
+    group.setAttribute('aria-label', item.label);
+    (item.options || []).forEach(function (opt) {
+      var on = opt.value === item.value;
+      var btn = appSheetEl('button', 'app-sheet_segment-btn' + (on ? ' is-on' : ''), opt.label);
+      btn.type = 'button';
+      btn.setAttribute('role', 'radio');
+      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      btn.addEventListener('click', function () {
+        if (item.value === opt.value) return;
+        item.value = opt.value;
+        if (item.onChange) item.onChange(opt.value);
+        render();
+      });
+      group.appendChild(btn);
+    });
+    wrap.appendChild(group);
+    return wrap;
+  }
+
+  function buildAction(item) {
+    var row = appSheetEl('button', 'app-sheet_row app-sheet_row--action' + (item.danger ? ' is-danger' : '') + (item.selected ? ' is-selected' : ''));
+    row.type = 'button';
+    row.appendChild(rowText(item));
+    if (item.selected) {
+      var mark = appSheetEl('span', 'app-sheet_check', '✓');
+      mark.setAttribute('aria-label', 'Sélectionné');
+      row.appendChild(mark);
+    }
+    row.addEventListener('click', function () {
+      if (!item.keepOpen) close();
+      if (item.onClick) item.onClick();
+    });
+    return row;
+  }
+
+  function buildReorder(item) {
+    var wrap = appSheetEl('div', 'app-sheet_block');
+    wrap.appendChild(rowText(item));
+    var list = appSheetEl('ul', 'app-sheet_list');
+    var rows = item.items || [];
+    function commit() { if (item.onChange) item.onChange(rows.map(function (r) { return { key: r.key, label: r.label, visible: !!r.visible }; })); render(); }
+    rows.forEach(function (r, i) {
+      var li = appSheetEl('li', 'app-sheet_list-row' + (r.visible ? '' : ' is-off'));
+      var eye = appSheetEl('button', 'app-sheet_list-eye' + (r.visible ? ' is-on' : ''), r.label);
+      eye.type = 'button';
+      eye.setAttribute('role', 'switch');
+      eye.setAttribute('aria-checked', r.visible ? 'true' : 'false');
+      eye.addEventListener('click', function () { r.visible = !r.visible; commit(); });
+      var up = appSheetEl('button', 'app-sheet_list-move', '↑');
+      up.type = 'button';
+      up.setAttribute('aria-label', 'Monter ' + r.label);
+      up.disabled = i === 0;
+      up.addEventListener('click', function () { rows.splice(i - 1, 0, rows.splice(i, 1)[0]); commit(); });
+      var down = appSheetEl('button', 'app-sheet_list-move', '↓');
+      down.type = 'button';
+      down.setAttribute('aria-label', 'Descendre ' + r.label);
+      down.disabled = i === rows.length - 1;
+      down.addEventListener('click', function () { rows.splice(i + 1, 0, rows.splice(i, 1)[0]); commit(); });
+      li.appendChild(eye);
+      li.appendChild(up);
+      li.appendChild(down);
+      list.appendChild(li);
+    });
+    wrap.appendChild(list);
+    return wrap;
+  }
+
+  function render() {
+    var scroll = body.scrollTop;
+    var focusIndex = -1;
+    var buttons = Array.prototype.slice.call(sheet.querySelectorAll('button'));
+    if (buttons.indexOf(document.activeElement) !== -1) focusIndex = buttons.indexOf(document.activeElement);
+    body.textContent = '';
+    sections.forEach(function (section) {
+      var block = appSheetEl('section', 'app-sheet_section');
+      if (section.title) block.appendChild(appSheetEl('h3', 'app-sheet_section-title', section.title));
+      (section.items || []).forEach(function (item) {
+        if (item.type === 'toggle') block.appendChild(buildToggle(item));
+        else if (item.type === 'segment') block.appendChild(buildSegment(item));
+        else if (item.type === 'action') block.appendChild(buildAction(item));
+        else if (item.type === 'reorder') block.appendChild(buildReorder(item));
+      });
+      body.appendChild(block);
+    });
+    body.scrollTop = scroll;
+    // Le contenu est reconstruit à chaque changement : on redonne le focus au même rang de bouton (navigation au clavier)
+    if (focusIndex !== -1) {
+      var after = sheet.querySelectorAll('button');
+      if (after[focusIndex]) after[focusIndex].focus();
+    }
+  }
+
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', onKey, true);
+  appSheetCurrent = close;
+  render();
+  document.body.appendChild(overlay);
+  // déclenche la transition d'entrée au prochain affichage
+  requestAnimationFrame(function () { overlay.classList.add('is-open'); });
+  closeBtn.focus();
+  return close;
+}

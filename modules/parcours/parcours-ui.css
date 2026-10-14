@@ -1273,3 +1273,46 @@ a:focus-visible, button:focus-visible, .dropdown-trigger:focus-visible, .select-
   outline-offset: 2px;
 }
 
+/* --------------------------------------------------------------------------
+   Lisibilité (menu 3 points, openParcoursMenu dans parcours-ui.js)
+   Classes pc-large-text et pc-high-contrast posées sur #page-parcours.
+   -------------------------------------------------------------------------- */
+
+/* Texte plus grand : les textes de 9 à 13,5 px passent à 11-15,5 px */
+#page-parcours.pc-large-text .quick-action-btn { font-size: 13px; }
+#page-parcours.pc-large-text .hole-counter em { font-size: 14px; }
+#page-parcours.pc-large-text .mode-btn.mode-btn-offgreen,
+#page-parcours.pc-large-text .mode-btn.track-unit-btn,
+#page-parcours.pc-large-text .mode-btn.track-skip-btn { font-size: 13px; }
+#page-parcours.pc-large-text .stat-card .stat-label { font-size: 13px; }
+#page-parcours.pc-large-text .progress-labels { font-size: 14.5px; }
+#page-parcours.pc-large-text .segmented button { font-size: 15.5px; }
+#page-parcours.pc-large-text .select-card span { font-size: 14.5px; }
+#page-parcours.pc-large-text .unit-toggle button { font-size: 14.5px; }
+#page-parcours.pc-large-text .hint-text { font-size: 15.5px; }
+#page-parcours.pc-large-text .input-box .input-box-label,
+#page-parcours.pc-large-text .result-box .result-label { font-size: 13.5px; }
+#page-parcours.pc-large-text .compass-caption { font-size: 15px; }
+#page-parcours.pc-large-text .data-table { font-size: 14.5px; }
+#page-parcours.pc-large-text .data-table caption,
+#page-parcours.pc-large-text .data-table .table-title { font-size: 15px; }
+#page-parcours.pc-large-text .data-table th { font-size: 13px; }
+#page-parcours.pc-large-text .elev-live { font-size: 15px; }
+/* Marques du Fairway et du Green : cercles de 22 px, 1 à 2 chiffres */
+#page-parcours.pc-large-text .fw-mark,
+#page-parcours.pc-large-text .gr-mark { font-size: 12px; }
+#page-parcours.pc-large-text .fw-ruler-label,
+#page-parcours.pc-large-text .gr-ring-label { font-size: 11px; }
+
+/* Contraste renforcé : on redéfinit les jetons de texte et de bordure sur la page. Une règle par thème,
+   car une variable posée sur #page-parcours l'emporterait aussi sur les valeurs du thème clair. */
+html:not([data-theme="light"]) #page-parcours.pc-high-contrast {
+  --text-secondary: #ffffff;
+  --text-muted: #dde2e8;
+  --border: #55627a;
+}
+html[data-theme="light"] #page-parcours.pc-high-contrast {
+  --text-secondary: #0f1511;
+  --text-muted: #2b3328;
+  --border: #6b7a66;
+}

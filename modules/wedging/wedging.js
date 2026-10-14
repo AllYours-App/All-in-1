@@ -173,13 +173,13 @@ const UI = (function () {
     return `<header class="wg-header">
       <div class="wg-header-side"><button class="wg-back-btn" onclick="${backHash === 'app-home' ? "showPage('home')" : "Router.go('" + backHash + "')"}">${ICONS.back} ${backLabel}</button></div>
       <h1 class="wg-title" style="${title === "WEDGING" ? "" : "font-size:16px;letter-spacing:2px;"}">${title}</h1>
-      <div class="wg-header-side wg-header-right">${rightIcon ? `<button class="wg-icon-btn" id="headerRightBtn">${rightIcon}</button>` : ""}</div>
+      <div class="wg-header-side wg-header-right">${rightIcon ? `<button class="wg-icon-btn" id="headerRightBtn" aria-label="Options" aria-haspopup="dialog" onclick="openWedgingMenu()">${rightIcon}</button>` : ""}</div>
     </header>`;
   }
   function topbar(label, backHash, rightIcon) {
     return `<div class="wg-topbar">
       <button class="wg-back-btn" onclick="Router.go('${backHash}')">${ICONS.back} ${label}</button>
-      <button class="wg-icon-btn" style="${rightIcon ? "" : "visibility:hidden;"}">${rightIcon || ""}</button>
+      <button class="wg-icon-btn" style="${rightIcon ? "" : "visibility:hidden;"}" ${rightIcon ? 'aria-label="Options" aria-haspopup="dialog" onclick="openWedgingMenu()"' : 'tabindex="-1" aria-hidden="true"'}>${rightIcon || ""}</button>
     </div>`;
   }
   function analysisHeader(eyebrow, title, subtitle) {
@@ -376,6 +376,31 @@ function removeWedgeShotsFromStats(roundId) {
 window.removeWedgeShotsFromStats = removeWedgeShotsFromStats;
 
 function wedgeBucketFor(distance) { return Math.round(distance / 5) * 5; }
+
+// Paliers des écrans d'analyse (Dispersion, Distance, SG). Le pas (5 ou 10 m) est un réglage d'affichage du menu 3 points
+// (golfModulePrefs.wedging.step) : les coups restent enregistrés par paliers de 5 m, rien n'est modifié dans les données.
+// Au pas de 10 m, les paliers sont 30-39m, 40-49m ... 100-110m (le dernier prend la limite haute, comme au pas de 5 m).
+function wedgeAnalysisStep() { return appPrefGet('wedging', 'step', 5) === 10 ? 10 : 5; }
+function wedgeAnalysisBuckets() {
+  if (wedgeAnalysisStep() === 5) return WEDGE_BUCKETS;
+  const arr = [];
+  for (let d = WEDGE_MIN_DISTANCE; d < WEDGE_MAX_DISTANCE; d += 10) arr.push(d);
+  return arr;
+}
+function wedgeAnalysisBucketFor(distance) {
+  const b = wedgeBucketFor(distance);
+  if (wedgeAnalysisStep() === 5) return b;
+  const buckets = wedgeAnalysisBuckets();
+  return Math.min(WEDGE_MIN_DISTANCE + Math.floor((b - WEDGE_MIN_DISTANCE) / 10) * 10, buckets[buckets.length - 1]);
+}
+// Libellé complet : "30-34m" (pas de 5) ou "30-39m" (pas de 10)
+function wedgeAnalysisBucketLabel(b) {
+  if (wedgeAnalysisStep() === 5) return wedgeBucketLabel(b);
+  const buckets = wedgeAnalysisBuckets();
+  return `${b}-${b === buckets[buckets.length - 1] ? WEDGE_MAX_DISTANCE : b + 9}m`;
+}
+// Libellé court (barres et titres) : "30m" au pas de 5, plage au pas de 10
+function wedgeAnalysisShortLabel(b) { return wedgeAnalysisStep() === 5 ? `${b}m` : wedgeAnalysisBucketLabel(b); }
 function wedgeLimitedRounds() {
   const sorted = wedgeRounds.slice().sort((a, b) => b.id - a.id);
   return wedgeShotsLimit === 'all' ? sorted : sorted.slice(0, wedgeShotsLimit);
@@ -496,14 +521,14 @@ let wedgeSortPopupKey = null;
 const WEDGE_EXERCISES_SORT_LABELS = { az: 'A → Z', type: 'Type' };
 
 function wedgeRadarBuckets() {
-  return Array.from(new Set(wedgeShotsWithResult().map(w => wedgeBucketFor(w.distanceToCover)))).sort((a, b) => a - b);
+  return Array.from(new Set(wedgeShotsWithResult().map(w => wedgeAnalysisBucketFor(w.distanceToCover)))).sort((a, b) => a - b);
 }
 
 const WEDGE_SORTS = {
   // Dispersion : distances affichées (multi, minimum 1)
   radarDistance: () => ({
     label: 'Distance', title: 'Trier par distance', multi: true,
-    options: wedgeRadarBuckets().map(b => [b, `${b}m`]),
+    options: wedgeRadarBuckets().map(b => [b, wedgeAnalysisShortLabel(b)]),
     isSelected: v => wedgeRadarDistances.has(v),
     valueText: wedgeRadarDistances.size || '',
     active: wedgeRadarDistances.size > 0,
@@ -1351,18 +1376,18 @@ Views.parcours = function () {
 /* --- DISPERSION = Toile d'araignée --- */
 Views.dispersionAnalysis = function () {
   const shots = wedgeShotsWithResult();
-  const buckets = Array.from(new Set(shots.map(w => wedgeBucketFor(w.distanceToCover)))).sort((a, b) => a - b);
+  const buckets = Array.from(new Set(shots.map(w => wedgeAnalysisBucketFor(w.distanceToCover)))).sort((a, b) => a - b);
   wedgeRadarDistances = new Set(Array.from(wedgeRadarDistances).filter(d => buckets.includes(d)));
   if (!wedgeRadarDistances.size && buckets.length) wedgeRadarDistances.add(buckets[0]);
   const selected = buckets.filter(b => wedgeRadarDistances.has(b));
   const cardsHtml = selected.map(b => {
-    const bucketShots = shots.filter(w => wedgeBucketFor(w.distanceToCover) === b);
+    const bucketShots = shots.filter(w => wedgeAnalysisBucketFor(w.distanceToCover) === b);
     const items = WEDGE_RADAR_ORDER.map(zone => {
       const vals = bucketShots.filter(w => w.zone === zone).map(w => w.finalDistance);
       const value = vals.length ? vals.reduce((a, b2) => a + b2, 0) / vals.length : null;
       return { label: wedgeRadarShortLabel(zone), value, display: value !== null ? `${Math.round(value * 10) / 10}m` : '—' };
     });
-    return `<div class="wg-insight-card"><div class="wg-insight-card-title">Dispersion à ${b}m (${bucketShots.length} coup${bucketShots.length > 1 ? 's' : ''})</div><div class="wg-insight-card-body">${Analytics.buildRadarChartSvg(items)}</div></div>`;
+    return `<div class="wg-insight-card"><div class="wg-insight-card-title">Dispersion à ${wedgeAnalysisShortLabel(b)} (${bucketShots.length} coup${bucketShots.length > 1 ? 's' : ''})</div><div class="wg-insight-card-body">${Analytics.buildRadarChartSvg(items)}</div></div>`;
   }).join('');
   return `
     ${UI.topbar("Wedging", "parcours", UI.ICONS.more)}
@@ -1378,10 +1403,10 @@ Views.dispersionAnalysis = function () {
 /* --- DISTANCE = Jauges --- */
 Views.distanceAnalysis = function () {
   const shots = wedgeShotsWithResult();
-  const rows = WEDGE_BUCKETS.map(b => {
-    const vals = shots.filter(w => wedgeBucketFor(w.distanceToCover) === b).map(w => w.finalDistance);
+  const rows = wedgeAnalysisBuckets().map(b => {
+    const vals = shots.filter(w => wedgeAnalysisBucketFor(w.distanceToCover) === b).map(w => w.finalDistance);
     const avg = vals.length ? vals.reduce((a, b2) => a + b2, 0) / vals.length : null;
-    return { label: `${b}m`, avg: avg !== null ? Math.round(avg * 10) / 10 : null };
+    return { label: wedgeAnalysisShortLabel(b), avg: avg !== null ? Math.round(avg * 10) / 10 : null };
   });
   const maxVal = Math.max(1, ...rows.filter(r => r.avg !== null).map(r => r.avg));
   const rowsHtml = rows.map(r => {
@@ -1393,7 +1418,7 @@ Views.distanceAnalysis = function () {
     ${UI.topbar("Wedging", "parcours", UI.ICONS.more)}
     ${UI.analysisHeader("ANALYSE", "Distance", "Distance finale moyenne par palier de distance à faire.")}
     <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
-    <section class="wg-section"><div class="wg-gauge-axis"><span>Distance à faire (paliers de 5m)</span><span>Résultat moyen (m)</span></div>${rowsHtml}</section>
+    <section class="wg-section"><div class="wg-gauge-axis"><span>Distance à faire (paliers de ${wedgeAnalysisStep()}m)</span><span>Résultat moyen (m)</span></div>${rowsHtml}</section>
     ${UI.bottomNav("distance")}
   `;
 };
@@ -1401,11 +1426,11 @@ Views.distanceAnalysis = function () {
 /* --- SG (Strokes Gained), par palier de distance à faire --- */
 Views.sgAnalysis = function () {
   const shots = wedgeShotsWithResult();
-  const entries = WEDGE_BUCKETS.map(b => {
-    const bucketShots = shots.filter(w => wedgeBucketFor(w.distanceToCover) === b);
+  const entries = wedgeAnalysisBuckets().map(b => {
+    const bucketShots = shots.filter(w => wedgeAnalysisBucketFor(w.distanceToCover) === b);
     const vals = bucketShots.map(Analytics.wedgeShotSG).filter(v => v !== null);
     const avg = vals.length ? vals.reduce((a, c) => a + c, 0) / vals.length : null;
-    return { label: wedgeBucketLabel(b), value: avg };
+    return { label: wedgeAnalysisBucketLabel(b), value: avg };
   });
   const maxAbs = Math.max(0.5, ...entries.filter(e => e.value !== null).map(e => Math.abs(e.value)));
   const rowsHtml = entries.map(e => {
@@ -1457,6 +1482,59 @@ Views.exercices = function () {
   if (wedgeReviewExerciseId !== null) return wedgeExerciseReviewHtml();
   return wedgeExercisesListHtml();
 };
+
+/* ============================ MENU 3 POINTS ================================ */
+// Réglages d'affichage enregistrés dans golfModulePrefs.wedging (voir commun.js) :
+//   defaultAnalysis : 'dispersion' | 'distance' | 'sg'  — analyse ouverte par "Voir mes analyses"
+//   step            : 5 | 10                            — pas des paliers des analyses (affichage seulement)
+// Ce menu est aussi le seul accès aux écrans d'analyse depuis le Journal et les Exercices.
+const WEDGE_ANALYSIS_VIEWS = [
+  { value: 'dispersion', label: 'Dispersion', route: 'dispersion-analysis' },
+  { value: 'distance', label: 'Distance', route: 'distance-analysis' },
+  { value: 'sg', label: 'SG', route: 'sg-analysis' },
+];
+function wedgeDefaultAnalysis() {
+  const saved = appPrefGet('wedging', 'defaultAnalysis', 'dispersion');
+  return WEDGE_ANALYSIS_VIEWS.find(v => v.value === saved) || WEDGE_ANALYSIS_VIEWS[0];
+}
+function openWedgingMenu() {
+  const current = wedgeDefaultAnalysis();
+  const hintFor = v => `Ouvre « ${v.label} » (vue par défaut).`;
+  const openItem = {
+    type: 'action', label: 'Voir mes analyses', hint: hintFor(current),
+    onClick: () => Router.go(wedgeDefaultAnalysis().route)
+  };
+  appSheet({
+    title: 'Wedging',
+    sections: [
+      {
+        title: 'Analyses',
+        items: [
+          openItem,
+          {
+            type: 'segment', label: 'Vue d\'analyse par défaut', value: current.value,
+            options: WEDGE_ANALYSIS_VIEWS.map(v => ({ value: v.value, label: v.label })),
+            onChange: v => {
+              appPrefSet('wedging', 'defaultAnalysis', v);
+              openItem.hint = hintFor(wedgeDefaultAnalysis());
+            }
+          },
+          {
+            type: 'segment', label: 'Pas des paliers', hint: 'Regroupe les distances à faire dans les analyses. Les coups restent enregistrés par 5 m.',
+            value: wedgeAnalysisStep(),
+            options: [{ value: 5, label: '5 m' }, { value: 10, label: '10 m' }],
+            onChange: v => {
+              appPrefSet('wedging', 'step', v);
+              wedgeRadarDistances = new Set(); // les distances cochées de la Dispersion désignaient d'anciens paliers
+              rerender();
+            }
+          },
+        ]
+      }
+    ]
+  });
+}
+window.openWedgingMenu = openWedgingMenu;
 
 /* =============================== 7. ROUTEUR =================================== */
 

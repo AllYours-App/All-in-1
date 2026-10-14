@@ -2501,3 +2501,14 @@
 #page-putting .quick-session_info-btn::after { content: ''; position: absolute; inset: -12px; }
 #page-putting .session-holes-nav_item::after,
 #page-putting .session-attempt.is-editable::after { content: ''; position: absolute; inset: -4px; } /* écart de 8 px entre items : pas de chevauchement */
+
+/* ---------- Préférences d'affichage (menu 3 points, openPuttingMenu dans putting.js) ----------
+   Classes posées sur #page-putting par puttingApplyPrefs() : elles survivent au HTML régénéré
+   à chaque ouverture du module. !important : la carte "À reprendre" alterne is-hidden par JS. */
+#page-putting.pref-hide-resume .resume-card,
+#page-putting.pref-hide-history [data-sub="home"] > .history-card,
+#page-putting.pref-hide-perf-sg [data-perf-card="sg"],
+#page-putting.pref-hide-perf-rate [data-perf-card="rate"],
+#page-putting.pref-hide-perf-putts [data-perf-card="putts"] {
+  display: none !important;
+}

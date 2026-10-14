@@ -14,7 +14,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label" id="main-header-back-label">Home</span>
   </a>
   <h1 class="page-header_title" id="main-header-title">Putting</h1>
-  <button type="button" class="page-header_menu" id="headerRightBtn" aria-label="Menu"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <button type="button" class="page-header_menu" id="headerRightBtn" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('main')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="stats">
@@ -23,7 +23,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label">Putting</span>
   </a>
   <h1 class="page-header_title">Performance</h1>
-  <button type="button" class="page-header_menu" aria-label="Menu"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <button type="button" class="page-header_menu" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('stats')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="exercise-flow">
@@ -419,7 +419,7 @@ function renderPuttingTab() {
 
   <div class="chart-card compare-card is-hidden" id="compare-card-stats"></div>
 
-  <div class="chart-card">
+  <div class="chart-card" data-perf-card="sg">
     <div class="line-chart_header">
       <div>
         <div class="line-chart_title">SG vs Tour par round</div>
@@ -434,7 +434,7 @@ function renderPuttingTab() {
     <svg class="line-chart" id="stats-sg-line" viewBox="-50 0 1020 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
-  <div class="chart-card">
+  <div class="chart-card" data-perf-card="rate">
     <div class="line-chart_header">
       <div>
         <div class="line-chart_title">Taux de réussite &amp; mètres par round</div>
@@ -455,7 +455,7 @@ function renderPuttingTab() {
     <svg class="line-chart" id="stats-rate-meters-line" viewBox="-50 0 1020 520" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
-  <div class="chart-card">
+  <div class="chart-card" data-perf-card="putts">
     <div class="line-chart_header">
       <div>
         <div class="line-chart_title">1 putt &amp; 3 putts par round</div>
@@ -776,6 +776,14 @@ const filterState = {
   pente: { sessions: '20', distance: 'all', parcours: 'all', compareA: null, compareB: null },
   stats: { sessions: '20', distance: 'all', parcours: 'all', compareA: null, compareB: null },
 };
+
+// Période par défaut choisie dans le menu 3 points (golfModulePrefs.putting.defaultSessions) : appliquée aux trois écrans d'analyse
+(function () {
+  const saved = appPrefGet('putting', 'defaultSessions', null);
+  if (saved && FILTER_SESSIONS_OPTIONS.some(function (o) { return o.value === saved; })) {
+    Object.keys(filterState).forEach(function (g) { filterState[g].sessions = saved; });
+  }
+})();
 
 /* ============================================================
    SG (Strokes Gained) — putting
@@ -3737,6 +3745,80 @@ function renderRoundDetailScreen(r) {
     </div>
   `;
 }
+
+/* ============================================================
+   MENU 3 POINTS (headers Putting et Performance)
+   Réglages d'affichage enregistrés dans golfModulePrefs.putting (voir commun.js) :
+   showResume, showHistory (écran principal), showPerfSg / showPerfRate / showPerfPutts
+   (cartes de Performance), defaultSessions (période par défaut des filtres).
+   L'affichage passe par des classes pref-hide-* sur #page-putting (CSS dans putting.css) :
+   elles survivent au HTML régénéré à chaque ouverture du module.
+   ============================================================ */
+const PUTTING_PREF_CLASSES = [
+  ['showResume', 'pref-hide-resume'],
+  ['showHistory', 'pref-hide-history'],
+  ['showPerfSg', 'pref-hide-perf-sg'],
+  ['showPerfRate', 'pref-hide-perf-rate'],
+  ['showPerfPutts', 'pref-hide-perf-putts'],
+];
+
+function puttingApplyPrefs() {
+  const page = document.getElementById('page-putting');
+  if (!page) return;
+  PUTTING_PREF_CLASSES.forEach(function (pair) {
+    page.classList.toggle(pair[1], appPrefGet('putting', pair[0], true) === false);
+  });
+}
+
+function puttingSetDefaultSessions(value) {
+  appPrefSet('putting', 'defaultSessions', value);
+  Object.keys(filterState).forEach(function (g) { filterState[g].sessions = value; });
+  // Libellés des boutons de filtre et graphiques réalignés tout de suite (le HTML existe déjà quand le menu est ouvert)
+  syncFilterButtons();
+  refreshAllAnalytics();
+}
+
+// contexte : 'main' (écran principal) ou 'stats' (Performance) : seul l'ordre des sections change
+function openPuttingMenu(context) {
+  const pref = function (key) { return appPrefGet('putting', key, true) !== false; };
+  const toggle = function (key, label, hint) {
+    return {
+      type: 'toggle', label: label, hint: hint, value: pref(key),
+      onChange: function (v) { appPrefSet('putting', key, v); puttingApplyPrefs(); },
+    };
+  };
+  const mainSection = {
+    title: 'Écran principal',
+    items: [
+      toggle('showResume', 'Carte « À reprendre »', 'Session interrompue, dans Parcours et Exercices.'),
+      toggle('showHistory', 'Activité récente', 'Dernières sessions de l\'onglet Parcours.'),
+    ],
+  };
+  const perfSection = {
+    title: 'Cartes de Performance',
+    items: [
+      toggle('showPerfSg', 'SG vs Tour par round'),
+      toggle('showPerfRate', 'Taux de réussite et mètres'),
+      toggle('showPerfPutts', '1 putt et 3 putts par round'),
+    ],
+  };
+  const periodSection = {
+    title: 'Filtres',
+    items: [{
+      type: 'segment', label: 'Période par défaut', hint: 'Nombre de sessions prises en compte dans les analyses.',
+      value: filterState.stats.sessions,
+      options: FILTER_SESSIONS_OPTIONS.map(function (o) { return { value: o.value, label: o.value === 'all' ? 'Toutes' : o.value }; }),
+      onChange: puttingSetDefaultSessions,
+    }],
+  };
+  appSheet({
+    title: 'Putting',
+    sections: context === 'stats' ? [perfSection, periodSection, mainSection] : [mainSection, periodSection, perfSection],
+  });
+}
+window.openPuttingMenu = openPuttingMenu;
+
+puttingApplyPrefs();
 
 // Les encadrés de l'accueil général sont remplis dès le chargement, sans attendre l'ouverture du Putting
 renderGolfHome();

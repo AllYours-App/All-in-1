@@ -53,7 +53,7 @@ Entraînement et suivi du putting :
 
 ### Wedging (jeu court, 30 à 110 m compris)
 - **Parcours** : après chaque coup d'approche, on note la distance qu'il fallait faire, puis la distance restante et la zone d'arrivée par rapport au drapeau (huit directions autour du trou, ou "coup rentré"). Un historique garde tous les coups.
-- **Analyses** : dispersion (où tombent les balles pour chaque distance), distance (distance moyenne restante au drapeau pour chaque palier de distance à faire) et Strokes Gained.
+- **Analyses** : dispersion (où tombent les balles pour chaque distance), distance (distance moyenne restante au drapeau pour chaque palier de distance à faire) et Strokes Gained. On y accède par le bouton 3 points du header ("Voir mes analyses"), qui ouvre la vue choisie par défaut ; les paliers peuvent être regroupés par 5 ou 10 m.
 - **Exercices** : exercices d'approche à créer, à jouer en séance, avec récapitulatif et revue.
 
 ### Stats
@@ -75,6 +75,13 @@ Préparation physique du golfeur :
 - **Séance active** : déroulement d'une séance avec séries, répétitions et repos, suivi en temps réel, puis récapitulatif.
 - **Progression**, **Historique** et **Objectifs** : suivi de l'évolution, des séances passées et des objectifs fixés.
 
+### Menu 3 points des headers (Putting, Wedging, Parcours, Gym)
+Le bouton à 3 points en haut à droite ouvre une feuille de réglages d'affichage propre au module (la feuille monte du bas de l'écran ; Échap, un appui sur le fond ou "Fermer" la referment). Les réglages sont enregistrés sur l'appareil et appliqués tout de suite.
+- **Putting** : afficher ou masquer "À reprendre" et "Activité récente" (écran principal), et chacune des trois cartes de Performance (SG par round, taux de réussite et mètres, 1 putt et 3 putts) ; période par défaut des filtres (5, 10, 15, 20 sessions ou toutes).
+- **Wedging** : accès aux analyses, vue d'analyse par défaut (Dispersion, Distance ou SG), pas des paliers des analyses (5 ou 10 m).
+- **Parcours** : ordre et visibilité du Green et du Fairway, puis de Vent, Dénivelé, Distance et Historique ; unité m ou yd (schémas et calculs ensemble) ; texte plus grand ; contraste renforcé.
+- **Gym** : unité de poids kg ou lb (saisie et affichage), temps de repos par défaut, choix du programme en cours. Les boutons à engrenage ("Réglages") des écrans de création et des objectifs ouvrent le même menu.
+
 ### Vitesse
 Pas encore disponible : l'écran annonce "Fonctionnalités à venir".
 
@@ -86,10 +93,10 @@ manifest.webmanifest       manifeste PWA
 README.md
 core/                      socle commun à tous les modules
   base.css                 reset, tokens :root, règles globales
-  commun.css               composants partagés (pavé numérique, en-têtes, popups, boutons ronds)
+  commun.css               composants partagés (pavé numérique, en-têtes, popups, boutons ronds, bottom sheet)
   theme-light.css          thème clair (activé par <html data-theme="light">)
   app-shell.js             showPage()
-  commun.js                appKeypad(), popups, applyAppTheme()
+  commun.js                appKeypad(), popups, appPrefGet/Set(), appSheet(), applyAppTheme()
   sg-data.js               tables Strokes Gained
   strokes-gained.js        calculs Strokes Gained
 vendor/
@@ -132,7 +139,7 @@ Cet ordre compte, car les fichiers se parlent par le scope global.
 ```
 Chart.js 4.5.0 (vendor/chart.umd.min.js)
 core/app-shell.js            -> showPage()
-core/commun.js               -> appKeypad(), applyAppTheme()
+core/commun.js               -> appKeypad(), appPrefGet/Set(), appSheet(), applyAppTheme()
 core/sg-data.js              -> SG_BASELINES
 core/strokes-gained.js       -> sgExpected(), sgShot()   (dépend de sg-data.js)
 modules/home/HomePage.js
@@ -146,7 +153,7 @@ modules/menu/menu.js
 modules/auth/auth.js         (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`, puis `theme-light` en dernier (il doit passer après les autres pour les surcharger). Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=40`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=40` par le numéro suivant dans toutes les balises).
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`, puis `theme-light` en dernier (il doit passer après les autres pour les surcharger). Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=45`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=45` par le numéro suivant dans toutes les balises).
 
 ### Dépendances externes
 
@@ -210,7 +217,7 @@ Le plan gratuit de Vercel (Hobby) est limité à un usage non commercial. Tant q
 
 ## Fichiers partagés
 
-### `index.html` (1073 lignes)
+### `index.html` (1035 lignes)
 Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Un script en `<head>` ajoute la classe `has-session` sur `<html>` si `golfSession` existe, pour éviter le flash de la page de connexion.
 
 ### `core/app-shell.js`
@@ -223,13 +230,17 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 
 `appEscapeHtml(valeur)` : échappe `& < > " '` ; à utiliser pour tout texte saisi par la personne avant de l'injecter dans un gabarit HTML (y compris dans un attribut `value="..."` ou un `<textarea>`). `appSafeSetItem(clé, valeur)` : écrit dans le `localStorage` et renvoie `true` ou `false` ; en cas d'échec (stockage plein ou indisponible), elle affiche une alerte à l'écran (au plus une toutes les 8 secondes) au lieu d'ignorer l'erreur. Les modules l'utilisent à la place des `try { localStorage.setItem(...) } catch {}` : `gym.js`, `putting.js`, `wedging.js` (`WedgeStorage`) et `parcours-ui.js` (Fairway, Green, captures). `menu.js` (`saveMenuState`) y passe désormais. `stats.js` y passe aussi (`persistRounds`, indicateurs, brouillon) et utilise `appEscapeHtml` : son ancien helper `esc` est supprimé.
 
+`appPrefGet(module, clé, défaut)` et `appPrefSet(module, clé, valeur)` : préférences d'affichage par module, dans la clé unique `golfModulePrefs` (`{ putting: {...}, wedging: {...}, parcours: {...}, gym: {...} }`). Elles sont volontairement séparées de `golfAppState`, que `menu.js` réécrit en entier depuis sa copie en mémoire. L'écriture passe par `appSafeSetItem`.
+
+`appSheet({ title, sections: [{ title, items }] })` : bottom sheet partagée par les menus 3 points (renvoie la fonction `close()`). Types d'entrées : `toggle` (`value`, `onChange`), `segment` (`options`, `value`, `onChange`), `action` (`onClick`, `selected`, `danger`, `keepOpen`) et `reorder` (liste `[{ key, label, visible }]` avec oeil et flèches haut / bas, `onChange` reçoit la liste dans le nouvel ordre). Tous les textes passent par `textContent`. Une seule feuille à la fois ; `Échap`, un appui sur le fond ou "Fermer" la referment ; une action la ferme avant d'appeler `onClick` (sauf `keepOpen`). Chaque module fournit ses entrées dans sa fonction `open…Menu()` et applique ses préférences au chargement.
+
 ### `core/base.css`, `core/commun.css`
-`base.css` : reset, tokens `:root` (dont les couleurs `--wg-*` partagées par tous les modules), règles globales. `commun.css` : composants partagés (`.app-keypad`, `.app-keypad-value`, en-têtes de page, etc.).
+`base.css` : reset, tokens `:root` (dont les couleurs `--wg-*` partagées par tous les modules), règles globales. `commun.css` : composants partagés (`.app-keypad`, `.app-keypad-value`, en-têtes de page, etc.). Les styles de la bottom sheet (`.app-sheet_*`) sont à la fin de `commun.css` (z-index 8900, sous les popups `.app-dialog` à 9000 : une confirmation ouverte depuis une entrée passe au-dessus). Ils n'utilisent que des jetons de `:root`, donc le thème clair s'applique sans règle dédiée.
 
 **Marges des pages (modèle : Putting).** Deux variables dans `base.css` : `--app-padding-x` (20 px, 16 px sous 360 px) pour la marge horizontale, et `--app-page-top` (56 px + safe-area + 16 px) pour le début du contenu sous le header fixe. Toute nouvelle page ou tout nouveau bloc de page les utilise, sans valeur en dur. Exceptions volontaires : les écrans de Gym et de Parcours verrouillés à la hauteur de l'écran (accueil Gym, création de programme, accueil Parcours) gardent un décalage vertical plus serré. `.screen` de `parcours-ui.css` est limité à `#page-parcours` (via `:where()`, spécificité inchangée) : il s'appliquait aussi à Stats et doublait sa marge.
 
 ### `vendor/chart.umd.min.js`
-Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=40`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
+Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=45`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
 
 ### `core/theme-light.css`
 Thème clair, actif quand `<html data-theme="light">`. Il redéfinit les jetons de couleur de chaque module (`:root`, `#page-stats`, `#page-putting`, `#page-wedging`, Gym, Menu) puis adapte les couleurs codées en dur. Choix dans Menu > Apparence > Thème (réglage `settings.theme`, `"dark"` ou `"light"`, dans `golfAppState`) ; `applyAppTheme()` (`core/commun.js`) pose l'attribut et la couleur de la barre du navigateur, et un petit script du `<head>` d'`index.html` l'applique avant le premier affichage. Restent sombres en mode clair : la photo et la carte de l'accueil, la carte de Parcours, l'écran de connexion. Ajouter un jeton de couleur dans un module oblige à lui donner sa valeur claire ici.
@@ -260,18 +271,19 @@ Ses fonctions de sauvegarde sont `saveMenuState()` / `loadMenuState()` (préfix�
 - À maintenir : toute nouvelle donnée collectée, tout nouveau service tiers (analytics, backend, paiement, connexion Apple/Google) ou changement de l'offre (abonnements) doit être reflété dans `MENU_DOCS.confidentialite` et `MENU_DOCS.cgu`, avec une nouvelle date `updatedAt`.
 
 ### `modules/parcours/parcours-ui.js` / `parcours-ui.css`
-Suivi pendant le parcours : Fairway (mises en jeu sur 18 trous), Green (attaques de green), Historique (bilan du parcours en cours), calculateur de vent, calculateur de dénivelé (capteurs d'orientation de l'appareil), calculateur "Mes distances" (lit `golfBag` et les distances de `menu.js`). Les fonctions sont globales car appelées depuis des `onclick` générés. Unités m/yd.
+Suivi pendant le parcours : Fairway (mises en jeu sur 18 trous), Green (attaques de green), Historique (bilan du parcours en cours), calculateur de vent, calculateur de dénivelé (capteurs d'orientation de l'appareil), calculateur "Mes distances" (lit `golfBag` et les distances de `menu.js`). Les fonctions sont globales car appelées depuis des `onclick` générés. Unités m/yd. Menu 3 points (`openParcoursMenu`, branché au chargement sur le bouton du header d'`index.html`) : `parcoursApplyPrefs()` applique l'ordre et la visibilité (propriété CSS `order` et `display` posées par JS sur `.track-block-green`, le `.track-block` du Fairway et les quatre `.quick-action-btn`, retrouvés par leur `onclick`), et les classes `pc-large-text` / `pc-high-contrast` sur `#page-parcours` (règles en fin de `parcours-ui.css`, une règle de contraste par thème). `setParcoursUnit(u)` règle ensemble `trackUnit` (Fairway, Green) et `parcoursSettings.distanceUnit` (Vent, Dénivelé).
 
 ### `modules/putting/putting.js` / `putting.css`
 Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessions de putting, reprise de session, analyses (distance, pente, performance, comparaisons), et saisie d'un "Nouveau parcours" avec historique et détail. Calcule le Strokes Gained des putts via `strokes-gained.js`. Remplit aussi le panneau de l'accueil (objectif de la semaine, dernière séance, `[data-stat]`) via `renderGolfHome()`, seule source de ce panneau. Expose `window.renderPuttingTab` et `window.renderGolfHome`. Ses requêtes DOM passent par `puttingQuery` / `puttingQueryAll` (limitées à `#page-putting`), sauf celles de `renderGolfHome()` qui visent `#page-home`. `renderPuttingTab()` retire `is-stats-screen` de `body` : ce drapeau reste sinon en place quand on quitte Putting depuis son écran Stats.
+Menu 3 points (`openPuttingMenu('main' | 'stats')`, boutons des headers principal et Performance) : `puttingApplyPrefs()` pose des classes `pref-hide-*` sur `#page-putting` (elles survivent au HTML régénéré par `renderPuttingTab`), règles en fin de `putting.css` ; les cartes de Performance portent `data-perf-card`. La période par défaut (`defaultSessions`) est lue au chargement et copiée dans les trois `filterState`.
 Sauvegarde : `savePuttingState()` / `loadPuttingState()`. `importPuttingRoundFromStats(data)` (exposée sur `window`) crée une partie `source: 'stats'` à partir d'une partie saisie en détaillé dans `stats.js` ; elle est dédoublonnée par `statsKey`. `removePuttingRoundFromStats(statsKey)` (exposée sur `window`) la retire quand la partie est supprimée dans Stats.
 
 ### `modules/wedging/wedging.js` / `wedging.css`
-SPA autonome (7 sections : constantes, `WedgeStorage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 30 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Le routeur n'agit que si `#page-wedging` est affichée : `hashchange` est ignoré sinon, `body` et le scroll ne sont touchés que dans ce cas, et un hash étranger (Gym écrit aussi dans `location.hash`) laisse Wedging sur sa dernière route (variable `current`) au lieu de le renvoyer sur Parcours. Le toast "Erreur JS" ne répond qu'aux erreurs levées par `wedging.js` pendant que Wedging est affiché. Calcule son SG avec `sgExpected('rough' | 'green', m)` de `strokes-gained.js`.
+SPA autonome (7 sections : constantes, `WedgeStorage`, `Analytics`, `UI`, état `Wedge`, vues, routeur). Journal Parcours (cases par distance de 30 à 110 m compris, zones de dispersion à 9 directions), exercices créatifs, analyses de dispersion, de distance et de SG. Menu 3 points (`openWedgingMenu`, boutons des headers et des barres du haut des écrans d'analyse) : seul accès aux analyses depuis le Journal et les Exercices. Le pas des paliers (`wedgeAnalysisStep()`, 5 ou 10 m) ne touche que l'affichage des analyses (`wedgeAnalysisBuckets`, `wedgeAnalysisBucketFor`, `wedgeAnalysisBucketLabel`) : les coups restent enregistrés par 5 m et le Journal garde ses cases de 5 m. Possède son propre routeur par hash (`#parcours`, `#exercices`, `#sg-analysis`...) rendu dans `#app`. Le routeur n'agit que si `#page-wedging` est affichée : `hashchange` est ignoré sinon, `body` et le scroll ne sont touchés que dans ce cas, et un hash étranger (Gym écrit aussi dans `location.hash`) laisse Wedging sur sa dernière route (variable `current`) au lieu de le renvoyer sur Parcours. Le toast "Erreur JS" ne répond qu'aux erreurs levées par `wedging.js` pendant que Wedging est affiché. Calcule son SG avec `sgExpected('rough' | 'green', m)` de `strokes-gained.js`.
 Les limites d'un coup de wedge sont les constantes `WEDGE_MIN_DISTANCE` (30 m, comprise) et `WEDGE_MAX_DISTANCE` (110 m, comprise) : elles construisent `WEDGE_BUCKETS` (16 paliers de 30-34m à 105-110m, le dernier prenant la limite haute, libellés par `wedgeBucketLabel`) et les chips de distance des exercices (de 30 à 110 m, par 5 m), et `stats.js` les lit pour classer ses coups. `normalizeWedgeRounds` range dans le dernier palier les coups enregistrés avec l'ancien palier "110m". `importWedgeShotsFromStats(list)` (exposée sur `window`) ajoute au Journal les coups venant de Stats (`source: 'stats'`, dédoublonnés par `statsKey`). `removeWedgeShotsFromStats(idPartie)` (exposée sur `window`) retire les coups dont le `statsKey` commence par `idPartie:` quand la partie est supprimée dans Stats.
 
 ### `modules/gym/gym.js` / `gym.css`
-Le plus gros fichier (6149 lignes). Injecte tout son HTML dans `#app-root-gym`, puis : bibliothèque d'icônes (`ICONS`, silhouette partagée `GYM_BODY` pour les zones du corps), données mockées (`GYM_DATA`), routeur interne, générateurs de composants et vues (Accueil, Programmes, Détail programme, Créer programme, Créer séance, Exercices, Séance active, Progression, Historique, Récap, Objectifs). Pavé numérique propre au module. Son écouteur `popstate` ne réagit que si `#page-gym` est affichée. `gymToday()` renvoie la date du jour à chaque appel (`GYM_DATA.today` est un accesseur). La séance active enregistre un brouillon dans `gym-session-draft` (séries saisies, exercice affiché, temps écoulé) à chaque changement ; il est repris à la réouverture de la même séance, effacé à la fin de la séance et ignoré au-delà de 12 h. Les textes saisis (noms de programmes, objectifs, descriptions) passent par `appEscapeHtml`.
+Le plus gros fichier (6264 lignes). Injecte tout son HTML dans `#app-root-gym`, puis : bibliothèque d'icônes (`ICONS`, silhouette partagée `GYM_BODY` pour les zones du corps), données mockées (`GYM_DATA`), routeur interne, générateurs de composants et vues (Accueil, Programmes, Détail programme, Créer programme, Créer séance, Exercices, Séance active, Progression, Historique, Récap, Objectifs). Pavé numérique propre au module. Son écouteur `popstate` ne réagit que si `#page-gym` est affichée. `gymToday()` renvoie la date du jour à chaque appel (`GYM_DATA.today` est un accesseur). La séance active enregistre un brouillon dans `gym-session-draft` (séries saisies, exercice affiché, temps écoulé) à chaque changement ; il est repris à la réouverture de la même séance, effacé à la fin de la séance et ignoré au-delà de 12 h. Les textes saisis (noms de programmes, objectifs, descriptions) passent par `appEscapeHtml`. Menu 3 points (`openGymMenu`, branché sur tous les `.gym-header__action`) : unité de poids kg / lb, repos par défaut, programme en cours (`gymSetActiveProgram`, avec sa confirmation habituelle). Les poids restent stockés en kg ; `gymWeightUnit()`, `gymKgToDisplay()`, `gymFmtWeight()`, `gymWeightToInput()` et `gymWeightFromInput()` ne convertissent que l'affichage et la saisie (la cible d'un objectif de volume est saisie dans l'unité affichée et stockée en kg). L'unité n'est pas modifiable pendant une séance. `gymDefaultRestLabel()` donne le repos par défaut (réglage, sinon repos de l'objectif).
 
 ### `modules/stats/stats.js` / `stats.css`
 IIFE unique. Composants (sparkline, KPI, filtres, graphiques Chart.js), écrans Dashboard / Par club / Par distance / Statistiques (Multi, Traditionnel, SG), saisie de parties (rapide trou par trou, ou détaillée coup par coup), calcul de toutes les stats à partir des parties enregistrées. Navigation interne via `data-goto`, exposée par `window.showStatsScreen`. Se rafraîchit au retour sur la page via un `MutationObserver`.
@@ -301,10 +313,50 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 | `wedgingShots`, `wedgingExercises`, `wedgingInProgressSessions` | `wedging.js` | coups (dont ceux importés de Stats : `source: 'stats'`, `statsKey`), exercices, sessions en cours |
 | `gym-programs-saved`, `gym-history`, `gym-goals`, `gym-active-program-id` | `gym.js` | programmes, historique, objectifs, programme actif |
 | `gym-session-draft` | `gym.js` | brouillon de la séance en cours (séries, exercice affiché, temps écoulé), effacé à la fin de la séance |
+| `golfModulePrefs` | `commun.js` (`appPrefSet`) | réglages d'affichage des menus 3 points (Putting, Wedging, Parcours, Gym) |
 | `golfStatsRounds` | `stats.js` | parties saisies dans Stats |
 | `golfStatsKpis` | `stats.js` | clés des indicateurs affichés dans "Mes indicateurs" (ordre d'affichage) |
 | `golfStatsRoundDraft` | `stats.js` | partie en cours (saisie rapide ou détaillée), effacée à l'enregistrement, ignorée après 24 h |
 
 ## Suivi des bugs
 
-Les bugs en cours, les tests à faire sur téléphone, les décisions attendues et l'historique des corrections ne sont plus dans ce fichier : ils sont dans `Suivi-des-bugs.docx` (statuts en couleur, répartition entre Claude et le propriétaire). Ce README décrit uniquement l'application et son code.
+Les bugs en cours, les tests à faire sur téléphone, les décisions attendues et l'historique des corrections ne sont plus dans ce fichier : ils sont dans `Suivi-des-bugs.docx` (statuts en couleur, répartition entre Claude et le propriétaire). Ce README décrit l'application et son code, plus les anomalies relevées lors des audits et les fonctionnalités à venir.
+
+### Anomalies relevées (audit des unités et réglages, 14/10/2026)
+
+- **Unité de distance en double.** Menu stocke `settings.distanceUnit` (`golfAppState`, `"m"` ou `"ft"` = yards) et Parcours a son propre `parcoursSettings.distanceUnit` (`parcours-settings`, `"m"` ou `"yd"`). Les deux ne sont pas synchronisés. Putting, Wedging et Stats n'en lisent aucun : leurs distances restent en mètres.
+- **Réglages enregistrés mais jamais lus.** `temperatureC`, `altitudeM`, `speedUnit`, `radarUnit` et les radars (`golfAppState`) ne sont utilisés par aucun autre module que Menu. Le calculateur de vent de Parcours est en km/h en dur.
+- **Menu : température (°C), altitude (m), longueur (cm) et poids (g) du driver** n'ont pas d'unité alternative (°F, ft, in, oz).
+- **Stats et Accueil sans menu 3 points** : le header de Stats n'a pas de bouton, l'Accueil non plus. Les menus de Putting, Wedging, Parcours et Gym existent (voir plus haut).
+- **Identifiant `headerRightBtn` en double** : Putting (header principal) et Wedging (`UI.header`) posent chacun un `id="headerRightBtn"` dans le même document. Aucun code ne s'en sert, mais l'identifiant devrait être unique.
+- **Menus 3 points non testés sur appareil** : le code a été vérifié par des tests automatiques (bottom sheet, conversions kg/lb, paliers, ordre des outils) mais pas dans un navigateur ; l'effet du texte plus grand et du contraste renforcé de Parcours (marques du Fairway et du Green) est à contrôler sur téléphone.
+- **Parcours : deux réglages d'unité encore stockés** (`parcours-settings` et `parcours-fairway-unit`) : le menu 3 points les règle ensemble, mais ils restent deux clés, et Menu garde son propre réglage (voir plus haut).
+- **Formats figés** : dates en `fr-FR` en dur (Putting, Stats), objectif hebdomadaire de Putting fixé dans le code (`GOLF_WEEKLY_GOAL = 5`).
+
+## Fonctionnalités à venir
+
+Rien de cette section n'existe dans le code actuel.
+
+### Menu 3 points des headers : reste à faire
+
+Les menus de Putting, Wedging, Parcours et Gym existent (voir "Menu 3 points des headers" dans le guide fonctionnel). Ce qui n'est pas fait :
+
+- **Stats** : masquer et réordonner les blocs du dashboard (carte SG, Analyser mon jeu, Mes parcours). Fenêtre de calcul réglable (10 ou 20 parties, saison) au lieu des 20 fixes de `computeKpiValues`. Catégories SG affichées au choix. Nombre de tours affichés dans "Mes parcours". Le header de Stats n'a pas de bouton à 3 points : il faudrait l'ajouter. Le choix des indicateurs existe déjà via "Modifier" dans "Mes indicateurs".
+- **Putting** : indicateur "réussite par distance" (il n'y a pas de carte à ce nom dans Performance) ; choix d'indicateurs plus fin que l'affichage des trois cartes existantes, sur le modèle de `kpiCatalog`.
+- **Wedging** : wedge par défaut. Le Journal et les exercices n'enregistrent pas de club : il n'y a rien à présélectionner tant que `wedgeDistances` (Menu) n'est pas relié à Wedging.
+- **Gym** : "programme épinglé" au sens d'un favori distinct du programme en cours. Le menu actuel choisit le programme en cours, avec la réinitialisation de progression habituelle de `gymSetActiveProgram`.
+- **Parcours** : mélanger les zones (Green, Fairway) et les outils dans un même ordre. Aujourd'hui les deux zones s'ordonnent entre elles et les quatre outils entre eux, la rangée d'outils restant sous les zones.
+- **Accueil** : réordonner ou masquer les six tuiles (Vitesse, par exemple), choisir les infos du panneau du bas. L'Accueil n'a pas de header avec bouton.
+- **Déplacer et redimensionner** : mode édition (appui long, glisser avec Pointer Events), deux tailles par bloc (compact ou large), layout stocké en JSON par module. Réservé à l'Accueil et au dashboard Stats : ailleurs, le coût dépasse le gain.
+
+### Autres personnalisations envisagées
+
+- **Unités** : une seule unité de distance partagée par tous les modules (Parcours en a déjà une pour ses schémas et ses calculs ; Putting, Wedging et Stats restent en mètres), vent suivant `speedUnit`, °F, ft, in et oz pour température, altitude et driver.
+- **Objectif hebdomadaire** réglable depuis l'Accueil.
+- **Index cible** (scratch, 10, 20) comme référence Strokes Gained.
+- **Gaucher ou droitier**, pour les schémas Fairway et Green.
+- **Écran toujours allumé** pendant une partie ou une séance.
+- **Retours haptiques et sonores** réglables (aujourd'hui seule la fin de repos de Gym vibre et sonne).
+- **Parcours favoris** pour la saisie de partie, au lieu de la recherche par géolocalisation à chaque fois.
+- **Export CSV** par module, en plus de l'export JSON global.
+- **Préréglages de layout** (Compétiteur, Entraînement, Minimal) à appliquer en un tap.

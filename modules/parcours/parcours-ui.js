@@ -13,6 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
     new MutationObserver(syncNoScroll).observe(page, { attributes: true, attributeFilter: ["class"] });
     syncNoScroll();
   }
+  // Bouton 3 points de l'accueil Parcours (le HTML est dans index.html) : menu d'affichage
+  const menuBtn = document.querySelector("#page-parcours .top-bar .icon-btn");
+  if (menuBtn) {
+    menuBtn.setAttribute("aria-haspopup", "dialog");
+    menuBtn.addEventListener("click", openParcoursMenu);
+  }
+  parcoursApplyPrefs();
   renderFairway();
   renderGreen();
   // Aucun écouteur pour l'instant : point d'accroche prévu pour d'autres modules
@@ -1396,3 +1403,137 @@ function saveHistoryEntry() {
   appSafeSetItem(CAPTURE_STORAGE_KEY, JSON.stringify(list));
   renderCourseModals(); // rafraîchit la modale : la progression affiche immédiatement le nouveau bilan
 }
+
+/* ==========================================================================
+   MENU 3 POINTS (accueil Parcours)
+   Réglages d'affichage enregistrés dans golfModulePrefs.parcours (voir commun.js) :
+     zoneOrder / zoneHidden : ordre et visibilité du Green et du Fairway
+     toolOrder / toolHidden : ordre et visibilité de Vent, Dénivelé, Distance, Historique
+     largeText, highContrast : lisibilité en plein soleil (classes pc-large-text / pc-high-contrast
+                               sur #page-parcours, règles dans parcours-ui.css)
+   Le Green et le Fairway restent au-dessus de la rangée d'outils : ils sont ordonnés entre eux,
+   et les quatre outils entre eux. L'unité m / yd, elle, est celle de setDistanceUnit() et du
+   Fairway / Green (voir plus haut), réglées ensemble par setParcoursUnit().
+   ========================================================================== */
+const PARCOURS_ZONES = [
+  { key: "green", label: "Green" },
+  { key: "fairway", label: "Fairway" },
+];
+const PARCOURS_TOOLS = [
+  { key: "wind", label: "Vent" },
+  { key: "elevation", label: "Dénivelé" },
+  { key: "distances", label: "Distance" },
+  { key: "history", label: "Historique" },
+];
+
+// Liste [{ key, label, visible }] dans l'ordre choisi ; clés inconnues ignorées, nouvelles clés ajoutées à la fin
+function parcoursLayoutFor(defs, orderKey, hiddenKey) {
+  const order = appPrefGet("parcours", orderKey, []);
+  const hidden = appPrefGet("parcours", hiddenKey, []);
+  const known = defs.map((d) => d.key);
+  const keys = (Array.isArray(order) ? order : []).filter((k, i, arr) => known.includes(k) && arr.indexOf(k) === i);
+  known.forEach((k) => { if (!keys.includes(k)) keys.push(k); });
+  return keys.map((k) => ({
+    key: k,
+    label: defs.find((d) => d.key === k).label,
+    visible: !(Array.isArray(hidden) && hidden.includes(k)),
+  }));
+}
+
+function parcoursElementFor(key) {
+  const home = document.querySelector('#page-parcours .screen-view[data-screen="home"]');
+  if (!home) return null;
+  switch (key) {
+    case "green": return home.querySelector(".track-block-green");
+    case "fairway": return home.querySelector(".track-block:not(.track-block-green)");
+    case "wind": return home.querySelector('.quick-actions [onclick^="openWindCalc"]');
+    case "elevation": return home.querySelector('.quick-actions [onclick^="openElevationCalc"]');
+    case "distances": return home.querySelector('.quick-actions [onclick^="openDistancesCalc"]');
+    case "history": return home.querySelector('.quick-actions [onclick^="openHistoryModal"]');
+    default: return null;
+  }
+}
+
+function parcoursApplyPrefs() {
+  const page = document.getElementById("page-parcours");
+  if (!page) return;
+  page.classList.toggle("pc-large-text", appPrefGet("parcours", "largeText", false) === true);
+  page.classList.toggle("pc-high-contrast", appPrefGet("parcours", "highContrast", false) === true);
+
+  [[PARCOURS_ZONES, "zoneOrder", "zoneHidden"], [PARCOURS_TOOLS, "toolOrder", "toolHidden"]].forEach(([defs, orderKey, hiddenKey]) => {
+    parcoursLayoutFor(defs, orderKey, hiddenKey).forEach((item, index) => {
+      const el = parcoursElementFor(item.key);
+      if (!el) return;
+      el.style.order = String(index);
+      el.style.display = item.visible ? "" : "none";
+    });
+  });
+  // La rangée d'outils passe toujours après le Green et le Fairway, et disparaît si les quatre outils sont masqués
+  const home = page.querySelector('.screen-view[data-screen="home"]');
+  const row = home && home.querySelector(".quick-actions");
+  if (row) {
+    row.style.order = "10";
+    row.style.display = parcoursLayoutFor(PARCOURS_TOOLS, "toolOrder", "toolHidden").some((t) => t.visible) ? "" : "none";
+  }
+}
+
+// Une seule unité pour les schémas (Fairway, Green) et les calculs (Vent, Dénivelé) : remplace les deux réglages séparés
+function setParcoursUnit(unit) {
+  if (unit !== "m" && unit !== "yd") return;
+  trackUnit = unit;
+  try { localStorage.setItem(TRACK_UNIT_KEY, trackUnit); } catch (e) { /* pas grave */ }
+  setDistanceUnit(unit); // enregistre parcoursSettings et redessine les modales
+  renderFairway();
+  renderGreen();
+}
+
+function openParcoursMenu() {
+  const saveLayout = (orderKey, hiddenKey) => (items) => {
+    appPrefSet("parcours", orderKey, items.map((i) => i.key));
+    appPrefSet("parcours", hiddenKey, items.filter((i) => !i.visible).map((i) => i.key));
+    parcoursApplyPrefs();
+    renderFairway(); // un bloc masqué n'a pas pu se dimensionner : on redessine quand il revient
+    renderGreen();
+  };
+  const toggle = (key, label, hint) => ({
+    type: "toggle", label, hint, value: appPrefGet("parcours", key, false) === true,
+    onChange: (v) => { appPrefSet("parcours", key, v); parcoursApplyPrefs(); },
+  });
+  appSheet({
+    title: "Parcours",
+    sections: [
+      {
+        title: "Affichage",
+        items: [
+          {
+            type: "reorder", label: "Terrain", hint: "Ordre et visibilité du Green et du Fairway.",
+            items: parcoursLayoutFor(PARCOURS_ZONES, "zoneOrder", "zoneHidden"),
+            onChange: saveLayout("zoneOrder", "zoneHidden"),
+          },
+          {
+            type: "reorder", label: "Outils", hint: "Ordre et visibilité des boutons du bas.",
+            items: parcoursLayoutFor(PARCOURS_TOOLS, "toolOrder", "toolHidden"),
+            onChange: saveLayout("toolOrder", "toolHidden"),
+          },
+        ],
+      },
+      {
+        title: "Unité",
+        items: [{
+          type: "segment", label: "Unité de distance", hint: "Appliquée au Fairway, au Green, au Vent et au Dénivelé.",
+          value: trackUnit,
+          options: [{ value: "m", label: "Mètres" }, { value: "yd", label: "Yards" }],
+          onChange: setParcoursUnit,
+        }],
+      },
+      {
+        title: "Lisibilité",
+        items: [
+          toggle("largeText", "Texte plus grand", "Agrandit les petits textes de l'écran et des calculs."),
+          toggle("highContrast", "Contraste renforcé", "Textes et bordures plus marqués, pour le plein soleil."),
+        ],
+      },
+    ],
+  });
+}
+window.openParcoursMenu = openParcoursMenu;

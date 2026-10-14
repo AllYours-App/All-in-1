@@ -868,6 +868,118 @@ document.getElementById("app-root-gym").innerHTML = `
 `;
 
 /* ==========================================================================
+   GYM — Menu 3 points des headers
+   Réglages d'affichage enregistrés dans golfModulePrefs.gym (voir commun.js) :
+     weightUnit  : 'kg' | 'lb'  — unité d'affichage et de saisie des poids
+     defaultRest : 'auto' | '30s' | '45s' | '60s' | '90s' | '120s'  — repos quand l'exercice n'en précise pas
+   Les poids restent STOCKÉS EN KG (séances, historique, objectifs) : l'unité ne change que
+   l'affichage et la saisie, rien n'est converti dans les données.
+   Les boutons à 3 points (Options) et à engrenage (Réglages) des headers ouvrent le même menu.
+   ========================================================================== */
+const GYM_LB_PER_KG = 2.2046226218;
+
+function gymWeightUnit() {
+  return appPrefGet("gym", "weightUnit", "kg") === "lb" ? "lb" : "kg";
+}
+
+// kg stockés -> nombre à afficher (kg : inchangé ; lb : arrondi au dixième)
+function gymKgToDisplay(kg) {
+  const n = Number(kg);
+  if (gymWeightUnit() === "kg" || !Number.isFinite(n)) return n;
+  return Math.round(n * GYM_LB_PER_KG * 10) / 10;
+}
+
+// Texte à afficher pour un poids stocké en kg, avec ou sans unité ("62,5 kg" / "137.8 lb")
+function gymFmtWeight(kg, withUnit = true) {
+  const text = gymWeightUnit() === "kg" ? String(kg) : String(gymKgToDisplay(kg));
+  return withUnit ? `${text} ${gymWeightUnit()}` : text;
+}
+
+// Poids stocké (kg) -> contenu du champ de saisie ("" si vide)
+function gymWeightToInput(stored) {
+  if (gymWeightUnit() === "kg" || stored === "" || stored == null) return stored === null || stored === undefined ? "" : String(stored);
+  const n = Number(stored);
+  return Number.isFinite(n) ? String(gymKgToDisplay(n)) : "";
+}
+
+// Contenu du champ de saisie -> poids à stocker (kg). En kg : valeur inchangée, comme avant.
+function gymWeightFromInput(text) {
+  if (gymWeightUnit() === "kg") return text;
+  const n = Number(String(text).replace(",", "."));
+  if (String(text).trim() === "" || !Number.isFinite(n)) return "";
+  return Math.round((n / GYM_LB_PER_KG) * 10000) / 10000;
+}
+
+function gymWeightValueToKg(displayValue) {
+  const n = Number(displayValue);
+  return gymWeightUnit() === "kg" || !Number.isFinite(n) ? n : Math.round((n / GYM_LB_PER_KG) * 10000) / 10000;
+}
+
+// Repos par défaut : réglage du menu, sinon repos propre à l'objectif de la séance
+function gymDefaultRestLabel(goalId) {
+  const pref = appPrefGet("gym", "defaultRest", "auto");
+  const option = REST_OPTIONS.find((r) => r.value === pref);
+  return option ? option.label : REST_BY_GOAL[goalId];
+}
+
+// Vue Gym actuellement affichée (id sans le préfixe "view-")
+function gymVisibleViewId() {
+  const el = document.querySelector("#app-root-gym .gym-view:not([hidden])");
+  return el ? el.id.replace(/^view-/, "") : null;
+}
+
+// Redessine la vue affichée (nouvelle unité de poids) sans navigation ni retour en haut de page
+function gymRefreshCurrentView() {
+  const view = gymVisibleViewId();
+  if (view && GymViews[view] && typeof GymViews[view].render === "function") GymViews[view].render(currentParams);
+}
+
+function openGymMenu() {
+  const inSession = gymVisibleViewId() === "seance-active";
+  const programs = Array.isArray(GYM_DATA.programs) ? GYM_DATA.programs : [];
+  const active = gymGetActiveProgram();
+  const sections = [
+    {
+      title: "Poids et repos",
+      items: [
+        inSession
+          // Pendant une séance, les champs déjà remplis resteraient dans l'ancienne unité : on attend la fin de la séance
+          ? { type: "action", label: "Unité de poids : " + gymWeightUnit(), hint: "Modifiable hors séance, depuis l'accueil Gym.", keepOpen: true }
+          : {
+            type: "segment", label: "Unité de poids", hint: "Saisie et affichage. Vos données restent enregistrées en kg.",
+            value: gymWeightUnit(),
+            options: [{ value: "kg", label: "kg" }, { value: "lb", label: "lb" }],
+            onChange: (v) => { appPrefSet("gym", "weightUnit", v); gymRefreshCurrentView(); },
+          },
+        {
+          type: "segment", label: "Temps de repos par défaut", hint: "Pour les exercices sans repos précisé. « Auto » suit l'objectif de la séance.",
+          value: appPrefGet("gym", "defaultRest", "auto"),
+          options: [{ value: "auto", label: "Auto" }].concat(REST_OPTIONS.map((r) => ({ value: r.value, label: r.value.replace("s", "") + "s" }))),
+          onChange: (v) => { appPrefSet("gym", "defaultRest", v); },
+        },
+      ],
+    },
+  ];
+  if (programs.length) {
+    sections.push({
+      title: "Programme en cours",
+      items: programs.map((program) => ({
+        type: "action", label: program.name || "Programme", selected: !!active && active.id === program.id,
+        hint: active && active.id === program.id ? "Programme en cours" : "",
+        onClick: () => { if (!active || active.id !== program.id) gymSetActiveProgram(program.id); },
+      })),
+    });
+  }
+  appSheet({ title: "Gym", sections });
+}
+window.openGymMenu = openGymMenu;
+
+document.querySelectorAll("#app-root-gym .gym-header__action").forEach((btn) => {
+  btn.setAttribute("aria-haspopup", "dialog");
+  btn.addEventListener("click", openGymMenu);
+});
+
+/* ==========================================================================
    GYM — Bibliothèque d'icônes SVG inline
    Style : outline, stroke=currentColor, cohérent avec le design system.
    Utilisation : ICONS.dumbbell, ICONS.chevronRight, etc.
@@ -3174,7 +3286,7 @@ function gymGetSessionDetail(session) {
         reps: item.reps || REPS_BY_GOAL[session.goal] || "10-12",
         rest: item.rest
           ? GYM_DATA.restOptions.find((r) => r.value === item.rest)?.label || item.rest
-          : REST_BY_GOAL[session.goal] || "1 min",
+          : gymDefaultRestLabel(session.goal) || "1 min",
         tempo: item.tempo || "",
         duration: gymCanBeTimed(exo) && Number(item.duration) > 0 ? Number(item.duration) : 0,
         status: index === 0 ? "en-cours" : "a-venir",
@@ -3190,7 +3302,7 @@ function gymGetSessionDetail(session) {
       name: exo ? exo.name : "Exercice",
       sets: SETS_BY_GOAL[session.goal] || 3,
       reps: REPS_BY_GOAL[session.goal] || "10-12",
-      rest: REST_BY_GOAL[session.goal] || "1 min",
+      rest: gymDefaultRestLabel(session.goal) || "1 min",
       tempo: "",
       duration: 0,
       status: index === 0 ? "en-cours" : "a-venir",
@@ -3293,15 +3405,15 @@ function gymGetDoneExercises() {
     entry.exercises.forEach((exo) => {
       const valid = exo.sets.filter((s) => s.valid);
       if (!valid.length) return;
-      const toHalf = (v) => Math.round(v * 2) / 2; // arrondi à 0,5 kg
+      const toHalf = (v) => Math.round(v * 2) / 2; // arrondi à 0,5 (kg ou lb selon l'unité choisie)
       const point = {
         date: new Date(entry.date),
-        poids: toHalf(Math.max(...valid.map((s) => s.weight || 0))),
+        poids: toHalf(gymKgToDisplay(Math.max(...valid.map((s) => s.weight || 0)))),
         series: valid.length,
         repetitions: Math.round(valid.reduce((a, s) => a + (s.reps || 0), 0)),
-        volume: toHalf(valid.reduce((a, s) => a + (s.weight || 0) * (s.reps || 0), 0)),
+        volume: toHalf(gymKgToDisplay(valid.reduce((a, s) => a + (s.weight || 0) * (s.reps || 0), 0))),
         // 1RM estimé (Epley) : meilleure série de la séance, 0 sans charge
-        rm: toHalf(Math.max(0, ...valid.map((s) => (s.weight > 0 ? s.weight * (1 + (s.reps || 0) / 30) : 0)))),
+        rm: toHalf(gymKgToDisplay(Math.max(0, ...valid.map((s) => (s.weight > 0 ? s.weight * (1 + (s.reps || 0) / 30) : 0))))),
         duree: Math.round(valid.reduce((a, s) => a + (s.duration || 0), 0)),
       };
       if (!map.has(exo.exerciseId)) map.set(exo.exerciseId, { exerciseId: exo.exerciseId, name: exo.name, sessions: [] });
@@ -4483,7 +4595,7 @@ function gymRenderDualChart(points, series, selected) {
    */
   function gymDefaultExerciseConfig() {
     const goalId = state.goals[0];
-    const restLabel = REST_BY_GOAL[goalId];
+    const restLabel = gymDefaultRestLabel(goalId);
     const restOption = restLabel && REST_OPTIONS.find((r) => r.label === restLabel);
     return {
       sets: SETS_BY_GOAL[goalId] || "",
@@ -5252,8 +5364,8 @@ function gymRenderDualChart(points, series, selected) {
             <div class="set-card__field set-card__field--weight">
               <span class="set-card__field-label">Poids</span>
               <div class="set-card__weight-row">
-                <input type="text" inputmode="none" readonly class="set-card__weight-input" placeholder="—" value="${set.weight}" data-set-index="${index}" data-field="weight" />
-                <span class="set-card__unit">kg</span>
+                <input type="text" inputmode="none" readonly class="set-card__weight-input" placeholder="—" value="${gymWeightToInput(set.weight)}" data-set-index="${index}" data-field="weight" />
+                <span class="set-card__unit">${gymWeightUnit()}</span>
                 <span class="set-card__valid-dot">${set.valid ? gymIcon("checkCircle") : gymIcon("timer")}</span>
               </div>
             </div>
@@ -5277,7 +5389,7 @@ function gymRenderDualChart(points, series, selected) {
       input.addEventListener("input", (e) => {
         const index = Number(e.target.dataset.setIndex);
         const set = exo.sets[index];
-        set.weight = e.target.value;
+        set.weight = gymWeightFromInput(e.target.value);
 
         // Poids saisi sur la série en cours : on la valide et on passe à la suivante.
         // Pas d'enchaînement sur la dernière série ni sur un exercice chronométré.
@@ -5291,7 +5403,7 @@ function gymRenderDualChart(points, series, selected) {
         renderSetsList();
       });
       input.addEventListener("click", () => {
-        gymOpenKeypad({ input, title: "Poids (kg)", decimal: true, min: 0 });
+        gymOpenKeypad({ input, title: `Poids (${gymWeightUnit()})`, decimal: true, min: 0 });
       });
     });
     list.querySelectorAll(".set-card__validate").forEach((btn) => {
@@ -5517,11 +5629,11 @@ function gymRenderDualChart(points, series, selected) {
    ========================================================================== */
 (function () {
   const METRICS = {
-    poids: { label: "Poids", unit: "kg", step: 0.5 },
+    poids: { label: "Poids", get unit() { return gymWeightUnit(); }, step: 0.5 },
     series: { label: "Séries", unit: "séries", step: 1 },
     repetitions: { label: "Répétitions", unit: "reps", step: 1 },
-    volume: { label: "Volume", unit: "kg", step: 0.5 },
-    rm: { label: "1RM", unit: "kg", step: 0.5 },
+    volume: { label: "Volume", get unit() { return gymWeightUnit(); }, step: 0.5 },
+    rm: { label: "1RM", get unit() { return gymWeightUnit(); }, step: 0.5 },
     duree: { label: "Durée", unit: "s", step: 1 },
   };
 
@@ -5557,7 +5669,7 @@ function gymRenderDualChart(points, series, selected) {
         <span class="session-summary__icon">${gymIcon("dumbbell")}</span>
         <span class="session-summary__text">
           <span class="session-summary__label">Volume cumulé</span>
-          <span class="session-summary__value">${totalVolume} kg</span>
+          <span class="session-summary__value">${gymFmtWeight(totalVolume)}</span>
         </span>
       </div>
       <div class="session-summary__item">
@@ -5826,7 +5938,7 @@ function gymRenderDualChart(points, series, selected) {
         <span class="session-summary__icon">${gymIcon("dumbbell")}</span>
         <span class="session-summary__text">
           <span class="session-summary__label">Volume</span>
-          <span class="session-summary__value">${entry.totalVolume} kg</span>
+          <span class="session-summary__value">${gymFmtWeight(entry.totalVolume)}</span>
         </span>
       </div>
       <div class="session-summary__item">
@@ -5862,7 +5974,7 @@ function gymRenderDualChart(points, series, selected) {
             (s, i) => `
             <span class="recap-set-pill ${s.valid ? "is-valid" : "is-invalid"}">
               <span class="recap-set-pill__index">${i + 1}</span>
-              <span>${exo.timed ? `${s.weight > 0 ? `${s.weight} kg · ` : ""}${gymFormatSeconds(s.duration)}` : `${s.weight || 0} kg × ${s.reps || 0}`}</span>
+              <span>${exo.timed ? `${s.weight > 0 ? `${gymFmtWeight(s.weight)} · ` : ""}${gymFormatSeconds(s.duration)}` : `${gymFmtWeight(s.weight || 0)} × ${s.reps || 0}`}</span>
               <span class="recap-set-pill__icon">${gymIcon(s.valid ? "check" : "cross")}</span>
             </span>
           `
@@ -5961,7 +6073,7 @@ function gymRenderDualChart(points, series, selected) {
      séances terminées, volume soulevé ou minutes d'entraînement. */
   const GOAL_METRICS = {
     sessions: { unit: "séances", fallback: 12, value: () => 1 },
-    volume: { unit: "kg", fallback: 10000, value: (h) => h.totalVolume || 0 },
+    volume: { get unit() { return gymWeightUnit(); }, fallback: 10000, value: (h) => h.totalVolume || 0, isWeight: true },
     minutes: { unit: "min", fallback: 600, value: (h) => h.duration || 0 },
   };
 
@@ -5975,7 +6087,9 @@ function gymRenderDualChart(points, series, selected) {
     return {
       ...goal,
       percent: Math.min(100, Math.round((current / target) * 100)),
-      progressLabel: `${Math.round(current)} / ${target} ${metric.unit}`,
+      progressLabel: metric.isWeight
+        ? `${Math.round(gymKgToDisplay(current))} / ${Math.round(gymKgToDisplay(target))} ${metric.unit}`
+        : `${Math.round(current)} / ${target} ${metric.unit}`,
     };
   }
 
@@ -6077,7 +6191,7 @@ function gymRenderDualChart(points, series, selected) {
   function updateTargetPlaceholder() {
     const type = GOAL_TYPES.find((t) => t.id === state.newGoalType) || GOAL_TYPES[0];
     const metric = GOAL_METRICS[type.metric];
-    document.getElementById("goal-progress-input").placeholder = `Cible en ${metric.unit} (ex. ${metric.fallback})`;
+    document.getElementById("goal-progress-input").placeholder = `Cible en ${metric.unit} (ex. ${metric.isWeight ? Math.round(gymKgToDisplay(metric.fallback)) : metric.fallback})`;
   }
 
   function createGoal() {
@@ -6094,7 +6208,8 @@ function gymRenderDualChart(points, series, selected) {
       icon: type.icon,
       type: type.id,
       metric: type.metric,
-      target: Number.isFinite(target) && target > 0 ? target : 0,
+      // Cible saisie dans l'unité affichée ; un objectif de volume est stocké en kg
+      target: Number.isFinite(target) && target > 0 ? (type.metric === "volume" ? gymWeightValueToKg(target) : target) : 0,
       createdAt: Date.now(),
       deadline: gymAddDays(GYM_DATA.today, 30),
     });
