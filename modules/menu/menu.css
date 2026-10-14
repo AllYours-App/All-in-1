@@ -13,8 +13,21 @@
 }
 
 /* ==========================================================================
-   Page wrapper — conteneur mobile centré
+   Page — fond plein écran (comme Stats, Gym, etc.) + conteneur mobile centré
    ========================================================================== */
+#page-menu {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--mn-bg);
+
+  /* Header : structure, taille et position viennent du header fixe commun (commun.css).
+     Ici, seulement les couleurs du module. */
+  --app-header-bg: var(--mn-bg);
+  --app-header-border: var(--mn-surface-border);
+  --app-header-text: var(--mn-text-primary);
+  --app-header-text-secondary: var(--mn-text-primary);
+}
+
 #page-menu .page_wrapper {
   max-width: 480px;
   margin: 0 auto;
@@ -22,43 +35,15 @@
   padding: 0 var(--mn-space-page);
 }
 
+/* Le contenu démarre sous le header fixe (56px + zone de sécurité iOS + 16px) */
 #page-menu .app_root {
+  padding-top: var(--app-page-top);
   padding-bottom: 24px;
 }
 
-/* ==========================================================================
-   Header
-   ========================================================================== */
-#page-menu .nav_component {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: calc(24px + env(safe-area-inset-top)) 0 20px; /* safe-area : le bouton retour ne passe pas sous l'encoche */
-  background: var(--mn-bg);
-}
-
+/* Le bouton retour reprend le style du lien retour commun : pas de marge interne propre au Menu */
 #page-menu .nav_back-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--mn-text-primary);
-  font-size: 17px;
-  font-weight: 500;
-  padding: 4px 0;
-}
-
-#page-menu .nav_back-icon {
-  width: 22px;
-  height: 22px;
-}
-
-#page-menu .nav_title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--mn-text-primary);
+  padding: 0;
 }
 
 /* ==========================================================================

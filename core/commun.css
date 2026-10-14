@@ -24,7 +24,8 @@
 #page-stats .page-header,
 #page-wedging .wg-header,
 #page-gym .gym-header,
-#page-parcours .top-bar {
+#page-parcours .top-bar,
+#page-menu .nav_component {
   position: fixed;
   top: 0;
   left: 0;
@@ -51,7 +52,8 @@
   #page-stats .page-header,
   #page-wedging .wg-header,
   #page-gym .gym-header,
-  #page-parcours .top-bar {
+  #page-parcours .top-bar,
+  #page-menu .nav_component {
     padding-inline: var(--app-padding-small);
   }
 }
@@ -62,7 +64,8 @@
 #page-stats .page-header__back,
 #page-wedging .wg-back-btn,
 #page-gym .gym-header__back,
-#page-parcours .back-link {
+#page-parcours .back-link,
+#page-menu .nav_back-button {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -80,7 +83,8 @@
 #page-stats .page-header__back svg,
 #page-wedging .wg-back-btn svg,
 #page-gym .gym-header__back svg,
-#page-parcours .back-link svg {
+#page-parcours .back-link svg,
+#page-menu .nav_back-button svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
@@ -92,7 +96,8 @@
 #page-stats .page-header__title,
 #page-wedging .wg-title,
 #page-gym .gym-header__title,
-#page-parcours .top-bar_title {
+#page-parcours .top-bar_title,
+#page-menu .nav_title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
@@ -135,28 +140,6 @@
 #page-parcours .top-bar .icon-btn svg {
   width: 18px;
   height: 18px;
-}
-
-/* ---------------------------------------------------------------------------
-   HEADER NON FIXE — titre centré (Menu / FAQ)
-   Même technique de centrage par grid 3 colonnes que le header fixe
-   ci-dessus, mais en flux normal (pas de position:fixed).
-   --------------------------------------------------------------------------- */
-#page-menu .nav_component {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-}
-
-#page-menu .nav_back-button {
-  grid-column: 1;
-  justify-self: start;
-}
-
-#page-menu .nav_title {
-  grid-column: 2;
-  justify-self: center;
-  text-align: center;
 }
 
 /* ---------------------------------------------------------------------------

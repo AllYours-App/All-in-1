@@ -234,7 +234,9 @@ body.no-scroll #page-parcours .screen-view.active .top-bar {
   width: 100%;
   margin: 0;
   flex: 0 0 auto;
-  padding: 14px var(--app-padding-x) 4px;
+  /* Zone de sécurité iOS : la hauteur du header (commun.css) l'inclut déjà, il faut la réserver en haut.
+     Sans elle, le header se plaçait sous l'heure / le réseau / la batterie, zone où iOS intercepte les appuis. */
+  padding: env(safe-area-inset-top, 0px) var(--app-padding-x) 0;
 }
 
 body.no-scroll :where(#page-parcours) .screen-view.active .screen {
