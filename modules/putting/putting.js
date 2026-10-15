@@ -1694,7 +1694,7 @@ function resumeSession() {
   clearResumableSession();
   exerciseFlowOriginTab = 'exercices';
   exerciseFlowScreen = 'session';
-  enterExerciseFlow(c.name);
+  enterExerciseFlow(flowTitleOf(c));
   renderExerciseFlowScreen();
   renderResumeCards();
 }
@@ -1733,7 +1733,7 @@ function resumeQuickSession() {
   clearResumableQuick();
   exerciseFlowOriginTab = 'parcours';
   exerciseFlowScreen = 'session';
-  enterExerciseFlow(c.name);
+  enterExerciseFlow(flowTitleOf(c));
   renderExerciseFlowScreen();
   renderResumeCards();
 }
@@ -1904,6 +1904,11 @@ function getCombineById(id) {
   return puttingCombines.find(function (c) { return c.id === id; });
 }
 
+// Titre du header du flux : l'exercice rapide s'affiche "Rapide" (son nom interne reste "Exercice rapide")
+function flowTitleOf(c) {
+  return c && c.isQuick ? 'Rapide' : (c ? c.name : 'Exercice');
+}
+
 // --- Entrée / sortie du flux ---
 function enterExerciseFlow(title) {
   exerciseFlowFromStats = document.body.classList.contains('is-stats-screen');
@@ -2001,7 +2006,7 @@ function startCombine(id) {
     })(),
   };
   exerciseFlowScreen = 'session';
-  enterExerciseFlow(c.name);
+  enterExerciseFlow(flowTitleOf(c));
   renderExerciseFlowScreen();
 }
 
@@ -2449,7 +2454,7 @@ function renderCombineRecapScreen() {
   const stats = combineSessionStats(session, combine);
   const best = bestCombineStats(session.combineId, isViewing ? session : null);
 
-  document.getElementById('exercise-flow-title').textContent = combine ? combine.name : 'Exercice';
+  document.getElementById('exercise-flow-title').textContent = flowTitleOf(combine);
 
   flowRoot.innerHTML = `
     <div class="stats_grid">

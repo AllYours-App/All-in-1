@@ -298,6 +298,11 @@
   display:flex;align-items:center;justify-content:space-between;
   max-width:var(--wg-max-width);margin:0 auto;padding:20px var(--app-padding-x) 0;
 }
+/* Séance d'exercice en cours : le bouton retour est centré dans les 56 px sous la zone de sécurité iOS,
+   comme dans les headers fixes (le décalage de 20 px sans zone de sécurité le plaçait trop haut). */
+.wg-topbar.is-session{
+  padding-top:calc(env(safe-area-inset-top, 0px) + 10px);
+}
 .wg-analysis-header{
   max-width:var(--wg-max-width);margin:0 auto;padding:16px var(--app-padding-x) 4px;
 }
@@ -534,6 +539,33 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 }
 .wg-history-day-title{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--wg-text-secondary);}
 .wg-history-day-count{font-size:12px;color:var(--wg-text-secondary);}
+
+/* ---------- Pile de coups par jour (façon notifications iPhone) ---------- */
+.wg-stack{display:flex;flex-direction:column;gap:12px;}
+.wg-stack-head{
+  width:100%;background:none;border:none;color:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.wg-stack-head .wg-history-day-count{display:inline-flex;align-items:center;gap:4px;}
+.wg-stack-chevron{display:inline-flex;transition:transform .3s cubic-bezier(.2,.8,.2,1);transform:rotate(90deg);}
+#page-wedging .wg-stack-chevron svg{width:16px;height:16px;}
+.wg-stack.is-open .wg-stack-chevron{transform:rotate(-90deg);}
+/* Cartes en position absolue : transform et hauteur de la liste posés en JS (wedgeLayoutStack) */
+.wg-stack-list{position:relative;cursor:pointer;}
+.wg-stack.is-open .wg-stack-list{cursor:default;}
+.wg-stack-item{
+  position:absolute;top:0;left:0;right:0;
+  transform-origin:bottom center;
+  will-change:transform;
+}
+.wg-stack.is-ready .wg-stack-list{transition:height .35s cubic-bezier(.2,.8,.2,1);}
+.wg-stack.is-ready .wg-stack-item{transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .25s ease;}
+/* Pile repliée : un appui n'importe où sur la pile la déplie, le bouton supprimer reste inactif */
+.wg-stack:not(.is-open) .wg-stack-item .wg-btn-danger{pointer-events:none;}
+.wg-stack:not(.is-open) .wg-stack-item:not(:first-child){pointer-events:none;}
+@media (prefers-reduced-motion:reduce){
+  .wg-stack.is-ready .wg-stack-list,.wg-stack.is-ready .wg-stack-item,.wg-stack-chevron{transition:none;}
+}
 
 /* ---------- Carte "À reprendre" (liste des exercices) ---------- */
 .wg-resume-card{

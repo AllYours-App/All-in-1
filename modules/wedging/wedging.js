@@ -442,19 +442,10 @@ function wedgeDayLabel(key, iso) {
   if (key === wedgeDayKey(yesterday.toISOString())) return 'Hier';
   return UI.formatDate(iso);
 }
-function wedgeHistoryGroupedHtml(rounds) {
-  const groups = new Map();
-  rounds.forEach(w => {
-    const key = wedgeDayKey(w.date);
-    if (!groups.has(key)) groups.set(key, { key, iso: w.date, shots: [] });
-    groups.get(key).shots.push(w);
-  });
-  return Array.from(groups.values()).sort((a, b) => b.key.localeCompare(a.key)).map(g => `
-    <div class="wg-history-day">
-      <span class="wg-history-day-title">${wedgeDayLabel(g.key, g.iso)}</span>
-      <span class="wg-history-day-count">${g.shots.length} coup${g.shots.length > 1 ? 's' : ''}</span>
-    </div>
-    ${g.shots.map(w => `
+// Jours dépliés dans l'historique (conservés d'un rendu à l'autre : rerender() reconstruit tout le HTML)
+const wedgeOpenStacks = new Set();
+function wedgeHistoryItemHtml(w) {
+  return `
     <div class="wg-history-item">
       <span class="wg-history-bar"></span>
       <div class="wg-history-mid">
@@ -462,8 +453,81 @@ function wedgeHistoryGroupedHtml(rounds) {
         <span class="wg-text-muted-sm">${wedgeZoneDisplayLabel(w.zone)} — ${w.finalDistance}m</span>
       </div>
       <button class="wg-btn-danger" onclick="deleteWedgeRound(${w.id})">${UI.ICONS.close}</button>
-    </div>`).join('')}
-  `).join('');
+    </div>`;
+}
+function wedgeHistoryGroupedHtml(rounds) {
+  const groups = new Map();
+  rounds.forEach(w => {
+    const key = wedgeDayKey(w.date);
+    if (!groups.has(key)) groups.set(key, { key, iso: w.date, shots: [] });
+    groups.get(key).shots.push(w);
+  });
+  return Array.from(groups.values()).sort((a, b) => b.key.localeCompare(a.key)).map(g => {
+    const label = wedgeDayLabel(g.key, g.iso);
+    const count = `${g.shots.length} coup${g.shots.length > 1 ? 's' : ''}`;
+    // Un seul coup ce jour-là : pas de pile
+    if (g.shots.length === 1) {
+      return `
+    <div class="wg-history-day"><span class="wg-history-day-title">${label}</span><span class="wg-history-day-count">${count}</span></div>
+    ${wedgeHistoryItemHtml(g.shots[0])}`;
+    }
+    // Plusieurs coups : pile façon notifications iPhone (le plus récent devant), un appui déplie / replie
+    const open = wedgeOpenStacks.has(g.key);
+    return `
+    <div class="wg-stack ${open ? 'is-open' : ''}" data-day="${g.key}">
+      <button type="button" class="wg-history-day wg-stack-head" aria-expanded="${open}" onclick="toggleWedgeStack('${g.key}')">
+        <span class="wg-history-day-title">${label}</span>
+        <span class="wg-history-day-count">${count}<span class="wg-stack-chevron">${UI.ICONS.chevron}</span></span>
+      </button>
+      <div class="wg-stack-list" onclick="openWedgeStackFromList(event, '${g.key}')">
+        ${g.shots.map(w => `<div class="wg-stack-item">${wedgeHistoryItemHtml(w)}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+// Mise en page d'une pile : cartes empilées (3 visibles, décalées de 10 px) ou dépliées (une sous l'autre).
+// Les cartes sont en position absolue : on calcule leur décalage vertical et la hauteur de la liste à partir de leur hauteur réelle.
+const WEDGE_STACK_PEEK = 10, WEDGE_STACK_GAP = 8, WEDGE_STACK_VISIBLE = 3;
+function wedgeLayoutStack(stack) {
+  const list = stack.querySelector('.wg-stack-list');
+  if (!list) return;
+  const open = stack.classList.contains('is-open');
+  const items = Array.from(list.children);
+  const heights = items.map(el => el.firstElementChild.offsetHeight);
+  if (!heights.length || !heights[0]) return; // page masquée : rien à mesurer (recalculé à l'affichage, voir ResizeObserver)
+  let total = 0;
+  items.forEach((el, i) => {
+    el.style.zIndex = String(items.length - i);
+    if (open) {
+      el.style.transform = `translateY(${total}px) scale(1)`;
+      el.style.opacity = '1';
+      total += heights[i] + (i < items.length - 1 ? WEDGE_STACK_GAP : 0);
+    } else {
+      const depth = Math.min(i, WEDGE_STACK_VISIBLE - 1);
+      // origine en bas : le bord bas de chaque carte arrière dépasse de WEDGE_STACK_PEEK sous la carte devant
+      el.style.transform = `translateY(${depth * WEDGE_STACK_PEEK}px) scale(${1 - depth * 0.05})`;
+      el.style.opacity = i < WEDGE_STACK_VISIBLE ? '1' : '0';
+      total = Math.max(total, heights[i] + depth * WEDGE_STACK_PEEK);
+    }
+  });
+  list.style.height = total + 'px';
+}
+function wedgeLayoutAllStacks() {
+  document.querySelectorAll('#page-wedging .wg-stack').forEach(wedgeLayoutStack);
+}
+function toggleWedgeStack(key) {
+  const stack = document.querySelector(`#page-wedging .wg-stack[data-day="${key}"]`);
+  if (!stack) return;
+  const open = !stack.classList.contains('is-open');
+  stack.classList.toggle('is-open', open);
+  stack.querySelector('.wg-stack-head').setAttribute('aria-expanded', String(open));
+  if (open) wedgeOpenStacks.add(key); else wedgeOpenStacks.delete(key);
+  wedgeLayoutStack(stack);
+}
+// Appui sur la pile repliée : elle se déplie (une fois dépliée, les cartes gardent leurs propres boutons)
+function openWedgeStackFromList(event, key) {
+  const stack = event.currentTarget.closest('.wg-stack');
+  if (stack && !stack.classList.contains('is-open')) toggleWedgeStack(key);
 }
 function resetWedgeHistoryFilters() { wedgeHistoryDistanceFilter = new Set(); wedgeHistoryZoneFilter = new Set(); rerender(); }
 function openWedgeHistoryDistancePopup() { wedgeHistoryDistancePopupOpen = true; rerender(); }
@@ -983,7 +1047,7 @@ function wedgeExSessionScreenHtml() {
   const attemptsHtml = dist.results.map((r, idx) => `<button class="wg-attempt-btn ${idx === s.activeAttempt ? 'active' : ''}" onclick="setWedgeExActiveAttempt(${idx})"><span>${idx + 1}</span>${ex.resultMode === 'distance' && r !== null && r !== undefined ? `<span class="wg-attempt-value">${r}</span>` : `<span class="wg-dot ${wedgeExResultDotClass(ex, r)}"></span>`}</button>`).join('');
   const distTabsHtml = s.distances.map((dd, idx) => `<button class="wg-ladder-item ${idx === s.activeDistanceIdx ? 'active' : ''}" onclick="setWedgeExActiveDistance(${idx})">${dd.distance}m</button>`).join('');
   const currentResult = dist.results[s.activeAttempt];
-  return `<div class="wg-topbar"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
+  return `<div class="wg-topbar is-session"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
     <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-session-subtitle">${dist.distance}m - ${s.activeAttempt + 1}/${dist.results.length}${wedgeExSuccessDistanceLabel(ex, dist.distance) ? ' · ' + wedgeExSuccessDistanceLabel(ex, dist.distance) : ''}</div>
     <section class="wg-section"><h4 class="mb-8">Balles</h4><div class="wg-attempts-grid">${attemptsHtml}</div></section>
@@ -1020,7 +1084,7 @@ function wedgeExElevatorScreenHtml() {
   const recentDotsHtml = s.history.slice(-10).map(h => `<span class="wg-dot ${h.made ? 'made' : 'missed'}"></span>`).join('');
   const seriesHtml = isXY ? `<div class="wg-series-dots">${Array.from({ length: s.xyY }, (_, i) => { const r = s.levelAttempts[i]; const cls = r === true ? 'filled' : (r === false ? 'missed' : ''); return `<span class="wg-series-dot ${cls}"></span>`; }).join('')}</div>
     <div class="wg-info-note mb-10">Balle ${Math.min(s.levelAttempts.length + 1, s.xyY)} / ${s.xyY} — besoin de ${s.xyX} réussies pour monter</div>` : '';
-  return `<div class="wg-topbar"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
+  return `<div class="wg-topbar is-session"><button class="wg-back-btn" onclick="cancelWedgeExerciseSession()">${UI.ICONS.back} Quitter</button></div>
     <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-section-desc wg-text-center">Palier ${s.currentLevelIdx + 1}/${s.levels.length} — ${distance}m</div>
     <p class="wg-text-muted wg-text-center mb-10">${isXY ? `Réussis ${s.xyX} balles sur ${s.xyY} pour monter d'un palier, sinon tu redescends — balles illimitées` : `Réussis pour monter d'un palier, rate pour redescendre — balles illimitées`}</p>
@@ -1174,7 +1238,7 @@ function wedgeExRecapScreenHtml() {
   if (!ex) { wedgeExRecap = null; return wedgeExercisesListHtml(); }
   const needsEditMode = ex.resultMode === 'inout' || ex.resultMode === 'elevator';
   const rows = wedgeExRecap.shots.map((s, i) => `<li onclick="toggleWedgeRecapShot(${i})">${ex.resultMode !== 'distance' ? `<span class="wg-dot ${s.made ? 'made' : 'missed'}"></span>` : ''}<span>Tir ${i + 1} — ${s.distance}m</span><span class="wg-text-muted-sm">${wedgeExRecapShotLabel(ex, s)}</span></li>`).join('');
-  return `<div class="wg-topbar">
+  return `<div class="wg-topbar is-session">
       <button class="wg-back-btn" onclick="discardWedgeExRecap()">${UI.ICONS.back} Annuler</button>
       ${needsEditMode ? `<button class="wg-icon-btn ${wedgeRecapEditMode ? 'active' : ''}" onclick="toggleWedgeRecapEditMode()">${UI.ICONS.edit}</button>` : ''}
     </div>
@@ -1636,12 +1700,22 @@ const Router = (function () {
         '<button class="wg-btn-secondary" style="margin-top:14px;" onclick="Router.go(\'parcours\')">Retour à l\'accueil</button>' +
         '</div>';
     }
+    // Piles de l'historique : mise en page sans animation au rendu, puis transitions activées pour les dépliages
+    try {
+      wedgeLayoutAllStacks();
+      requestAnimationFrame(() => document.querySelectorAll('#page-wedging .wg-stack').forEach(el => el.classList.add('is-ready')));
+    } catch (_) {}
     if (changed && active) requestAnimationFrame(() => window.scrollTo(0, 0));
   }
   function go(hash) { location.hash = "#" + hash; }
   // Un changement de hash n'est traité que si Wedging est affiché : sinon c'est un autre module (Gym, liens #...) qui navigue
   window.addEventListener("hashchange", () => { if (isActive()) render(); });
   window.addEventListener("DOMContentLoaded", render);
+  // Recalcule les piles quand la page devient visible (display:none -> mesures à 0 au rendu) ou change de largeur
+  window.addEventListener("DOMContentLoaded", () => {
+    const appEl = document.getElementById("app");
+    if (appEl && window.ResizeObserver) new ResizeObserver(() => wedgeLayoutAllStacks()).observe(appEl);
+  });
   // Toast d'erreur : uniquement pour une erreur levée par wedging.js pendant que Wedging est affiché
   window.addEventListener("error", (e) => {
     if (!isActive() || !/wedging\.js/.test(e.filename || "")) return;
