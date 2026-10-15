@@ -2978,7 +2978,9 @@
         if (i >= IMAGE_EXT.length) { console.warn(`Image introuvable : ${base}.(${IMAGE_EXT.join('|')})`); resolve(null); return; }
         const url = `${base}.${IMAGE_EXT[i++]}`;
         const img = new Image();
-        img.onload = () => resolve(url);
+        // URL absolue : posée dans une variable CSS (--qr-green-bg), une URL relative serait résolue
+        // depuis stats.css (modules/stats/) et non depuis la page → image introuvable
+        img.onload = () => resolve(new URL(url, document.baseURI).href);
         img.onerror = tryNext;
         img.src = url;
       };
