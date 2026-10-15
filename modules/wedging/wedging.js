@@ -429,6 +429,42 @@ function wedgeHistoryFilteredRounds() {
     return okDistance && okZone;
   });
 }
+// Historique du Journal regroupé par jour (le plus récent en haut, coups du jour du plus récent au plus ancien)
+function wedgeDayKey(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? 'inconnue' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function wedgeDayLabel(key, iso) {
+  if (key === 'inconnue') return 'Date inconnue';
+  const today = new Date(), yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (key === wedgeDayKey(today.toISOString())) return "Aujourd'hui";
+  if (key === wedgeDayKey(yesterday.toISOString())) return 'Hier';
+  return UI.formatDate(iso);
+}
+function wedgeHistoryGroupedHtml(rounds) {
+  const groups = new Map();
+  rounds.forEach(w => {
+    const key = wedgeDayKey(w.date);
+    if (!groups.has(key)) groups.set(key, { key, iso: w.date, shots: [] });
+    groups.get(key).shots.push(w);
+  });
+  return Array.from(groups.values()).sort((a, b) => b.key.localeCompare(a.key)).map(g => `
+    <div class="wg-history-day">
+      <span class="wg-history-day-title">${wedgeDayLabel(g.key, g.iso)}</span>
+      <span class="wg-history-day-count">${g.shots.length} coup${g.shots.length > 1 ? 's' : ''}</span>
+    </div>
+    ${g.shots.map(w => `
+    <div class="wg-history-item">
+      <span class="wg-history-bar"></span>
+      <div class="wg-history-mid">
+        <b>${wedgeBucketLabel(w.distanceToCover)}</b>
+        <span class="wg-text-muted-sm">${wedgeZoneDisplayLabel(w.zone)} — ${w.finalDistance}m</span>
+      </div>
+      <button class="wg-btn-danger" onclick="deleteWedgeRound(${w.id})">${UI.ICONS.close}</button>
+    </div>`).join('')}
+  `).join('');
+}
 function resetWedgeHistoryFilters() { wedgeHistoryDistanceFilter = new Set(); wedgeHistoryZoneFilter = new Set(); rerender(); }
 function openWedgeHistoryDistancePopup() { wedgeHistoryDistancePopupOpen = true; rerender(); }
 function closeWedgeHistoryDistancePopup() { wedgeHistoryDistancePopupOpen = false; rerender(); }
@@ -1354,16 +1390,7 @@ Views.parcours = function () {
     <div class="wg-toolbar"><span class="wg-toolbar-title">HISTORIQUE</span></div>
     <div class="wg-list">
       ${wedgeHistoryFiltersRowHtml()}
-      ${filtered.map(w => `
-        <div class="wg-history-item">
-          <span class="wg-history-bar"></span>
-          <div class="wg-history-mid">
-            <b>${wedgeBucketLabel(w.distanceToCover)}</b>
-            <span class="wg-text-muted-sm">${wedgeZoneDisplayLabel(w.zone)} — ${w.finalDistance}m — ${UI.formatDate(w.date)}</span>
-          </div>
-          <button class="wg-btn-danger" onclick="deleteWedgeRound(${w.id})">${UI.ICONS.close}</button>
-        </div>
-      `).join('') || '<p class="wg-empty-state">Aucun coup enregistré.</p>'}
+      ${wedgeHistoryGroupedHtml(filtered) || '<p class="wg-empty-state">Aucun coup enregistré.</p>'}
     </div>
 
     ${UI.bottomNav(null)}
@@ -1450,6 +1477,27 @@ Views.sgAnalysis = function () {
 };
 
 /* --- EXERCICES = Créatif : liste, modale, session, revue (état en cascade, comme l'ancienne version) --- */
+// Carte "À reprendre" en tête de la liste des exercices : une par session interrompue (la plus récente en premier)
+function wedgeSessionProgressText(session) {
+  if (session.elevator) { const n = session.history.length; return `${n} balle${n > 1 ? 's' : ''} jouée${n > 1 ? 's' : ''}`; }
+  const total = session.distances.reduce((n, d) => n + d.results.length, 0);
+  const done = session.distances.reduce((n, d) => n + d.results.filter(r => r !== null).length, 0);
+  return `${done} / ${total} balles`;
+}
+function resumeWedgeExercise(id) { wedgeResumePopupExerciseId = id; resumeWedgeExerciseFromPopup(); }
+function wedgeResumeCardsHtml() {
+  const cards = wedgeInProgressSessions.slice().reverse().map(entry => {
+    const ex = wedgeExercises.find(e => e.id === entry.exerciseId);
+    if (!ex || !entry.session) return '';
+    return `<div class="wg-resume-card">
+      <span class="wg-resume-card-label">À reprendre</span>
+      <b class="wg-resume-card-name">${appEscapeHtml(ex.name)}</b>
+      <span class="wg-text-muted-sm">${wedgeSessionProgressText(entry.session)}</span>
+      <button class="wg-btn-primary mt-8" onclick="resumeWedgeExercise(${ex.id})">Reprendre</button>
+    </div>`;
+  }).join('');
+  return cards ? `<div class="wg-list mb-10">${cards}</div>` : '';
+}
 function wedgeExercisesListHtml() {
   const isHistory = wedgeExercisesTab === 'history';
   return `
@@ -1460,6 +1508,7 @@ function wedgeExercisesListHtml() {
       <button class="wg-chip ${isHistory ? 'active' : ''}" onclick="setWedgeExercisesTab('history')">Historique</button>
     </div>
     ${isHistory ? wedgeExerciseHistoryHtml() : `
+      ${wedgeResumeCardsHtml()}
       <div class="wg-toolbar"><span class="wg-toolbar-title">MES EXERCICES</span><button class="wg-chip active" onclick="openWedgeExerciseModal()">${UI.ICONS.plus} Créer</button></div>
       <div class="wg-chip-row mb-10">${wedgeSortBtnHtml('exercisesSort')}</div>
       <div class="wg-list mb-70">${wedgeExercises.length ? wedgeSortedExercises().map(ex => wedgeExerciseCardHtml(ex)).join('') : '<p class="wg-empty-state">Aucun exercice pour le moment.</p>'}</div>

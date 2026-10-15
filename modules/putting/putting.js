@@ -61,8 +61,8 @@ function renderPuttingTab() {
     <!-- Sous-panneau : accueil Parcours -->
     <div class="analyse-subpanel" data-sub="home">
 
-      <!-- Carte reprendre : masquée par défaut, affichée par JS uniquement quand une reprise existe -->
-      <div class="resume-card is-hidden">
+      <!-- Carte reprendre (onglet Parcours : exercice rapide) : masquée par défaut, affichée par JS uniquement quand une reprise existe -->
+      <div class="resume-card is-hidden" data-resume="quick">
         <div class="resume-card_image"></div>
         <div class="resume-card_content">
           <div class="resume-card_label">À reprendre</div>
@@ -313,8 +313,8 @@ function renderPuttingTab() {
 
     <div class="page-subtitle">S'entraîner avec méthode, progresser chaque jour.</div>
 
-    <!-- Carte reprendre : masquée par défaut, affichée par JS uniquement quand une reprise existe -->
-    <div class="resume-card is-hidden">
+    <!-- Carte reprendre (onglet Exercices : exercice créé) : masquée par défaut, affichée par JS uniquement quand une reprise existe -->
+    <div class="resume-card is-hidden" data-resume="exercice">
       <div class="resume-card_image"></div>
       <div class="resume-card_content">
         <div class="resume-card_label">À reprendre</div>
@@ -638,7 +638,8 @@ let selectedCombineId = null;
 let editingCombineId = null;
 let puttingCreativeModalOpen = false;
 let puttingCreativeForm = null;
-let resumableSession = null; // session de putting à reprendre (clé putting_resume), voir loadPuttingState()
+let resumableSession = null; // exercice créé à reprendre, onglet Exercices (clé putting_resume), voir loadPuttingState()
+let resumableQuick = null; // exercice rapide à reprendre, onglet Parcours (clé putting_resume_quick). Indépendant de resumableSession : les deux peuvent exister en même temps
 
 /* ============================================================
    PAVÉ NUMÉRIQUE — popup générique remplaçant prompt() natif pour
@@ -1648,15 +1649,18 @@ function loadPuttingState() {
     const sessions = localStorage.getItem('putting_sessions');
     const rounds = localStorage.getItem('putting_rounds');
     const resume = localStorage.getItem('putting_resume');
+    const resumeQuick = localStorage.getItem('putting_resume_quick');
     puttingCombines = combines ? JSON.parse(combines) : [];
     puttingSessions = sessions ? JSON.parse(sessions) : [];
     puttingRounds = rounds ? JSON.parse(rounds) : [];
     resumableSession = resume ? JSON.parse(resume) : null;
+    resumableQuick = resumeQuick ? JSON.parse(resumeQuick) : null;
   } catch (e) {
     puttingCombines = [];
     puttingSessions = [];
     puttingRounds = [];
     resumableSession = null;
+    resumableQuick = null;
   }
 }
 loadPuttingState();
@@ -1695,20 +1699,62 @@ function resumeSession() {
   renderResumeCards();
 }
 
+/* Exercice rapide (onglet Parcours) : sa séance est enregistrée avec son exercice, qui n'existe que le temps de la séance
+   (il n'est jamais dans putting_combines) ; on le remet dans puttingCombines à la reprise. */
+function saveResumableQuick() {
+  const c = getCombineById(activeCombineId);
+  if (!c) return;
+  resumableQuick = {
+    combine: c,
+    name: c.name,
+    activeHoleIndex: activeHoleIndex,
+    session: activeSession,
+    dateISO: new Date().toISOString(),
+  };
+  appSafeSetItem('putting_resume_quick', JSON.stringify(resumableQuick));
+}
+
+function clearResumableQuick() {
+  resumableQuick = null;
+  try { localStorage.removeItem('putting_resume_quick'); } catch (e) {}
+}
+
+function resumeQuickSession() {
+  if (!resumableQuick || !resumableQuick.combine || !resumableQuick.session || !resumableQuick.session.holes) {
+    clearResumableQuick();
+    renderResumeCards();
+    return;
+  }
+  const c = resumableQuick.combine;
+  if (!getCombineById(c.id)) puttingCombines.push(c);
+  activeCombineId = c.id;
+  activeSession = resumableQuick.session;
+  activeHoleIndex = resumableQuick.activeHoleIndex;
+  clearResumableQuick();
+  exerciseFlowOriginTab = 'parcours';
+  exerciseFlowScreen = 'session';
+  enterExerciseFlow(c.name);
+  renderExerciseFlowScreen();
+  renderResumeCards();
+}
+
+// Deux cartes indépendantes : data-resume="exercice" (onglet Exercices) et data-resume="quick" (onglet Parcours)
 function renderResumeCards() {
   puttingQueryAll('.resume-card').forEach(function (card) {
-    if (!resumableSession) {
+    const quick = card.getAttribute('data-resume') === 'quick';
+    const saved = quick ? resumableQuick : resumableSession;
+    if (!saved || !saved.session || !saved.session.holes) {
       card.classList.add('is-hidden');
       return;
     }
     card.classList.remove('is-hidden');
-    const doneHoles = resumableSession.session.holes.filter(function (h) { return h.results.length > 0; }).length;
+    const doneHoles = saved.session.holes.filter(function (h) { return h.results.length > 0; }).length;
     const nameEl = card.querySelector('.resume-card_name');
-    if (nameEl) nameEl.textContent = resumableSession.name + ' — ' + doneHoles + '/' + resumableSession.session.holes.length + ' trous';
+    if (nameEl) nameEl.textContent = saved.name + ' — ' + doneHoles + '/' + saved.session.holes.length + ' trous';
     const btn = card.querySelector('.resume-card_button');
     btn.disabled = false;
     btn.removeAttribute('title');
-    btn.onclick = resumeSession;
+    btn.onclick = quick ? resumeQuickSession : resumeSession;
   });
 }
 
@@ -1880,8 +1926,12 @@ function enterExerciseFlow(title) {
 async function exitExerciseFlow(event) {
   if (event) event.preventDefault();
   if (exerciseFlowScreen === 'session' && !(await appConfirm('Quitter sans enregistrer cette séance ?', { confirmLabel: 'Quitter', cancelLabel: 'Rester' }))) return;
-  if (exerciseFlowScreen === 'session' && activeSession && activeSession.holes.some(function (h) { return h.results.length > 0; }) && String(activeCombineId).indexOf('quick-') !== 0) {
-    saveResumableSession();
+  // Exercice rapide (onglet Parcours) et exercice créé (onglet Exercices) ont chacun leur reprise : on ne touche qu'à celle de la séance quittée
+  const leavingQuick = String(activeCombineId).indexOf('quick-') === 0;
+  if (exerciseFlowScreen === 'session' && activeSession && activeSession.holes.some(function (h) { return h.results.length > 0; })) {
+    if (leavingQuick) saveResumableQuick(); else saveResumableSession();
+  } else if (leavingQuick) {
+    clearResumableQuick();
   } else {
     clearResumableSession();
   }
