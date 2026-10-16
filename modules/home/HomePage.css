@@ -26,8 +26,31 @@
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
+/* Accueil verrouillé (classe posée par HomePage.js tant que la page est affichée) : aucun défilement,
+   aucun rebond vertical (l'accueil ne défile jamais, le bug Safari signalé dans base.css ne s'applique donc pas). */
+html.home-locked,
+html.home-locked body {
+  overflow: hidden;
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* La bande sombre sous la barre d'état du thème clair (theme-light.css) recouvrirait la photo : l'accueil
+   est identique dans les deux thèmes. */
+html[data-theme="light"].home-locked::before {
+  display: none;
+}
+
 /* Sur un vrai téléphone : plein écran, sans cadre */
 @media (max-width: 430px) {
+  /* Couvre tout l'écran, y compris sous la barre d'état et l'indicateur d'accueil iOS,
+     sans dépendre de 100dvh (un vide apparaissait en bas de l'accueil) */
+  html.home-locked #page-home .page-wrapper {
+    position: fixed;
+    inset: 0;
+    height: auto;
+  }
+
   .home-screen_component {
     width: 100%;
     height: 100%;

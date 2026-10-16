@@ -13,9 +13,10 @@
 function applyAppTheme(theme) {
   const isLight = theme === "light";
   document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
-  // Couleur de la barre du navigateur (Android, Safari)
+  // Couleur de la barre du navigateur (Android, Safari). L'accueil (photo plein écran) reste sombre dans les deux thèmes.
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", isLight ? "#f2f5ef" : "#050505");
+  const onHome = document.documentElement.classList.contains("home-locked");
+  if (meta) meta.setAttribute("content", isLight && !onHome ? "#f2f5ef" : "#050505");
 }
 
 /* ---------------------------------------------------------------------------
