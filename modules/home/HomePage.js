@@ -33,15 +33,11 @@ window.renderHomeGreeting = renderHomeGreeting;
 
 // Accueil : écran fixe, sans défilement ni rebond. La classe html.home-locked n'existe que tant que
 // #page-home est affichée (le module la retire lui-même en la quittant, voir HomePage.css).
-// La couleur de la barre du navigateur reste sombre sur l'accueil quel que soit le thème (voir applyAppTheme dans commun.js).
 (function () {
   const page = document.getElementById("page-home");
   if (!page) return;
   const syncHomeLock = () => {
     document.documentElement.classList.toggle("home-locked", page.classList.contains("active"));
-    if (typeof applyAppTheme === "function") {
-      applyAppTheme(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
-    }
   };
   new MutationObserver(syncHomeLock).observe(page, { attributes: true, attributeFilter: ["class"] });
   syncHomeLock();

@@ -126,22 +126,6 @@ html[data-theme="light"] #page-menu {
 /* Fond du document (Parcours et Vitesse n'ont pas de fond propre) */
 html[data-theme="light"] body { background: var(--bg); }
 
-/* Barre d'état iOS en appli installée : ses icônes restent blanches (black-translucent),
-   on réserve donc une bande sombre sous elle pour qu'elles restent lisibles. */
-@media (display-mode: standalone) {
-  html[data-theme="light"]::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-top, 0px);
-    background: #050505;
-    z-index: 9999;
-    pointer-events: none;
-  }
-}
-
 /* ---- Accueil : photo conservée, boutons et panneau passés en blanc ---- */
 html[data-theme="light"] .home-screen_header { color: #fff; }
 html[data-theme="light"] .header_title-highlight { color: #b8ff3d; }
