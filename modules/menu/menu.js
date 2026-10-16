@@ -1,10 +1,10 @@
 /* ==========================================================================
    Références DOM globales
    ========================================================================== */
-const menuRoot = document.getElementById("root");
-const menuBackBtn = document.getElementById("backBtn");
-const menuHeaderTitle = document.getElementById("headerTitle");
-const backLabel = document.querySelector(".nav_back-label");
+const menuRoot = document.getElementById("menu-root");
+const menuBackBtn = document.getElementById("menu-back-btn");
+const menuHeaderTitle = document.getElementById("menu-header-title");
+const menuBackLabel = document.querySelector("#page-menu .nav_back-label");
 
 /* ==========================================================================
    State global de l'app + persistance localStorage
@@ -83,7 +83,7 @@ function enterScreen(renderFn, title, back = backToMenu, label = back === backTo
   currentRender = renderFn;
   backTarget = back;
   menuHeaderTitle.textContent = title;
-  backLabel.textContent = label;
+  menuBackLabel.textContent = label;
   menuBackBtn.classList.remove("is-hidden");
 }
 
@@ -474,7 +474,7 @@ function renderGolfBagScreen() {
   paint(`
     ${topRowHtml()}
     <div class="field-list">
-      <h3>Clubs (<span id="bag-count">${golfBag.clubs.length}</span>)</h3>
+      <h3>Clubs (<span id="menu-bag-count">${golfBag.clubs.length}</span>)</h3>
       ${golfClubCatalog.map(c => `
         <div class="field-row"><span class="label">${c.name}</span><span class="val">
           <label class="radio-select">
@@ -492,7 +492,7 @@ function toggleClub(id, isChecked) {
   const others = golfBag.clubs.filter(cid => cid !== id);
   golfBag.clubs = isChecked ? [...others, id] : others;
   saveMenuState();
-  document.getElementById('bag-count').textContent = golfBag.clubs.length;
+  document.getElementById('menu-bag-count').textContent = golfBag.clubs.length;
 }
 
 /* ==========================================================================
@@ -742,7 +742,7 @@ function menuSetContactTopic(value) { menuContactDraft.topic = value; }
 
 function menuSetContactMessage(value) {
   menuContactDraft.message = value;
-  const error = document.getElementById("contactError");
+  const error = document.getElementById("menu-contact-error");
   if (error) error.textContent = "";
 }
 
@@ -760,7 +760,7 @@ function renderContactScreen(back = backToHelp, label = "Aide") {
         <span class="contact_label">Message</span>
         <textarea class="contact_textarea" maxlength="2000" placeholder="Décrivez votre demande" oninput="menuSetContactMessage(this.value)">${appEscapeHtml(menuContactDraft.message)}</textarea>
       </label>
-      <p class="contact_error" id="contactError" role="alert"></p>
+      <p class="contact_error" id="menu-contact-error" role="alert"></p>
       <button type="button" class="btn btn-primary" onclick="menuSendContactMessage()">Envoyer</button>
       <p class="contact_note">La version de l'application et le type d'appareil sont ajoutés au message pour faciliter le diagnostic. Vous pouvez aussi écrire directement à <a class="contact_link" href="mailto:${email}">${email}</a>.</p>
     </div>
@@ -770,7 +770,7 @@ function renderContactScreen(back = backToHelp, label = "Aide") {
 function menuSendContactMessage() {
   const message = menuContactDraft.message.trim();
   if (message.length < 10) {
-    document.getElementById("contactError").textContent = "Écrivez un message d'au moins 10 caractères.";
+    document.getElementById("menu-contact-error").textContent = "Écrivez un message d'au moins 10 caractères.";
     return;
   }
   const topicLabel = (MENU_CONTACT_TOPICS.find(([value]) => value === menuContactDraft.topic) || [])[1] || "Contact";
@@ -978,7 +978,7 @@ function renderDataScreen(back, label) {
         <h2 class="data_title">Exporter mes données</h2>
         <p class="data_text">Enregistrez une copie de votre profil, de vos réglages et de vos données de jeu et d'entraînement dans un fichier lisible (JSON).</p>
         <button type="button" class="data_button" onclick="exportMenuData()">Exporter mes données</button>
-        <p class="data_feedback" id="dataFeedback" role="status"></p>
+        <p class="data_feedback" id="menu-data-feedback" role="status"></p>
       </section>
       <section class="data_card is-danger">
         <h2 class="data_title">Supprimer mon compte et mes données</h2>
@@ -997,7 +997,7 @@ function renderDataScreen(back, label) {
 }
 
 function menuSetDataFeedback(text) {
-  const el = document.getElementById("dataFeedback");
+  const el = document.getElementById("menu-data-feedback");
   if (el) el.textContent = text;
 }
 

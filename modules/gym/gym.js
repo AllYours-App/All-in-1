@@ -8,7 +8,7 @@
 document.getElementById("app-root-gym").innerHTML = `
 
     <!-- ============================== VUE : ACCUEIL ============================== -->
-    <section class="gym-view" id="view-gym-home" hidden>
+    <section class="gym-view" id="gym-view-gym-home" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="showPage('home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -114,15 +114,15 @@ document.getElementById("app-root-gym").innerHTML = `
         </div>
 
         <!-- Prochaine séance (visible seulement si un programme est lancé) -->
-        <a class="card gym-anim-in home-next-session" id="home-next-session" href="#" onclick="gymHomeNextSessionClick(); return false;" hidden>
+        <a class="card gym-anim-in home-next-session" id="gym-home-next-session" href="#" onclick="gymHomeNextSessionClick(); return false;" hidden>
           <span class="gym-eyebrow">Prochaine séance</span>
           <div class="next-session__row">
             <span class="next-session__icon">
               <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l12-7z"/></svg>
             </span>
             <div class="next-session__body">
-              <span class="next-session__title" id="home-next-session-title"></span>
-              <span class="next-session__meta" id="home-next-session-meta"></span>
+              <span class="next-session__title" id="gym-home-next-session-title"></span>
+              <span class="next-session__meta" id="gym-home-next-session-meta"></span>
             </div>
             <span class="next-session__arrow">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -164,7 +164,7 @@ document.getElementById("app-root-gym").innerHTML = `
     </section>
 
     <!-- ============================== VUE : PROGRAMMES ============================== -->
-    <section class="gym-view" id="view-programmes" hidden>
+    <section class="gym-view" id="gym-view-programmes" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -186,17 +186,17 @@ document.getElementById("app-root-gym").innerHTML = `
           Nouveau programme
         </a>
 
-        <div class="tabs tabs--split" id="programmes-tabs">
+        <div class="tabs tabs--split" id="gym-programmes-tabs">
           <button class="tab is-active" data-value="mes-programmes">Mes programmes</button>
           <button class="tab" data-value="bibliotheque">Bibliothèque</button>
         </div>
 
-        <div class="gym-stagger" id="programmes-list" style="display:flex; flex-direction:column; gap:14px;"></div>
+        <div class="gym-stagger" id="gym-programmes-list" style="display:flex; flex-direction:column; gap:14px;"></div>
       </main>
     </section>
 
     <!-- ============================== VUE : DÉTAIL PROGRAMME ============================== -->
-    <section class="gym-view" id="view-programme-detail" hidden>
+    <section class="gym-view" id="gym-view-programme-detail" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('programmes'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -208,24 +208,24 @@ document.getElementById("app-root-gym").innerHTML = `
       </header>
 
       <main class="gym-main">
-        <div id="program-hero" class="gym-anim-in"></div>
+        <div id="gym-program-hero" class="gym-anim-in"></div>
 
-        <div class="card" id="program-info-row"></div>
+        <div class="card" id="gym-program-info-row"></div>
 
-        <div class="card gym-anim-in" id="program-progress-card" style="display:flex; flex-direction:column; gap:16px;"></div>
+        <div class="card gym-anim-in" id="gym-program-progress-card" style="display:flex; flex-direction:column; gap:16px;"></div>
 
         <section style="display:flex; flex-direction:column; gap:14px;">
           <div class="gym-section-head">
             <h2 class="gym-section-title">Séances</h2>
-            <a class="gym-link" href="#" onclick="gymNavigate('creer-seance', {programme: gymGetParam('id','prog-force')}); return false;">Ajouter <span id="icon-add-session"></span></a>
+            <a class="gym-link" href="#" onclick="gymNavigate('creer-seance', {programme: gymGetParam('id','prog-force')}); return false;">Ajouter <span id="gym-icon-add-session"></span></a>
           </div>
-          <div class="gym-stagger" id="program-sessions-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+          <div class="gym-stagger" id="gym-program-sessions-list" style="display:flex; flex-direction:column; gap:12px;"></div>
         </section>
       </main>
     </section>
 
     <!-- ============================== VUE : CRÉER UN PROGRAMME ============================== -->
-    <section class="gym-view" id="view-creer-programme" hidden>
+    <section class="gym-view" id="gym-view-creer-programme" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('programmes'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -243,7 +243,7 @@ document.getElementById("app-root-gym").innerHTML = `
             <h1 class="gym-title-xl">Ton programme sur mesure</h1>
           </div>
           <div class="hero-photo cp-hero">
-            <div class="hero-photo__silhouette" style="width:90%;" id="cp-hero-icon"></div>
+            <div class="hero-photo__silhouette" style="width:90%;" id="gym-cp-hero-icon"></div>
           </div>
         </div>
 
@@ -254,8 +254,8 @@ document.getElementById("app-root-gym").innerHTML = `
             </div>
           </div>
           <label class="field">
-            <span id="icon-field-titre"></span>
-            <input type="text" id="input-titre" placeholder="Ex. : Prépa été" maxlength="60" />
+            <span id="gym-icon-field-titre"></span>
+            <input type="text" id="gym-input-titre" placeholder="Ex. : Prépa été" maxlength="60" />
           </label>
         </div>
 
@@ -266,7 +266,7 @@ document.getElementById("app-root-gym").innerHTML = `
               <p class="step__heading">Quel est ton objectif ?</p>
             </div>
           </div>
-          <div class="choice-grid" id="objectif-grid"></div>
+          <div class="choice-grid" id="gym-objectif-grid"></div>
         </div>
 
         <div class="cp-row">
@@ -278,8 +278,8 @@ document.getElementById("app-root-gym").innerHTML = `
               </div>
             </div>
             <label class="field">
-              <span id="icon-field-seances"></span>
-              <input type="text" id="input-seances" placeholder="3" inputmode="none" readonly />
+              <span id="gym-icon-field-seances"></span>
+              <input type="text" id="gym-input-seances" placeholder="3" inputmode="none" readonly />
               <span class="field__suffix">/ semaine</span>
             </label>
           </div>
@@ -292,8 +292,8 @@ document.getElementById("app-root-gym").innerHTML = `
               </div>
             </div>
             <label class="field">
-              <span id="icon-field-duree"></span>
-              <input type="text" id="input-duree" placeholder="8" inputmode="none" readonly />
+              <span id="gym-icon-field-duree"></span>
+              <input type="text" id="gym-input-duree" placeholder="8" inputmode="none" readonly />
               <span class="field__suffix">semaines</span>
             </label>
           </div>
@@ -301,26 +301,26 @@ document.getElementById("app-root-gym").innerHTML = `
 
         <div class="card card--accent cp-recap gym-anim-in">
           <div class="cp-recap__head">
-            <div class="icon-circle" id="icon-recap-target"></div>
+            <div class="icon-circle" id="gym-icon-recap-target"></div>
             <div>
               <p class="step__heading">Récapitulatif</p>
             </div>
           </div>
           <div class="summary-grid">
-            <div class="summary-item"><span id="icon-recap-1"></span><span class="summary-item__label">Objectif</span><span class="summary-item__value" id="recap-objectif">Force</span></div>
-            <div class="summary-item"><span id="icon-recap-2"></span><span class="summary-item__label">Séances</span><span class="summary-item__value" id="recap-seances">—</span></div>
-            <div class="summary-item"><span id="icon-recap-3"></span><span class="summary-item__label">Durée</span><span class="summary-item__value" id="recap-duree">—</span></div>
+            <div class="summary-item"><span id="gym-icon-recap-1"></span><span class="summary-item__label">Objectif</span><span class="summary-item__value" id="gym-recap-objectif">Force</span></div>
+            <div class="summary-item"><span id="gym-icon-recap-2"></span><span class="summary-item__label">Séances</span><span class="summary-item__value" id="gym-recap-seances">—</span></div>
+            <div class="summary-item"><span id="gym-icon-recap-3"></span><span class="summary-item__label">Durée</span><span class="summary-item__value" id="gym-recap-duree">—</span></div>
           </div>
         </div>
 
-        <button class="btn btn-primary" id="btn-generer">
+        <button class="btn btn-primary" id="gym-btn-generer">
           Générer mon programme
         </button>
       </main>
     </section>
 
     <!-- ============================== VUE : CRÉER UNE SÉANCE ============================== -->
-    <section class="gym-view" id="view-creer-seance" hidden>
+    <section class="gym-view" id="gym-view-creer-seance" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('programme-detail', {id: gymGetParam('programme','prog-force')}); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -337,8 +337,8 @@ document.getElementById("app-root-gym").innerHTML = `
           <h1 class="gym-title-xl">Configure ta séance</h1>
         </div>
 
-        <div class="card" id="creer-seance-empty" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px; padding:32px 20px;">
-          <div class="icon-circle" id="creer-seance-empty-icon"></div>
+        <div class="card" id="gym-creer-seance-empty" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px; padding:32px 20px;">
+          <div class="icon-circle" id="gym-creer-seance-empty-icon"></div>
           <div>
             <p class="list-row__title">Aucun programme disponible</p>
             <p class="list-row__meta">Crée d'abord un programme pour pouvoir y ajouter une séance.</p>
@@ -346,7 +346,7 @@ document.getElementById("app-root-gym").innerHTML = `
           <a class="btn btn-primary" href="#" onclick="gymNavigate('creer-programme'); return false;" style="width:auto; padding:12px 22px; font-size:13.5px;">Créer un programme</a>
         </div>
 
-        <div id="creer-seance-form" style="display:flex; flex-direction:column; gap:24px;">
+        <div id="gym-creer-seance-form" style="display:flex; flex-direction:column; gap:24px;">
 
         <!-- Étape 1 : programme -->
         <div class="card step gym-anim-in">
@@ -357,13 +357,13 @@ document.getElementById("app-root-gym").innerHTML = `
               <p class="step__hint">Choisis le programme dans lequel ajouter cette séance.</p>
             </div>
           </div>
-          <button type="button" class="card card--interactive list-row" id="program-picker-btn" style="border-color:var(--gym-border-strong);">
-            <div class="icon-circle icon-circle--sm" id="program-picker-icon"></div>
+          <button type="button" class="card card--interactive list-row" id="gym-program-picker-btn" style="border-color:var(--gym-border-strong);">
+            <div class="icon-circle icon-circle--sm" id="gym-program-picker-icon"></div>
             <div class="list-row__body">
-              <span class="list-row__title" id="program-picker-name">—</span>
-              <span class="list-row__meta" id="program-picker-meta">—</span>
+              <span class="list-row__title" id="gym-program-picker-name">—</span>
+              <span class="list-row__meta" id="gym-program-picker-meta">—</span>
             </div>
-            <span class="list-row__chevron" id="program-picker-chevron"></span>
+            <span class="list-row__chevron" id="gym-program-picker-chevron"></span>
           </button>
         </div>
 
@@ -377,19 +377,19 @@ document.getElementById("app-root-gym").innerHTML = `
             </div>
           </div>
           <div style="display:flex; gap:10px;">
-            <button type="button" class="card card--interactive list-row" id="category-picker-btn" style="border-color:var(--gym-border-strong); flex:1; min-width:0;">
+            <button type="button" class="card card--interactive list-row" id="gym-category-picker-btn" style="border-color:var(--gym-border-strong); flex:1; min-width:0;">
               <div class="list-row__body" style="min-width:0;">
                 <span class="list-row__meta">Catégorie</span>
-                <span class="list-row__title" id="category-picker-value" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">À définir</span>
+                <span class="list-row__title" id="gym-category-picker-value" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">À définir</span>
               </div>
-              <span class="list-row__chevron" id="category-picker-chevron"></span>
+              <span class="list-row__chevron" id="gym-category-picker-chevron"></span>
             </button>
-            <button type="button" class="card card--interactive list-row" id="goal-picker-btn" style="border-color:var(--gym-border-strong); flex:1; min-width:0;">
+            <button type="button" class="card card--interactive list-row" id="gym-goal-picker-btn" style="border-color:var(--gym-border-strong); flex:1; min-width:0;">
               <div class="list-row__body" style="min-width:0;">
                 <span class="list-row__meta">Objectif</span>
-                <span class="list-row__title" id="goal-picker-value" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">À définir</span>
+                <span class="list-row__title" id="gym-goal-picker-value" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">À définir</span>
               </div>
-              <span class="list-row__chevron" id="goal-picker-chevron"></span>
+              <span class="list-row__chevron" id="gym-goal-picker-chevron"></span>
             </button>
           </div>
         </div>
@@ -403,14 +403,14 @@ document.getElementById("app-root-gym").innerHTML = `
               <p class="step__hint">Ajoute les exercices de ta séance. Tu peux en ajouter plusieurs.</p>
             </div>
           </div>
-          <button type="button" class="btn btn-primary" id="btn-add-exercise" style="width:auto; align-self:flex-end; padding:12px 18px; font-size:13.5px;">
-            <span id="icon-plus-add"></span> Ajouter un exercice
+          <button type="button" class="btn btn-primary" id="gym-btn-add-exercise" style="width:auto; align-self:flex-end; padding:12px 18px; font-size:13.5px;">
+            <span id="gym-icon-plus-add"></span> Ajouter un exercice
           </button>
-          <div id="exercise-list" style="display:flex; flex-direction:column;"></div>
+          <div id="gym-exercise-list" style="display:flex; flex-direction:column;"></div>
         </div>
 
-        <button class="btn btn-primary" id="btn-create-session">
-          <span id="icon-check-create"></span> Créer la séance
+        <button class="btn btn-primary" id="gym-btn-create-session">
+          <span id="gym-icon-check-create"></span> Créer la séance
         </button>
 
         </div>
@@ -418,7 +418,7 @@ document.getElementById("app-root-gym").innerHTML = `
     </section>
 
     <!-- ============================== VUE : EXERCICES ============================== -->
-    <section class="gym-view" id="view-exercices" hidden>
+    <section class="gym-view" id="gym-view-exercices" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -437,11 +437,11 @@ document.getElementById("app-root-gym").innerHTML = `
             <p class="gym-subtitle">Découvrez et explorez tous les exercices pour progresser à votre rythme.</p>
           </div>
           <div class="hero-photo" style="width:110px; height:110px; flex-shrink:0; min-height:0;">
-            <div class="hero-photo__silhouette" id="ex-hero-icon" style="width:90%;"></div>
+            <div class="hero-photo__silhouette" id="gym-ex-hero-icon" style="width:90%;"></div>
           </div>
         </div>
 
-        <div class="tabs gym-anim-in" id="region-tabs">
+        <div class="tabs gym-anim-in" id="gym-region-tabs">
           <button class="tab is-active" data-value="tous">Tous</button>
           <button class="tab" data-value="haut-du-corps">Haut du corps</button>
           <button class="tab" data-value="bas-du-corps">Bas du corps</button>
@@ -450,22 +450,22 @@ document.getElementById("app-root-gym").innerHTML = `
         </div>
 
         <label class="search-bar gym-anim-in">
-          <span id="icon-search"></span>
-          <input type="search" id="search-input" placeholder="Rechercher un exercice ou une catégorie" />
+          <span id="gym-icon-search"></span>
+          <input type="search" id="gym-search-input" placeholder="Rechercher un exercice ou une catégorie" />
         </label>
 
-        <div class="gym-stagger" id="category-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+        <div class="gym-stagger" id="gym-category-list" style="display:flex; flex-direction:column; gap:12px;"></div>
 
-        <button type="button" class="disclosure" id="advanced-filter-toggle">
-          <span id="icon-sliders"></span>
+        <button type="button" class="disclosure" id="gym-advanced-filter-toggle">
+          <span id="gym-icon-sliders"></span>
           Filtrer les exercices
-          <span id="icon-chevron-filter"></span>
+          <span id="gym-icon-chevron-filter"></span>
         </button>
 
-        <div class="card" id="advanced-filter-panel" style="display:none; flex-direction:column; gap:16px;">
+        <div class="card" id="gym-advanced-filter-panel" style="display:none; flex-direction:column; gap:16px;">
           <div>
             <p class="step__hint" style="margin-bottom:10px;">Équipement</p>
-            <div class="tabs" id="equipment-filter">
+            <div class="tabs" id="gym-equipment-filter">
               <button class="tab is-active" data-value="tous">Tous</button>
               <button class="tab" data-value="avec-materiel">Avec matériel</button>
               <button class="tab" data-value="poids-du-corps">Poids du corps</button>
@@ -473,7 +473,7 @@ document.getElementById("app-root-gym").innerHTML = `
           </div>
           <div>
             <p class="step__hint" style="margin-bottom:10px;">Niveau</p>
-            <div class="tabs" id="level-filter">
+            <div class="tabs" id="gym-level-filter">
               <button class="tab is-active" data-value="tous">Tous</button>
               <button class="tab" data-value="debutant">Débutant</button>
               <button class="tab" data-value="intermediaire">Intermédiaire</button>
@@ -485,25 +485,25 @@ document.getElementById("app-root-gym").innerHTML = `
     </section>
 
     <!-- ============================== VUE : SÉANCE ACTIVE ============================== -->
-    <section class="gym-view" id="view-seance-active" hidden>
+    <section class="gym-view" id="gym-view-seance-active" hidden>
       <div class="session-shell">
 
         <header class="session-header">
-          <a class="session-header__back" href="#" id="seance-active-back" aria-label="Retour">
+          <a class="session-header__back" href="#" id="gym-seance-active-back" aria-label="Retour">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </a>
           <div class="session-header__title">
             <span class="session-header__name">Séance en cours</span>
-            <span class="session-header__meta" id="session-eyebrow">—</span>
+            <span class="session-header__meta" id="gym-session-eyebrow">—</span>
           </div>
           <div class="session-header__timer">
-            <span class="session-header__timer-icon" id="icon-session-timer"></span>
-            <span class="session-header__timer-value" id="session-timer">00:00:00</span>
-            <button type="button" class="session-header__pause" id="btn-reset-timer" aria-label="Réinitialiser le chrono">
-              <span id="icon-session-reset"></span>
+            <span class="session-header__timer-icon" id="gym-icon-session-timer"></span>
+            <span class="session-header__timer-value" id="gym-session-timer">00:00:00</span>
+            <button type="button" class="session-header__pause" id="gym-btn-reset-timer" aria-label="Réinitialiser le chrono">
+              <span id="gym-icon-session-reset"></span>
             </button>
-            <button type="button" class="session-header__pause" id="btn-toggle-timer" aria-label="Mettre en pause">
-              <span id="icon-session-pause"></span>
+            <button type="button" class="session-header__pause" id="gym-btn-toggle-timer" aria-label="Mettre en pause">
+              <span id="gym-icon-session-pause"></span>
             </button>
           </div>
         </header>
@@ -511,39 +511,39 @@ document.getElementById("app-root-gym").innerHTML = `
         <main class="session-main">
 
           <!-- État vide : aucune séance active -->
-          <div class="gym-anim-in" id="session-empty" style="display:none; flex-direction:column; gap:10px;">
-            <h1 class="gym-title-xl" id="session-empty-title">Aucune séance active</h1>
-            <p class="gym-subtitle" id="session-empty-subtitle">Crée un programme et ajoute-y une séance pour commencer à t'entraîner.</p>
+          <div class="gym-anim-in" id="gym-session-empty" style="display:none; flex-direction:column; gap:10px;">
+            <h1 class="gym-title-xl" id="gym-session-empty-title">Aucune séance active</h1>
+            <p class="gym-subtitle" id="gym-session-empty-subtitle">Crée un programme et ajoute-y une séance pour commencer à t'entraîner.</p>
           </div>
 
           <!-- Contenu de la séance en cours -->
-          <div class="gym-anim-in" id="session-content" style="display:none; flex-direction:column; gap:16px;">
+          <div class="gym-anim-in" id="gym-session-content" style="display:none; flex-direction:column; gap:16px;">
 
             <!-- Exercice courant : navigation + titre -->
             <div class="session-exercise-hero">
               <div class="session-exercise-hero__nav">
-                <button type="button" class="session-exercise-hero__arrow" id="btn-prev-exercise" aria-label="Exercice précédent">
+                <button type="button" class="session-exercise-hero__arrow" id="gym-btn-prev-exercise" aria-label="Exercice précédent">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
-                <span class="gym-eyebrow" id="session-exo-position">EXERCICE — / —</span>
-                <button type="button" class="session-exercise-hero__arrow" id="btn-next-exercise" aria-label="Exercice suivant">
+                <span class="gym-eyebrow" id="gym-session-exo-position">EXERCICE — / —</span>
+                <button type="button" class="session-exercise-hero__arrow" id="gym-btn-next-exercise" aria-label="Exercice suivant">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
               </div>
-              <h1 class="session-exercise-hero__title" id="session-exercise-title">—</h1>
+              <h1 class="session-exercise-hero__title" id="gym-session-exercise-title">—</h1>
             </div>
 
-            <div class="card session-summary" id="session-info-row"></div>
+            <div class="card session-summary" id="gym-session-info-row"></div>
 
-            <div class="session-sets-list" id="session-sets-list"></div>
+            <div class="session-sets-list" id="gym-session-sets-list"></div>
 
-            <div class="session-actions" id="session-actions" style="display:none;">
-              <button type="button" class="btn btn-secondary" id="btn-finish-session">
+            <div class="session-actions" id="gym-session-actions" style="display:none;">
+              <button type="button" class="btn btn-secondary" id="gym-btn-finish-session">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Terminer la séance
               </button>
-              <button type="button" class="btn btn-primary" id="btn-next-series">
-                <span id="session-next-label">Exercice suivant</span>
+              <button type="button" class="btn btn-primary" id="gym-btn-next-series">
+                <span id="gym-session-next-label">Exercice suivant</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </button>
             </div>
@@ -556,7 +556,7 @@ document.getElementById("app-root-gym").innerHTML = `
     </section>
 
     <!-- ============================== VUE : PROGRESSION ============================== -->
-    <section class="gym-view" id="view-progression" hidden>
+    <section class="gym-view" id="gym-view-progression" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -575,8 +575,8 @@ document.getElementById("app-root-gym").innerHTML = `
         </div>
 
         <!-- État vide : aucune séance terminée pour le moment -->
-        <div class="card gym-anim-in" id="progression-empty" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding:40px 24px;">
-          <div class="icon-circle" id="progression-empty-icon"></div>
+        <div class="card gym-anim-in" id="gym-progression-empty" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding:40px 24px;">
+          <div class="icon-circle" id="gym-progression-empty-icon"></div>
           <div>
             <p class="list-row__title">Pas encore de données</p>
             <p class="list-row__meta">Termine tes premières séances pour voir apparaître ta progression ici.</p>
@@ -584,23 +584,23 @@ document.getElementById("app-root-gym").innerHTML = `
         </div>
 
         <!-- Contenu : rempli dès qu'au moins une séance a été terminée -->
-        <div id="progression-content" style="display:none; flex-direction:column; gap:20px;">
+        <div id="gym-progression-content" style="display:none; flex-direction:column; gap:20px;">
 
-          <div class="card session-summary gym-anim-in" id="progression-stats" style="grid-template-columns: repeat(3, 1fr);"></div>
+          <div class="card session-summary gym-anim-in" id="gym-progression-stats" style="grid-template-columns: repeat(3, 1fr);"></div>
 
-          <section id="progression-exercise-section" style="display:flex; flex-direction:column; gap:14px;">
-            <button type="button" class="card card--interactive list-row" id="progression-exo-btn" style="border-color:var(--gym-border-strong);">
+          <section id="gym-progression-exercise-section" style="display:flex; flex-direction:column; gap:14px;">
+            <button type="button" class="card card--interactive list-row" id="gym-progression-exo-btn" style="border-color:var(--gym-border-strong);">
               <div class="list-row__body">
                 <span class="gym-eyebrow">Exercice</span>
-                <span class="list-row__title" id="progression-exo-name">—</span>
-                <span class="list-row__meta" id="progression-exo-meta">—</span>
+                <span class="list-row__title" id="gym-progression-exo-name">—</span>
+                <span class="list-row__meta" id="gym-progression-exo-meta">—</span>
               </div>
-              <span class="list-row__chevron" id="progression-exo-chevron"></span>
+              <span class="list-row__chevron" id="gym-progression-exo-chevron"></span>
             </button>
-            <div class="tabs" id="progression-metric-tabs"></div>
+            <div class="tabs" id="gym-progression-metric-tabs"></div>
             <div class="card chart-card gym-anim-in">
-              <div class="chart-readout" id="progression-readout"></div>
-              <div id="progression-chart"></div>
+              <div class="chart-readout" id="gym-progression-readout"></div>
+              <div id="gym-progression-chart"></div>
             </div>
           </section>
 
@@ -609,7 +609,7 @@ document.getElementById("app-root-gym").innerHTML = `
     </section>
 
     <!-- ============================== VUE : HISTORIQUE ============================== -->
-    <section class="gym-view" id="view-historique" hidden>
+    <section class="gym-view" id="gym-view-historique" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -627,32 +627,32 @@ document.getElementById("app-root-gym").innerHTML = `
           <p class="gym-subtitle">Consultez vos séances et suivez vos entraînements.</p>
         </div>
 
-        <div class="tabs gym-anim-in" id="history-tabs">
+        <div class="tabs gym-anim-in" id="gym-history-tabs">
           <button class="tab is-active" data-value="tous">Tous</button>
           <button class="tab" data-value="programme">Programmes</button>
           <button class="tab" data-value="libre">Séances libres</button>
           <button class="tab" data-value="exercice">Exercices</button>
         </div>
 
-        <div id="history-groups" style="display:flex; flex-direction:column; gap:24px;"></div>
+        <div id="gym-history-groups" style="display:flex; flex-direction:column; gap:24px;"></div>
 
-        <div id="history-skeleton" style="display:none; flex-direction:column; gap:12px;">
+        <div id="gym-history-skeleton" style="display:none; flex-direction:column; gap:12px;">
           <div class="skeleton-row"><div class="skeleton-block" style="width:64px; height:64px; border-radius:14px;"></div><div style="flex:1; display:flex; flex-direction:column; gap:8px;"><div class="skeleton-block" style="width:60%; height:14px;"></div><div class="skeleton-block" style="width:40%; height:12px;"></div></div></div>
           <div class="skeleton-row"><div class="skeleton-block" style="width:64px; height:64px; border-radius:14px;"></div><div style="flex:1; display:flex; flex-direction:column; gap:8px;"><div class="skeleton-block" style="width:50%; height:14px;"></div><div class="skeleton-block" style="width:35%; height:12px;"></div></div></div>
         </div>
 
-        <button type="button" class="disclosure" id="load-more-btn">
-          <span id="icon-doc-more"></span>
+        <button type="button" class="disclosure" id="gym-load-more-btn">
+          <span id="gym-icon-doc-more"></span>
           Plus de séances
-          <span id="icon-chevron-more"></span>
+          <span id="gym-icon-chevron-more"></span>
         </button>
       </main>
     </section>
 
     <!-- ============================== VUE : RÉCAP DE SÉANCE ============================== -->
-    <section class="gym-view" id="view-seance-recap" hidden>
+    <section class="gym-view" id="gym-view-seance-recap" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" id="recap-back">
+        <a class="gym-header__back" href="#" id="gym-recap-back">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -664,37 +664,37 @@ document.getElementById("app-root-gym").innerHTML = `
       <main class="gym-main">
 
         <!-- Bandeau affiché uniquement juste après avoir terminé la séance -->
-        <div class="card card--accent gym-anim-in" id="recap-congrats" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px;"></div>
+        <div class="card card--accent gym-anim-in" id="gym-recap-congrats" style="display:none; text-align:center; flex-direction:column; align-items:center; gap:12px;"></div>
 
         <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
-          <span class="gym-eyebrow" id="recap-eyebrow">—</span>
-          <h1 class="gym-title-xl" id="recap-title">—</h1>
-          <p class="gym-subtitle" id="recap-meta">—</p>
+          <span class="gym-eyebrow" id="gym-recap-eyebrow">—</span>
+          <h1 class="gym-title-xl" id="gym-recap-title">—</h1>
+          <p class="gym-subtitle" id="gym-recap-meta">—</p>
         </div>
 
-        <div class="card session-summary gym-anim-in" id="recap-summary"></div>
+        <div class="card session-summary gym-anim-in" id="gym-recap-summary"></div>
 
         <section style="display:flex; flex-direction:column; gap:14px;">
           <div class="gym-section-head">
             <h2 class="gym-section-title">Détail par exercice</h2>
           </div>
-          <div id="recap-exercises" style="display:flex; flex-direction:column; gap:12px;"></div>
+          <div id="gym-recap-exercises" style="display:flex; flex-direction:column; gap:12px;"></div>
         </section>
 
-        <div class="card" id="recap-empty" style="display:none; text-align:center; color:var(--gym-text-secondary); font-size:14px;">
+        <div class="card" id="gym-recap-empty" style="display:none; text-align:center; color:var(--gym-text-secondary); font-size:14px;">
           Séance introuvable.
         </div>
 
-        <div id="recap-actions" style="display:flex; flex-direction:column; gap:10px;">
-          <button type="button" class="btn btn-primary" id="btn-recap-primary">Voir le programme</button>
-          <button type="button" class="btn btn-secondary" id="btn-recap-home">Retour à l'accueil</button>
+        <div id="gym-recap-actions" style="display:flex; flex-direction:column; gap:10px;">
+          <button type="button" class="btn btn-primary" id="gym-btn-recap-primary">Voir le programme</button>
+          <button type="button" class="btn btn-secondary" id="gym-btn-recap-home">Retour à l'accueil</button>
         </div>
 
       </main>
     </section>
 
     <!-- ============================== VUE : OBJECTIFS ============================== -->
-    <section class="gym-view" id="view-objectifs" hidden>
+    <section class="gym-view" id="gym-view-objectifs" hidden>
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -715,154 +715,154 @@ document.getElementById("app-root-gym").innerHTML = `
         <div class="card gym-anim-in" style="display:flex; align-items:center; gap:16px;">
           <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; gap:10px;">
-              <div class="icon-circle icon-circle--sm" id="hero-target-icon"></div>
+              <div class="icon-circle icon-circle--sm" id="gym-hero-target-icon"></div>
               <span class="list-row__title" style="font-size:15px;">Un objectif clair = des résultats concrets</span>
             </div>
             <p class="list-row__meta">Que ce soit pour t'affiner, gagner en force ou améliorer ton endurance, chaque objectif compte !</p>
           </div>
           <div class="hero-photo" style="width:90px; height:90px; min-height:0; flex-shrink:0;">
-            <div class="hero-photo__silhouette" style="width:85%;" id="hero-photo-icon"></div>
+            <div class="hero-photo__silhouette" style="width:85%;" id="gym-hero-photo-icon"></div>
           </div>
         </div>
 
         <section style="display:flex; flex-direction:column; gap:14px;">
           <div class="gym-section-head">
             <h2 class="gym-section-title">Mes objectifs</h2>
-            <a class="gym-link" href="#objectifs-grid" id="goals-see-all">Voir tous <span id="icon-voir-tous"></span></a>
+            <a class="gym-link" href="#gym-objectifs-grid" id="gym-goals-see-all">Voir tous <span id="gym-icon-voir-tous"></span></a>
           </div>
-          <div class="choice-grid choice-grid--2 gym-stagger" id="objectifs-grid" style="align-items:stretch;"></div>
+          <div class="choice-grid choice-grid--2 gym-stagger" id="gym-objectifs-grid" style="align-items:stretch;"></div>
         </section>
 
         <div class="card gym-anim-in" style="display:flex; flex-direction:column; gap:18px;">
           <span class="list-row__title">Comment ça marche ?</span>
-          <div class="howto" id="howto-steps"></div>
+          <div class="howto" id="gym-howto-steps"></div>
         </div>
 
-        <button class="btn btn-primary" id="btn-new-goal">
-          <span id="icon-plus-goal"></span> Créer un nouvel objectif
+        <button class="btn btn-primary" id="gym-btn-new-goal">
+          <span id="gym-icon-plus-goal"></span> Créer un nouvel objectif
         </button>
       </main>
     </section>
 
   <!-- Bottom sheet : choix d'une séance créée à lancer (accueil) -->
-  <div class="sheet-overlay" id="launch-sheet-overlay"></div>
-  <div class="sheet" id="launch-sheet">
+  <div class="sheet-overlay" id="gym-launch-sheet-overlay"></div>
+  <div class="sheet" id="gym-launch-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Lancer une séance</span>
-      <button type="button" class="icon-btn" id="launch-sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-launch-sheet-close" style="color:var(--gym-text);"></button>
     </div>
-    <div class="sheet__body" id="launch-sheet-body"></div>
+    <div class="sheet__body" id="gym-launch-sheet-body"></div>
   </div>
 
   <!-- Bottom sheet : choix de l'exercice (vue Progression) -->
-  <div class="sheet-overlay" id="exo-sheet-overlay"></div>
-  <div class="sheet" id="exo-sheet">
+  <div class="sheet-overlay" id="gym-exo-sheet-overlay"></div>
+  <div class="sheet" id="gym-exo-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Choisir un exercice</span>
-      <button type="button" class="icon-btn" id="exo-sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-exo-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div style="padding:12px 20px 0;">
       <label class="search-bar">
-        <span id="exo-sheet-search-icon"></span>
-        <input type="search" id="exo-sheet-search" placeholder="Rechercher un exercice" />
+        <span id="gym-exo-sheet-search-icon"></span>
+        <input type="search" id="gym-exo-sheet-search" placeholder="Rechercher un exercice" />
       </label>
     </div>
-    <div class="sheet__body" id="exo-sheet-body"></div>
+    <div class="sheet__body" id="gym-exo-sheet-body"></div>
   </div>
 
   <!-- Bottom sheet : choix du programme (vue Créer une séance) -->
-  <div class="sheet-overlay" id="program-sheet-overlay"></div>
-  <div class="sheet" id="program-sheet">
+  <div class="sheet-overlay" id="gym-program-sheet-overlay"></div>
+  <div class="sheet" id="gym-program-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Choisir un programme</span>
-      <button type="button" class="icon-btn" id="program-sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-program-sheet-close" style="color:var(--gym-text);"></button>
     </div>
-    <div class="sheet__body" id="program-sheet-body"></div>
+    <div class="sheet__body" id="gym-program-sheet-body"></div>
   </div>
 
   <!-- Bottom sheet : choix de la catégorie (vue Créer une séance) -->
-  <div class="sheet-overlay" id="category-sheet-overlay"></div>
-  <div class="sheet" id="category-sheet">
+  <div class="sheet-overlay" id="gym-category-sheet-overlay"></div>
+  <div class="sheet" id="gym-category-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Catégorie</span>
-      <button type="button" class="icon-btn" id="category-sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-category-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div class="sheet__body">
-      <div class="choice-grid" id="category-grid"></div>
+      <div class="choice-grid" id="gym-category-grid"></div>
     </div>
   </div>
 
   <!-- Bottom sheet : choix de l'objectif (vue Créer une séance) -->
-  <div class="sheet-overlay" id="session-goal-sheet-overlay"></div>
-  <div class="sheet" id="session-goal-sheet">
+  <div class="sheet-overlay" id="gym-session-goal-sheet-overlay"></div>
+  <div class="sheet" id="gym-session-goal-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Objectif</span>
-      <button type="button" class="icon-btn" id="session-goal-sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-session-goal-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div class="sheet__body">
-      <div class="choice-grid" id="goal-grid"></div>
+      <div class="choice-grid" id="gym-goal-grid"></div>
     </div>
   </div>
 
   <!-- Bottom sheet : ajout d'un exercice (vue Créer une séance) -->
-  <div class="sheet-overlay" id="sheet-overlay"></div>
-  <div class="sheet" id="exercise-sheet">
+  <div class="sheet-overlay" id="gym-sheet-overlay"></div>
+  <div class="sheet" id="gym-exercise-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Ajouter un exercice</span>
-      <button type="button" class="icon-btn" id="sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div style="padding:4px 20px 12px;">
       <label class="search-bar">
-        <span id="icon-sheet-search"></span>
-        <input type="search" id="sheet-search-input" placeholder="Rechercher un exercice (nom, muscle...)" />
+        <span id="gym-icon-sheet-search"></span>
+        <input type="search" id="gym-sheet-search-input" placeholder="Rechercher un exercice (nom, muscle...)" />
       </label>
     </div>
-    <div class="sheet__body" id="sheet-body"></div>
+    <div class="sheet__body" id="gym-sheet-body"></div>
   </div>
 
   <!-- Bottom sheet : création d'un objectif (vue Objectifs) -->
-  <div class="sheet-overlay" id="goal-sheet-overlay"></div>
-  <div class="sheet" id="goal-sheet">
+  <div class="sheet-overlay" id="gym-goal-sheet-overlay"></div>
+  <div class="sheet" id="gym-goal-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
       <span class="sheet__title">Nouvel objectif</span>
-      <button type="button" class="icon-btn" id="goal-sheet-close" style="color:var(--gym-text);"></button>
+      <button type="button" class="icon-btn" id="gym-goal-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div class="sheet__body" style="gap:20px;">
       <div>
         <p class="step__hint" style="margin-bottom:10px;">Type d'objectif</p>
-        <div class="choice-grid" id="goal-type-grid"></div>
+        <div class="choice-grid" id="gym-goal-type-grid"></div>
       </div>
       <label class="field">
-        <span id="icon-goal-title"></span>
-        <input type="text" id="goal-title-input" placeholder="Nom de l'objectif" />
+        <span id="gym-icon-goal-title"></span>
+        <input type="text" id="gym-goal-title-input" placeholder="Nom de l'objectif" />
       </label>
       <label class="field">
-        <span id="icon-goal-target"></span>
-        <input type="text" id="goal-progress-input" inputmode="none" readonly placeholder="Cible (ex. 12 séances)" />
+        <span id="gym-icon-goal-target"></span>
+        <input type="text" id="gym-goal-progress-input" inputmode="none" readonly placeholder="Cible (ex. 12 séances)" />
       </label>
-      <button class="btn btn-primary" id="btn-create-goal">Créer l'objectif</button>
+      <button class="btn btn-primary" id="gym-btn-create-goal">Créer l'objectif</button>
     </div>
   </div>
 
   <!-- Bottom sheet : pavé numérique commun (remplace le clavier natif sur tous les champs à saisie manuelle de chiffres) -->
-  <div class="sheet-overlay" id="keypad-sheet-overlay"></div>
-  <div class="sheet" id="keypad-sheet">
+  <div class="sheet-overlay" id="gym-keypad-sheet-overlay"></div>
+  <div class="sheet" id="gym-keypad-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__head">
-      <span class="sheet__title" id="keypad-sheet-title">Valeur</span>
-      <button type="button" class="icon-btn" id="keypad-sheet-close" style="color:var(--gym-text);"></button>
+      <span class="sheet__title" id="gym-keypad-sheet-title">Valeur</span>
+      <button type="button" class="icon-btn" id="gym-keypad-sheet-close" style="color:var(--gym-text);"></button>
     </div>
     <div class="sheet__body">
-      <div class="app-keypad-value" id="keypad-value">0</div>
-      <div class="app-keypad" id="keypad-grid"></div>
-      <button type="button" class="btn btn-primary" id="keypad-confirm">Valider</button>
+      <div class="app-keypad-value" id="gym-keypad-value">0</div>
+      <div class="app-keypad" id="gym-keypad-grid"></div>
+      <button type="button" class="btn btn-primary" id="gym-keypad-confirm">Valider</button>
     </div>
   </div>
 `;
@@ -3546,7 +3546,7 @@ function gymKeypadBackspaceIcon() {
 
 function gymKeypadRenderGrid() {
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", gymKeypadDecimal ? "." : "", "0", "back"];
-  document.getElementById("keypad-grid").innerHTML = keys
+  document.getElementById("gym-keypad-grid").innerHTML = keys
     .map((key) => {
       if (key === "") return `<button type="button" tabindex="-1" style="visibility:hidden;"></button>`;
       if (key === "back") return `<button type="button" data-key="back" aria-label="Effacer">${gymKeypadBackspaceIcon()}</button>`;
@@ -3554,7 +3554,7 @@ function gymKeypadRenderGrid() {
     })
     .join("");
 
-  document.getElementById("keypad-grid")
+  document.getElementById("gym-keypad-grid")
     .querySelectorAll("[data-key]")
     .forEach((btn) => {
       btn.addEventListener("click", () => gymKeypadPressKey(btn.dataset.key));
@@ -3562,7 +3562,7 @@ function gymKeypadRenderGrid() {
 }
 
 function gymKeypadUpdateDisplay() {
-  document.getElementById("keypad-value").textContent = gymKeypadValue === "" ? "0" : gymKeypadValue;
+  document.getElementById("gym-keypad-value").textContent = gymKeypadValue === "" ? "0" : gymKeypadValue;
 }
 
 function gymKeypadPressKey(key) {
@@ -3592,17 +3592,17 @@ function gymOpenKeypad({ input, title = "Valeur", decimal = false, min = null, m
   gymKeypadMin = min;
   gymKeypadMax = max;
 
-  document.getElementById("keypad-sheet-title").textContent = title;
+  document.getElementById("gym-keypad-sheet-title").textContent = title;
   gymKeypadRenderGrid();
   gymKeypadUpdateDisplay();
 
-  document.getElementById("keypad-sheet-overlay").classList.add("is-open");
-  document.getElementById("keypad-sheet").classList.add("is-open");
+  document.getElementById("gym-keypad-sheet-overlay").classList.add("is-open");
+  document.getElementById("gym-keypad-sheet").classList.add("is-open");
 }
 
 function gymCloseKeypad() {
-  document.getElementById("keypad-sheet-overlay").classList.remove("is-open");
-  document.getElementById("keypad-sheet").classList.remove("is-open");
+  document.getElementById("gym-keypad-sheet-overlay").classList.remove("is-open");
+  document.getElementById("gym-keypad-sheet").classList.remove("is-open");
   gymKeypadTarget = null;
 }
 
@@ -3620,10 +3620,10 @@ function gymConfirmKeypad() {
   gymCloseKeypad();
 }
 
-document.getElementById("keypad-sheet-close").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
-document.getElementById("keypad-sheet-close").addEventListener("click", gymCloseKeypad);
-document.getElementById("keypad-sheet-overlay").addEventListener("click", gymCloseKeypad);
-document.getElementById("keypad-confirm").addEventListener("click", gymConfirmKeypad);
+document.getElementById("gym-keypad-sheet-close").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+document.getElementById("gym-keypad-sheet-close").addEventListener("click", gymCloseKeypad);
+document.getElementById("gym-keypad-sheet-overlay").addEventListener("click", gymCloseKeypad);
+document.getElementById("gym-keypad-confirm").addEventListener("click", gymConfirmKeypad);
 
 /**
  * Anti-rebond simple, utilisé pour la barre de recherche.
@@ -3683,14 +3683,28 @@ function gymGetParam(name, fallback) {
  * Affiche une vue et déclenche son rendu, sans toucher à l'historique
  * (utilisé en interne par gymNavigate et par la gestion du bouton retour).
  */
+// Vue Gym affichée. Les classes posées sur body (gym-home-locked : accueil sans défilement ;
+// gym-view-fit : Créer un programme, le document ne doit pas dépasser la hauteur visible, voir gym.css)
+// n'existent que tant que la page Gym est affichée : gymSyncBodyLocks les retire dès qu'on la quitte.
+let gymActiveView = null;
+function gymSyncBodyLocks() {
+  const gymIsActivePage = !!document.getElementById("page-gym")?.classList.contains("active");
+  document.body.classList.toggle("gym-home-locked", gymIsActivePage && gymActiveView === "gym-home");
+  document.body.classList.toggle("gym-view-fit", gymIsActivePage && gymActiveView === "creer-programme");
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const gymPage = document.getElementById("page-gym");
+  if (gymPage) new MutationObserver(gymSyncBodyLocks).observe(gymPage, { attributes: true, attributeFilter: ["class"] });
+});
+
 function gymActivateView(view, params) {
   if (!GymViews[view]) view = "gym-home";
   currentParams = params || {};
 
-  document.querySelectorAll(".gym-view").forEach((el) => {
+  document.querySelectorAll("#page-gym .gym-view").forEach((el) => {
     el.hidden = true;
   });
-  const section = document.getElementById(`view-${view}`);
+  const section = document.getElementById(`gym-view-${view}`);
   if (section) section.hidden = false;
 
   // Bloque le scroll du body tant que l'accueil (écran fixe, sans défilement) est affiché.
@@ -3698,13 +3712,11 @@ function gymActivateView(view, params) {
   // navigateur) peut appeler cette fonction alors qu'on est sur un autre module
   // (ex. Wedging, qui manipule aussi location.hash), sans quoi on verrouille le
   // scroll d'un module qui n'est même pas visible.
-  const gymIsActivePage = !!document.getElementById("page-gym")?.classList.contains("active");
-  document.body.classList.toggle("gym-home-locked", gymIsActivePage && view === "gym-home");
-  // Créer un programme : le document ne doit pas dépasser la hauteur visible (voir gym.css).
-  document.body.classList.toggle("gym-view-fit", gymIsActivePage && view === "creer-programme");
+  gymActiveView = view;
+  gymSyncBodyLocks();
 
   // Filet de sécurité : referme toute bottom-sheet restée ouverte en quittant sa vue.
-  document.querySelectorAll(".sheet.is-open, .sheet-overlay.is-open").forEach((el) => {
+  document.querySelectorAll("#page-gym .sheet.is-open, #page-gym .sheet-overlay.is-open").forEach((el) => {
     el.classList.remove("is-open");
   });
 
@@ -3745,7 +3757,7 @@ window.addEventListener("popstate", (e) => {
  * n'a été lancé (ou plus aucune séance en-cours).
  */
 function gymRenderHomeNextSession() {
-  const box = document.getElementById("home-next-session");
+  const box = document.getElementById("gym-home-next-session");
   if (!box) return;
 
   const program = gymGetActiveProgram();
@@ -3759,12 +3771,12 @@ function gymRenderHomeNextSession() {
 
   box.hidden = false;
   box.dataset.sessionId = session.id;
-  document.getElementById("home-next-session-title").textContent = `${program.name} — Séance ${session.index}`;
-  document.getElementById("home-next-session-meta").textContent = `${gymFormatDuration(session.duration)} · ${session.exerciseIds.length} exercices`;
+  document.getElementById("gym-home-next-session-title").textContent = `${program.name} — Séance ${session.index}`;
+  document.getElementById("gym-home-next-session-meta").textContent = `${gymFormatDuration(session.duration)} · ${session.exerciseIds.length} exercices`;
 }
 
 function gymHomeNextSessionClick() {
-  const box = document.getElementById("home-next-session");
+  const box = document.getElementById("gym-home-next-session");
   if (!box || !box.dataset.sessionId) return;
   gymNavigate("seance-active", { session: box.dataset.sessionId });
 }
@@ -3775,7 +3787,7 @@ function gymHomeNextSessionClick() {
  * depuis l'accueil ("Lancer une séance").
  */
 function gymOpenLaunchSheet() {
-  const body = document.getElementById("launch-sheet-body");
+  const body = document.getElementById("gym-launch-sheet-body");
   const programsWithSessions = GYM_DATA.programs.filter((p) => p.sessions && p.sessions.length);
 
   body.innerHTML = programsWithSessions.length
@@ -3800,18 +3812,18 @@ function gymOpenLaunchSheet() {
         </div>
       `;
 
-  document.getElementById("launch-sheet-overlay").classList.add("is-open");
-  document.getElementById("launch-sheet").classList.add("is-open");
+  document.getElementById("gym-launch-sheet-overlay").classList.add("is-open");
+  document.getElementById("gym-launch-sheet").classList.add("is-open");
 }
 
 function gymCloseLaunchSheet() {
-  document.getElementById("launch-sheet-overlay").classList.remove("is-open");
-  document.getElementById("launch-sheet").classList.remove("is-open");
+  document.getElementById("gym-launch-sheet-overlay").classList.remove("is-open");
+  document.getElementById("gym-launch-sheet").classList.remove("is-open");
 }
 
-document.getElementById("launch-sheet-close").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
-document.getElementById("launch-sheet-close").addEventListener("click", gymCloseLaunchSheet);
-document.getElementById("launch-sheet-overlay").addEventListener("click", gymCloseLaunchSheet);
+document.getElementById("gym-launch-sheet-close").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+document.getElementById("gym-launch-sheet-close").addEventListener("click", gymCloseLaunchSheet);
+document.getElementById("gym-launch-sheet-overlay").addEventListener("click", gymCloseLaunchSheet);
 
 GymViews["gym-home"] = { render: gymRenderHomeNextSession };
 
@@ -4140,7 +4152,7 @@ function gymRenderDualChart(points, series, selected) {
 
 (function () {
   function renderMyPrograms() {
-    const list = document.getElementById("programmes-list");
+    const list = document.getElementById("gym-programmes-list");
     list.innerHTML = GYM_DATA.programs.length
       ? GYM_DATA.programs.map((p) => gymRenderProgramCard(p)).join("")
       : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucun programme pour l'instant. Crée le premier avec le bouton ci-dessus.</div>`;
@@ -4148,7 +4160,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderLibrary() {
-    const list = document.getElementById("programmes-list");
+    const list = document.getElementById("gym-programmes-list");
     list.innerHTML = GYM_DATA.programLibrary
       .map(
         (tpl) => `
@@ -4167,19 +4179,19 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function animateProgressBars() {
-    document.querySelectorAll("#view-programmes .progress-fill[data-progress]").forEach((el) => {
+    document.querySelectorAll("#gym-view-programmes .progress-fill[data-progress]").forEach((el) => {
       gymAnimateProgress(el, Number(el.dataset.progress));
     });
   }
 
   // Liaison unique : les onglets existent dès le chargement du document.
-  gymSetupTabs(document.getElementById("programmes-tabs"), (value) => {
+  gymSetupTabs(document.getElementById("gym-programmes-tabs"), (value) => {
     if (value === "bibliotheque") renderLibrary();
     else renderMyPrograms();
   });
 
   function render() {
-    const tabs = document.getElementById("programmes-tabs");
+    const tabs = document.getElementById("gym-programmes-tabs");
     tabs.querySelectorAll(".tab").forEach((t) => t.classList.remove("is-active"));
     tabs.querySelector('[data-value="mes-programmes"]').classList.add("is-active");
     renderMyPrograms();
@@ -4200,7 +4212,7 @@ function gymRenderDualChart(points, series, selected) {
     const imageName = goalId === "force"
       ? "ProgrammeForce-1"
       : `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
-    document.getElementById("program-hero").innerHTML = `
+    document.getElementById("gym-program-hero").innerHTML = `
       <div class="hero-photo">
         <img class="hero-photo__image" src="images/${imageName}.webp" alt="">
         <div class="hero-photo__content">
@@ -4213,7 +4225,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderEmptyState() {
-    document.getElementById("program-hero").innerHTML = `
+    document.getElementById("gym-program-hero").innerHTML = `
       <div class="card" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; padding:32px 20px;">
         <div class="icon-circle">${gymIcon("dumbbell")}</div>
         <div>
@@ -4223,14 +4235,14 @@ function gymRenderDualChart(points, series, selected) {
         <a class="btn btn-primary" href="#" onclick="gymNavigate('programmes'); return false;" style="width:auto; padding:12px 22px; font-size:13.5px;">Retour aux programmes</a>
       </div>
     `;
-    document.getElementById("program-info-row").innerHTML = "";
-    document.getElementById("program-progress-card").innerHTML = "";
-    document.getElementById("icon-add-session").innerHTML = "";
-    document.getElementById("program-sessions-list").innerHTML = "";
+    document.getElementById("gym-program-info-row").innerHTML = "";
+    document.getElementById("gym-program-progress-card").innerHTML = "";
+    document.getElementById("gym-icon-add-session").innerHTML = "";
+    document.getElementById("gym-program-sessions-list").innerHTML = "";
   }
 
   function renderInfoRow(program) {
-    document.getElementById("program-info-row").innerHTML = `
+    document.getElementById("gym-program-info-row").innerHTML = `
       <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; text-align:center;">
         <div class="summary-item">${gymIcon("dumbbell")}<span class="summary-item__value">${program.sessionsCount} séances</span><span class="summary-item__label">${program.frequencyPerWeek}x/semaine</span></div>
         <div class="summary-item">${gymIcon("target")}<span class="summary-item__label">Objectif</span><span class="summary-item__value">${program.objectiveLabel}</span></div>
@@ -4239,7 +4251,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderActions(program) {
-    document.getElementById("program-progress-card").innerHTML = `
+    document.getElementById("gym-program-progress-card").innerHTML = `
       <div class="btn-grid">
         <button class="btn btn-primary" onclick="gymNavigate('creer-seance', {programme:'${program.id}'});">${gymIcon("plus")} Créer une séance</button>
         <button class="btn btn-secondary" onclick="gymSaveProgram('${program.id}', this);">${gymIcon("doc")} Enregistrer le programme</button>
@@ -4250,8 +4262,8 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderSessionsList(program) {
-    document.getElementById("icon-add-session").innerHTML = gymIcon("plus");
-    const container = document.getElementById("program-sessions-list");
+    document.getElementById("gym-icon-add-session").innerHTML = gymIcon("plus");
+    const container = document.getElementById("gym-program-sessions-list");
     container.innerHTML = program.sessions.length
       ? program.sessions.map((s) => gymRenderSessionRow(s, program.id)).join("")
       : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Tu n'as pas encore ajouté de séance à ce programme.</div>`;
@@ -4287,18 +4299,18 @@ function gymRenderDualChart(points, series, selected) {
   };
 
   function fillIcons() {
-    document.getElementById("cp-hero-icon").innerHTML = gymIcon("dumbbell");
-    document.getElementById("icon-field-titre").innerHTML = gymIcon("edit");
-    document.getElementById("icon-field-seances").innerHTML = gymIcon("calendar");
-    document.getElementById("icon-field-duree").innerHTML = gymIcon("calendar");
-    document.getElementById("icon-recap-target").innerHTML = gymIcon("target");
-    document.getElementById("icon-recap-1").innerHTML = gymIcon("dumbbell");
-    document.getElementById("icon-recap-2").innerHTML = gymIcon("calendar");
-    document.getElementById("icon-recap-3").innerHTML = gymIcon("calendar");
+    document.getElementById("gym-cp-hero-icon").innerHTML = gymIcon("dumbbell");
+    document.getElementById("gym-icon-field-titre").innerHTML = gymIcon("edit");
+    document.getElementById("gym-icon-field-seances").innerHTML = gymIcon("calendar");
+    document.getElementById("gym-icon-field-duree").innerHTML = gymIcon("calendar");
+    document.getElementById("gym-icon-recap-target").innerHTML = gymIcon("target");
+    document.getElementById("gym-icon-recap-1").innerHTML = gymIcon("dumbbell");
+    document.getElementById("gym-icon-recap-2").innerHTML = gymIcon("calendar");
+    document.getElementById("gym-icon-recap-3").innerHTML = gymIcon("calendar");
   }
 
   function renderGoalGrid() {
-    const grid = document.getElementById("objectif-grid");
+    const grid = document.getElementById("gym-objectif-grid");
     grid.innerHTML = GYM_DATA.trainingGoals
       .map(
         (goal) => `
@@ -4314,16 +4326,16 @@ function gymRenderDualChart(points, series, selected) {
 
   function updateRecap() {
     const goal = GYM_DATA.trainingGoals.find((g) => g.id === state.goal);
-    document.getElementById("recap-objectif").textContent = goal ? goal.label : "—";
-    document.getElementById("recap-seances").textContent = state.seances ? `${state.seances}/semaine` : "—";
-    document.getElementById("recap-duree").textContent = state.duree ? `${state.duree} sem.` : "—";
+    document.getElementById("gym-recap-objectif").textContent = goal ? goal.label : "—";
+    document.getElementById("gym-recap-seances").textContent = state.seances ? `${state.seances}/semaine` : "—";
+    document.getElementById("gym-recap-duree").textContent = state.duree ? `${state.duree} sem.` : "—";
   }
 
   function onGenerate() {
     if (!state.seances || !state.duree) {
       // Pas de séances/durée renseignées : on met en avant le champ à compléter.
-      if (!state.seances) document.getElementById("input-seances").focus();
-      else document.getElementById("input-duree").focus();
+      if (!state.seances) document.getElementById("gym-input-seances").focus();
+      else document.getElementById("gym-input-duree").focus();
       return;
     }
     const goal = GYM_DATA.trainingGoals.find((g) => g.id === state.goal);
@@ -4360,30 +4372,30 @@ function gymRenderDualChart(points, series, selected) {
     gymNavigate("programme-detail", { id: newProgram.id });
   }
 
-  gymSetupChoiceGrid(document.getElementById("objectif-grid"), {
+  gymSetupChoiceGrid(document.getElementById("gym-objectif-grid"), {
     onChange: (value) => {
       state.goal = value;
       updateRecap();
     },
   });
-  document.getElementById("input-titre").addEventListener("input", (e) => {
+  document.getElementById("gym-input-titre").addEventListener("input", (e) => {
     state.titre = e.target.value;
   });
-  document.getElementById("input-seances").addEventListener("input", (e) => {
+  document.getElementById("gym-input-seances").addEventListener("input", (e) => {
     state.seances = e.target.value ? Number(e.target.value) : null;
     updateRecap();
   });
-  document.getElementById("input-seances").addEventListener("click", () => {
-    gymOpenKeypad({ input: document.getElementById("input-seances"), title: "Séances / semaine", min: 1, max: 7 });
+  document.getElementById("gym-input-seances").addEventListener("click", () => {
+    gymOpenKeypad({ input: document.getElementById("gym-input-seances"), title: "Séances / semaine", min: 1, max: 7 });
   });
-  document.getElementById("input-duree").addEventListener("input", (e) => {
+  document.getElementById("gym-input-duree").addEventListener("input", (e) => {
     state.duree = e.target.value ? Number(e.target.value) : null;
     updateRecap();
   });
-  document.getElementById("input-duree").addEventListener("click", () => {
-    gymOpenKeypad({ input: document.getElementById("input-duree"), title: "Durée (semaines)", min: 1, max: 52 });
+  document.getElementById("gym-input-duree").addEventListener("click", () => {
+    gymOpenKeypad({ input: document.getElementById("gym-input-duree"), title: "Durée (semaines)", min: 1, max: 52 });
   });
-  document.getElementById("btn-generer").addEventListener("click", onGenerate);
+  document.getElementById("gym-btn-generer").addEventListener("click", onGenerate);
 
   function render(params) {
     const editing = params && params.id ? gymGetProgram(params.id) : null;
@@ -4392,10 +4404,10 @@ function gymRenderDualChart(points, series, selected) {
     state.goal = editing ? editing.goal : (params && params.objectif) || "force";
     state.seances = editing ? editing.frequencyPerWeek : null;
     state.duree = editing ? Math.max(1, Math.round(editing.sessionsCount / (editing.frequencyPerWeek || 1))) : null;
-    document.getElementById("input-titre").value = state.titre;
-    document.getElementById("input-seances").value = state.seances || "";
-    document.getElementById("input-duree").value = state.duree || "";
-    document.getElementById("btn-generer").textContent = editing ? "Enregistrer les modifications" : "Générer mon programme";
+    document.getElementById("gym-input-titre").value = state.titre;
+    document.getElementById("gym-input-seances").value = state.seances || "";
+    document.getElementById("gym-input-duree").value = state.duree || "";
+    document.getElementById("gym-btn-generer").textContent = editing ? "Enregistrer les modifications" : "Générer mon programme";
 
     fillIcons();
     renderGoalGrid();
@@ -4424,17 +4436,17 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function fillIcons() {
-    document.getElementById("program-picker-chevron").innerHTML = gymIcon("chevronDown");
-    document.getElementById("category-picker-chevron").innerHTML = gymIcon("chevronDown");
-    document.getElementById("goal-picker-chevron").innerHTML = gymIcon("chevronDown");
-    document.getElementById("icon-plus-add").innerHTML = gymIcon("plus");
-    document.getElementById("icon-check-create").innerHTML = gymIcon("check");
-    document.getElementById("sheet-close").innerHTML = closeIconSvg();
-    document.getElementById("program-sheet-close").innerHTML = closeIconSvg();
-    document.getElementById("category-sheet-close").innerHTML = closeIconSvg();
-    document.getElementById("session-goal-sheet-close").innerHTML = closeIconSvg();
-    document.getElementById("icon-sheet-search").innerHTML = gymIcon("search");
-    document.getElementById("creer-seance-empty-icon").innerHTML = gymIcon("dumbbell");
+    document.getElementById("gym-program-picker-chevron").innerHTML = gymIcon("chevronDown");
+    document.getElementById("gym-category-picker-chevron").innerHTML = gymIcon("chevronDown");
+    document.getElementById("gym-goal-picker-chevron").innerHTML = gymIcon("chevronDown");
+    document.getElementById("gym-icon-plus-add").innerHTML = gymIcon("plus");
+    document.getElementById("gym-icon-check-create").innerHTML = gymIcon("check");
+    document.getElementById("gym-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("gym-program-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("gym-category-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("gym-session-goal-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("gym-icon-sheet-search").innerHTML = gymIcon("search");
+    document.getElementById("gym-creer-seance-empty-icon").innerHTML = gymIcon("dumbbell");
   }
 
   /* ---- Étape 1 : sélection du programme (bottom sheet, toujours au premier plan) --- */
@@ -4442,13 +4454,13 @@ function gymRenderDualChart(points, series, selected) {
   function renderProgramPicker() {
     const program = gymGetProgram(state.programId);
     if (!program) return;
-    document.getElementById("program-picker-icon").innerHTML = gymIcon("calendarPlus");
-    document.getElementById("program-picker-name").textContent = program.name;
-    document.getElementById("program-picker-meta").textContent = `${program.sessionsCount} séances · ${program.frequencyPerWeek} séances / semaine`;
+    document.getElementById("gym-program-picker-icon").innerHTML = gymIcon("calendarPlus");
+    document.getElementById("gym-program-picker-name").textContent = program.name;
+    document.getElementById("gym-program-picker-meta").textContent = `${program.sessionsCount} séances · ${program.frequencyPerWeek} séances / semaine`;
   }
 
   function openProgramSheet() {
-    document.getElementById("program-sheet-body").innerHTML = GYM_DATA.programs
+    document.getElementById("gym-program-sheet-body").innerHTML = GYM_DATA.programs
       .map(
         (p) => `
         <button type="button" class="sheet__row" data-program-id="${p.id}">
@@ -4463,7 +4475,7 @@ function gymRenderDualChart(points, series, selected) {
       )
       .join("");
 
-    document.querySelectorAll("#program-sheet-body [data-program-id]").forEach((row) => {
+    document.querySelectorAll("#gym-program-sheet-body [data-program-id]").forEach((row) => {
       row.addEventListener("click", () => {
         state.programId = row.dataset.programId;
         renderProgramPicker();
@@ -4471,19 +4483,19 @@ function gymRenderDualChart(points, series, selected) {
       });
     });
 
-    document.getElementById("program-sheet-overlay").classList.add("is-open");
-    document.getElementById("program-sheet").classList.add("is-open");
+    document.getElementById("gym-program-sheet-overlay").classList.add("is-open");
+    document.getElementById("gym-program-sheet").classList.add("is-open");
   }
 
   function closeProgramSheet() {
-    document.getElementById("program-sheet-overlay").classList.remove("is-open");
-    document.getElementById("program-sheet").classList.remove("is-open");
+    document.getElementById("gym-program-sheet-overlay").classList.remove("is-open");
+    document.getElementById("gym-program-sheet").classList.remove("is-open");
   }
 
   /* ---- Étape 2 : catégorie & objectif (choix multiple, via bottom sheets) -------- */
 
   function renderCategoryGrid() {
-    const grid = document.getElementById("category-grid");
+    const grid = document.getElementById("gym-category-grid");
     grid.innerHTML = GYM_DATA.sessionCategories
       .map(
         (cat) => `
@@ -4497,7 +4509,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderGoalGrid() {
-    const grid = document.getElementById("goal-grid");
+    const grid = document.getElementById("gym-goal-grid");
     grid.innerHTML = GYM_DATA.trainingGoals
       .map(
         (goal) => `
@@ -4513,34 +4525,34 @@ function gymRenderDualChart(points, series, selected) {
   function updatePickerLabels() {
     const categoryLabels = GYM_DATA.sessionCategories.filter((c) => state.categories.includes(c.id)).map((c) => c.label);
     const goalLabels = GYM_DATA.trainingGoals.filter((g) => state.goals.includes(g.id)).map((g) => g.label);
-    document.getElementById("category-picker-value").textContent = categoryLabels.length ? categoryLabels.join(", ") : "À définir";
-    document.getElementById("goal-picker-value").textContent = goalLabels.length ? goalLabels.join(", ") : "À définir";
+    document.getElementById("gym-category-picker-value").textContent = categoryLabels.length ? categoryLabels.join(", ") : "À définir";
+    document.getElementById("gym-goal-picker-value").textContent = goalLabels.length ? goalLabels.join(", ") : "À définir";
   }
 
   function openCategorySheet() {
-    document.getElementById("category-sheet-overlay").classList.add("is-open");
-    document.getElementById("category-sheet").classList.add("is-open");
+    document.getElementById("gym-category-sheet-overlay").classList.add("is-open");
+    document.getElementById("gym-category-sheet").classList.add("is-open");
   }
 
   function closeCategorySheet() {
-    document.getElementById("category-sheet-overlay").classList.remove("is-open");
-    document.getElementById("category-sheet").classList.remove("is-open");
+    document.getElementById("gym-category-sheet-overlay").classList.remove("is-open");
+    document.getElementById("gym-category-sheet").classList.remove("is-open");
   }
 
   function openGoalSheet() {
-    document.getElementById("session-goal-sheet-overlay").classList.add("is-open");
-    document.getElementById("session-goal-sheet").classList.add("is-open");
+    document.getElementById("gym-session-goal-sheet-overlay").classList.add("is-open");
+    document.getElementById("gym-session-goal-sheet").classList.add("is-open");
   }
 
   function closeGoalSheet() {
-    document.getElementById("session-goal-sheet-overlay").classList.remove("is-open");
-    document.getElementById("session-goal-sheet").classList.remove("is-open");
+    document.getElementById("gym-session-goal-sheet-overlay").classList.remove("is-open");
+    document.getElementById("gym-session-goal-sheet").classList.remove("is-open");
   }
 
   /* ---- Étape 3 : liste des exercices --------------------------------------------- */
 
   function renderExerciseList() {
-    const container = document.getElementById("exercise-list");
+    const container = document.getElementById("gym-exercise-list");
     container.innerHTML = state.exercises.length
       ? state.exercises
           .map((item, index) => gymRenderEditableExerciseRow(item.exerciseId, item.sets, item.reps, item.rest, item.tempo, index, item.duration))
@@ -4615,7 +4627,7 @@ function gymRenderDualChart(points, series, selected) {
 
     const customRow = raw
       ? `
-        <button type="button" class="sheet__row" id="sheet-add-custom" style="border:1.5px dashed var(--gym-accent-border);">
+        <button type="button" class="sheet__row" id="gym-sheet-add-custom" style="border:1.5px dashed var(--gym-accent-border);">
           <span class="icon-circle icon-circle--sm" style="color:var(--gym-accent);">${gymIcon("plus")}</span>
           <div class="list-row__body">
             <span class="list-row__title" style="color:var(--gym-accent);">Ajouter « ${raw} »</span>
@@ -4625,7 +4637,7 @@ function gymRenderDualChart(points, series, selected) {
       `
       : "";
 
-    document.getElementById("sheet-body").innerHTML =
+    document.getElementById("gym-sheet-body").innerHTML =
       customRow +
       (list.length
         ? list
@@ -4646,7 +4658,7 @@ function gymRenderDualChart(points, series, selected) {
         ? ""
         : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucun exercice ne correspond à ta recherche.</div>`);
 
-    const addCustomRow = document.getElementById("sheet-add-custom");
+    const addCustomRow = document.getElementById("gym-sheet-add-custom");
     if (addCustomRow) {
       addCustomRow.addEventListener("click", () => {
         const customExercise = {
@@ -4665,7 +4677,7 @@ function gymRenderDualChart(points, series, selected) {
       });
     }
 
-    document.querySelectorAll("#sheet-body [data-exercise-id]").forEach((row) => {
+    document.querySelectorAll("#gym-sheet-body [data-exercise-id]").forEach((row) => {
       row.addEventListener("click", () => {
         state.exercises.push({ exerciseId: row.dataset.exerciseId, ...gymDefaultExerciseConfig() });
         renderExerciseList();
@@ -4675,17 +4687,17 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function openExerciseSheet() {
-    const searchInput = document.getElementById("sheet-search-input");
+    const searchInput = document.getElementById("gym-sheet-search-input");
     searchInput.value = "";
     renderExerciseSheetList("");
-    document.getElementById("sheet-overlay").classList.add("is-open");
-    document.getElementById("exercise-sheet").classList.add("is-open");
+    document.getElementById("gym-sheet-overlay").classList.add("is-open");
+    document.getElementById("gym-exercise-sheet").classList.add("is-open");
     searchInput.focus();
   }
 
   function closeExerciseSheet() {
-    document.getElementById("sheet-overlay").classList.remove("is-open");
-    document.getElementById("exercise-sheet").classList.remove("is-open");
+    document.getElementById("gym-sheet-overlay").classList.remove("is-open");
+    document.getElementById("gym-exercise-sheet").classList.remove("is-open");
   }
 
   /* ---- Validation finale ------------------------------------------------------------ */
@@ -4723,48 +4735,48 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   // Liaisons statiques (une seule fois, les éléments existent dès le chargement).
-  document.getElementById("program-picker-btn").addEventListener("click", openProgramSheet);
-  document.getElementById("program-sheet-overlay").addEventListener("click", closeProgramSheet);
-  document.getElementById("program-sheet-close").addEventListener("click", closeProgramSheet);
-  document.getElementById("category-picker-btn").addEventListener("click", openCategorySheet);
-  document.getElementById("category-sheet-overlay").addEventListener("click", closeCategorySheet);
-  document.getElementById("category-sheet-close").addEventListener("click", closeCategorySheet);
-  document.getElementById("goal-picker-btn").addEventListener("click", openGoalSheet);
-  document.getElementById("session-goal-sheet-overlay").addEventListener("click", closeGoalSheet);
-  document.getElementById("session-goal-sheet-close").addEventListener("click", closeGoalSheet);
-  gymSetupChoiceGrid(document.getElementById("category-grid"), {
+  document.getElementById("gym-program-picker-btn").addEventListener("click", openProgramSheet);
+  document.getElementById("gym-program-sheet-overlay").addEventListener("click", closeProgramSheet);
+  document.getElementById("gym-program-sheet-close").addEventListener("click", closeProgramSheet);
+  document.getElementById("gym-category-picker-btn").addEventListener("click", openCategorySheet);
+  document.getElementById("gym-category-sheet-overlay").addEventListener("click", closeCategorySheet);
+  document.getElementById("gym-category-sheet-close").addEventListener("click", closeCategorySheet);
+  document.getElementById("gym-goal-picker-btn").addEventListener("click", openGoalSheet);
+  document.getElementById("gym-session-goal-sheet-overlay").addEventListener("click", closeGoalSheet);
+  document.getElementById("gym-session-goal-sheet-close").addEventListener("click", closeGoalSheet);
+  gymSetupChoiceGrid(document.getElementById("gym-category-grid"), {
     multiple: true,
     onChange: (values) => {
       state.categories = values;
       updatePickerLabels();
     },
   });
-  gymSetupChoiceGrid(document.getElementById("goal-grid"), {
+  gymSetupChoiceGrid(document.getElementById("gym-goal-grid"), {
     multiple: true,
     onChange: (values) => {
       state.goals = values;
       updatePickerLabels();
     },
   });
-  document.getElementById("btn-add-exercise").addEventListener("click", openExerciseSheet);
-  document.getElementById("sheet-overlay").addEventListener("click", closeExerciseSheet);
-  document.getElementById("sheet-close").addEventListener("click", closeExerciseSheet);
-  document.getElementById("sheet-search-input").addEventListener(
+  document.getElementById("gym-btn-add-exercise").addEventListener("click", openExerciseSheet);
+  document.getElementById("gym-sheet-overlay").addEventListener("click", closeExerciseSheet);
+  document.getElementById("gym-sheet-close").addEventListener("click", closeExerciseSheet);
+  document.getElementById("gym-sheet-search-input").addEventListener(
     "input",
     gymDebounce((e) => renderExerciseSheetList(e.target.value), 120)
   );
-  document.getElementById("btn-create-session").addEventListener("click", onCreateSession);
+  document.getElementById("gym-btn-create-session").addEventListener("click", onCreateSession);
 
   function render(params) {
     fillIcons();
 
     if (!GYM_DATA.programs.length) {
-      document.getElementById("creer-seance-empty").style.display = "flex";
-      document.getElementById("creer-seance-form").style.display = "none";
+      document.getElementById("gym-creer-seance-empty").style.display = "flex";
+      document.getElementById("gym-creer-seance-form").style.display = "none";
       return;
     }
-    document.getElementById("creer-seance-empty").style.display = "none";
-    document.getElementById("creer-seance-form").style.display = "flex";
+    document.getElementById("gym-creer-seance-empty").style.display = "none";
+    document.getElementById("gym-creer-seance-form").style.display = "flex";
 
     state.programId = (params && params.programme && gymGetProgram(params.programme) && params.programme) || GYM_DATA.programs[0].id;
     state.categories = [];
@@ -4799,7 +4811,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderCategoriesList() {
-    document.getElementById("region-tabs").style.display = "flex";
+    document.getElementById("gym-region-tabs").style.display = "flex";
     let categories = GYM_DATA.categories;
 
     if (state.region !== "tous") {
@@ -4811,7 +4823,7 @@ function gymRenderDualChart(points, series, selected) {
       );
     }
 
-    const list = document.getElementById("category-list");
+    const list = document.getElementById("gym-category-list");
     list.innerHTML = categories.length
       ? categories.map((c) => gymRenderCategoryRow(c)).join("")
       : emptyState("Aucune catégorie ne correspond à ta recherche.");
@@ -4825,7 +4837,7 @@ function gymRenderDualChart(points, series, selected) {
       return;
     }
 
-    document.getElementById("region-tabs").style.display = "none";
+    document.getElementById("gym-region-tabs").style.display = "none";
 
     let pool = gymGetCategoryPool(categoryId);
 
@@ -4838,9 +4850,9 @@ function gymRenderDualChart(points, series, selected) {
       );
     }
 
-    const list = document.getElementById("category-list");
+    const list = document.getElementById("gym-category-list");
     const backRow = `
-      <button type="button" class="gym-link" id="back-to-categories" style="margin-bottom:4px;">
+      <button type="button" class="gym-link" id="gym-back-to-categories" style="margin-bottom:4px;">
         ${gymIcon("back")} Toutes les catégories
       </button>
     `;
@@ -4867,7 +4879,7 @@ function gymRenderDualChart(points, series, selected) {
           .join("");
     }
 
-    document.getElementById("back-to-categories").addEventListener("click", () => {
+    document.getElementById("gym-back-to-categories").addEventListener("click", () => {
       state.activeCategory = null;
       renderView();
     });
@@ -4878,31 +4890,31 @@ function gymRenderDualChart(points, series, selected) {
     else renderCategoriesList();
   }
 
-  document.getElementById("ex-hero-icon").innerHTML = gymIcon("running");
-  document.getElementById("icon-search").innerHTML = gymIcon("search");
-  document.getElementById("icon-sliders").innerHTML = gymIcon("sliders");
-  document.getElementById("icon-chevron-filter").innerHTML = gymIcon("chevronDown");
+  document.getElementById("gym-ex-hero-icon").innerHTML = gymIcon("running");
+  document.getElementById("gym-icon-search").innerHTML = gymIcon("search");
+  document.getElementById("gym-icon-sliders").innerHTML = gymIcon("sliders");
+  document.getElementById("gym-icon-chevron-filter").innerHTML = gymIcon("chevronDown");
 
-  gymSetupTabs(document.getElementById("region-tabs"), (value) => {
+  gymSetupTabs(document.getElementById("gym-region-tabs"), (value) => {
     state.region = value;
     renderView();
   });
-  gymSetupTabs(document.getElementById("equipment-filter"), (value) => {
+  gymSetupTabs(document.getElementById("gym-equipment-filter"), (value) => {
     state.equipment = value;
     renderView();
   });
-  gymSetupTabs(document.getElementById("level-filter"), () => {
+  gymSetupTabs(document.getElementById("gym-level-filter"), () => {
     /* Niveau : filtre illustratif, sans donnée de niveau par exercice. */
   });
-  document.getElementById("search-input").addEventListener(
+  document.getElementById("gym-search-input").addEventListener(
     "input",
     gymDebounce((e) => {
       state.search = e.target.value.trim().toLowerCase();
       renderView();
     }, 150)
   );
-  document.getElementById("advanced-filter-toggle").addEventListener("click", (e) => {
-    const panel = document.getElementById("advanced-filter-panel");
+  document.getElementById("gym-advanced-filter-toggle").addEventListener("click", (e) => {
+    const panel = document.getElementById("gym-advanced-filter-panel");
     const isOpen = panel.style.display === "flex";
     panel.style.display = isOpen ? "none" : "flex";
     e.currentTarget.classList.toggle("is-open", !isOpen);
@@ -4913,13 +4925,13 @@ function gymRenderDualChart(points, series, selected) {
     state.region = "tous";
     state.search = "";
     state.equipment = "tous";
-    document.getElementById("search-input").value = "";
+    document.getElementById("gym-search-input").value = "";
 
-    const regionTabs = document.getElementById("region-tabs");
+    const regionTabs = document.getElementById("gym-region-tabs");
     regionTabs.querySelectorAll(".tab").forEach((t) => t.classList.remove("is-active"));
     regionTabs.querySelector('[data-value="tous"]').classList.add("is-active");
 
-    const equipmentTabs = document.getElementById("equipment-filter");
+    const equipmentTabs = document.getElementById("gym-equipment-filter");
     equipmentTabs.querySelectorAll(".tab").forEach((t) => t.classList.remove("is-active"));
     equipmentTabs.querySelector('[data-value="tous"]').classList.add("is-active");
 
@@ -5060,7 +5072,7 @@ function gymRenderDualChart(points, series, selected) {
 
   function tickTimer() {
     const elapsed = state.elapsedMs + (state.timerStart ? Date.now() - state.timerStart : 0);
-    document.getElementById("session-timer").textContent = formatElapsed(elapsed);
+    document.getElementById("gym-session-timer").textContent = formatElapsed(elapsed);
   }
 
   function stopTimerInterval() {
@@ -5072,7 +5084,7 @@ function gymRenderDualChart(points, series, selected) {
 
   // L'icône reflète toujours l'état réel : play = chrono arrêté, pause = chrono en marche
   function syncPauseIcon() {
-    document.getElementById("icon-session-pause").innerHTML = gymIcon(state.isPaused ? "play" : "pause");
+    document.getElementById("gym-icon-session-pause").innerHTML = gymIcon(state.isPaused ? "play" : "pause");
   }
 
   function startTimer() {
@@ -5108,10 +5120,10 @@ function gymRenderDualChart(points, series, selected) {
     tickTimer();
   }
 
-  document.getElementById("icon-session-timer").innerHTML = gymIcon("clock");
-  document.getElementById("icon-session-reset").innerHTML = gymIcon("reset");
-  document.getElementById("btn-toggle-timer").addEventListener("click", togglePause);
-  document.getElementById("btn-reset-timer").addEventListener("click", resetTimer);
+  document.getElementById("gym-icon-session-timer").innerHTML = gymIcon("clock");
+  document.getElementById("gym-icon-session-reset").innerHTML = gymIcon("reset");
+  document.getElementById("gym-btn-toggle-timer").addEventListener("click", togglePause);
+  document.getElementById("gym-btn-reset-timer").addEventListener("click", resetTimer);
   syncPauseIcon(); // icône présente dès le chargement
 
   /* ---- Chrono par série (exercices de gainage chronométrés) ---------------------
@@ -5170,7 +5182,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function updateHoldDisplay(remaining, ratio) {
-    const card = document.querySelector(`#session-sets-list [data-hold-index="${hold.setIndex}"]`);
+    const card = document.querySelector(`#gym-session-sets-list [data-hold-index="${hold.setIndex}"]`);
     if (!card) return;
     card.querySelector("[data-hold-value]").textContent = gymFormatSeconds(remaining);
     card.querySelector("[data-hold-fill]").style.width = `${Math.min(100, ratio * 100).toFixed(1)}%`;
@@ -5178,7 +5190,7 @@ function gymRenderDualChart(points, series, selected) {
 
   function tickHold() {
     if (hold.setIndex == null) return;
-    const view = document.getElementById("view-seance-active");
+    const view = document.getElementById("gym-view-seance-active");
     // Vue quittée ou autre exercice affiché : on abandonne l'essai en cours.
     if (!view || view.hidden || state.exerciseIndex !== hold.exoIndex) {
       cancelHold();
@@ -5253,9 +5265,9 @@ function gymRenderDualChart(points, series, selected) {
   /* ---- En-tête ---------------------------------------------------------------- */
 
   function renderHead() {
-    document.getElementById("session-eyebrow").textContent = `${state.program.name.toUpperCase()} · SÉANCE ${state.session.index}`;
+    document.getElementById("gym-session-eyebrow").textContent = `${state.program.name.toUpperCase()} · SÉANCE ${state.session.index}`;
 
-    const backLink = document.getElementById("seance-active-back");
+    const backLink = document.getElementById("gym-seance-active-back");
     backLink.onclick = (e) => {
       e.preventDefault();
       gymNavigate("programme-detail", { id: state.program.id });
@@ -5272,11 +5284,11 @@ function gymRenderDualChart(points, series, selected) {
     const total = state.exercises.length;
     const exo = currentExercise();
 
-    document.getElementById("session-exo-position").textContent = `EXERCICE ${state.exerciseIndex + 1} / ${total}`;
-    document.getElementById("session-exercise-title").textContent = exo.name;
+    document.getElementById("gym-session-exo-position").textContent = `EXERCICE ${state.exerciseIndex + 1} / ${total}`;
+    document.getElementById("gym-session-exercise-title").textContent = exo.name;
 
-    document.getElementById("btn-prev-exercise").disabled = state.exerciseIndex === 0;
-    document.getElementById("btn-next-exercise").disabled = state.exerciseIndex === total - 1;
+    document.getElementById("gym-btn-prev-exercise").disabled = state.exerciseIndex === 0;
+    document.getElementById("gym-btn-next-exercise").disabled = state.exerciseIndex === total - 1;
   }
 
   function goToExercise(index) {
@@ -5288,8 +5300,8 @@ function gymRenderDualChart(points, series, selected) {
     renderSetsList();
   }
 
-  document.getElementById("btn-prev-exercise").addEventListener("click", () => goToExercise(state.exerciseIndex - 1));
-  document.getElementById("btn-next-exercise").addEventListener("click", () => goToExercise(state.exerciseIndex + 1));
+  document.getElementById("gym-btn-prev-exercise").addEventListener("click", () => goToExercise(state.exerciseIndex - 1));
+  document.getElementById("gym-btn-next-exercise").addEventListener("click", () => goToExercise(state.exerciseIndex + 1));
 
   /* ---- Résumé séries / répétitions / repos -------------------------------------- */
 
@@ -5300,7 +5312,7 @@ function gymRenderDualChart(points, series, selected) {
     const repsItem = exo.timed
       ? { label: "Durée", value: gymFormatSeconds(exo.durationTarget), icon: "timer" }
       : { label: "Répétitions", value: exo.repsLabel, icon: "dumbbell" };
-    document.getElementById("session-info-row").innerHTML = `
+    document.getElementById("gym-session-info-row").innerHTML = `
       <div class="session-summary__item">
         <span class="session-summary__icon">${gymIcon("layers")}</span>
         <span class="session-summary__text">
@@ -5342,12 +5354,12 @@ function gymRenderDualChart(points, series, selected) {
 
   function updateNextButtonLabel() {
     const isLastExercise = state.exerciseIndex === state.exercises.length - 1;
-    document.getElementById("session-next-label").textContent = isLastExercise ? "Terminer la séance" : "Exercice suivant";
+    document.getElementById("gym-session-next-label").textContent = isLastExercise ? "Terminer la séance" : "Exercice suivant";
   }
 
   function renderSetsList() {
     const exo = currentExercise();
-    const list = document.getElementById("session-sets-list");
+    const list = document.getElementById("gym-session-sets-list");
 
     list.innerHTML = exo.sets
       .map((set, index) => {
@@ -5541,9 +5553,9 @@ function gymRenderDualChart(points, series, selected) {
     gymNavigate("seance-recap", { history: entry.id, from: "session" });
   }
 
-  document.getElementById("btn-next-series").addEventListener("click", goToNextExercise);
+  document.getElementById("gym-btn-next-series").addEventListener("click", goToNextExercise);
 
-  document.getElementById("btn-finish-session").addEventListener("click", async () => {
+  document.getElementById("gym-btn-finish-session").addEventListener("click", async () => {
     const totalSets = state.exercises.reduce((sum, e) => sum + e.sets.length, 0);
     const validSets = state.exercises.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).length, 0);
     if (validSets < totalSets && !(await appConfirm("Il reste des séries non validées. Terminer la séance maintenant ?", { confirmLabel: "Terminer", cancelLabel: "Continuer la séance" }))) return;
@@ -5559,13 +5571,13 @@ function gymRenderDualChart(points, series, selected) {
     state.session = null;
     state.exercises = [];
 
-    document.getElementById("session-eyebrow").textContent = "";
-    document.getElementById("session-empty").style.display = "flex";
-    document.getElementById("session-content").style.display = "none";
-    document.getElementById("session-actions").style.display = "none";
-    document.getElementById("session-timer").textContent = "00:00:00";
+    document.getElementById("gym-session-eyebrow").textContent = "";
+    document.getElementById("gym-session-empty").style.display = "flex";
+    document.getElementById("gym-session-content").style.display = "none";
+    document.getElementById("gym-session-actions").style.display = "none";
+    document.getElementById("gym-session-timer").textContent = "00:00:00";
 
-    const backLink = document.getElementById("seance-active-back");
+    const backLink = document.getElementById("gym-seance-active-back");
     backLink.onclick = (e) => {
       e.preventDefault();
       gymNavigate("gym-home");
@@ -5589,9 +5601,9 @@ function gymRenderDualChart(points, series, selected) {
     state.program = program;
     state.session = session;
 
-    document.getElementById("session-empty").style.display = "none";
-    document.getElementById("session-content").style.display = "flex";
-    document.getElementById("session-actions").style.display = "flex";
+    document.getElementById("gym-session-empty").style.display = "none";
+    document.getElementById("gym-session-content").style.display = "flex";
+    document.getElementById("gym-session-actions").style.display = "flex";
 
     let restored = null;
     if (!isSameSession) {
@@ -5646,10 +5658,10 @@ function gymRenderDualChart(points, series, selected) {
   const $ = (id) => document.getElementById(id);
 
   function fillIcons() {
-    $("progression-empty-icon").innerHTML = gymIcon("trendUp");
-    $("progression-exo-chevron").innerHTML = gymIcon("chevronDown");
-    $("exo-sheet-search-icon").innerHTML = gymIcon("search");
-    $("exo-sheet-close").innerHTML = $("launch-sheet-close").innerHTML;
+    $("gym-progression-empty-icon").innerHTML = gymIcon("trendUp");
+    $("gym-progression-exo-chevron").innerHTML = gymIcon("chevronDown");
+    $("gym-exo-sheet-search-icon").innerHTML = gymIcon("search");
+    $("gym-exo-sheet-close").innerHTML = $("gym-launch-sheet-close").innerHTML;
   }
 
   function renderStats() {
@@ -5657,7 +5669,7 @@ function gymRenderDualChart(points, series, selected) {
     const totalVolume = history.reduce((sum, h) => sum + h.totalVolume, 0);
     const totalSets = history.reduce((sum, h) => sum + h.validSets, 0);
 
-    $("progression-stats").innerHTML = `
+    $("gym-progression-stats").innerHTML = `
       <div class="session-summary__item">
         <span class="session-summary__icon">${gymIcon("calendar")}</span>
         <span class="session-summary__text">
@@ -5696,12 +5708,12 @@ function gymRenderDualChart(points, series, selected) {
 
   function renderExerciseButton(exo) {
     const last = exo.sessions[exo.sessions.length - 1].date;
-    $("progression-exo-name").textContent = exo.name;
-    $("progression-exo-meta").textContent = `${exo.sessions.length} séance${exo.sessions.length > 1 ? "s" : ""} · dernière le ${gymFormatShortDate(last)}`;
+    $("gym-progression-exo-name").textContent = exo.name;
+    $("gym-progression-exo-meta").textContent = `${exo.sessions.length} séance${exo.sessions.length > 1 ? "s" : ""} · dernière le ${gymFormatShortDate(last)}`;
   }
 
   function renderMetricTabs() {
-    $("progression-metric-tabs").innerHTML = Object.entries(METRICS)
+    $("gym-progression-metric-tabs").innerHTML = Object.entries(METRICS)
       .map(([key, m]) => {
         const idx = state.metrics.indexOf(key);
         const cls = idx === 0 ? "is-active" : idx === 1 ? "is-active is-active--b" : state.metrics.length >= 2 ? "is-disabled" : "";
@@ -5716,10 +5728,10 @@ function gymRenderDualChart(points, series, selected) {
     const points = exo.sessions;
     if (state.selectedIndex == null || state.selectedIndex >= points.length) state.selectedIndex = points.length - 1;
     const series = state.metrics.map((k) => ({ key: k, unit: METRICS[k].unit, step: METRICS[k].step }));
-    $("progression-chart").innerHTML = gymRenderDualChart(points, series, state.selectedIndex);
+    $("gym-progression-chart").innerHTML = gymRenderDualChart(points, series, state.selectedIndex);
 
     const p = points[state.selectedIndex];
-    $("progression-readout").innerHTML =
+    $("gym-progression-readout").innerHTML =
       `<span>${gymFormatShortDate(p.date)}</span>` +
       state.metrics
         .map((k, i) => `<span class="chart-readout__item--${i ? "b" : "a"}">${METRICS[k].label} ${p[k]} ${METRICS[k].unit}</span>`)
@@ -5736,9 +5748,9 @@ function gymRenderDualChart(points, series, selected) {
   /* ---- Sélecteur d'exercice (bottom sheet) : uniquement les exos réalisés ---- */
 
   function renderExerciseList() {
-    const q = $("exo-sheet-search").value.trim().toLowerCase();
+    const q = $("gym-exo-sheet-search").value.trim().toLowerCase();
     const list = gymGetDoneExercises().filter((e) => e.name.toLowerCase().includes(q));
-    $("exo-sheet-body").innerHTML = list.length
+    $("gym-exo-sheet-body").innerHTML = list.length
       ? list
           .map((e) => {
             const last = e.sessions[e.sessions.length - 1].date;
@@ -5754,24 +5766,24 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function openSheet() {
-    $("exo-sheet-search").value = "";
+    $("gym-exo-sheet-search").value = "";
     renderExerciseList();
-    $("exo-sheet-overlay").classList.add("is-open");
-    $("exo-sheet").classList.add("is-open");
+    $("gym-exo-sheet-overlay").classList.add("is-open");
+    $("gym-exo-sheet").classList.add("is-open");
   }
 
   function closeSheet() {
-    $("exo-sheet-overlay").classList.remove("is-open");
-    $("exo-sheet").classList.remove("is-open");
+    $("gym-exo-sheet-overlay").classList.remove("is-open");
+    $("gym-exo-sheet").classList.remove("is-open");
   }
 
   // Liaisons uniques (les éléments existent dès le chargement du document).
-  $("progression-exo-btn").addEventListener("click", openSheet);
-  $("exo-sheet-close").addEventListener("click", closeSheet);
-  $("exo-sheet-overlay").addEventListener("click", closeSheet);
-  $("exo-sheet-search").addEventListener("input", renderExerciseList);
+  $("gym-progression-exo-btn").addEventListener("click", openSheet);
+  $("gym-exo-sheet-close").addEventListener("click", closeSheet);
+  $("gym-exo-sheet-overlay").addEventListener("click", closeSheet);
+  $("gym-exo-sheet-search").addEventListener("input", renderExerciseList);
 
-  $("exo-sheet-body").addEventListener("click", (e) => {
+  $("gym-exo-sheet-body").addEventListener("click", (e) => {
     const row = e.target.closest(".sheet__row");
     if (!row) return;
     state.exerciseId = row.dataset.id;
@@ -5782,7 +5794,7 @@ function gymRenderDualChart(points, series, selected) {
   });
 
   // Sélection de 2 métriques maximum : il faut en décocher une pour en changer.
-  $("progression-metric-tabs").addEventListener("click", (e) => {
+  $("gym-progression-metric-tabs").addEventListener("click", (e) => {
     const tab = e.target.closest(".tab");
     if (!tab) return;
     const key = tab.dataset.value;
@@ -5798,7 +5810,7 @@ function gymRenderDualChart(points, series, selected) {
     renderChart();
   });
 
-  $("progression-chart").addEventListener("click", (e) => {
+  $("gym-progression-chart").addEventListener("click", (e) => {
     const hit = e.target.closest("[data-index]");
     if (!hit) return;
     state.selectedIndex = Number(hit.dataset.index);
@@ -5810,13 +5822,13 @@ function gymRenderDualChart(points, series, selected) {
 
     const exercises = gymGetDoneExercises();
     const hasHistory = GYM_DATA.history.length > 0;
-    $("progression-empty").style.display = hasHistory ? "none" : "flex";
-    $("progression-content").style.display = hasHistory ? "flex" : "none";
+    $("gym-progression-empty").style.display = hasHistory ? "none" : "flex";
+    $("gym-progression-content").style.display = hasHistory ? "flex" : "none";
     if (!hasHistory) return;
 
     renderStats();
 
-    const section = $("progression-exercise-section");
+    const section = $("gym-progression-exercise-section");
     section.style.display = exercises.length ? "flex" : "none";
     if (!exercises.length) return;
 
@@ -5853,7 +5865,7 @@ function gymRenderDualChart(points, series, selected) {
     const all = getFilteredEntries();
     const visible = all.slice(0, state.visibleCount);
     const groups = gymGroupHistoryByMonth(visible);
-    const container = document.getElementById("history-groups");
+    const container = document.getElementById("gym-history-groups");
 
     if (!visible.length) {
       container.innerHTML = `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Aucune séance dans cette catégorie pour le moment.</div>`;
@@ -5872,12 +5884,12 @@ function gymRenderDualChart(points, series, selected) {
         .join("");
     }
 
-    document.getElementById("load-more-btn").style.display = visible.length < all.length ? "flex" : "none";
+    document.getElementById("gym-load-more-btn").style.display = visible.length < all.length ? "flex" : "none";
   }
 
   function loadMore() {
-    const skeleton = document.getElementById("history-skeleton");
-    const btn = document.getElementById("load-more-btn");
+    const skeleton = document.getElementById("gym-history-skeleton");
+    const btn = document.getElementById("gym-load-more-btn");
     skeleton.style.display = "flex";
     btn.style.display = "none";
 
@@ -5889,19 +5901,19 @@ function gymRenderDualChart(points, series, selected) {
     }, 550);
   }
 
-  document.getElementById("icon-doc-more").innerHTML = gymIcon("doc");
-  document.getElementById("icon-chevron-more").innerHTML = gymIcon("chevronDown");
-  gymSetupTabs(document.getElementById("history-tabs"), (value) => {
+  document.getElementById("gym-icon-doc-more").innerHTML = gymIcon("doc");
+  document.getElementById("gym-icon-chevron-more").innerHTML = gymIcon("chevronDown");
+  gymSetupTabs(document.getElementById("gym-history-tabs"), (value) => {
     state.filter = value;
     state.visibleCount = state.pageSize;
     renderList();
   });
-  document.getElementById("load-more-btn").addEventListener("click", loadMore);
+  document.getElementById("gym-load-more-btn").addEventListener("click", loadMore);
 
   function render() {
     state.filter = "tous";
     state.visibleCount = state.pageSize;
-    const tabs = document.getElementById("history-tabs");
+    const tabs = document.getElementById("gym-history-tabs");
     tabs.querySelectorAll(".tab").forEach((t) => t.classList.remove("is-active"));
     tabs.querySelector('[data-value="tous"]').classList.add("is-active");
     renderList();
@@ -5920,7 +5932,7 @@ function gymRenderDualChart(points, series, selected) {
 
 (function () {
   function renderCongrats(show) {
-    const box = document.getElementById("recap-congrats");
+    const box = document.getElementById("gym-recap-congrats");
     box.style.display = show ? "flex" : "none";
     if (!show) return;
     box.innerHTML = `
@@ -5933,7 +5945,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderSummary(entry) {
-    document.getElementById("recap-summary").innerHTML = `
+    document.getElementById("gym-recap-summary").innerHTML = `
       <div class="session-summary__item">
         <span class="session-summary__icon">${gymIcon("dumbbell")}</span>
         <span class="session-summary__text">
@@ -5966,7 +5978,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderExercises(entry) {
-    document.getElementById("recap-exercises").innerHTML = entry.exercises
+    document.getElementById("gym-recap-exercises").innerHTML = entry.exercises
       .map((exo) => {
         const validCount = exo.sets.filter((s) => s.valid).length;
         const pills = exo.sets
@@ -6006,43 +6018,43 @@ function gymRenderDualChart(points, series, selected) {
 
     if (!entry) {
       renderCongrats(false);
-      document.getElementById("recap-eyebrow").textContent = "";
-      document.getElementById("recap-title").textContent = "Séance introuvable";
-      document.getElementById("recap-meta").textContent = "";
-      document.getElementById("recap-summary").innerHTML = "";
-      document.getElementById("recap-exercises").innerHTML = "";
-      document.getElementById("recap-actions").style.display = "none";
-      document.getElementById("recap-empty").style.display = "block";
-      document.getElementById("recap-back").onclick = (e) => {
+      document.getElementById("gym-recap-eyebrow").textContent = "";
+      document.getElementById("gym-recap-title").textContent = "Séance introuvable";
+      document.getElementById("gym-recap-meta").textContent = "";
+      document.getElementById("gym-recap-summary").innerHTML = "";
+      document.getElementById("gym-recap-exercises").innerHTML = "";
+      document.getElementById("gym-recap-actions").style.display = "none";
+      document.getElementById("gym-recap-empty").style.display = "block";
+      document.getElementById("gym-recap-back").onclick = (e) => {
         e.preventDefault();
         gymNavigate("gym-home");
       };
       return;
     }
 
-    document.getElementById("recap-empty").style.display = "none";
-    document.getElementById("recap-actions").style.display = "flex";
+    document.getElementById("gym-recap-empty").style.display = "none";
+    document.getElementById("gym-recap-actions").style.display = "flex";
     renderCongrats(from === "session");
 
-    document.getElementById("recap-eyebrow").textContent = entry.programName.toUpperCase();
-    document.getElementById("recap-title").textContent = entry.sessionTitle;
-    document.getElementById("recap-meta").textContent = `${gymFormatDate(entry.date)} · ${entry.tag}`;
+    document.getElementById("gym-recap-eyebrow").textContent = entry.programName.toUpperCase();
+    document.getElementById("gym-recap-title").textContent = entry.sessionTitle;
+    document.getElementById("gym-recap-meta").textContent = `${gymFormatDate(entry.date)} · ${entry.tag}`;
 
     renderSummary(entry);
     renderExercises(entry);
 
     const program = gymGetProgram(entry.programId);
 
-    document.getElementById("recap-back").onclick = (e) => {
+    document.getElementById("gym-recap-back").onclick = (e) => {
       e.preventDefault();
       if (from === "historique") gymNavigate("historique");
       else if (program) gymNavigate("programme-detail", { id: entry.programId });
       else gymNavigate("gym-home");
     };
 
-    document.getElementById("btn-recap-home").onclick = () => gymNavigate("gym-home");
+    document.getElementById("gym-btn-recap-home").onclick = () => gymNavigate("gym-home");
 
-    const primaryBtn = document.getElementById("btn-recap-primary");
+    const primaryBtn = document.getElementById("gym-btn-recap-primary");
     if (program) {
       primaryBtn.style.display = "";
       primaryBtn.textContent = "Voir le programme";
@@ -6103,17 +6115,17 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function fillIcons() {
-    document.getElementById("hero-target-icon").innerHTML = gymIcon("target");
-    document.getElementById("hero-photo-icon").innerHTML = gymIcon("star");
-    document.getElementById("icon-voir-tous").innerHTML = gymIcon("chevronRight");
-    document.getElementById("icon-plus-goal").innerHTML = gymIcon("plus");
-    document.getElementById("icon-goal-title").innerHTML = gymIcon("edit");
-    document.getElementById("icon-goal-target").innerHTML = gymIcon("target");
-    document.getElementById("goal-sheet-close").innerHTML = closeIconSvg();
+    document.getElementById("gym-hero-target-icon").innerHTML = gymIcon("target");
+    document.getElementById("gym-hero-photo-icon").innerHTML = gymIcon("star");
+    document.getElementById("gym-icon-voir-tous").innerHTML = gymIcon("chevronRight");
+    document.getElementById("gym-icon-plus-goal").innerHTML = gymIcon("plus");
+    document.getElementById("gym-icon-goal-title").innerHTML = gymIcon("edit");
+    document.getElementById("gym-icon-goal-target").innerHTML = gymIcon("target");
+    document.getElementById("gym-goal-sheet-close").innerHTML = closeIconSvg();
   }
 
   function renderGoals() {
-    const grid = document.getElementById("objectifs-grid");
+    const grid = document.getElementById("gym-objectifs-grid");
 
     if (!state.goals.length) {
       grid.innerHTML = `
@@ -6152,7 +6164,7 @@ function gymRenderDualChart(points, series, selected) {
       { icon: "star", label: "4. Atteignez vos résultats" },
     ];
 
-    document.getElementById("howto-steps").innerHTML = steps
+    document.getElementById("gym-howto-steps").innerHTML = steps
       .map(
         (step, index) => `
         <div class="howto__step">
@@ -6166,7 +6178,7 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function renderGoalTypeGrid() {
-    const grid = document.getElementById("goal-type-grid");
+    const grid = document.getElementById("gym-goal-type-grid");
     grid.innerHTML = GOAL_TYPES.map(
       (type) => `
         <button type="button" class="choice ${type.id === state.newGoalType ? "is-active" : ""}" data-value="${type.id}">
@@ -6178,25 +6190,25 @@ function gymRenderDualChart(points, series, selected) {
   }
 
   function openGoalSheet() {
-    document.getElementById("goal-sheet-overlay").classList.add("is-open");
-    document.getElementById("goal-sheet").classList.add("is-open");
+    document.getElementById("gym-goal-sheet-overlay").classList.add("is-open");
+    document.getElementById("gym-goal-sheet").classList.add("is-open");
   }
 
   function closeGoalSheet() {
-    document.getElementById("goal-sheet-overlay").classList.remove("is-open");
-    document.getElementById("goal-sheet").classList.remove("is-open");
+    document.getElementById("gym-goal-sheet-overlay").classList.remove("is-open");
+    document.getElementById("gym-goal-sheet").classList.remove("is-open");
   }
 
   // Le champ de cible suit l'unité du type d'objectif choisi.
   function updateTargetPlaceholder() {
     const type = GOAL_TYPES.find((t) => t.id === state.newGoalType) || GOAL_TYPES[0];
     const metric = GOAL_METRICS[type.metric];
-    document.getElementById("goal-progress-input").placeholder = `Cible en ${metric.unit} (ex. ${metric.isWeight ? Math.round(gymKgToDisplay(metric.fallback)) : metric.fallback})`;
+    document.getElementById("gym-goal-progress-input").placeholder = `Cible en ${metric.unit} (ex. ${metric.isWeight ? Math.round(gymKgToDisplay(metric.fallback)) : metric.fallback})`;
   }
 
   function createGoal() {
-    const titleInput = document.getElementById("goal-title-input");
-    const progressInput = document.getElementById("goal-progress-input");
+    const titleInput = document.getElementById("gym-goal-title-input");
+    const progressInput = document.getElementById("gym-goal-progress-input");
     const type = GOAL_TYPES.find((t) => t.id === state.newGoalType);
 
     const title = titleInput.value.trim() || type.label;
@@ -6221,24 +6233,24 @@ function gymRenderDualChart(points, series, selected) {
     progressInput.value = "";
   }
 
-  gymSetupChoiceGrid(document.getElementById("goal-type-grid"), {
+  gymSetupChoiceGrid(document.getElementById("gym-goal-type-grid"), {
     onChange: (value) => {
       state.newGoalType = value;
       updateTargetPlaceholder();
     },
   });
-  document.getElementById("btn-new-goal").addEventListener("click", openGoalSheet);
+  document.getElementById("gym-btn-new-goal").addEventListener("click", openGoalSheet);
   // "Voir tous" : la grille affiche déjà tous les objectifs. Le lien ne doit pas changer le hash
   // (popstate renvoyait sur l'accueil Gym) : il amène simplement la grille à l'écran.
-  document.getElementById("goals-see-all").addEventListener("click", (e) => {
+  document.getElementById("gym-goals-see-all").addEventListener("click", (e) => {
     e.preventDefault();
-    document.getElementById("objectifs-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("gym-objectifs-grid").scrollIntoView({ behavior: "smooth", block: "start" });
   });
-  document.getElementById("goal-sheet-overlay").addEventListener("click", closeGoalSheet);
-  document.getElementById("goal-sheet-close").addEventListener("click", closeGoalSheet);
-  document.getElementById("btn-create-goal").addEventListener("click", createGoal);
-  document.getElementById("goal-progress-input").addEventListener("click", () => {
-    gymOpenKeypad({ input: document.getElementById("goal-progress-input"), title: "Cible", decimal: true, min: 0 });
+  document.getElementById("gym-goal-sheet-overlay").addEventListener("click", closeGoalSheet);
+  document.getElementById("gym-goal-sheet-close").addEventListener("click", closeGoalSheet);
+  document.getElementById("gym-btn-create-goal").addEventListener("click", createGoal);
+  document.getElementById("gym-goal-progress-input").addEventListener("click", () => {
+    gymOpenKeypad({ input: document.getElementById("gym-goal-progress-input"), title: "Cible", decimal: true, min: 0 });
   });
 
   function render() {

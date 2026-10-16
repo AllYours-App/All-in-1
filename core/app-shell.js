@@ -12,15 +12,8 @@ function showPage(id) {
 
   document.querySelectorAll(".app-page").forEach((p) => p.classList.toggle("active", p === target));
 
-  // Parcours pilote lui-même body.no-scroll selon son propre écran actif ;
-  // on resynchronise cet état à l'entrée/sortie de cette partie.
-  if (id === "parcours") {
-    const parcoursHome = document.querySelector('#page-parcours .screen-view[data-screen="home"]');
-    document.body.classList.toggle("no-scroll", !!(parcoursHome && parcoursHome.classList.contains("active")));
-  } else {
-    document.body.classList.remove("no-scroll");
-    document.body.classList.remove("gym-home-locked", "gym-view-fit");
-  }
+  // Les verrous de défilement posés sur body (no-scroll, gym-home-locked, gym-view-fit) ne sont plus
+  // gérés ici : chaque module (Parcours, Gym) suit lui-même l'activation de sa page et retire son verrou en la quittant.
 
   window.scrollTo({ top: 0, behavior: "instant" });
 }

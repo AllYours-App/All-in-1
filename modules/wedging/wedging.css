@@ -313,7 +313,7 @@
 /* ---------- Filtres à puces (dispersion) ---------- */
 .wg-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
 /* Rangée de chips posée directement dans la page (hors .wg-section) : même marge horizontale que le reste */
-#page-wedging #app > .wg-chip-row{padding:0 var(--app-padding-x);}
+#page-wedging #wedging-app > .wg-chip-row{padding:0 var(--app-padding-x);}
 .wg-chip{
   background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text-secondary);
   border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:pointer;

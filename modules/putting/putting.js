@@ -1,4 +1,4 @@
-const root = document.getElementById('app-root');
+const puttingRoot = document.getElementById('app-root');
 
 // Sélecteurs limités à la page Putting : d'autres modules réutilisent des noms proches (data-header, .bottom-nav...)
 function puttingQuery(sel) { return document.querySelector('#page-putting ' + sel); }
@@ -7,14 +7,14 @@ function puttingQueryAll(sel) { return document.querySelectorAll('#page-putting 
 function renderPuttingTab() {
   // Retour sur Putting : l'écran Stats de Putting n'est plus affiché, ce drapeau (resté sur body si on a quitté depuis cet écran) doit retomber
   document.body.classList.remove('is-stats-screen');
-  root.innerHTML = `
+  puttingRoot.innerHTML = `
 <header class="page-header" data-header="main">
   <a href="#" class="page-header_back" onclick="handleMainHeaderBack(event)">
     <svg class="page-header_back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
     <span class="page-header_back-label" id="main-header-back-label">Home</span>
   </a>
   <h1 class="page-header_title" id="main-header-title">Putting</h1>
-  <button type="button" class="page-header_menu" id="headerRightBtn" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('main')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <button type="button" class="page-header_menu" id="puttingMenuBtn" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('main')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
 </header>
 
 <header class="page-header is-hidden" data-header="stats">
