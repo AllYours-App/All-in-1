@@ -5,10 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Golf App</title>
 <script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
-<script>/* DIAGNOSTIC TEMPORAIRE (avec core/diag.js) : journal de la hauteur du viewport depuis le début du chargement */
-window.__diagLog=[];(function(){var t0=performance.now(),last="";function p(n){var s="ih="+innerHeight+" vv="+(window.visualViewport?Math.round(visualViewport.height):"-")+" sy="+Math.round(scrollY),k=n+s;if(k===last||window.__diagLog.length>60)return;last=k;window.__diagLog.push(Math.round(performance.now()-t0)+"ms "+n+" "+s)}
+<script>/* DIAGNOSTIC TEMPORAIRE (avec core/diag.js) : variantes d'essai de l'accueil + journal de la hauteur du viewport */
+(function(){var v=null;try{v=localStorage.getItem("diagVariant")}catch(e){}
+if(v){document.documentElement.classList.add("dv-"+v);var st=document.createElement("style");
+var base="html.dv-A.home-locked,html.dv-A.home-locked body,html.dv-B.home-locked,html.dv-B.home-locked body,html.dv-C.home-locked,html.dv-C.home-locked body{overflow:visible!important;height:auto!important;overscroll-behavior-y:auto!important}";
+var b="html.dv-B.home-locked body,html.dv-C.home-locked body{min-height:calc(100lvh + 2px)!important}";
+var c="html.dv-C.home-locked #page-home .page-wrapper{position:absolute!important;top:0!important;left:0!important;right:0!important;height:100lvh!important}";
+st.textContent=base+b+c;document.head.appendChild(st)}
+window.__diagVariant=v;
+window.__diagLog=[];var t0=performance.now(),last="";function p(n){var s="ih="+innerHeight+" vv="+(window.visualViewport?Math.round(visualViewport.height):"-")+" sy="+Math.round(scrollY),k=n+s;if(k===last||window.__diagLog.length>80)return;last=k;window.__diagLog.push(Math.round(performance.now()-t0)+"ms "+n+" "+s)}
 p("head");["DOMContentLoaded","load","pageshow","resize","orientationchange","visibilitychange","focus","touchstart"].forEach(function(n){window.addEventListener(n,function(){p(n)},{passive:true})});
 if(window.visualViewport){visualViewport.addEventListener("resize",function(){p("vv.resize")});visualViewport.addEventListener("scroll",function(){p("vv.scroll")})}
+new MutationObserver(function(){p("html."+(document.documentElement.className||"(vide)"))}).observe(document.documentElement,{attributes:true,attributeFilter:["class"]});
 [300,1000,2500,6000,15000].forEach(function(ms){setTimeout(function(){p("+"+ms)},ms)})})();</script>
 <script>try{var st=(JSON.parse(localStorage.getItem("golfAppState"))||{}).settings;if(st&&st.theme==="light"){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f2f5ef")}}catch(e){}</script>
 <link rel="icon" type="image/png" href="images/icon.png">
@@ -1035,7 +1043,7 @@ if(window.visualViewport){visualViewport.addEventListener("resize",function(){p(
 <script src="modules/vitesse/vitesse.js?v=49"></script>
 <script src="modules/stats/stats.js?v=49"></script>
 <script src="modules/menu/menu.js?v=49"></script>
-<script src="core/diag.js?v=52"></script> <!-- diagnostic temporaire, à retirer -->
+<script src="core/diag.js?v=53"></script> <!-- diagnostic temporaire, à retirer -->
 <script src="modules/auth/auth.js?v=49"></script>
 </body>
 </html>
