@@ -33,6 +33,10 @@ html.home-locked body {
   overflow: hidden;
   height: 100%;
   overscroll-behavior-y: none;
+  /* écran d'application : un appui long ne sélectionne pas le texte et n'ouvre pas Copier / Chercher / Traduire */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Sur un téléphone : plein écran, sans cadre. Le seuil est à 600 px et non à 430 px : les iPhone récents
