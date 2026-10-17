@@ -42,8 +42,11 @@ html.home-locked body {
      sans dépendre de 100dvh */
   html.home-locked #page-home .page-wrapper {
     position: fixed;
-    inset: 0;
-    height: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* --home-viewport-gap (HomePage.js) : écart entre l'écran et le viewport mesuré par iOS en appli installée */
+    height: calc(100dvh + var(--home-viewport-gap, 0px));
   }
 
   .home-screen_component {
@@ -227,7 +230,7 @@ html.home-locked body {
   position: absolute;
   left: 20px;
   right: 20px;
-  bottom: 24px;
+  bottom: calc(24px + var(--home-viewport-gap, 0px)); /* même position qu'avant : l'écart ne décale que le bas de l'image */
   height: 70px;
   background: var(--color-bg-card);
   border-radius: 26px;
