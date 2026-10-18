@@ -1237,7 +1237,8 @@ function wedgeExRecapScreenHtml() {
   const ex = wedgeExercises.find(e => e.id === wedgeExRecap.exerciseId);
   if (!ex) { wedgeExRecap = null; return wedgeExercisesListHtml(); }
   const needsEditMode = ex.resultMode === 'inout' || ex.resultMode === 'elevator';
-  const rows = wedgeExRecap.shots.map((s, i) => `<li onclick="toggleWedgeRecapShot(${i})">${ex.resultMode !== 'distance' ? `<span class="wg-dot ${s.made ? 'made' : 'missed'}"></span>` : ''}<span>Tir ${i + 1} — ${s.distance}m</span><span class="wg-text-muted-sm">${wedgeExRecapShotLabel(ex, s)}</span></li>`).join('');
+  const hasDot = ex.resultMode !== 'distance';
+  const rows = wedgeExRecap.shots.map((s, i) => `<li class="wg-recap-row${hasDot ? '' : ' no-dot'}" onclick="toggleWedgeRecapShot(${i})">${hasDot ? `<span class="wg-dot ${s.made ? 'made' : 'missed'}"></span>` : ''}<span class="wg-recap-shot">Tir ${i + 1}</span><span class="wg-recap-dist">${s.distance} m</span><span class="wg-recap-result wg-text-muted-sm">${wedgeExRecapShotLabel(ex, s)}</span></li>`).join('');
   return `<div class="wg-topbar is-session">
       <button class="wg-back-btn" onclick="discardWedgeExRecap()">${WedgeUI.ICONS.back} Annuler</button>
       ${needsEditMode ? `<button class="wg-icon-btn ${wedgeRecapEditMode ? 'active' : ''}" onclick="toggleWedgeRecapEditMode()">${WedgeUI.ICONS.edit}</button>` : ''}

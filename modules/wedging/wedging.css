@@ -301,8 +301,11 @@
 /* Séance d'exercice en cours : le bouton retour est centré dans les 56 px sous la zone de sécurité iOS,
    comme dans les headers fixes (le décalage de 20 px sans zone de sécurité le plaçait trop haut). */
 .wg-topbar.is-session{
-  padding-top:calc(env(safe-area-inset-top, 0px) + 10px);
+  padding-top:env(safe-area-inset-top, 0px);
+  min-height:calc(56px + env(safe-area-inset-top, 0px));
+  align-items:center;
 }
+.wg-topbar.is-session + .wg-session-title{margin-top:4px;}
 .wg-analysis-header{
   max-width:var(--wg-max-width);margin:0 auto;padding:16px var(--app-padding-x) 4px;
 }
@@ -512,6 +515,14 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   background:var(--wg-card);border:1px solid var(--wg-border);border-radius:var(--wg-radius-sm);
   padding:12px 14px;margin-bottom:8px;font-size:13px;cursor:pointer;
 }
+
+/* Récapitulatif d'un exercice : colonnes alignées (pastille | tir | distance | résultat) */
+.wg-session-list li.wg-recap-row{
+  display:grid;grid-template-columns:8px 3.6em 3.4em minmax(0,1fr);align-items:center;column-gap:10px;
+}
+.wg-session-list li.wg-recap-row.no-dot{grid-template-columns:3.6em 3.4em minmax(0,1fr);}
+.wg-recap-dist{font-variant-numeric:tabular-nums;}
+.wg-recap-result{text-align:right;min-width:0;}
 
 /* ---------- Jauges (Distance finale moyenne par palier) ---------- */
 .wg-gauge-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--wg-text-secondary);margin-bottom:10px;}
