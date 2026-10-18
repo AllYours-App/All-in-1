@@ -1733,7 +1733,7 @@ body.gym-home-locked {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, var(--gym-card) 0%, rgba(7, 20, 38, 0.82) 45%, var(--gym-card) 100%);
+  background: linear-gradient(180deg, rgba(7, 20, 38, 0.6) 0%, rgba(7, 20, 38, 0.5) 45%, rgba(7, 20, 38, 0.92) 100%);
 }
 
 .feature-card__body {

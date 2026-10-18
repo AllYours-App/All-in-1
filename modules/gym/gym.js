@@ -437,7 +437,7 @@ document.getElementById("app-root-gym").innerHTML = `
             <p class="gym-subtitle">Découvrez et explorez tous les exercices pour progresser à votre rythme.</p>
           </div>
           <div class="hero-photo" style="width:110px; height:110px; flex-shrink:0; min-height:0;">
-            <div class="hero-photo__silhouette" id="gym-ex-hero-icon" style="width:90%;"></div>
+            <img class="hero-photo__image" src="images/FondBoutonExercices.webp" alt="" loading="lazy">
           </div>
         </div>
 
@@ -4890,7 +4890,6 @@ function gymRenderDualChart(points, series, selected) {
     else renderCategoriesList();
   }
 
-  document.getElementById("gym-ex-hero-icon").innerHTML = gymIcon("running");
   document.getElementById("gym-icon-search").innerHTML = gymIcon("search");
   document.getElementById("gym-icon-sliders").innerHTML = gymIcon("sliders");
   document.getElementById("gym-icon-chevron-filter").innerHTML = gymIcon("chevronDown");
