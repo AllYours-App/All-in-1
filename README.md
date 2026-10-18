@@ -324,6 +324,7 @@ Les bugs en cours, les tests à faire sur téléphone, les décisions attendues 
 
 ### Anomalies relevées (correctifs du 18/10/2026)
 
+- **Headers : règle commune.** Tout header, fixe ou statique, occupe 56 px sous la zone de sécurité iOS, avec son contenu centré (centre à `56/2 + safe-area-inset-top` du haut). Les barres statiques de Wedging (`.wg-topbar` : analyses Dispersion, Distance et SG, séance, récap) et l'en-tête de la séance active de Gym (`.session-header`) n'avaient qu'un padding de 18 à 20 px : leur contenu passait sous l'heure et la batterie. Mesuré en simulation avec une zone de sécurité de 0, 20 et 47 px sur tous les headers de l'appli. À contrôler sur téléphone : la séance active de Gym est un peu plus haute qu'avant. L'écran de saisie détaillée de Stats n'a pas de header standard (poignée repliable, voulu) et l'accueil a son propre bloc « Bonjour ».
 - **Wedging : l'écran de récapitulatif** garde un bouton « Enregistrer » pleine largeur, sans marge latérale, contrairement à la liste au-dessus.
 - **Wedging : la fenêtre « Session en cours » (Reprendre / Recommencer)** reste affichée quand on lance un exercice déjà commencé ; seul le popup Quitter / Rester de Putting a été supprimé.
 - **Gym : aucune photo propre à chaque exercice** n'existe dans le dépôt. La page Exercices affiche `FondBoutonExercices.webp` dans son en-tête et la carte Exercices de l'accueil Gym est éclaircie ; les catégories gardent leurs pictogrammes.
