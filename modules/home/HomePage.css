@@ -26,7 +26,7 @@
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
-/* Accueil verrouillé (classe posée par HomePage.js tant que la page est affichée) : aucun défilement,
+/* Accueil verrouillé (classe posée par HomePage.js tant que la page est affichée) : pas de défilement visible,
    aucun rebond vertical (l'accueil ne défile jamais, le bug Safari signalé dans base.css ne s'applique donc pas). */
 html.home-locked,
 html.home-locked body {
@@ -42,15 +42,24 @@ html.home-locked body {
 /* Sur un téléphone : plein écran, sans cadre. Le seuil est à 600 px et non à 430 px : les iPhone récents
    les plus larges font 440 px et retombaient sur la carte de 852 px de haut centrée (vide en haut et en bas). */
 @media (max-width: 600px) {
-  /* Couvre tout l'écran, y compris sous la barre d'état et l'indicateur d'accueil iOS,
-     sans dépendre de 100dvh */
+  /* iPhone, appli installée : si le document ne défile pas, iOS ne donne que 762 pt sur 812 (la photo s'arrêtait
+     50 pt avant le bas de l'écran). Dès que le document peut défiler un peu, il donne toute la hauteur.
+     Le document dépasse donc l'écran de 2 px (le contenu visible est en position fixed, il ne bouge pas ;
+     overscroll-behavior-y: none, posé plus haut, supprime le rebond). */
+  html.home-locked,
+  html.home-locked body {
+    overflow: visible;
+    height: auto;
+  }
+  html.home-locked body {
+    min-height: calc(100lvh + 2px);
+  }
+
+  /* Couvre tout l'écran, y compris sous la barre d'état et l'indicateur d'accueil iOS */
   html.home-locked #page-home .page-wrapper {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    /* --home-viewport-gap (HomePage.js) : écart entre l'écran et le viewport mesuré par iOS en appli installée */
-    height: calc(100dvh + var(--home-viewport-gap, 0px));
+    inset: 0;
+    height: auto;
   }
 
   .home-screen_component {
@@ -234,7 +243,7 @@ html.home-locked body {
   position: absolute;
   left: 20px;
   right: 20px;
-  bottom: calc(24px + var(--home-viewport-gap, 0px)); /* même position qu'avant : l'écart ne décale que le bas de l'image */
+  bottom: 24px;
   height: 70px;
   background: var(--color-bg-card);
   border-radius: 26px;

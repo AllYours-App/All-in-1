@@ -36,22 +36,10 @@ window.renderHomeGreeting = renderHomeGreeting;
 (function () {
   const page = document.getElementById("page-home");
   if (!page) return;
-  // Appli installée sur iPhone : le viewport de mise en page (innerHeight, 100dvh, bas d'un élément fixed) peut être
-  // plus court que l'écran de la hauteur de la zone de sécurité haute (50 pt sur iPhone mini) : un vide noir restait
-  // en bas de l'accueil. On mesure cet écart et on l'ajoute à la hauteur de l'accueil (--home-viewport-gap).
-  const syncHomeViewportGap = () => {
-    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
-    const gap = Math.round((window.screen ? window.screen.height : 0) - window.innerHeight);
-    const usable = standalone && window.innerWidth <= 600 && window.innerHeight > window.innerWidth && gap > 0 && gap <= 120;
-    page.style.setProperty("--home-viewport-gap", usable ? gap + "px" : "0px");
-  };
   const syncHomeLock = () => {
     document.documentElement.classList.toggle("home-locked", page.classList.contains("active"));
-    syncHomeViewportGap();
   };
   new MutationObserver(syncHomeLock).observe(page, { attributes: true, attributeFilter: ["class"] });
-  window.addEventListener("resize", syncHomeViewportGap);
-  window.addEventListener("orientationchange", syncHomeViewportGap);
   syncHomeLock();
 })();
 

@@ -59,9 +59,7 @@
       "meta viewport : " + ((document.querySelector('meta[name="viewport"]') || {}).content || "?"),
       "modes d'affichage : " + ["standalone", "fullscreen", "minimal-ui", "browser"].filter((m) => window.matchMedia("(display-mode: " + m + ")").matches).join(", "),
       "scrollY : " + Math.round(window.scrollY) + " / scrollHeight : " + document.documentElement.scrollHeight,
-      "VARIANTE ACTIVE : " + (window.__diagVariant || "aucune") + " / dernier essai : " + lastAction,
       "html.className : " + (document.documentElement.className || "(vide)"),
-      "--home-viewport-gap : " + (home ? getComputedStyle(home).getPropertyValue("--home-viewport-gap") || "(vide)" : "n/a"),
       "wrapper : " + rect("#page-home .page-wrapper"),
       "photo : " + rect("#page-home .home-screen_component"),
       "panneau : " + rect("#page-home .bottom-panel_wrapper"),
@@ -85,20 +83,8 @@
     const home = document.getElementById("page-home");
     document.documentElement.classList.toggle("home-locked", !!(home && home.classList.contains("active")));
   };
-  // Les variantes sont lues très tôt par le script du <head> d'index.html : on les choisit puis on recharge la page.
-  const setVariant = (v) => {
-    try {
-      if (v) localStorage.setItem("diagVariant", v); else localStorage.removeItem("diagVariant");
-    } catch (e) {}
-    location.reload();
-  };
   const EXPERIMENTS = [
-    ["Variante A : accueil sans verrou html (recharge)", () => setVariant("A")],
-    ["Variante B : A + page défilable de 2 px (recharge)", () => setVariant("B")],
-    ["Variante C : B + photo non fixe (recharge)", () => setVariant("C")],
-    ["Aucune variante (recharge)", () => setVariant(null)],
-    ["Viewport sans cover (live)", () => setViewport("width=device-width, initial-scale=1")],
-    ["Tout remettre (live)", () => resetAll()]
+    ["Recharger la page", () => location.reload()]
   ];
 
   function show() {
