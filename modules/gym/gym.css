@@ -1962,12 +1962,14 @@ body.gym-home-locked {
 
 /* ---- Header : retour, titre, minuteur ----------------------------------- */
 
+/* 56 px centrés sous la zone de sécurité iOS, comme les headers fixes (18 px de padding la laissait sous l'heure). */
 .session-header {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 20px 14px;
+  padding: env(safe-area-inset-top, 0px) 20px 0;
+  min-height: calc(56px + env(safe-area-inset-top, 0px));
 }
 
 .session-header__back {
