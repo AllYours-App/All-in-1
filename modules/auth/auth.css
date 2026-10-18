@@ -23,6 +23,25 @@
   color: var(--auth-text);
 }
 
+/* ---------- Hauteur complète sur iPhone (appli installée) ----------
+   Un document qui ne défile pas n'obtient que 762 pt sur 812 (innerHeight, 100dvh, bas d'un élément fixed) :
+   le bas de la page de connexion restait noir. Dès que le document peut défiler un peu, iOS donne toute la
+   hauteur : il dépasse donc l'écran de 2 px (le contenu est en position fixed, il ne bouge pas).
+   Classe html.login-locked posée par auth.js tant que la page est affichée. */
+html.login-locked {
+  overscroll-behavior-y: none;
+}
+@media (max-width: 600px) {
+  html.login-locked,
+  html.login-locked body {
+    overflow: visible;
+    height: auto;
+  }
+  html.login-locked body {
+    min-height: calc(100lvh + 2px);
+  }
+}
+
 /* ---------- Fond : photo + dégradé vertical vers le bleu nuit ---------- */
 
 .auth_background {

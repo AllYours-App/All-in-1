@@ -8,7 +8,14 @@
 
   const SESSION_KEY = 'golfSession';
 
-  if (!document.getElementById('page-login')) return;
+  const loginPage = document.getElementById('page-login');
+  if (!loginPage) return;
+
+  // html.login-locked n'existe que tant que la page de connexion est affichée (même principe que html.home-locked,
+  // voir auth.css : sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812).
+  const syncLoginLock = () => document.documentElement.classList.toggle('login-locked', loginPage.classList.contains('active'));
+  new MutationObserver(syncLoginLock).observe(loginPage, { attributes: true, attributeFilter: ['class'] });
+  syncLoginLock();
 
   // Dès que l'utilisateur a cliqué, on ne le renvoie plus de force à la page de départ
   let hasInteracted = false;
