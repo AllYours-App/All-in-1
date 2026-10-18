@@ -77,7 +77,7 @@ Préparation physique du golfeur :
 
 ### Menu 3 points des headers (Putting, Wedging, Parcours, Gym)
 Le bouton à 3 points en haut à droite ouvre une feuille de réglages d'affichage propre au module (la feuille monte du bas de l'écran ; Échap, un appui sur le fond ou "Fermer" la referment). Les réglages sont enregistrés sur l'appareil et appliqués tout de suite.
-- **Putting** : afficher ou masquer "À reprendre" et "Activité récente" (écran principal), et chacune des trois cartes de Performance (SG par round, taux de réussite et mètres, 1 putt et 3 putts) ; période par défaut des filtres (5, 10, 15, 20 sessions ou toutes).
+- **Putting** : afficher ou masquer "Activité récente" (écran principal ; la carte "À reprendre" est toujours affichée), et chacune des trois cartes de Performance (SG par round, taux de réussite et mètres, 1 putt et 3 putts) ; période par défaut des filtres (5, 10, 15, 20 sessions ou toutes).
 - **Wedging** : accès aux analyses, vue d'analyse par défaut (Dispersion, Distance ou SG), pas des paliers des analyses (5 ou 10 m).
 - **Parcours** : ordre et visibilité du Green et du Fairway, puis de Vent, Dénivelé, Distance et Historique ; unité m ou yd (schémas et calculs ensemble) ; texte plus grand ; contraste renforcé.
 - **Gym** : unité de poids kg ou lb (saisie et affichage), temps de repos par défaut, choix du programme en cours. Les boutons à engrenage ("Réglages") des écrans de création et des objectifs ouvrent le même menu.
@@ -275,7 +275,7 @@ Suivi pendant le parcours : Fairway (mises en jeu sur 18 trous), Green (attaques
 
 ### `modules/putting/putting.js` / `putting.css`
 Module le plus transversal. Combinés d'exercices (créatifs ou rapides), sessions de putting, reprise de session, analyses (distance, pente, performance, comparaisons), et saisie d'un "Nouveau parcours" avec historique et détail. Calcule le Strokes Gained des putts via `strokes-gained.js`. Remplit aussi le panneau de l'accueil (objectif de la semaine, dernière séance, `[data-stat]`) via `renderGolfHome()`, seule source de ce panneau. Expose `window.renderPuttingTab` et `window.renderGolfHome`. Ses requêtes DOM passent par `puttingQuery` / `puttingQueryAll` (limitées à `#page-putting`), sauf celles de `renderGolfHome()` qui visent `#page-home`. `renderPuttingTab()` retire `is-stats-screen` de `body` : ce drapeau reste sinon en place quand on quitte Putting depuis son écran Stats.
-Reprise : deux emplacements indépendants, `resumableSession` (exercice créé, onglet Exercices, `putting_resume`) et `resumableQuick` (exercice rapide, onglet Parcours, `putting_resume_quick`). `exitExerciseFlow` n'enregistre ou n'efface que celui de la séance quittée ; `renderResumeCards()` remplit les deux cartes (`data-resume="exercice"` et `data-resume="quick"`). Menu 3 points (`openPuttingMenu('main' | 'stats')`, boutons des headers principal et Performance) : `puttingApplyPrefs()` pose des classes `pref-hide-*` sur `#page-putting` (elles survivent au HTML régénéré par `renderPuttingTab`), règles en fin de `putting.css` ; les cartes de Performance portent `data-perf-card`. La période par défaut (`defaultSessions`) est lue au chargement et copiée dans les trois `filterState`.
+Reprise : deux emplacements indépendants, `resumableSession` (exercice créé, onglet Exercices, `putting_resume`) et `resumableQuick` (exercice rapide, onglet Parcours, `putting_resume_quick`). `exitExerciseFlow` quitte sans demander de confirmation (la séance commencée est enregistrée comme reprise) et n'enregistre ou n'efface que l'emplacement de la séance quittée ; `renderResumeCards()` remplit les deux cartes (`data-resume="exercice"` et `data-resume="quick"`). Menu 3 points (`openPuttingMenu('main' | 'stats')`, boutons des headers principal et Performance) : `puttingApplyPrefs()` (réglages `showHistory`, `showPerf*`; l'ancien réglage `showResume` n'existe plus et son éventuelle valeur stockée est ignorée) pose des classes `pref-hide-*` sur `#page-putting` (elles survivent au HTML régénéré par `renderPuttingTab`), règles en fin de `putting.css` ; les cartes de Performance portent `data-perf-card`. La période par défaut (`defaultSessions`) est lue au chargement et copiée dans les trois `filterState`.
 Sauvegarde : `savePuttingState()` / `loadPuttingState()`. `importPuttingRoundFromStats(data)` (exposée sur `window`) crée une partie `source: 'stats'` à partir d'une partie saisie en détaillé dans `stats.js` ; elle est dédoublonnée par `statsKey`. `removePuttingRoundFromStats(statsKey)` (exposée sur `window`) la retire quand la partie est supprimée dans Stats.
 
 ### `modules/wedging/wedging.js` / `wedging.css`
@@ -321,6 +321,13 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 ## Suivi des bugs
 
 Les bugs en cours, les tests à faire sur téléphone, les décisions attendues et l'historique des corrections ne sont plus dans ce fichier : ils sont dans `Suivi-des-bugs.docx` (statuts en couleur, répartition entre Claude et le propriétaire). Ce README décrit l'application et son code, plus les anomalies relevées lors des audits et les fonctionnalités à venir.
+
+### Anomalies relevées (correctifs du 18/10/2026)
+
+- **Wedging : l'écran de récapitulatif** garde un bouton « Enregistrer » pleine largeur, sans marge latérale, contrairement à la liste au-dessus.
+- **Wedging : la fenêtre « Session en cours » (Reprendre / Recommencer)** reste affichée quand on lance un exercice déjà commencé ; seul le popup Quitter / Rester de Putting a été supprimé.
+- **Gym : aucune photo propre à chaque exercice** n'existe dans le dépôt. La page Exercices affiche `FondBoutonExercices.webp` dans son en-tête et la carte Exercices de l'accueil Gym est éclaircie ; les catégories gardent leurs pictogrammes.
+- **Symboles** (`stats.js` : `club`, `iron`, `wedge`, `putter`, `bag` ; bouton Wedging de `index.html`) redessinés en silhouettes pleines, vérifiés en rendu mais pas sur téléphone : le sac ressemble encore un peu à un gobelet.
 
 ### Anomalies relevées (audit des unités et réglages, 14/10/2026)
 
