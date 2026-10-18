@@ -1930,7 +1930,6 @@ function enterExerciseFlow(title) {
 
 async function exitExerciseFlow(event) {
   if (event) event.preventDefault();
-  if (exerciseFlowScreen === 'session' && !(await appConfirm('Quitter sans enregistrer cette séance ?', { confirmLabel: 'Quitter', cancelLabel: 'Rester' }))) return;
   // Exercice rapide (onglet Parcours) et exercice créé (onglet Exercices) ont chacun leur reprise : on ne touche qu'à celle de la séance quittée
   const leavingQuick = String(activeCombineId).indexOf('quick-') === 0;
   if (exerciseFlowScreen === 'session' && activeSession && activeSession.holes.some(function (h) { return h.results.length > 0; })) {
@@ -3804,13 +3803,12 @@ function renderRoundDetailScreen(r) {
 /* ============================================================
    MENU 3 POINTS (headers Putting et Performance)
    Réglages d'affichage enregistrés dans golfModulePrefs.putting (voir commun.js) :
-   showResume, showHistory (écran principal), showPerfSg / showPerfRate / showPerfPutts
+   showHistory (écran principal), showPerfSg / showPerfRate / showPerfPutts
    (cartes de Performance), defaultSessions (période par défaut des filtres).
    L'affichage passe par des classes pref-hide-* sur #page-putting (CSS dans putting.css) :
    elles survivent au HTML régénéré à chaque ouverture du module.
    ============================================================ */
 const PUTTING_PREF_CLASSES = [
-  ['showResume', 'pref-hide-resume'],
   ['showHistory', 'pref-hide-history'],
   ['showPerfSg', 'pref-hide-perf-sg'],
   ['showPerfRate', 'pref-hide-perf-rate'],
@@ -3845,7 +3843,6 @@ function openPuttingMenu(context) {
   const mainSection = {
     title: 'Écran principal',
     items: [
-      toggle('showResume', 'Carte « À reprendre »', 'Session interrompue, dans Parcours et Exercices.'),
       toggle('showHistory', 'Activité récente', 'Dernières sessions de l\'onglet Parcours.'),
     ],
   };
