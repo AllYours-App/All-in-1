@@ -11,87 +11,87 @@ html[data-theme="light"] {
   color-scheme: light;
 
   /* ---- Commun / Accueil ---- */
-  --color-bg-card: rgba(255, 255, 255, 0.92);
-  --color-bg-card-strong: rgba(255, 255, 255, 0.96);
-  --color-bg-profile: rgba(255, 255, 255, 0.82);
-  --color-border: rgba(15, 21, 17, 0.1);
-  --color-border-strong: rgba(15, 21, 17, 0.14);
-  --color-text-primary: #0f1511;
-  --color-text-secondary: rgba(15, 21, 17, 0.7);
+  --color-bg-card: rgba(251, 251, 246, 0.92);
+  --color-bg-card-strong: rgba(251, 251, 246, 0.96);
+  --color-bg-profile: rgba(251, 251, 246, 0.82);
+  --color-border: rgba(30, 42, 32, 0.1);
+  --color-border-strong: rgba(30, 42, 32, 0.14);
+  --color-text-primary: #1e2a20;
+  --color-text-secondary: rgba(30, 42, 32, 0.7);
   --color-green: #3f8a0f;
   --color-orange: #b86a0c;
   --color-blue: #14789f;
-  --color-border-panel: rgba(15, 21, 17, 0.22);
-  --shadow-capsule: 0 10px 30px rgba(15, 21, 17, 0.12);
+  --color-border-panel: rgba(30, 42, 32, 0.22);
+  --shadow-capsule: 0 10px 30px rgba(30, 42, 32, 0.12);
 
   /* ---- Parcours (et Vitesse) ---- */
-  --bg: #f2f5ef;
-  --card: #ffffff;
-  --card-alt: #eef2ea;
-  --border: #dde3d8;
-  --text: #0f1511;
-  --text-secondary: #4c564a;
-  --text-muted: #6f796b;
+  --bg: #f1f3ea;
+  --card: #fbfbf6;
+  --card-alt: #e9eee0;
+  --border: #d9dfcf;
+  --text: #1e2a20;
+  --text-secondary: #55615a;
+  --text-muted: #66726a;
   --accent: #3f8a0f;
   --accent-dim: rgba(63, 138, 15, 0.12);
   --accent-dim-strong: rgba(63, 138, 15, 0.24);
   --danger: #d63c41;
-  --shadow-soft: 0 8px 24px rgba(15, 21, 17, 0.1);
-  --shadow-lift: 0 14px 34px rgba(15, 21, 17, 0.16);
+  --shadow-soft: 0 8px 24px rgba(30, 42, 32, 0.1);
+  --shadow-lift: 0 14px 34px rgba(30, 42, 32, 0.16);
 
   /* ---- Wedging ---- */
-  --wg-bg: #f2f5ef;
-  --wg-card: #ffffff;
-  --wg-border: #dde3d8;
-  --wg-text: #0f1511;
-  --wg-text-secondary: #4c564a;
+  --wg-bg: #f1f3ea;
+  --wg-card: #fbfbf6;
+  --wg-border: #d9dfcf;
+  --wg-text: #1e2a20;
+  --wg-text-secondary: #55615a;
   --wg-accent: #3f8a0f;
   --wg-danger: #d63c41;
 
   /* ---- Gym ---- */
-  --gym-bg: #f2f5f9;
-  --gym-card: #ffffff;
-  --gym-card-hover: #eaeff6;
-  --gym-border: rgba(11, 18, 32, 0.1);
-  --gym-border-strong: rgba(11, 18, 32, 0.18);
-  --gym-text: #0b1220;
-  --gym-text-secondary: rgba(11, 18, 32, 0.7);
-  --gym-text-muted: rgba(11, 18, 32, 0.5);
+  --gym-bg: #f1f3ea;
+  --gym-card: #fbfbf6;
+  --gym-card-hover: #e9eee0;
+  --gym-border: rgba(30, 42, 32, 0.1);
+  --gym-border-strong: rgba(30, 42, 32, 0.18);
+  --gym-text: #1e2a20;
+  --gym-text-secondary: rgba(30, 42, 32, 0.74);
+  --gym-text-muted: rgba(30, 42, 32, 0.66);
   --gym-accent: #3f8a0f;
   --gym-accent-dim: rgba(63, 138, 15, 0.12);
   --gym-accent-border: rgba(63, 138, 15, 0.5);
   --gym-success: #1f9d55;
   --gym-danger: #d63c3c;
-  --gym-shadow-card: 0 8px 24px rgba(11, 18, 32, 0.08);
+  --gym-shadow-card: 0 6px 20px rgba(30, 42, 32, 0.07);
 
   /* ---- Menu ---- */
-  --mn-bg: #f3f5f0;
-  --mn-surface: #ffffff;
-  --mn-surface-border: rgba(15, 21, 17, 0.1);
+  --mn-bg: #f1f3ea;
+  --mn-surface: #fbfbf6;
+  --mn-surface-border: rgba(30, 42, 32, 0.1);
   --mn-accent: #3f8a0f;
-  --mn-text-primary: #0f1511;
-  --mn-text-secondary: #566052;
-  --mn-text-tertiary: #7b8576;
+  --mn-text-primary: #1e2a20;
+  --mn-text-secondary: #55615a;
+  --mn-text-tertiary: #66726a;
   --mn-accent-dim: rgba(63, 138, 15, 0.12);
 }
 
 /* ---- Stats ---- */
 html[data-theme="light"] #page-stats {
-  --color-bg-base: #f2f5ef;
-  --color-bg-elevated: #ffffff;
-  --color-bg-card: #ffffff;
-  --color-bg-card-hover: #eaefe5;
+  --color-bg-base: #f1f3ea;
+  --color-bg-elevated: #fbfbf6;
+  --color-bg-card: #fbfbf6;
+  --color-bg-card-hover: #e6ecdc;
   --color-accent: #3f8a0f;
   --color-accent-bright: #3f8a0f;
   --color-accent-10: rgba(63, 138, 15, 0.12);
   --color-accent-15: rgba(63, 138, 15, 0.12);
   --color-accent-25: rgba(63, 138, 15, 0.25);
-  --color-text-primary: #0f1511;
-  --color-text-secondary: #4c564a;
-  --color-text-tertiary: #6f796b;
+  --color-text-primary: #1e2a20;
+  --color-text-secondary: #55615a;
+  --color-text-tertiary: #66726a;
   --color-text-disabled: #9aa395;
-  --color-border: rgba(15, 21, 17, 0.1);
-  --color-border-strong: rgba(15, 21, 17, 0.14);
+  --color-border: rgba(30, 42, 32, 0.1);
+  --color-border-strong: rgba(30, 42, 32, 0.14);
   --color-border-accent: #3f8a0f;
   --color-negative: #c9392d;
   --color-negative-10: rgba(201, 57, 45, 0.12);
@@ -103,13 +103,13 @@ html[data-theme="light"] #page-stats {
 html[data-theme="light"] #page-putting {
   --accent: #3f8a0f;
   --accent-dim: rgba(63, 138, 15, 0.12);
-  --bg-page: #f2f5ef;
-  --bg-card: #ffffff;
-  --bg-card-alt: #eef2ea;
-  --border-subtle: rgba(15, 21, 17, 0.1);
-  --text-primary: #0f1511;
-  --text-secondary: #4c564a;
-  --text-tertiary: #6f796b;
+  --bg-page: #f1f3ea;
+  --bg-card: #fbfbf6;
+  --bg-card-alt: #e9eee0;
+  --border-subtle: rgba(30, 42, 32, 0.1);
+  --text-primary: #1e2a20;
+  --text-secondary: #55615a;
+  --text-tertiary: #66726a;
 }
 
 /* ---- Menu : alerte ---- */
@@ -126,12 +126,18 @@ html[data-theme="light"] #page-menu {
 /* Fond du document (Parcours et Vitesse n'ont pas de fond propre) */
 html[data-theme="light"] body { background: var(--bg); }
 
-/* ---- Accueil : photo conservée, boutons et panneau passés en blanc ---- */
-html[data-theme="light"] .home-screen_header { color: #fff; }
+/* ---- Accueil : photo conservée, boutons et panneau en verre dépoli clair (plus de blanc opaque sur la photo) ---- */
+html[data-theme="light"] .home-screen_header { color: #fff; text-shadow: 0 1px 14px rgba(8, 20, 10, 0.38); }
 html[data-theme="light"] .header_title-highlight { color: #b8ff3d; }
 html[data-theme="light"] .orbit-button,
-html[data-theme="light"] .bottom-panel_wrapper { background: rgba(255, 255, 255, 0.94); }
-html[data-theme="light"] .goal_progress-track { background: rgba(15, 21, 17, 0.12); }
+html[data-theme="light"] .bottom-panel_wrapper {
+  background: rgba(247, 248, 241, 0.8);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow: 0 8px 24px rgba(10, 24, 12, 0.2);
+}
+html[data-theme="light"] .orbit-button_subtitle { color: #3a463d; opacity: 1; }
+html[data-theme="light"] .goal_progress-track { background: rgba(30, 42, 32, 0.12); }
 
 /* ---- Parcours : la carte du trou reste sombre, ses commandes gardent les couleurs claires ---- */
 html[data-theme="light"] #fairway-root,
@@ -150,66 +156,87 @@ html[data-theme="light"] #green-root {
 /* ---- Wedging ---- */
 /* Wedging redéfinit ses propres jetons sur #page-wedging : on les redéfinit ici aussi */
 html[data-theme="light"] #page-wedging {
-  --wg-bg: #eef2ea;
-  --wg-card: #ffffff;
-  --wg-border: rgba(15, 21, 17, 0.1);
-  --wg-text: #0f1511;
-  --wg-text-secondary: #4c564a;
+  --wg-bg: #f1f3ea;
+  --wg-card: #fbfbf6;
+  --wg-border: rgba(30, 42, 32, 0.1);
+  --wg-text: #1e2a20;
+  --wg-text-secondary: #55615a;
   --wg-accent: #3f8a0f;
   --wg-accent-dim: rgba(63, 138, 15, 0.12);
   --wg-danger: #c9392d;
-  --app-header-bg: #f2f5ef;
-  --app-header-border: rgba(15, 21, 17, 0.1);
-  --app-header-text: #0f1511;
-  --app-header-text-secondary: #0f1511;
-  --app-nav-bg: #ffffff;
-  --app-nav-border: rgba(15, 21, 17, 0.1);
-  --app-nav-text: #4c564a;
+  --app-header-bg: #f1f3ea;
+  --app-header-border: rgba(30, 42, 32, 0.1);
+  --app-header-text: #1e2a20;
+  --app-header-text-secondary: #1e2a20;
+  --app-nav-bg: #fbfbf6;
+  --app-nav-border: rgba(30, 42, 32, 0.1);
+  --app-nav-text: #55615a;
   --app-nav-active: #3f8a0f;
   --app-nav-active-bg: rgba(63, 138, 15, 0.12);
   --app-fab-bg: #3f8a0f;
-  background-color: #f2f5ef;
-  color: #0f1511;
+  background-color: #f1f3ea;
+  color: #1e2a20;
 }
-html[data-theme="light"] #page-wedging .wg-bottom-nav-item { border-right-color: rgba(15, 21, 17, 0.1); }
+html[data-theme="light"] #page-wedging .wg-bottom-nav-item { border-right-color: rgba(30, 42, 32, 0.1); }
 html[data-theme="light"] .wg-radar-label-num { fill: var(--wg-text); }
-html[data-theme="light"] .wg-wheel-sector { fill: rgba(15, 21, 17, 0.06); stroke: rgba(15, 21, 17, 0.3); }
+html[data-theme="light"] .wg-wheel-sector { fill: rgba(30, 42, 32, 0.06); stroke: rgba(30, 42, 32, 0.3); }
 html[data-theme="light"] .wg-wheel-sector--in { fill: rgba(63, 138, 15, 0.16); }
 html[data-theme="light"] .wg-wheel-sector--out { fill: rgba(214, 60, 65, 0.14); }
-html[data-theme="light"] .wg-wheel-center { fill: rgba(15, 21, 17, 0.1); stroke: rgba(15, 21, 17, 0.3); }
+html[data-theme="light"] .wg-wheel-center { fill: rgba(30, 42, 32, 0.1); stroke: rgba(30, 42, 32, 0.3); }
 html[data-theme="light"] .wg-wheel-center.selected { fill: rgba(63, 138, 15, 0.4); }
 html[data-theme="light"] .wg-wheel-hole { fill: rgba(63, 138, 15, 0.16); }
 html[data-theme="light"] .wg-wheel-pole { stroke: var(--wg-text); }
 
 /* ---- Stats ---- */
-html[data-theme="light"] #page-stats .sg-item__bar { background: rgba(15, 21, 17, 0.1); }
-html[data-theme="light"] #page-stats .saisie-rapide_wheel-sector { fill: rgba(15, 21, 17, 0.06); stroke: rgba(15, 21, 17, 0.3); }
+html[data-theme="light"] #page-stats .sg-item__bar { background: rgba(30, 42, 32, 0.1); }
+html[data-theme="light"] #page-stats .saisie-rapide_wheel-sector { fill: rgba(30, 42, 32, 0.06); stroke: rgba(30, 42, 32, 0.3); }
 html[data-theme="light"] #page-stats .saisie-rapide_wheel-sector.is-selected { fill: rgba(63, 138, 15, 0.3); }
-html[data-theme="light"] #page-stats .saisie-rapide_wheel-center { fill: rgba(15, 21, 17, 0.1); stroke: rgba(15, 21, 17, 0.3); }
+html[data-theme="light"] #page-stats .saisie-rapide_wheel-center { fill: rgba(30, 42, 32, 0.1); stroke: rgba(30, 42, 32, 0.3); }
 html[data-theme="light"] #page-stats .saisie-rapide_wheel-center.is-selected { fill: rgba(63, 138, 15, 0.45); }
-html[data-theme="light"] #page-stats #st-pane-multi .multi-wheel_sector { stroke: rgba(15, 21, 17, 0.3); }
-html[data-theme="light"] #page-stats #st-pane-multi .multi-wheel_text { fill: #0f1511; stroke: rgba(255, 255, 255, 0.8); }
-html[data-theme="light"] #page-stats #st-pane-multi .multi-wheel_text.is-empty { fill: rgba(15, 21, 17, 0.55); }
+html[data-theme="light"] #page-stats #st-pane-multi .multi-wheel_sector { stroke: rgba(30, 42, 32, 0.3); }
+html[data-theme="light"] #page-stats #st-pane-multi .multi-wheel_text { fill: #1e2a20; stroke: rgba(255, 255, 255, 0.8); }
+html[data-theme="light"] #page-stats #st-pane-multi .multi-wheel_text.is-empty { fill: rgba(30, 42, 32, 0.55); }
 
 /* ---- Putting ---- */
-html[data-theme="light"] #page-putting .quick-session_track { background-color: rgba(15, 21, 17, 0.1); }
+html[data-theme="light"] #page-putting .quick-session_track { background-color: rgba(30, 42, 32, 0.1); }
 
 /* ---- Gym ---- */
-html[data-theme="light"] .gym-app .progress-track { background: rgba(11, 18, 32, 0.1); }
-html[data-theme="light"] .ring circle.ring__track { stroke: rgba(11, 18, 32, 0.1); }
+html[data-theme="light"] .gym-app .progress-track { background: rgba(30, 42, 32, 0.1); }
+html[data-theme="light"] .ring circle.ring__track { stroke: rgba(30, 42, 32, 0.1); }
 html[data-theme="light"] .gym-app .btn-secondary:hover,
 html[data-theme="light"] .gym-app .icon-btn:active,
 html[data-theme="light"] .sheet__row:active,
-html[data-theme="light"] .session-header__back:hover { background: rgba(11, 18, 32, 0.06); }
+html[data-theme="light"] .session-header__back:hover { background: rgba(30, 42, 32, 0.06); }
 html[data-theme="light"] .home-hero__media::after {
-  background: linear-gradient(180deg, rgba(242, 245, 249, 0.7) 0%, rgba(242, 245, 249, 0.35) 32%, rgba(242, 245, 249, 0.55) 75%, var(--gym-bg) 100%),
-    linear-gradient(90deg, var(--gym-bg) 0%, rgba(242, 245, 249, 0.45) 42%, transparent 75%);
+  background: linear-gradient(180deg, rgba(241, 243, 234, 0.7) 0%, rgba(241, 243, 234, 0.35) 32%, rgba(241, 243, 234, 0.55) 75%, var(--gym-bg) 100%),
+    linear-gradient(90deg, var(--gym-bg) 0%, rgba(241, 243, 234, 0.45) 42%, transparent 75%);
 }
 html[data-theme="light"] .feature-card__media::after {
-  background: linear-gradient(180deg, var(--gym-card) 0%, rgba(255, 255, 255, 0.86) 45%, var(--gym-card) 100%);
+  background: linear-gradient(180deg, rgba(251, 251, 246, 0.9) 0%, rgba(240, 244, 232, 0.76) 45%, rgba(251, 251, 246, 0.94) 100%);
 }
 
 /* ---- Menu : bandeau du profil ---- */
 html[data-theme="light"] #page-menu .profile_cover { background: linear-gradient(180deg, #dfe8d6 0%, #cddbc2 100%); }
-html[data-theme="light"] #page-menu .profile_logout-button { background: rgba(255, 255, 255, 0.7); }
-html[data-theme="light"] #page-menu .profile_avatar-image { background: #eef2ea; }
+html[data-theme="light"] #page-menu .profile_logout-button { background: rgba(251, 251, 246, 0.7); }
+html[data-theme="light"] #page-menu .profile_avatar-image { background: #e9eee0; }
+
+/* ---- Gym : images et vignettes sombres adoucies pour ne pas trancher sur les cartes claires ---- */
+html[data-theme="light"] .thumb {
+  background: linear-gradient(155deg, #e4eadb 0%, #d3dcc6 100%);
+  border-color: rgba(30, 42, 32, 0.08);
+}
+html[data-theme="light"] .thumb svg { color: rgba(30, 42, 32, 0.6); }
+html[data-theme="light"] .hero-photo {
+  background: linear-gradient(150deg, #dfe6d3 0%, #cbd6bd 100%);
+  border-color: rgba(30, 42, 32, 0.08);
+  box-shadow: 0 6px 18px rgba(30, 42, 32, 0.08);
+}
+html[data-theme="light"] .hero-photo::after {
+  background: linear-gradient(0deg, rgba(24, 38, 27, 0.62) 0%, rgba(24, 38, 27, 0.04) 70%);
+}
+html[data-theme="light"] .hero-photo__silhouette { color: rgba(30, 42, 32, 0.16); }
+html[data-theme="light"] .hero-photo__image { filter: saturate(0.85) brightness(1.12); }
+/* Vignette-photo sans texte (page Exercices) : voile clair plutôt que dégradé noir */
+html[data-theme="light"] .hero-photo:not(:has(.hero-photo__content))::after {
+  background: linear-gradient(0deg, rgba(228, 234, 219, 0.5) 0%, rgba(228, 234, 219, 0.3) 100%);
+}

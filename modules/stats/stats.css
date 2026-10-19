@@ -1265,7 +1265,8 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-md);
+  /* marges de zone de sécurité : un cadre haut ne doit pas passer sous la caméra / l'encoche */
+  padding: calc(var(--space-md) + env(safe-area-inset-top, 0px)) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
   background: rgba(4, 8, 6, 0.72);
   opacity: 0;
   visibility: hidden;
@@ -1281,8 +1282,8 @@ html {
 #page-stats .new-round_modal {
   width: 100%;
   max-width: 440px;
-  max-height: calc(100vh - 2 * var(--space-md));
-  max-height: calc(100dvh - 2 * var(--space-md));
+  max-height: calc(100vh - 2 * var(--space-md) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-height: calc(100dvh - 2 * var(--space-md) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   display: flex;
   flex-direction: column;

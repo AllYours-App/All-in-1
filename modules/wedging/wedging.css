@@ -294,16 +294,13 @@
 .wg-history-mid{flex:1;display:flex;flex-direction:column;gap:6px;}
 
 /* ---------- Pages d'analyse (Distance / Dispersion / Historique) ---------- */
+/* Barre du haut statique (analyses, séances, récap) : même géométrie que les headers fixes,
+   soit 56 px centrés sous la zone de sécurité iOS. Un simple padding de 20 px la laissait sous l'heure. */
 .wg-topbar{
   display:flex;align-items:center;justify-content:space-between;
-  max-width:var(--wg-max-width);margin:0 auto;padding:20px var(--app-padding-x) 0;
-}
-/* Séance d'exercice en cours : le bouton retour est centré dans les 56 px sous la zone de sécurité iOS,
-   comme dans les headers fixes (le décalage de 20 px sans zone de sécurité le plaçait trop haut). */
-.wg-topbar.is-session{
-  padding-top:env(safe-area-inset-top, 0px);
+  max-width:var(--wg-max-width);margin:0 auto;
+  padding:env(safe-area-inset-top, 0px) var(--app-padding-x) 0;
   min-height:calc(56px + env(safe-area-inset-top, 0px));
-  align-items:center;
 }
 .wg-topbar.is-session + .wg-session-title{margin-top:4px;}
 .wg-analysis-header{

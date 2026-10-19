@@ -5,14 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Golf App</title>
 <script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
-<script>/* DIAGNOSTIC TEMPORAIRE (avec core/diag.js) : journal de la hauteur du viewport depuis le début du chargement */
-(function(){try{localStorage.removeItem("diagVariant")}catch(e){}
-window.__diagLog=[];var t0=performance.now(),last="";function p(n){var s="ih="+innerHeight+" vv="+(window.visualViewport?Math.round(visualViewport.height):"-")+" sy="+Math.round(scrollY),k=n+s;if(k===last||window.__diagLog.length>80)return;last=k;window.__diagLog.push(Math.round(performance.now()-t0)+"ms "+n+" "+s)}
-p("head");["DOMContentLoaded","load","pageshow","resize","orientationchange","visibilitychange","focus","touchstart"].forEach(function(n){window.addEventListener(n,function(){p(n)},{passive:true})});
-if(window.visualViewport){visualViewport.addEventListener("resize",function(){p("vv.resize")});visualViewport.addEventListener("scroll",function(){p("vv.scroll")})}
-new MutationObserver(function(){p("html."+(document.documentElement.className||"(vide)"))}).observe(document.documentElement,{attributes:true,attributeFilter:["class"]});
-[300,1000,2500,6000,15000].forEach(function(ms){setTimeout(function(){p("+"+ms)},ms)})})();</script>
-<script>try{var st=(JSON.parse(localStorage.getItem("golfAppState"))||{}).settings;if(st&&st.theme==="light"){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f2f5ef")}}catch(e){}</script>
+<script>try{var st=(JSON.parse(localStorage.getItem("golfAppState"))||{}).settings;if(st&&st.theme==="light"){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f1f3ea")}}catch(e){}</script>
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -27,12 +20,12 @@ new MutationObserver(function(){p("html."+(document.documentElement.className||"
 <link rel="stylesheet" href="modules/parcours/parcours-ui.css?v=54">
 <link rel="stylesheet" href="modules/wedging/wedging.css?v=56">
 <link rel="stylesheet" href="modules/gym/gym.css?v=56">
-<link rel="stylesheet" href="modules/putting/putting.css?v=54">
+<link rel="stylesheet" href="modules/putting/putting.css?v=56">
 <link rel="stylesheet" href="modules/vitesse/vitesse.css?v=54">
-<link rel="stylesheet" href="modules/stats/stats.css?v=54">
+<link rel="stylesheet" href="modules/stats/stats.css?v=56">
 <link rel="stylesheet" href="modules/menu/menu.css?v=54">
 <link rel="stylesheet" href="modules/auth/auth.css?v=55">
-<link rel="stylesheet" href="core/theme-light.css?v=54">
+<link rel="stylesheet" href="core/theme-light.css?v=57">
 <script src="vendor/chart.umd.min.js?v=54"></script>
 </head>
 <body>
@@ -1022,7 +1015,7 @@ new MutationObserver(function(){p("html."+(document.documentElement.className||"
   } catch (e) {}
 </script>
 <script src="core/app-shell.js?v=54"></script>
-<script src="core/commun.js?v=54"></script>
+<script src="core/commun.js?v=57"></script>
 <script src="core/sg-data.js?v=54"></script>
 <script src="core/strokes-gained.js?v=54"></script>
 <script src="modules/home/HomePage.js?v=54"></script>
@@ -1033,7 +1026,6 @@ new MutationObserver(function(){p("html."+(document.documentElement.className||"
 <script src="modules/vitesse/vitesse.js?v=54"></script>
 <script src="modules/stats/stats.js?v=55"></script>
 <script src="modules/menu/menu.js?v=54"></script>
-<script src="core/diag.js?v=54"></script> <!-- diagnostic temporaire, à retirer -->
 <script src="modules/auth/auth.js?v=55"></script>
 </body>
 </html>
