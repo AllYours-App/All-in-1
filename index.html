@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Golf App</title>
-<script>try{if(localStorage.getItem("golfSession"))document.documentElement.classList.add("has-session")}catch(e){}</script>
+<script>try{var h=location.hash;if(/^#(access_token|error)=|[#&]error_code=/.test(h)){window.__authHash=h.slice(1);history.replaceState(null,"",location.pathname+location.search)}}catch(e){}</script>
+<script>try{if(localStorage.getItem("golfSupabaseAuth")||(window.__authHash&&/access_token=/.test(window.__authHash)))document.documentElement.classList.add("has-session")}catch(e){}</script>
 <script>try{var st=(JSON.parse(localStorage.getItem("golfAppState"))||{}).settings;if(st&&st.theme==="light"){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f1f3ea")}}catch(e){}</script>
 <link rel="icon" type="image/png" href="images/icon.png">
 <link rel="apple-touch-icon" href="images/icon.png">
@@ -24,9 +25,10 @@
 <link rel="stylesheet" href="modules/vitesse/vitesse.css?v=54">
 <link rel="stylesheet" href="modules/stats/stats.css?v=57">
 <link rel="stylesheet" href="modules/menu/menu.css?v=56">
-<link rel="stylesheet" href="modules/auth/auth.css?v=55">
+<link rel="stylesheet" href="modules/auth/auth.css?v=58">
 <link rel="stylesheet" href="core/theme-light.css?v=57">
 <script src="vendor/chart.umd.min.js?v=54"></script>
+<script src="vendor/supabase.umd.min.js?v=1"></script>
 </head>
 <body>
 
@@ -843,7 +845,7 @@
 </div>
 </div>
 
-<!-- ======================= PARTIE : AUTH (connexion + inscription) ======================= -->
+<!-- ======================= PARTIE : AUTH (connexion, inscription, mot de passe oublié, nouveau mot de passe) ======================= -->
 <div id="page-login" class="app-page active">
   <section class="auth_component">
 
@@ -1000,6 +1002,119 @@
   </section>
 </div>
 
+<div id="page-forgot-password" class="app-page">
+  <section class="auth_component">
+
+    <div class="auth_background">
+      <img class="auth_background-image" data-auth-background alt="" decoding="async">
+      <div class="auth_background-overlay"></div>
+    </div>
+
+    <div class="auth_content">
+
+      <div class="auth_logo">
+        <svg class="auth_logo-icon" width="44" height="72" viewBox="0 0 44 72" fill="none" aria-hidden="true">
+          <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
+          <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
+        </svg>
+        <div class="auth_logo-text">GOLF</div>
+      </div>
+
+      <div class="auth_header">
+        <h1 class="auth_heading">Mot de passe oublié</h1>
+        <p class="auth_subheading">Saisissez votre adresse e-mail : nous vous envoyons un lien pour choisir un nouveau mot de passe.</p>
+      </div>
+
+      <form class="auth_form" data-auth-form="forgot" novalidate>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 7l9 6 9-6"/>
+          </svg>
+          <input class="auth_input" type="email" name="email" placeholder="Adresse e-mail" autocomplete="email" inputmode="email" required>
+        </label>
+
+        <p class="auth_error" data-auth-error role="alert"></p>
+
+        <button class="auth_button is-primary" type="submit">Envoyer le lien</button>
+      </form>
+
+      <div class="auth_switch">
+        <span class="auth_switch-text">Vous vous en souvenez ?</span>
+        <button class="auth_switch-link" type="button" data-auth-goto="login">Se connecter</button>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<div id="page-reset-password" class="app-page">
+  <section class="auth_component">
+
+    <div class="auth_background">
+      <img class="auth_background-image" data-auth-background alt="" decoding="async">
+      <div class="auth_background-overlay"></div>
+    </div>
+
+    <div class="auth_content">
+
+      <div class="auth_logo">
+        <svg class="auth_logo-icon" width="44" height="72" viewBox="0 0 44 72" fill="none" aria-hidden="true">
+          <rect x="2" y="0" width="6" height="72" rx="3" fill="currentColor"/>
+          <path d="M8 4 L42 14 L8 26 Z" fill="currentColor"/>
+        </svg>
+        <div class="auth_logo-text">GOLF</div>
+      </div>
+
+      <div class="auth_header">
+        <h1 class="auth_heading">Nouveau mot de passe</h1>
+        <p class="auth_subheading">Choisissez un nouveau mot de passe pour votre compte.</p>
+      </div>
+
+      <form class="auth_form" data-auth-form="reset" novalidate>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password" placeholder="Mot de passe" autocomplete="new-password" required>
+          <button class="auth_toggle" type="button" data-auth-toggle aria-label="Afficher le mot de passe">
+            <svg class="auth_toggle-icon is-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="auth_toggle-icon is-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7c2 0 3.8.7 5.3 1.7M22 12s-3.6 7-10 7c-2 0-3.8-.7-5.3-1.7"/>
+              <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+              <path d="M3 3l18 18"/>
+            </svg>
+          </button>
+        </label>
+
+        <label class="auth_field">
+          <svg class="auth_field-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <input class="auth_input" type="password" name="password-confirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" required>
+        </label>
+
+        <p class="auth_error" data-auth-error role="alert"></p>
+
+        <button class="auth_button is-primary" type="submit">Enregistrer</button>
+      </form>
+
+      <div class="auth_switch">
+        <span class="auth_switch-text">Un doute ?</span>
+        <button class="auth_switch-link" type="button" data-auth-goto="login">Retour à la connexion</button>
+      </div>
+
+    </div>
+  </section>
+</div>
+
 <script>
   // Bloque le swipe-retour depuis les bords et le zoom au pincement (iOS)
   document.addEventListener('touchstart', function (e) {
@@ -1017,6 +1132,7 @@
   } catch (e) {}
 </script>
 <script src="core/app-shell.js?v=54"></script>
+<script src="core/supabase-client.js?v=1"></script>
 <script src="core/commun.js?v=57"></script>
 <script src="core/sg-data.js?v=54"></script>
 <script src="core/strokes-gained.js?v=54"></script>
@@ -1027,7 +1143,7 @@
 <script src="modules/putting/putting.js?v=57"></script>
 <script src="modules/vitesse/vitesse.js?v=54"></script>
 <script src="modules/stats/stats.js?v=56"></script>
-<script src="modules/menu/menu.js?v=56"></script>
-<script src="modules/auth/auth.js?v=55"></script>
+<script src="modules/menu/menu.js?v=57"></script>
+<script src="modules/auth/auth.js?v=58"></script>
 </body>
 </html>

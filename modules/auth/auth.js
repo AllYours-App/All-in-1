@@ -1,12 +1,17 @@
 /* ============================================================
-   AUTH — connexion + création de compte
+   AUTH — connexion, création de compte, mot de passe oublié
    Première page affichée tant qu'aucune session n'existe.
-   Pas de serveur pour l'instant : la "session" n'est qu'une clé localStorage.
+   Authentification : Supabase Auth (client : core/supabase-client.js, window.appSupabase).
+   La session est gardée par supabase-js dans le localStorage, sous la clé 'golfSupabaseAuth'.
    ============================================================ */
 (function () {
   'use strict';
 
-  const SESSION_KEY = 'golfSession';
+  const SESSION_KEY = window.APP_SESSION_KEY || 'golfSupabaseAuth';
+  const sb = window.appSupabase || null;
+
+  // Ancienne "session" locale (avant Supabase) : plus utilisée
+  try { localStorage.removeItem('golfSession'); } catch (e) {}
 
   const loginPage = document.getElementById('page-login');
   if (!loginPage) return;
@@ -23,38 +28,50 @@
   // showPage() vient de app-shell.js, chargé en premier ; le typeof protège seulement d'un oubli de la balise <script>
   const goTo = (page) => { if (typeof showPage === 'function') showPage(page); };
 
-  /* ---------- Session (connexion unique) ---------- */
+  /* ---------- Session ---------- */
 
-  function getSession() {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
-  }
-
-  function saveSession(email) {
+  // Lecture synchrone du localStorage (pour afficher tout de suite la bonne page, sans attendre le réseau).
+  // supabase-js renouvelle ou invalide la session ensuite : un échec déclenche SIGNED_OUT (voir plus bas).
+  function hasStoredSession() {
     try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ email, createdAt: Date.now() }));
-    } catch (e) {
-      console.error('Erreur d\'écriture du localStorage', e);
-    }
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+      return !!(s && s.access_token && s.refresh_token);
+    } catch (e) { return false; }
   }
 
-  function clearSession() {
-    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
-  }
+  // Lien reçu par e-mail (confirmation, mot de passe oublié) : le <head> de index.html a mis son hash de côté
+  // dans window.__authHash. Tant qu'il n'est pas traité, on n'affiche ni la connexion ni l'accueil.
+  const emailLinkParams = window.__authHash ? new URLSearchParams(window.__authHash) : null;
+  let emailLinkPending = !!(emailLinkParams && emailLinkParams.get('access_token'));
 
   // Home si l'utilisateur est déjà connecté, sinon connexion.
   // La classe anti-flash n'est retirée qu'une fois la bonne page affichée.
   function showStartPage() {
-    if (typeof showPage !== 'function') return;
-    showPage(getSession() ? 'home' : 'login');
+    if (typeof showPage !== 'function' || emailLinkPending) return;
+    showPage(hasStoredSession() ? 'home' : 'login');
     document.documentElement.classList.remove('has-session');
   }
 
   // Déconnexion : window.authLogout()
   window.authLogout = function () {
-    clearSession();
+    // scope 'local' : déconnecte cet appareil seulement. Hors ligne, l'appel réseau peut échouer : on efface la clé à la main.
+    if (sb) sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
     document.querySelectorAll('[data-auth-form]').forEach(resetForm);
     goTo('login');
   };
+
+  // Session perdue (expirée, révoquée, supprimée depuis un autre appareil) : retour à la connexion
+  if (sb) {
+    sb.auth.onAuthStateChange((event) => {
+      // Pas d'appel à Supabase ici (risque de blocage) : seulement de l'affichage
+      if (event !== 'SIGNED_OUT') return;
+      document.querySelectorAll('[data-auth-form]').forEach(resetForm);
+      const active = document.querySelector('.app-page.active');
+      const current = active ? active.id.replace('page-', '') : '';
+      if (!['login', 'signup', 'forgot-password'].includes(current)) goTo('login');
+    });
+  }
 
   showStartPage();
 
@@ -62,12 +79,12 @@
   window.addEventListener('load', () => {
     const active = document.querySelector('.app-page.active');
     const current = active ? active.id.replace('page-', '') : '';
-    const wanted = getSession() ? 'home' : 'login';
-    if (!hasInteracted && (current === 'home' || current === 'login') && current !== wanted) {
+    const wanted = hasStoredSession() ? 'home' : 'login';
+    if (!emailLinkPending && !hasInteracted && (current === 'home' || current === 'login') && current !== wanted) {
       showStartPage();
     }
     // Filet de sécurité : la page de connexion ne doit jamais rester masquée
-    document.documentElement.classList.remove('has-session');
+    if (!emailLinkPending) document.documentElement.classList.remove('has-session');
   });
 
   /* ---------- Fond d'écran selon l'heure ---------- */
@@ -112,15 +129,30 @@
   /* ---------- Validation ---------- */
 
   function clearError(form) {
-    form.querySelector('[data-auth-error]').textContent = '';
+    const box = form.querySelector('[data-auth-error]');
+    box.textContent = '';
+    box.classList.remove('is-info');
     form.querySelectorAll('.auth_field.is-error').forEach((el) => el.classList.remove('is-error'));
   }
 
+  // input facultatif : sans lui, le message s'affiche sans surligner de champ
   function showError(form, message, input) {
     clearError(form);
     form.querySelector('[data-auth-error]').textContent = message;
-    input.closest('.auth_field').classList.add('is-error');
-    input.focus();
+    if (input) {
+      input.closest('.auth_field').classList.add('is-error');
+      input.focus();
+    }
+  }
+
+  // Message d'information (et non d'erreur), affiché sur le formulaire du type donné ('login', 'signup'...)
+  function showNotice(formType, message) {
+    const form = document.querySelector('[data-auth-form="' + formType + '"]');
+    if (!form) return;
+    clearError(form);
+    const box = form.querySelector('[data-auth-error]');
+    box.textContent = message;
+    box.classList.add('is-info');
   }
 
   // form.reset() ne remet pas le type du champ mot de passe : on le remasque à la main
@@ -145,6 +177,11 @@
       [f.password, f.password.value.length >= 8, 'Le mot de passe doit contenir au moins 8 caractères.'],
       [f['password-confirm'], f.password.value === f['password-confirm'].value, 'Les mots de passe ne correspondent pas.'],
     ],
+    forgot: (f) => [emailRule(f)],
+    reset: (f) => [
+      [f.password, f.password.value.length >= 8, 'Le mot de passe doit contenir au moins 8 caractères.'],
+      [f['password-confirm'], f.password.value === f['password-confirm'].value, 'Les mots de passe ne correspondent pas.'],
+    ],
   };
 
   // Retourne true si le formulaire est valide (un type inconnu est refusé)
@@ -156,23 +193,135 @@
     return !failed;
   }
 
+  /* ---------- Appels Supabase ---------- */
+
+  // Messages en français pour les erreurs Supabase (le texte d'origine est en anglais et technique)
+  function friendlyError(err) {
+    const code = (err && err.code) || '';
+    const msg = String((err && err.message) || '');
+    if (code === 'invalid_credentials' || /invalid login credentials/i.test(msg)) return 'E-mail ou mot de passe incorrect.';
+    if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) return 'Adresse e-mail non confirmée : ouvrez le lien reçu par e-mail.';
+    if (code === 'user_already_exists' || code === 'email_exists' || /already registered/i.test(msg)) return 'Un compte existe déjà avec cette adresse. Connectez-vous.';
+    if (code === 'weak_password') return 'Mot de passe trop faible : choisissez-en un plus long ou plus varié.';
+    if (code === 'same_password') return 'Le nouveau mot de passe doit être différent de l\'ancien.';
+    if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || (err && err.status === 429)) return 'Trop de tentatives. Réessayez dans quelques minutes.';
+    if (/session missing|not authenticated/i.test(msg)) return 'Lien expiré. Refaites une demande de mot de passe oublié.';
+    if ((err && err.name === 'AuthRetryableFetchError') || /failed to fetch|network|load failed/i.test(msg) || navigator.onLine === false) {
+      return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+    }
+    return 'Une erreur est survenue. Réessayez.';
+  }
+
+  // Adresse de retour des e-mails : la racine du site (doit figurer dans les Redirect URLs de Supabase)
+  const siteUrl = () => location.origin + '/';
+
+  const HANDLERS = {
+    async login(form) {
+      const { error } = await sb.auth.signInWithPassword({
+        email: form.elements.email.value.trim(),
+        password: form.elements.password.value,
+      });
+      if (error) throw error;
+      resetForm(form);
+      goTo('home');
+    },
+
+    async signup(form) {
+      const email = form.elements.email.value.trim();
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password: form.elements.password.value,
+        options: { emailRedirectTo: siteUrl() },
+      });
+      if (error) throw error;
+      // E-mail déjà utilisé : avec la confirmation d'e-mail activée, Supabase ne renvoie pas d'erreur
+      // (pour ne pas révéler quelles adresses ont un compte), mais l'utilisateur renvoyé n'a aucune identité
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        throw { code: 'user_already_exists' };
+      }
+      resetForm(form);
+      if (data.session) { goTo('home'); return; } // confirmation d'e-mail désactivée : déjà connecté
+      goTo('login');
+      showNotice('login', 'Compte créé. Ouvrez le lien envoyé à ' + email + ' pour le confirmer, puis connectez-vous.');
+    },
+
+    async forgot(form) {
+      const { error } = await sb.auth.resetPasswordForEmail(form.elements.email.value.trim(), { redirectTo: siteUrl() });
+      if (error) throw error;
+      resetForm(form);
+      goTo('login');
+      // Même message que l'adresse existe ou non
+      showNotice('login', 'Si un compte existe pour cette adresse, un e-mail avec un lien vient d\'être envoyé.');
+    },
+
+    async reset(form) {
+      const { error } = await sb.auth.updateUser({ password: form.elements.password.value });
+      if (error) throw error;
+      resetForm(form);
+      goTo('home');
+    },
+  };
+
   document.querySelectorAll('[data-auth-form]').forEach((form) => {
     const type = form.dataset.authForm;
+    const submitButton = form.querySelector('[type="submit"]');
 
     // Efface l'erreur dès que l'utilisateur retape quelque chose
     form.addEventListener('input', () => clearError(form));
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       hasInteracted = true;
+      if (form.dataset.busy) return;
       if (!validate(form, type)) return;
+      if (!sb || !HANDLERS[type]) {
+        showError(form, 'Service de connexion indisponible. Rechargez la page.');
+        return;
+      }
 
-      // TODO : appel backend (connexion ou création de compte) avant d'enregistrer la session
-      saveSession(form.elements.email.value.trim());
-      resetForm(form);
-      goTo('home');
+      // Un seul envoi à la fois (double appui)
+      form.dataset.busy = '1';
+      if (submitButton) submitButton.disabled = true;
+      try {
+        await HANDLERS[type](form);
+      } catch (err) {
+        console.warn('Auth :', type, err);
+        showError(form, friendlyError(err), form.elements.password || form.elements.email);
+      } finally {
+        delete form.dataset.busy;
+        if (submitButton) submitButton.disabled = false;
+      }
     });
   });
+
+  /* ---------- Lien reçu par e-mail ---------- */
+
+  // Confirmation d'inscription ou mot de passe oublié : le lien ramène sur le site avec la session dans le hash
+  // (#access_token=...&refresh_token=...&type=recovery), ou avec une erreur (#error=...&error_code=otp_expired).
+  function handleEmailLink() {
+    if (!emailLinkParams) return;
+    const p = emailLinkParams;
+    const done = (page, notice, formType) => {
+      emailLinkPending = false;
+      goTo(page);
+      document.documentElement.classList.remove('has-session');
+      if (notice) showNotice(formType || 'login', notice);
+    };
+
+    if (p.get('access_token') && p.get('refresh_token') && sb) {
+      sb.auth.setSession({ access_token: p.get('access_token'), refresh_token: p.get('refresh_token') }).then(({ error }) => {
+        if (error) { done('login', 'Ce lien n\'est plus valable. Connectez-vous, ou refaites une demande.'); return; }
+        if (p.get('type') === 'recovery') done('reset-password');
+        else done('home');
+      }).catch(() => done('login', 'Connexion impossible. Vérifiez votre réseau et réessayez.'));
+    } else if (p.get('error') || p.get('error_code')) {
+      const expired = p.get('error_code') === 'otp_expired';
+      done('login', expired ? 'Ce lien a expiré ou a déjà servi. Connectez-vous, ou refaites une demande.' : 'Ce lien n\'est pas valable.');
+    } else {
+      emailLinkPending = false;
+    }
+  }
+  handleEmailLink();
 
   /* ---------- Navigation entre connexion / inscription ---------- */
 
