@@ -324,6 +324,8 @@ Les bugs en cours, les tests à faire sur téléphone, les décisions attendues 
 
 ### Anomalies relevées (correctifs du 19/10/2026, Accueil et Wedging)
 
+- **Symboles des clubs et du sac à refaire.** Les cinq icônes de `stats.js` (`club`, `iron`, `wedge`, `putter`, `bag`) ne correspondaient pas aux objets. Redessinées de zéro, en contours de 1,6 px comme les autres icônes : bois (tête arrondie avec ligne de semelle), fer (lame et deux rainures), wedge (tête inclinée et balle), putter (tête plate avec ligne de visée et balle), sac (col, poche, bandoulière, trois clubs qui dépassent). Le bouton Wedging de l'accueil (`index.html`) reprend le même dessin. Dans la saisie détaillée, un wedge affichait l'icône du fer : il a maintenant la sienne (`sdClubType` renvoie `wedge`, `ICON_OF.wedge`, `.is-wedge`). Vérifié en rendu image, à contrôler sur téléphone aux petites tailles (14 px).
+
 - **Wedging, récapitulatif d'exercice : valeurs mal alignées et mots « Réussi » / « Raté » inutiles.** Les colonnes distance et résultat étaient respectivement alignées à gauche et à droite, ce qui donnait des valeurs en escalier. Distance et résultat alignés à droite dans leur colonne (le résultat colle au bord droit du bandeau), sans les deux mots (la pastille indique déjà le résultat). Corrigé (`wedgeExRecapShotLabel`, `.wg-recap-dist`, `.wg-recap-result`).
 - **Wedging, détail d'une session de l'historique : lignes non alignées.** Cet écran (`wedgeExerciseLogDetailHtml`) utilisait une ligne à deux blocs sans colonnes et gardait « Réussi » / « Raté » ; le résumé « 7/15 réussis » était collé au bord gauche. Il utilise maintenant la même grille que le récapitulatif (`.wg-recap-row`) et le résumé a la même marge que la liste (`.wg-log-summary`). Corrigé ; à contrôler sur téléphone.
 - **Accueil, encadrés du bas : titres et symboles désalignés.** L'anneau de l'objectif (22 px) et l'icône du calendrier (13 px) n'avaient pas la même largeur, donc les deux titres ne partaient pas du même point. Les deux symboles sont dans une boîte de 22 px. Corrigé ; à contrôler sur téléphone.
@@ -343,7 +345,7 @@ Les bugs en cours, les tests à faire sur téléphone, les décisions attendues 
 - **Wedging : l'écran de récapitulatif** garde un bouton « Enregistrer » pleine largeur, sans marge latérale, contrairement à la liste au-dessus.
 - **Wedging : la fenêtre « Session en cours » (Reprendre / Recommencer)** reste affichée quand on lance un exercice déjà commencé ; seul le popup Quitter / Rester de Putting a été supprimé.
 - **Gym : aucune photo propre à chaque exercice** n'existe dans le dépôt. La page Exercices affiche `FondBoutonExercices.webp` dans son en-tête et la carte Exercices de l'accueil Gym est éclaircie ; les catégories gardent leurs pictogrammes.
-- **Symboles** (`stats.js` : `club`, `iron`, `wedge`, `putter`, `bag` ; bouton Wedging de `index.html`) redessinés en silhouettes pleines, vérifiés en rendu mais pas sur téléphone : le sac ressemble encore un peu à un gobelet.
+- **Symboles** (`stats.js` : `club`, `iron`, `wedge`, `putter`, `bag` ; bouton Wedging de `index.html`) : les silhouettes pleines du 18/10 ne ressemblaient pas aux objets (bois en poêle, putter en barre, sac en gobelet).
 
 ### Anomalies relevées (audit des unités et réglages, 14/10/2026)
 

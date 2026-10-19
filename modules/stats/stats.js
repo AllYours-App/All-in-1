@@ -140,15 +140,15 @@
     chevronDown: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 9l6 6 6-6"/></svg>`,
     trendUp: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 16l6-6 4 4 6-8"/><path d="M14 6h6v6"/></svg>`,
     trendDown: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 8l6 6 4-4 6 8"/><path d="M14 18h6v-6"/></svg>`,
-    club: `<svg viewBox="0 0 24 24" ${STROKE}><path stroke-width="1.8" d="M20.5 2l-7.2 12.2"/><path fill="currentColor" stroke="none" d="M13.2 12.6C8.4 11.6 2.4 13.2 2 17.4c-.3 3 2.4 4.9 6.6 4.9 4.8 0 8.4-2 8.4-5.2 0-2.3-1.7-3.9-3.8-4.5z"/></svg>`,
-    iron: `<svg viewBox="0 0 24 24" ${STROKE}><path stroke-width="1.8" d="M19.5 2l-5.2 11.6"/><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M14.6 12.6L4 15.2c-.8.2-1.2 1-1 1.8l1.2 4.2c.2.7.8 1.1 1.5 1.1h9.6c.8 0 1.4-.5 1.5-1.2l1.4-7.4zM6 17.4h7.8v1.2H6zM6.4 19.9h7v1.2h-7z"/></svg>`,
+    club: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M20.5 2.5L14.6 11.6"/><path d="M14.6 11.6C10.6 9.6 4.2 10.6 3 15.4c-.8 3.3 1.6 5.9 5.6 5.9 3.8 0 6.8-2.1 6.8-4.9 0-2.2-.3-3.7-.8-4.8z"/><path d="M4 16.6c3.2 1.3 7.4 1.3 11.2-.1"/></svg>`,
+    iron: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M19.5 2.5l-5.2 10"/><path d="M14.3 12.5L5 14.9c-1.3.3-2 1.2-1.8 2.5l.6 3c.2 1 1 1.6 2 1.6h8c1.1 0 1.9-.7 2-1.8l.7-6.5z"/><path d="M6.6 17.2h7.2M6.9 19.4h6.9"/></svg>`,
     flag: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 21V4"/><path d="M6 4l11 3-11 3"/></svg>`,
     bowl: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M10 21V5"/><path d="M10 5l6 2.2-6 2.2"/><ellipse cx="10" cy="20" rx="6.5" ry="2"/></svg>`,
-    wedge: `<svg viewBox="0 0 24 24" ${STROKE}><path stroke-width="1.8" d="M17.5 2l-4.6 11.4"/><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12.9 12.6L3.4 18.6c-.9.6-.5 2 .6 2.1l9 1.2c.9.1 1.7-.4 2-1.3l1.5-5.2zM6.4 19.1l5.6-3.4.5 1.1-5.2 3.1z"/><circle cx="20.2" cy="19.6" r="2.4" fill="currentColor" stroke="none"/></svg>`,
-    putter: `<svg viewBox="0 0 24 24" ${STROKE}><path stroke-width="1.8" d="M18 2l-3.6 14.6"/><path fill="currentColor" stroke="none" d="M3 19.8c0-1.1.9-2 2-2h12.5c1.1 0 2 .9 2 2V22H3z"/></svg>`,
+    wedge: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M16.5 2.5l-4.4 10.2"/><path d="M12.1 12.7L5 16.4c-1.4.7-1.7 2-.8 3.1l1.2 1.5c.7.9 1.8 1.2 2.9.9l5.6-1.5c1-.3 1.6-1 1.7-2l.3-4.2z"/><circle cx="20" cy="19" r="2.1"/><path d="M7.4 17.9l5.2-2.4"/></svg>`,
+    putter: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M17.5 2.5l-3.7 12.4"/><rect x="2.5" y="14.9" width="14" height="6" rx="1.6"/><path d="M9.5 16.6v2.6"/><circle cx="20.4" cy="18.4" r="1.9"/></svg>`,
     target: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>`,
     bird: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 008-8V7a4 4 0 00-7.3-2.3L2 20"/><path d="M20 7l2 .5-2 .5"/><path d="M10 18v3M14 17.8V21"/><path d="M7 18a6 6 0 003.8-10.6"/></svg>`,
-    bag: `<svg viewBox="0 0 24 24" ${STROKE}><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M7.2 9.6h9.6l-1.2 10.9a1.7 1.7 0 0 1-1.7 1.5h-3.8a1.7 1.7 0 0 1-1.7-1.5zM8.2 14.1h7.6v1.2H8.2z"/><path stroke-width="1.8" d="M9.4 9.6L7 4.6M12 9.6V3.4M14.6 9.6l2.4-5"/><circle cx="6.6" cy="3.8" r="1.9" fill="currentColor" stroke="none"/><circle cx="12" cy="2.6" r="1.9" fill="currentColor" stroke="none"/><circle cx="17.4" cy="3.8" r="1.9" fill="currentColor" stroke="none"/><path stroke-width="1.8" d="M16.8 12.4c2.3.5 3.2 2.6 2.7 5.6"/></svg>`,
+    bag: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7.2 9.8l1.3 10.4c.1 1.1 1 1.9 2.1 1.9h2.8c1.1 0 2-.8 2.1-1.9l1.3-10.4"/><ellipse cx="12" cy="9.8" rx="4.8" ry="1.3"/><path d="M9.7 14.4h4.6v4.6c0 .6-.4 1-1 1h-2.6c-.6 0-1-.4-1-1z"/><path d="M10 8.6L8.3 4.9M12 8.5V4.2M14 8.6l1.7-3.7"/><circle cx="7.6" cy="3.6" r="1.5"/><circle cx="12" cy="2.8" r="1.5"/><circle cx="16.4" cy="3.6" r="1.5"/><path d="M16.5 12.2c2.4.4 3.3 3 2.5 6.2"/></svg>`,
     arc: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="5" cy="14" r="2"/><path d="M18 16V4"/><path d="M18 4l4 2-4 2"/><path d="M3 20.5h18"/><path d="M5.5 18.5L3 20.5l2.5 2M18.5 18.5l2.5 2-2.5 2"/></svg>`,
     bars: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 20V11"/><path d="M12 20V6"/><path d="M19 20v-7"/></svg>`,
     calendar: `<svg viewBox="0 0 24 24" ${STROKE}><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>`,
@@ -3430,7 +3430,7 @@
 
   // Sac du joueur = clubs cochés dans Menu > Mon sac de golf (golfBag / golfClubCatalog de menu.js)
   // type : wood | iron | putter
-  const sdClubType = (id) => (id === 'putter' ? 'putter' : /^(fer|wedge)/.test(id) ? 'iron' : 'wood');
+  const sdClubType = (id) => (id === 'putter' ? 'putter' : /^wedge/.test(id) ? 'wedge' : /^fer/.test(id) ? 'iron' : 'wood');
   const getSdClubs = () => (typeof golfBag === 'undefined' || typeof golfClubCatalog === 'undefined' ? [] : golfClubCatalog.filter((c) => golfBag.clubs.includes(c.id)));
   const SD_MAX_SHOTS = 15;
 
@@ -3491,7 +3491,7 @@
       { value: 'court_gauche', label: 'Court gauche' }, { value: 'court', label: 'Court' }, { value: 'court_droite', label: 'Court droite' },
     ];
     const resultLabel = (v) => (RESULTS.find((r) => r.value === v) || {}).label || '--';
-    const ICON_OF = { wood: icon('club'), iron: icon('iron'), putter: icon('putter') };
+    const ICON_OF = { wood: icon('club'), iron: icon('iron'), wedge: icon('wedge'), putter: icon('putter') };
 
     /* ---------- État ---------- */
     let round = null;   // partie en cours (currentRound)

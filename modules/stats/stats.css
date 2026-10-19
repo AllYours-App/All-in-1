@@ -2152,7 +2152,8 @@ html {
   color: var(--color-accent);
 }
 #page-stats .saisie-detaillee_icon svg { width: 14px; height: 14px; }
-#page-stats .saisie-detaillee_icon.is-iron { border-color: var(--color-text-primary); color: var(--color-text-primary); }
+#page-stats .saisie-detaillee_icon.is-iron,
+#page-stats .saisie-detaillee_icon.is-wedge { border-color: var(--color-text-primary); color: var(--color-text-primary); }
 
 /* ---------- Stats du trou ---------- */
 #page-stats .saisie-detaillee_stats {
