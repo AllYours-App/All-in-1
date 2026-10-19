@@ -200,6 +200,11 @@ html.login-locked {
   color: var(--auth-error);
 }
 
+/* Message d'information (compte créé, e-mail envoyé...) : même emplacement que l'erreur, autre couleur */
+.auth_error.is-info {
+  color: var(--auth-lime);
+}
+
 /* ---------- Boutons ---------- */
 
 .auth_button {

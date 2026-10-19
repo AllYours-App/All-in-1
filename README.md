@@ -1,8 +1,8 @@
 # All-in-1
 
-Application golf mobile-first : parcours, putting, wedging, stats, gym, profil. Tout est en HTML/CSS/JS vanilla, sans framework ni étape de build. Déployée provisoirement sur Vercel (`all-in-1-delta.vercel.app`) : le plan gratuit de Vercel exclut l'usage commercial, l'hébergeur devra changer avant la mise en ligne publique (voir "Mise en ligne et conformité").
+Application golf mobile-first : parcours, putting, wedging, stats, gym, profil. Tout est en HTML/CSS/JS vanilla, sans framework ni étape de build. Hébergée sur Cloudflare (`all-in-1.ducoin-co.workers.dev`), qui remplace Vercel : le plan gratuit de Vercel excluait l'usage commercial. À revérifier dans les conditions de Cloudflare avant la mise en ligne publique (voir "Mise en ligne et conformité").
 
-Il n'y a aucun backend dans le code actuel : toutes les données vivent dans le `localStorage` du navigateur. La cible est Supabase (authentification et base de données) : les textes légaux sont déjà rédigés dans cette hypothèse.
+La connexion passe par Supabase Auth (e-mail et mot de passe ; pas de connexion Apple ni Google). Les données de jeu, de profil et de réglages vivent encore dans le `localStorage` du navigateur : leur synchronisation avec les tables Supabase (`supabase/schema.sql`) reste à écrire (voir "Brancher Supabase").
 
 ## Guide fonctionnel
 
@@ -11,7 +11,7 @@ Cette partie décrit l'application du point de vue de l'utilisateur, sans vocabu
 All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur téléphone. On s'y connecte, on arrive sur un accueil qui propose six parties de travail, et chacune se concentre sur un aspect du jeu. Les données sont enregistrées sur l'appareil.
 
 ### Connexion et création de compte
-Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
+Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. À la création du compte, un e-mail de confirmation est envoyé : on ouvre son lien, puis on se connecte. "Mot de passe oublié ?" envoie un lien par e-mail ; il ouvre l'écran "Nouveau mot de passe". Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
 
 ### Accueil
 Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine (réglé dans le Menu, de 1 à 14 séances, 5 par défaut) et dernière séance (date et type d'entraînement sur la même ligne, un seul type : celui de l'activité la plus récente). Un bouton de profil ouvre le Menu.
@@ -96,14 +96,18 @@ core/                      socle commun à tous les modules
   commun.css               composants partagés (pavé numérique, en-têtes, popups, boutons ronds, bottom sheet)
   theme-light.css          thème clair (activé par <html data-theme="light">)
   app-shell.js             showPage()
+  supabase-client.js       client Supabase unique (window.appSupabase)
   commun.js                appKeypad(), popups, appPrefGet/Set(), appSheet(), applyAppTheme()
   sg-data.js               tables Strokes Gained
   strokes-gained.js        calculs Strokes Gained
 vendor/
   chart.umd.min.js         Chart.js 4.5.0
+  supabase.umd.min.js      supabase-js 2.117.2
 modules/                   une page = un dossier (CSS + JS)
   home/  auth/  parcours/  putting/  wedging/  gym/  stats/  vitesse/  menu/
 images/                    fonds, illustrations, icône
+supabase/
+  schema.sql               script SQL à coller dans Supabase (tables, RLS, déclencheurs)
 docs/
   Suivi-des-bugs.docx      suivi des bugs et des corrections
 ```
@@ -122,7 +126,7 @@ Tous les scripts sont des scripts classiques (pas de modules ES). Ils partagent 
 
 | Page (`id`) | Conteneur | JS | CSS | Origine du HTML |
 |---|---|---|---|---|
-| `page-login`, `page-signup` | dans `index.html` | `modules/auth/auth.js` | `modules/auth/auth.css` | `index.html` |
+| `page-login`, `page-signup`, `page-forgot-password`, `page-reset-password` | dans `index.html` | `modules/auth/auth.js` | `modules/auth/auth.css` | `index.html` |
 | `page-home` | dans `index.html` | `modules/home/HomePage.js` | `modules/home/HomePage.css` | `index.html` |
 | `page-parcours` | dans `index.html` | `modules/parcours/parcours-ui.js` | `modules/parcours/parcours-ui.css` | `index.html` |
 | `page-stats` | dans `index.html` | `modules/stats/stats.js` | `modules/stats/stats.css` | `index.html` |
@@ -138,7 +142,9 @@ Cet ordre compte, car les fichiers se parlent par le scope global.
 
 ```
 Chart.js 4.5.0 (vendor/chart.umd.min.js)
+supabase-js 2.117.2 (vendor/supabase.umd.min.js)   -> global `supabase`
 core/app-shell.js            -> showPage()
+core/supabase-client.js      -> window.appSupabase, window.APP_SESSION_KEY
 core/commun.js               -> appKeypad(), appPrefGet/Set(), appSheet(), applyAppTheme()
 core/sg-data.js              -> SG_BASELINES
 core/strokes-gained.js       -> sgExpected(), sgShot()   (dépend de sg-data.js)
@@ -158,6 +164,7 @@ Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, 
 ### Dépendances externes
 
 - Chart.js 4.5.0, hébergé dans `vendor/` (`vendor/chart.umd.min.js`, graphiques de `stats.js`) : plus aucun CDN tiers.
+- supabase-js 2.117.2, hébergé dans `vendor/` (`vendor/supabase.umd.min.js`) : client Supabase. Il appelle `https://kszmszroxzunhmlfuite.supabase.co` (authentification ; base de données à venir). La clé publique (`sb_publishable_...`) est dans `core/supabase-client.js` : elle est faite pour être visible, la protection vient des règles RLS.
 - API publique `https://api.flyawaygolf.com/v2` : recherche de golfs par géolocalisation et profil de golf, appelée uniquement depuis `stats.js` (popup "Nouveau parcours"). Elle reçoit la position de l'appareil : elle est citée dans la politique de confidentialité, comme Supabase et l'hébergeur.
 
 ### Règles de cloisonnement entre modules
@@ -181,34 +188,63 @@ Passage en professionnel, dès la première pub ou le premier abonnement :
 - App Store (plus tard) : achats via l'achat intégré d'Apple obligatoire pour les abonnements.
 
 ### Champs à compléter (`MENU_LEGAL` dans `menu.js`)
-Tout champ au format `[À COMPLÉTER : ...]` s'affiche tel quel dans l'appli et est listé dans la console au chargement. Déjà renseignés : éditeur (Pierre-Antton Ducoin, non professionnel), e-mail de contact (`contactgolfevolution@gmail.com`), Supabase comme prestataire.
+Tout champ au format `[À COMPLÉTER : ...]` s'affiche tel quel dans l'appli et est listé dans la console au chargement. Déjà renseignés : éditeur (Pierre-Antton Ducoin, non professionnel), e-mail de contact (`contactgolfevolution@gmail.com`), Supabase comme prestataire (`backendRegion` : Irlande, Union européenne, soit la région `eu-west-1` du projet), Cloudflare comme hébergeur (`hostName`, `hostAddress`, `hostUrl`).
 
 | Clé | À renseigner |
 |---|---|
-| `backendRegion` | Région du projet Supabase. Choisir une région de l'Union européenne à la création du projet (elle ne se change pas ensuite). |
-| `hostName`, `hostAddress`, `hostUrl` | Nom, adresse et site de l'hébergeur de l'appli. |
 | `appVersion`, `updatedAt` | Version affichée dans À propos, et date des textes légaux à changer à chaque modification de `MENU_DOCS`. |
 
-### Remplacer Vercel
-Le plan gratuit de Vercel (Hobby) est limité à un usage non commercial. Tant que l'appli reste gratuite et sans pub, il peut convenir (à vérifier dans leurs conditions) ; il ne conviendra plus dès la monétisation, et l'hébergeur doit alors changer. Si l'hébergeur change dès maintenant :
-- renseigner `hostName`, `hostAddress` et `hostUrl` dans `MENU_LEGAL` (alimentent les mentions légales et la politique de confidentialité, rubrique "Prestataires") ;
-- remplacer l'URL `all-in-1-delta.vercel.app` dans ce README et partout où elle est utilisée (fiche Google Play, configuration de l'appli Android) ;
+### Hébergement (Cloudflare, ancien Vercel)
+L'appli est déployée sur Cloudflare (Workers, adresse `all-in-1.ducoin-co.workers.dev`), depuis le dépôt GitHub. Les textes légaux (`MENU_LEGAL`) citent Cloudflare, Inc. comme hébergeur. Les comparatifs consultés indiquent que l'offre gratuite de Cloudflare n'interdit pas l'usage commercial, contrairement à Vercel Hobby ; à relire dans les conditions de Cloudflare avant la mise en ligne publique. Reste à faire :
+- si un nom de domaine propre est ajouté : l'ajouter aussi dans Supabase (Authentication > URL Configuration : Site URL et Redirect URLs), sinon les liens reçus par e-mail renvoient vers l'ancienne adresse ;
+- remplacer l'URL `all-in-1-delta.vercel.app` partout où elle est encore utilisée (fiche Google Play, configuration de l'appli Android) ;
 - si l'appli est publiée sur Google Play en TWA, mettre à jour l'URL de départ et le fichier `/.well-known/assetlinks.json` sur le nouveau domaine ;
-- vérifier dans la politique de confidentialité, rubrique "Transferts hors Union européenne", que le texte reste exact (hébergeur dans ou hors UE) ;
-- reconfigurer les éventuels réglages propres à Vercel (en-têtes, redirections) chez le nouvel hébergeur.
+- la politique de confidentialité (rubrique "Transferts hors Union européenne") reste exacte : Cloudflare est établi aux États-Unis.
 
 ### Brancher Supabase
-- `auth.js` : remplacer la session `localStorage` (`TODO : appel backend`) par Supabase Auth, y compris le mot de passe oublié (`forgot-password`) et les boutons Apple et Google si conservés.
+- **Fait (20/10/2026) : connexion.** `auth.js` utilise Supabase Auth : inscription avec e-mail de confirmation, connexion, déconnexion, mot de passe oublié (pages `forgot-password` et `reset-password`), liens reçus par e-mail. Pas de connexion Apple ni Google (décision du 20/10/2026).
+- **Fait : tables.** `supabase/schema.sql` lancé dans Supabase (tables, RLS).
+- **Reste à faire : données.** Rien n'est encore écrit dans les tables : voir "Un seul module d'accès aux données" ci-dessous.
 - `menu.js` : `deleteMenuData()` doit appeler une Edge Function qui supprime l'utilisateur et ses lignes, puis effacer en local. `exportMenuData()` doit inclure les données du serveur si elles ne sont plus toutes en local.
 - Données : les textes supposent que le profil, les réglages et les données de jeu sont enregistrés côté serveur et retrouvés sur un autre appareil (FAQ, CGU, confidentialité). Adapter les textes si la synchronisation est partielle.
 - Politique de confidentialité : si des services Supabase supplémentaires (stockage de fichiers, analytics) sont utilisés, les ajouter dans `MENU_DOCS.confidentialite`.
 - **RLS (Row Level Security) obligatoire** sur toutes les tables, avec une règle du type "un utilisateur ne lit et n'écrit que les lignes dont `user_id = auth.uid()`". La clé publique (`anon`) est visible par tous dans le code : c'est la RLS qui protège les données. Sans elle, n'importe qui peut lire les données de tous les utilisateurs. Ne jamais mettre la clé `service_role` dans le code client.
-- **Schéma de données à définir avant de coder** : une table par type de donnée (profil et réglages, parties, trous, coups, sessions et combinés de putting, coups et exercices de wedging, programmes, historique et objectifs de gym), chacune avec `user_id`, `id`, `created_at`, `updated_at`. Les clés du tableau "Données persistées" en donnent la liste.
+- **Schéma de données** : écrit dans `supabase/schema.sql` (tableau ci-dessous). Reste à le lancer dans Supabase, puis à écrire le module d'accès.
 - **Un seul module d'accès aux données.** Aujourd'hui chaque fichier lit et écrit son propre `localStorage` (`saveMenuState`, `savePuttingState`, `WedgeStorage`, etc.). Créer un fichier unique (par exemple `data.js`, chargé avant les modules) qui expose lecture, écriture et synchronisation, et y rediriger les modules un par un. Sinon la migration se fera en 8 endroits différents avec 8 comportements différents.
 - **Hors-ligne.** Sur un parcours, le réseau est souvent mauvais. La saisie doit toujours écrire d'abord en local, puis une file d'attente envoie les données à Supabase quand le réseau revient (avec gestion des conflits : la dernière modification gagne, via `updated_at`). Sinon la saisie plante en plein trou.
 - **Migration des données existantes** : prévoir à la première connexion l'envoi du contenu actuel du `localStorage` vers le compte, pour que les utilisateurs actuels ne perdent rien.
-- **Connexion Apple** : exige un compte Apple Developer payant. Google et e-mail n'ont pas cette contrainte.
+- **Connexion Apple et Google** : retirées. Si elles reviennent un jour, Apple exige un compte Apple Developer payant.
 - Calculs (Strokes Gained, indicateurs de `stats.js`) : peuvent rester côté client dans un premier temps. Ne pas les déplacer côté serveur sans besoin.
+
+#### Schéma de données (`supabase/schema.sql`)
+
+Script à coller dans Supabase (SQL Editor > New query > Run). Il peut être relancé sans risque. Il crée 11 tables, toutes protégées par RLS (`user_id = auth.uid()`, aucun accès pour `anon`), et un déclencheur qui crée la ligne `profiles` à l'inscription. Validé sur un Postgres local avec un schéma `auth` simulé (isolation entre deux comptes, refus pour `anon`, relance sans erreur) ; pas encore lancé sur un vrai projet Supabase.
+
+| Table | Remplace la clé `localStorage` |
+|---|---|
+| `profiles` (une ligne par personne) | `golfAppState`, `golfModulePrefs`, `parcours-settings`, `parcours-fairway-unit`, `golfStatsKpis`, `gym-active-program-id` |
+| `stats_rounds` | `golfStatsRounds` |
+| `parcours_captures` | `parcours-captures` |
+| `putting_combines`, `putting_sessions`, `putting_rounds` | `putting_combines`, `putting_sessions`, `putting_rounds` |
+| `wedging_shots`, `wedging_exercises` | `wedgingShots`, `wedgingExercises` |
+| `gym_programs`, `gym_history`, `gym_goals` | `gym-programs-saved`, `gym-history`, `gym-goals` |
+
+Les dix tables de liste ont les mêmes colonnes : `user_id`, `id` (texte), `occurred_at` (date de l'élément, pour trier), `data` (jsonb : l'objet complet tel qu'il est aujourd'hui dans le `localStorage`), `created_at`, `updated_at` (posé par le serveur à chaque écriture) et `deleted_at` (suppression douce, pour propager une suppression aux autres appareils). Clé primaire : `(user_id, id)`. Une ligne de `data` est limitée à 1 Mo.
+
+Restent sur l'appareil : les brouillons et parties à reprendre (`gym-session-draft`, `putting_resume`, `putting_resume_quick`, `golfStatsRoundDraft`, `parcours-fairway-round`, `parcours-green-round`, `wedgingInProgressSessions`).
+
+Points de vigilance pour le module d'accès aux données (non résolus, à traiter en le codant) :
+- **Relire l'objet depuis `data`, jamais depuis la colonne `id`.** Plusieurs `id` sont des nombres (`Date.now()` dans Putting et Wedging) alors que la colonne est du texte ; le code compare ces ids avec `===`. L'objet complet reste dans `data` avec son type d'origine.
+- **Suppression = `deleted_at`**, et lecture avec `deleted_at is null`. Une vraie suppression (`delete`) ne se propagerait pas aux autres appareils.
+- **Compte différent sur le même appareil.** La déconnexion n'efface pas les données locales (parties, putting, gym...). Si une autre personne se connecte sur le même appareil, elle verrait celles de la précédente, et le module d'accès aux données les enverrait sur son compte. À traiter en premier : mémoriser l'identifiant du dernier compte connecté et vider ou isoler le `localStorage` quand il change.
+- **Anciens utilisateurs.** L'ancienne session locale (`golfSession`) est supprimée au chargement : ils doivent créer un vrai compte. Leurs données locales restent sur l'appareil ; la migration vers le compte est à écrire.
+- **Lien reçu par e-mail sur iPhone avec l'appli installée.** Le lien s'ouvre dans Safari, qui a son propre stockage : la confirmation ou le nouveau mot de passe sont pris en compte (le compte existe), mais la personne doit ensuite se connecter dans l'appli installée. Le flux "implicit" de supabase-js (`core/supabase-client.js`) a été choisi pour cela : le flux "pkce" échouerait dans ce cas.
+- **Hash de l'URL.** `index.html` met de côté le hash des liens e-mail (`window.__authHash`) puis le vide avant le chargement de Gym et Wedging, qui lisent `location.hash`. Tout nouveau code qui lit `location.hash` au chargement doit en tenir compte.
+- **Réglages Supabase à vérifier** (Authentication) : Site URL et Redirect URLs = adresse de l'appli ; confirmation d'e-mail activée ; longueur minimale du mot de passe réglée à 8 comme dans l'appli (Supabase accepte 6 par défaut, l'appli en exige 8).
+- **Envoi des e-mails.** Le service d'envoi fourni par Supabase est limité et prévu pour les essais : brancher un service SMTP propre (Authentication > SMTP Settings) avant la mise en ligne publique.
+- **Tests.** Les flux de connexion ont été testés avec la vraie bibliothèque et un réseau simulé (connexion, erreurs, inscription, e-mail déjà utilisé, mot de passe oublié, lien de récupération, lien expiré, réseau coupé). Pas encore testés avec de vrais e-mails ni sur téléphone.
+- **Parties Stats, copies dans Putting et Wedging** : les éléments `source: 'stats'` (`statsKey`) sont des copies. Ils seront synchronisés comme les autres ; la suppression d'une partie doit continuer à retirer ses copies (`removePuttingRoundFromStats`, Wedging) puis marquer chaque ligne `deleted_at`.
+- **Suppression du compte (à faire avant toute mise en ligne publique, des comptes existent maintenant).** Aujourd'hui `deleteMenuData()` ne vide que l'appareil : le compte Supabase reste, alors que l'écran affiche une suppression définitive. `deleteMenuData()` doit appeler une Edge Function qui exécute `auth.admin.deleteUser`. Les clés étrangères sont en `on delete cascade` : supprimer l'utilisateur supprime toutes ses lignes.
 
 ### Publication
 - Google Play Console : politique de confidentialité = `<url>/?legal=confidentialite` ; suppression de compte = `<url>/?legal=donnees` (compléter le formulaire "Sécurité des données" avec les données listées dans la politique).
@@ -217,8 +253,8 @@ Le plan gratuit de Vercel (Hobby) est limité à un usage non commercial. Tant q
 
 ## Fichiers partagés
 
-### `index.html` (1035 lignes)
-Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Un script en `<head>` ajoute la classe `has-session` sur `<html>` si `golfSession` existe, pour éviter le flash de la page de connexion.
+### `index.html` (1149 lignes)
+Contient le HTML de Home, Parcours, Stats, Menu, Login, Signup, Mot de passe oublié et Nouveau mot de passe, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Deux scripts en `<head>` : le premier met de côté le hash d'un lien reçu par e-mail (`window.__authHash`) puis le vide ; le second ajoute la classe `has-session` sur `<html>` si la session Supabase (`golfSupabaseAuth`) existe ou si un lien e-mail est en cours de traitement, pour éviter le flash de la page de connexion.
 
 ### `core/app-shell.js`
 `showPage(id)` : active la page demandée et masque les autres, puis remonte en haut de page. Ignore un id inconnu. Ne touche à aucune classe de `body` : chaque module retire lui-même son verrou de défilement en quittant sa page. Expose `window.showPage`.
@@ -234,6 +270,9 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 
 `appSheet({ title, sections: [{ title, items }] })` : bottom sheet partagée par les menus 3 points (renvoie la fonction `close()`). Types d'entrées : `toggle` (`value`, `onChange`), `segment` (`options`, `value`, `onChange`), `action` (`onClick`, `selected`, `danger`, `keepOpen`) et `reorder` (liste `[{ key, label, visible }]` avec oeil et flèches haut / bas, `onChange` reçoit la liste dans le nouvel ordre). Tous les textes passent par `textContent`. Une seule feuille à la fois ; `Échap`, un appui sur le fond ou "Fermer" la referment ; une action la ferme avant d'appeler `onClick` (sauf `keepOpen`). Chaque module fournit ses entrées dans sa fonction `open…Menu()` et applique ses préférences au chargement.
 
+### `core/supabase-client.js`
+Crée le client Supabase unique (`window.appSupabase`, ou `null` si `vendor/supabase.umd.min.js` n'a pas chargé) et expose `window.APP_SESSION_KEY` (`'golfSupabaseAuth'`, clé `localStorage` de la session). Contient l'URL du projet et la clé publique. Options : session gardée et renouvelée automatiquement, `detectSessionInUrl: false` (les liens e-mail sont lus par `auth.js`), flux `implicit`. Le futur module d'accès aux données (`data.js`) utilisera ce même client.
+
 ### `core/base.css`, `core/commun.css`
 `base.css` : reset, tokens `:root` (dont les couleurs `--wg-*` partagées par tous les modules), règles globales. `commun.css` : composants partagés (`.app-keypad`, `.app-keypad-value`, en-têtes de page, etc.). Les styles de la bottom sheet (`.app-sheet_*`) sont à la fin de `commun.css` (z-index 8900, sous les popups `.app-dialog` à 9000 : une confirmation ouverte depuis une entrée passe au-dessus). Ils n'utilisent que des jetons de `:root`, donc le thème clair s'applique sans règle dédiée.
 
@@ -241,6 +280,9 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 
 ### `vendor/chart.umd.min.js`
 Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=54`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
+
+### `vendor/supabase.umd.min.js`
+supabase-js 2.117.2 (licence MIT) : copie du fichier `dist/umd/supabase.js` publié sur npm (`@supabase/supabase-js`), chargée par `index.html` avec `?v=1` ; expose le global `supabase`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (une version publiée depuis plus de deux semaines) et incrémenter `?v=`.
 
 ### `core/theme-light.css`
 Thème clair, actif quand `<html data-theme="light">`. Il redéfinit les jetons de couleur de chaque module (`:root`, `#page-stats`, `#page-putting`, `#page-wedging`, Gym, Menu) puis adapte les couleurs codées en dur. Choix dans Menu > Apparence > Thème (switch Clair / Sombre ; réglage `settings.theme`, `"dark"` ou `"light"`, dans `golfAppState`) ; `applyAppTheme()` (`core/commun.js`) pose l'attribut et la couleur de la barre du navigateur, et un petit script du `<head>` d'`index.html` l'applique avant le premier affichage. Restent sombres en mode clair : la photo et la carte de l'accueil, la carte de Parcours, l'écran de connexion. Ajouter un jeton de couleur dans un module oblige à lui donner sa valeur claire ici. Palette revue le 19/10/2026 : fond ivoire verdâtre `#f1f3ea`, cartes blanc cassé `#fbfbf6`, texte vert très sombre `#1e2a20` (plus de noir ni de blanc purs), secondaire `#55615a`, discret `#66726a`, bordures `#d9dfcf` ; Gym, qui était bleu-gris, suit la même famille. Pour que les images ne tranchent plus sur l'interface : les boutons et le panneau de l'accueil sont en verre dépoli (`backdrop-filter`), le voile des cartes Gym est teinté, et les vignettes et photos d'en-tête de Gym sont éclaircies (`.thumb`, `.hero-photo`). Contrastes mesurés : texte et secondaire au-dessus de 5,7:1, discret 4,5:1 ; le vert d'accent `#3f8a0f` en texte sur les cartes reste à 4,2:1 (valeur d'origine, non modifiée).
@@ -254,7 +296,7 @@ Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence 
 Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), Expose `window.renderHomeGreeting` (rappelée par `menu.js`). Le panneau du bas de l'accueil (objectif de la semaine, dernière séance) est rempli par `renderGolfHome()` dans `putting.js`. L'objectif de la semaine se règle dans le Menu (section Entraînement, bouton « Objectif semaine » ouvrant le pavé numérique) : la valeur est stockée dans `settings.weeklyGoal` et lue par `golfWeeklyGoal()`. Le type de la dernière séance est celui de l'activité la plus récente (Putting, ou Parcours pour une partie venue de Stats). Les symboles des deux encadrés ont la même boîte de 22 px (`.column_icon`), ce qui aligne les titres ; la date et le type de la dernière séance sont dans `.column_line`. Toutes ses requêtes DOM sont limitées à `#page-home`. Un `MutationObserver` sur `#page-home` pose `html.home-locked` tant que l'accueil est affiché (et la retire en le quittant) : `overscroll-behavior-y: none` (pas de rebond ; sans risque ici car l'accueil ne défile jamais), `user-select: none` et `-webkit-touch-callout: none` (pas de menu Copier / Chercher à l'appui long). Sous 600 px de large, `.page-wrapper` est en `position: fixed; inset: 0` et la photo prend tout l'écran ; au-dessus, l'accueil reste une carte centrée de 430 × 852 px (les iPhone les plus larges font 440 px : un seuil à 430 px les laissait en mode carte, avec du vide en haut et en bas). **Sous 600 px, le document dépasse volontairement l'écran de 2 px** (`body { min-height: calc(100lvh + 2px) }`, `overflow: visible`, `height: auto`) : sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812 (innerHeight, `100dvh`, bas d'un élément `fixed`) et la photo s'arrêtait 50 pt avant le bas ; dès qu'il peut défiler, iOS donne les 812 pt. Cette règle ne doit pas être supprimée sans retester sur iPhone. Le thème clair n'a aucune bande sous la barre d'état : sombre et clair ne diffèrent que par les couleurs. Le diagnostic temporaire du viewport (`core/diag.js` et son script du `<head>`) a été retiré le 19/10/2026.
 
 ### `modules/auth/auth.js` / `auth.css`
-Connexion et création de compte. La session est uniquement la clé `golfSession` du `localStorage` (`{ email, createdAt }`) : aucun serveur, la validation ne vérifie que le format de l'e-mail et la longueur du mot de passe (8 caractères minimum à l'inscription). Choisit la page de départ (`home` si session, sinon `login`), expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`). Réutilise `getBackgroundByHour()` de `HomePage.js`. Les liens légaux sous les formulaires (dans `index.html`) appellent `openHelpPage('cgu' | 'confidentialite', 'login' | 'signup')` de `menu.js` : le texte s'ouvre dans la page Menu et le bouton retour ramène à l'écran d'origine. Un `MutationObserver` sur `#page-login` pose `html.login-locked` tant que la page de connexion est affichée : sous 600 px, `html` et `body` en `overflow: visible`, `body` en `min-height: calc(100lvh + 2px)` et `overscroll-behavior-y: none`, comme pour l'accueil (sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812 et le bas de la page restait noir ; voir `HomePage.css`).
+Connexion, création de compte, mot de passe oublié et nouveau mot de passe, via Supabase Auth (`window.appSupabase`). Quatre formulaires (`data-auth-form` : `login`, `signup`, `forgot`, `reset`), chacun avec sa règle de validation (format de l'e-mail, 8 caractères minimum, confirmation identique) puis un appel dans `HANDLERS`. Les erreurs Supabase sont traduites en français (`friendlyError`) ; `showNotice` affiche un message d'information (classe `.auth_error.is-info`). Inscription : si la confirmation d'e-mail est active, retour à la connexion avec un message ; un e-mail déjà utilisé est détecté (utilisateur renvoyé sans identité). "Mot de passe oublié" répond toujours par le même message, que l'adresse existe ou non. `handleEmailLink()` traite le lien reçu par e-mail (`window.__authHash`) : confirmation -> accueil ; récupération -> page `reset-password` ; lien expiré -> connexion avec un message. La session est gardée par supabase-js sous `golfSupabaseAuth` ; `hasStoredSession()` la lit sans réseau pour choisir tout de suite la page de départ (`home` si session, sinon `login`). Si la session est perdue (événement `SIGNED_OUT`), retour à la connexion. Expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`, déconnexion locale à l'appareil). Réutilise `getBackgroundByHour()` de `HomePage.js`. Les liens légaux sous les formulaires (dans `index.html`) appellent `openHelpPage('cgu' | 'confidentialite', 'login' | 'signup')` de `menu.js` : le texte s'ouvre dans la page Menu et le bouton retour ramène à l'écran d'origine. Un `MutationObserver` sur `#page-login` pose `html.login-locked` tant que la page de connexion est affichée : sous 600 px, `html` et `body` en `overflow: visible`, `body` en `min-height: calc(100lvh + 2px)` et `overscroll-behavior-y: none`, comme pour l'accueil (sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812 et le bas de la page restait noir ; voir `HomePage.css`).
 
 ### `modules/menu/menu.js` / `menu.css`
 Profil et réglages. Gère l'état global persisté dans `golfAppState` : `userProfile`, `settings` (température, altitude, unités), `radars`, `golfBag`, `driverSettings`, `personalDistances`, `wedgeDistances`. Écrans : menu principal, sac de golf (`golfClubCatalog`), distances par club, et le groupe Aide & support (voir ci-dessous). Contient son propre pavé numérique (`openMenuKeypad`...) construit sur `appKeypad`. Expose `window.renderMenuTab`.
@@ -304,7 +346,7 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 
 | Clé | Écrite par | Contenu |
 |---|---|---|
-| `golfSession` | `auth.js` | e-mail et date de session |
+| `golfSupabaseAuth` | supabase-js (`core/supabase-client.js`) | session Supabase (jetons). L'ancienne clé `golfSession` est supprimée au chargement par `auth.js` |
 | `golfAppState` | `menu.js` | profil, réglages, radars, sac, distances |
 | `parcours-settings`, `parcours-fairway-unit` | `parcours-ui.js` | unités |
 | `parcours-fairway-round`, `parcours-green-round` | `parcours-ui.js` | tour en cours (Fairway, Green) |

@@ -621,15 +621,15 @@ const menuTodo = (label) => `[À COMPLÉTER : ${label}]`;
 const MENU_LEGAL = {
   appName: "All-in-1",
   appVersion: "1.0.0",
-  updatedAt: "6 octobre 2026",
+  updatedAt: "20 octobre 2026",
   editorName: "Pierre-Antton Ducoin",
   editorStatus: "éditeur non professionnel",
   contactEmail: "contactgolfevolution@gmail.com",
   backendName: "Supabase",
-  backendRegion: menuTodo("région du projet Supabase, de préférence dans l'Union européenne"),
-  hostName: menuTodo("hébergeur de l'application, en remplacement de Vercel"),
-  hostAddress: menuTodo("adresse de l'hébergeur"),
-  hostUrl: menuTodo("site web de l'hébergeur"),
+  backendRegion: "Irlande, Union européenne",
+  hostName: "Cloudflare, Inc.",
+  hostAddress: "101 Townsend Street, San Francisco, CA 94107, États-Unis",
+  hostUrl: "https://www.cloudflare.com",
 };
 
 function warnMenuLegalPlaceholders() {
@@ -903,7 +903,6 @@ const MENU_DOCS = {
         "{{backendName}} : base de données et authentification. Il agit comme sous-traitant, pour notre compte.",
         "{{hostName}} : hébergement de l'Application. Il voit les données techniques de connexion, dont l'adresse IP.",
         "FlyAway Golf (api.flyawaygolf.com) : lorsque vous recherchez un golf proche dans Stats, les coordonnées de votre position sont envoyées à ce service pour retrouver les parcours voisins. Rien n'est envoyé sans cette action de votre part.",
-        "Google et Apple : si vous vous connectez avec votre compte Google ou Apple, ils nous transmettent votre adresse e-mail et un identifiant, selon leurs propres politiques.",
         "Google Play, et plus tard l'App Store : distribution de l'Application, selon leurs propres politiques.",
       ] },
       { h: "5. Ce que nous ne faisons pas", p: [
@@ -1112,7 +1111,7 @@ window.addEventListener("load", () => {
   const id = new URLSearchParams(location.search).get("legal");
   if (!["cgu", "confidentialite", "mentions", "donnees"].includes(id)) return;
   let hasSession = false;
-  try { hasSession = !!localStorage.getItem("golfSession"); } catch (e) {}
+  try { hasSession = !!localStorage.getItem(window.APP_SESSION_KEY || "golfSupabaseAuth"); } catch (e) {}
   openHelpPage(id, hasSession ? null : "login");
 });
 
