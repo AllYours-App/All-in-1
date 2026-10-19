@@ -521,7 +521,7 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
 /* Résumé au-dessus de la liste : même marge latérale que les lignes */
 .wg-log-summary{max-width:var(--wg-max-width);margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px;}
 .wg-recap-dist{font-variant-numeric:tabular-nums;text-align:right;}
-.wg-recap-result{font-variant-numeric:tabular-nums;text-align:left;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wg-recap-result{font-variant-numeric:tabular-nums;text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* ---------- Jauges (Distance finale moyenne par palier) ---------- */
 .wg-gauge-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--wg-text-secondary);margin-bottom:10px;}

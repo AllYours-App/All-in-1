@@ -287,12 +287,12 @@
   opacity: 1;
 }
 
-/* Switch (thème sombre / clair) : le curseur glisse de gauche à droite */
+/* Switch à deux libellés (Clair | Sombre) : le curseur glisse de gauche à droite */
 #page-menu .mn-switch {
   position: relative;
   display: inline-flex;
-  width: 46px;
-  height: 28px;
+  width: 132px;
+  height: 34px;
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -303,33 +303,50 @@
   margin: 0;
   opacity: 0;
   cursor: pointer;
+  z-index: 2;
 }
 
 #page-menu .mn-switch_track {
+  position: relative;
   width: 100%;
   height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
   border-radius: 999px;
-  background: var(--mn-text-tertiary);
-  transition: background 0.2s ease;
+  background: var(--mn-bg);
+  border: 1px solid var(--mn-surface-border);
 }
 
 #page-menu .mn-switch_thumb {
   position: absolute;
   top: 3px;
+  bottom: 3px;
   left: 3px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #ffffff;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: var(--mn-accent);
   transition: transform 0.2s ease;
 }
 
-#page-menu .mn-switch input:checked ~ .mn-switch_track {
-  background: var(--mn-accent);
+#page-menu .mn-switch_opt {
+  position: relative;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mn-text-secondary);
+  transition: color 0.2s ease;
+  user-select: none;
+}
+
+/* Libellé de la position active, lisible sur le curseur */
+#page-menu .mn-switch input:not(:checked) ~ .mn-switch_track .mn-switch_opt:first-of-type,
+#page-menu .mn-switch input:checked ~ .mn-switch_track .mn-switch_opt:last-of-type {
+  color: #050505;
 }
 
 #page-menu .mn-switch input:checked ~ .mn-switch_track .mn-switch_thumb {
-  transform: translateX(18px);
+  transform: translateX(100%);
 }
 
 #page-menu .mn-switch input:focus-visible ~ .mn-switch_track {

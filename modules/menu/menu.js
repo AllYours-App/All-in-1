@@ -258,13 +258,18 @@ function optionsHtml(options, current) {
   return options.map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
 }
 
-// Switch glissant gauche (éteint) / droite (allumé)
-function settingSwitchRow(label, key, checked, onValue, offValue) {
+// Switch à deux positions : le curseur glisse vers la droite quand c'est coché.
+// Les deux libellés sont écrits dans le switch (gauche = éteint, droite = allumé).
+function settingSwitchRow(label, key, checked, [offLabel, offValue], [onLabel, onValue]) {
   return `
       <div class="field-row"><span class="label">${label}</span><span class="val">
         <label class="mn-switch">
-          <input type="checkbox" role="switch" aria-label="${label}" ${checked ? 'checked' : ''} onchange="updateMenuSetting('${key}', this.checked ? '${onValue}' : '${offValue}')">
-          <span class="mn-switch_track"><span class="mn-switch_thumb"></span></span>
+          <input type="checkbox" role="switch" aria-label="${label} : ${offLabel} ou ${onLabel}" ${checked ? 'checked' : ''} onchange="updateMenuSetting('${key}', this.checked ? '${onValue}' : '${offValue}')">
+          <span class="mn-switch_track">
+            <span class="mn-switch_thumb"></span>
+            <span class="mn-switch_opt">${offLabel}</span>
+            <span class="mn-switch_opt">${onLabel}</span>
+          </span>
         </label>
       </span></div>`;
 }
@@ -318,7 +323,7 @@ function renderMenuTab() {
     </div>
     <div class="field-list">
       <h3>Apparence</h3>
-      ${settingSwitchRow('Mode sombre', 'theme', settings.theme !== 'light', 'dark', 'light')}
+      ${settingSwitchRow('Thème', 'theme', settings.theme !== 'light', ['Clair', 'light'], ['Sombre', 'dark'])}
     </div>
     <div class="field-list">
       <h3>Entraînement</h3>
