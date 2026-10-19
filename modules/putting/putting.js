@@ -1234,23 +1234,10 @@ function renderExercicesStats() {
 const GOLF_WEEKLY_GOAL_DEFAULT = 5; // séances par semaine, valeur par défaut
 const GOLF_WEEKLY_GOAL_MAX = 14;
 
-// Objectif lu dans golfModulePrefs (module 'home', clé 'weeklyGoal')
+// Objectif de la semaine : réglé dans le Menu (settings.weeklyGoal)
 function golfWeeklyGoal() {
-  const n = parseInt(appPrefGet('home', 'weeklyGoal', GOLF_WEEKLY_GOAL_DEFAULT), 10);
+  const n = parseInt(settings.weeklyGoal, 10);
   return n >= 1 && n <= GOLF_WEEKLY_GOAL_MAX ? n : GOLF_WEEKLY_GOAL_DEFAULT;
-}
-
-// Appui sur l'encadré "Objectif semaine" de l'accueil
-async function editWeeklyGoal() {
-  const saisie = await appPrompt('Objectif de la semaine (séances, 1 à ' + GOLF_WEEKLY_GOAL_MAX + ')', String(golfWeeklyGoal()));
-  if (saisie === null) return;
-  const n = parseInt(String(saisie).trim(), 10);
-  if (!(n >= 1 && n <= GOLF_WEEKLY_GOAL_MAX)) {
-    await appAlert('Saisis un nombre entier entre 1 et ' + GOLF_WEEKLY_GOAL_MAX + '.');
-    return;
-  }
-  appPrefSet('home', 'weeklyGoal', n);
-  renderGolfHome();
 }
 const RING_CIRCUMFERENCE = 2 * Math.PI * 9; // r=9 dans le SVG de l'accueil
 
@@ -3901,5 +3888,4 @@ renderGolfHome();
 // Expose renderPuttingTab globalement pour être appelée depuis index.html
 window.renderPuttingTab = renderPuttingTab;
 window.renderGolfHome = renderGolfHome;
-window.editWeeklyGoal = editWeeklyGoal;
 

@@ -314,18 +314,6 @@ html.home-locked body {
   flex-shrink: 0;
 }
 
-/* Objectif de la semaine : toute la colonne se touche pour le modifier */
-.bottom-panel_column.is-goal {
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.bottom-panel_column.is-goal:focus-visible {
-  outline: 2px solid var(--color-blue);
-  outline-offset: 2px;
-  border-radius: 8px;
-}
-
 /* Colonne objectif : icône (anneau) + titre, puis valeur, puis barre de progression */
 .goal_progress-track {
   display: block;

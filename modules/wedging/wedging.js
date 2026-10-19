@@ -1400,17 +1400,13 @@ function wedgeExerciseReviewHtml() {
 function wedgeExerciseLogDetailHtml(ex) {
   const log = ex.logs.find(l => l.id === wedgeViewedLogId);
   if (!log) return wedgeExerciseReviewHtml();
-  const shotRows = log.shots.map((s, i) => {
-    let resultLabel, dotClass = '';
-    if (ex.resultMode === 'zone') { const dirLabel = s.direction || s.zone; resultLabel = `${dirLabel} — ${s.made ? 'Réussi' : 'Raté'}`; dotClass = s.made ? 'made' : 'missed'; }
-    else if (ex.resultMode === 'distance') resultLabel = `${s.resultDistance}m`;
-    else { resultLabel = s.made ? 'Réussi' : 'Raté'; dotClass = s.made ? 'made' : 'missed'; }
-    return `<li>${dotClass ? `<span class="wg-dot ${dotClass}"></span>` : ''}<span>Tir ${i + 1} — ${s.distance}m</span><span class="wg-text-muted-sm">${resultLabel}</span></li>`;
-  }).join('');
+  // Même grille que le récapitulatif : pastille | tir | distance | résultat
+  const hasDot = ex.resultMode !== 'distance';
+  const shotRows = log.shots.map((s, i) => `<li class="wg-recap-row${hasDot ? '' : ' no-dot'}">${hasDot ? `<span class="wg-dot ${s.made ? 'made' : 'missed'}"></span>` : ''}<span class="wg-recap-shot">Tir ${i + 1}</span><span class="wg-recap-dist">${s.distance} m</span><span class="wg-recap-result wg-text-muted-sm">${wedgeExRecapShotLabel(ex, s)}</span></li>`).join('');
   return `<div class="wg-topbar"><button class="wg-back-btn" onclick="closeWedgeExerciseLog()">${WedgeUI.ICONS.back} Retour</button><button class="wg-icon-btn" onclick="askDeleteWedgeLog(${log.id})">${WedgeUI.ICONS.trash}</button></div>
     <div class="wg-session-title">${appEscapeHtml(ex.name)}</div>
     <div class="wg-section-desc wg-text-center">${WedgeUI.formatDate(log.date)}</div>
-    <div class="wg-insight-card-title mt-8">${wedgeLogSummaryText(ex, log)}</div>
+    <div class="wg-insight-card-title wg-log-summary mt-8">${wedgeLogSummaryText(ex, log)}</div>
     <ul class="wg-session-list">${shotRows}</ul>
     <div style="height:24px;"></div>
     ${wedgeConfirmDeleteLogId !== null ? wedgeConfirmDeleteLogModalHtml() : ''}`;

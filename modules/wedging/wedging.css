@@ -518,6 +518,8 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   display:grid;grid-template-columns:8px 3.6em 3.4em minmax(0,1fr);align-items:center;column-gap:10px;
 }
 .wg-session-list li.wg-recap-row.no-dot{grid-template-columns:3.6em 3.4em minmax(0,1fr);}
+/* Résumé au-dessus de la liste : même marge latérale que les lignes */
+.wg-log-summary{max-width:var(--wg-max-width);margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px;}
 .wg-recap-dist{font-variant-numeric:tabular-nums;text-align:right;}
 .wg-recap-result{font-variant-numeric:tabular-nums;text-align:left;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 

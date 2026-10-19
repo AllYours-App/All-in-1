@@ -21,6 +21,7 @@ let settings = {
   distanceUnit: "m", // "ft" = yards (voir MENU_M_TO_YD)
   defaultRadarId: "radar_default",
   theme: "dark", // "dark" ou "light" (voir applyAppTheme dans commun.js)
+  weeklyGoal: 5, // objectif de séances par semaine affiché sur l'Accueil (1 à 14)
 };
 
 let radars = [
@@ -248,7 +249,6 @@ function topRowHtml(showLogout = false) {
 /* ==========================================================================
    Écran Menu (paramètres)
    ========================================================================== */
-const THEME_OPTIONS = [['dark', 'Sombre'], ['light', 'Clair']];
 const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
 const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'KPH']];
 const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'KPH']];
@@ -256,6 +256,17 @@ const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'K
 
 function optionsHtml(options, current) {
   return options.map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+// Switch glissant gauche (éteint) / droite (allumé)
+function settingSwitchRow(label, key, checked, onValue, offValue) {
+  return `
+      <div class="field-row"><span class="label">${label}</span><span class="val">
+        <label class="mn-switch">
+          <input type="checkbox" role="switch" aria-label="${label}" ${checked ? 'checked' : ''} onchange="updateMenuSetting('${key}', this.checked ? '${onValue}' : '${offValue}')">
+          <span class="mn-switch_track"><span class="mn-switch_thumb"></span></span>
+        </label>
+      </span></div>`;
 }
 
 function settingSelectRow(label, key, options) {
@@ -307,7 +318,13 @@ function renderMenuTab() {
     </div>
     <div class="field-list">
       <h3>Apparence</h3>
-      ${settingSelectRow('Thème', 'theme', THEME_OPTIONS)}
+      ${settingSwitchRow('Mode sombre', 'theme', settings.theme !== 'light', 'dark', 'light')}
+    </div>
+    <div class="field-list">
+      <h3>Entraînement</h3>
+      <div class="field-row"><span class="label">Objectif semaine</span><span class="val">
+        ${numButton({ title: 'Objectif semaine', target: 'setting:weeklyGoal', value: settings.weeklyGoal, unit: 'séances' }, `${settings.weeklyGoal} séance${settings.weeklyGoal > 1 ? 's' : ''}`)}
+      </span></div>
     </div>
     <div class="field-list">
       <h3>Conditions de référence</h3>
@@ -379,9 +396,16 @@ function updateMenuSetting(key, value) {
   if (key === 'distanceUnit' && value !== settings.distanceUnit) {
     convertStoredDistances(settings.distanceUnit, value);
   }
-  settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
+  if (key === 'weeklyGoal') {
+    // Entier entre 1 et 14 ; une saisie invalide garde l'objectif actuel
+    const n = parseInt(value, 10);
+    settings.weeklyGoal = n >= 1 && n <= 14 ? n : settings.weeklyGoal;
+  } else {
+    settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
+  }
   if (key === 'theme') applyAppTheme(value);
   saveMenuState();
+  if (key === 'weeklyGoal' && typeof renderGolfHome === 'function') renderGolfHome();
 }
 
 function updateDriverField(key, value) {
