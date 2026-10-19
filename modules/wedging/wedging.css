@@ -518,8 +518,8 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   display:grid;grid-template-columns:8px 3.6em 3.4em minmax(0,1fr);align-items:center;column-gap:10px;
 }
 .wg-session-list li.wg-recap-row.no-dot{grid-template-columns:3.6em 3.4em minmax(0,1fr);}
-.wg-recap-dist{font-variant-numeric:tabular-nums;}
-.wg-recap-result{text-align:right;min-width:0;}
+.wg-recap-dist{font-variant-numeric:tabular-nums;text-align:right;}
+.wg-recap-result{font-variant-numeric:tabular-nums;text-align:left;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* ---------- Jauges (Distance finale moyenne par palier) ---------- */
 .wg-gauge-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--wg-text-secondary);margin-bottom:10px;}

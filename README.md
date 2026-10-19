@@ -14,7 +14,7 @@ All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur t�
 Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
 
 ### Accueil
-Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine et date de la dernière séance. Un bouton de profil ouvre le Menu.
+Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine (on le touche pour le modifier, de 1 à 14 séances, 5 par défaut) et dernière séance (date et type d'entraînement sur la même ligne, un seul type : celui de l'activité la plus récente). Un bouton de profil ouvre le Menu.
 
 ### Menu (profil et réglages)
 C'est ici que le joueur renseigne ses informations personnelles, utilisées ensuite dans le reste de l'application :
@@ -54,7 +54,7 @@ Entraînement et suivi du putting :
 ### Wedging (jeu court, 30 à 110 m compris)
 - **Parcours** : après chaque coup d'approche, on note la distance qu'il fallait faire, puis la distance restante et la zone d'arrivée par rapport au drapeau (huit directions autour du trou, ou "coup rentré"). L'historique garde tous les coups, regroupés par jour (Aujourd'hui, Hier, puis la date) avec le nombre de coups du jour.
 - **Analyses** : dispersion (où tombent les balles pour chaque distance), distance (distance moyenne restante au drapeau pour chaque palier de distance à faire) et Strokes Gained. On y accède par le bouton 3 points du header ("Voir mes analyses"), qui ouvre la vue choisie par défaut ; les paliers peuvent être regroupés par 5 ou 10 m.
-- **Exercices** : exercices d'approche à créer, à jouer en séance, avec récapitulatif et revue. Une session interrompue se reprend depuis la carte « À reprendre » en haut de la liste (une carte par session) ou depuis le badge « En cours » de l'exercice.
+- **Exercices** : exercices d'approche à créer, à jouer en séance, avec récapitulatif et revue. Dans le récapitulatif, les tirs sont alignés en colonnes (pastille verte ou rouge, numéro, distance, résultat) et les mots « Réussi » et « Raté » ne s'affichent plus : la pastille suffit. Une session interrompue se reprend depuis la carte « À reprendre » en haut de la liste (une carte par session) ou depuis le badge « En cours » de l'exercice.
 
 ### Stats
 Tableau de bord des performances, rempli à partir des parties que le joueur saisit lui-même :
@@ -153,7 +153,7 @@ modules/menu/menu.js
 modules/auth/auth.js         (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`, puis `theme-light` en dernier (il doit passer après les autres pour les surcharger). Tous les CSS et JS locaux portent le même paramètre de version dans `index.html` (`?v=46`), à incrémenter partout à chaque déploiement qui modifie un fichier (remplacer `?v=46` par le numéro suivant dans toutes les balises).
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`, puis `theme-light` en dernier (il doit passer après les autres pour les surcharger). Chaque CSS et JS local porte un paramètre de version dans `index.html` (`?v=NN`), à incrémenter pour chaque fichier modifié à chaque déploiement. Les numéros ne sont plus identiques d'un fichier à l'autre (de `?v=54` à `?v=57` au 19/10/2026) : ne pas faire de remplacement global.
 
 ### Dépendances externes
 
@@ -240,7 +240,7 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login et Signup, les conteneurs
 **Marges des pages (modèle : Putting).** Deux variables dans `base.css` : `--app-padding-x` (20 px, 16 px sous 360 px) pour la marge horizontale, et `--app-page-top` (56 px + safe-area + 16 px) pour le début du contenu sous le header fixe. Toute nouvelle page ou tout nouveau bloc de page les utilise, sans valeur en dur. Exceptions volontaires : les écrans de Gym et de Parcours verrouillés à la hauteur de l'écran (accueil Gym, création de programme, accueil Parcours) gardent un décalage vertical plus serré. `.screen` de `parcours-ui.css` est limité à `#page-parcours` (via `:where()`, spécificité inchangée) : il s'appliquait aussi à Stats et doublait sa marge.
 
 ### `vendor/chart.umd.min.js`
-Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=46`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
+Chart.js 4.5.0 (licence MIT) : copie du fichier officiel `chart.umd.min.js` publié sur npm, chargée par `index.html` avec `?v=54`. Pour changer de version, remplacer ce fichier par celui de la nouvelle version (`npm pack chart.js@X.Y.Z`, dossier `dist/`).
 
 ### `core/theme-light.css`
 Thème clair, actif quand `<html data-theme="light">`. Il redéfinit les jetons de couleur de chaque module (`:root`, `#page-stats`, `#page-putting`, `#page-wedging`, Gym, Menu) puis adapte les couleurs codées en dur. Choix dans Menu > Apparence > Thème (réglage `settings.theme`, `"dark"` ou `"light"`, dans `golfAppState`) ; `applyAppTheme()` (`core/commun.js`) pose l'attribut et la couleur de la barre du navigateur, et un petit script du `<head>` d'`index.html` l'applique avant le premier affichage. Restent sombres en mode clair : la photo et la carte de l'accueil, la carte de Parcours, l'écran de connexion. Ajouter un jeton de couleur dans un module oblige à lui donner sa valeur claire ici. Palette revue le 19/10/2026 : fond ivoire verdâtre `#f1f3ea`, cartes blanc cassé `#fbfbf6`, texte vert très sombre `#1e2a20` (plus de noir ni de blanc purs), secondaire `#55615a`, discret `#66726a`, bordures `#d9dfcf` ; Gym, qui était bleu-gris, suit la même famille. Pour que les images ne tranchent plus sur l'interface : les boutons et le panneau de l'accueil sont en verre dépoli (`backdrop-filter`), le voile des cartes Gym est teinté, et les vignettes et photos d'en-tête de Gym sont éclaircies (`.thumb`, `.hero-photo`). Contrastes mesurés : texte et secondaire au-dessus de 5,7:1, discret 4,5:1 ; le vert d'accent `#3f8a0f` en texte sur les cartes reste à 4,2:1 (valeur d'origine, non modifiée).
@@ -251,7 +251,7 @@ Moteur Strokes Gained partagé. `sg-data.js` contient les tables de référence 
 ## Modules
 
 ### `modules/home/HomePage.js` / `HomePage.css`
-Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), Expose `window.renderHomeGreeting` (rappelée par `menu.js`). Le panneau du bas de l'accueil (objectif de la semaine, dernière séance) est rempli par `renderGolfHome()` dans `putting.js`. Toutes ses requêtes DOM sont limitées à `#page-home`. Un `MutationObserver` sur `#page-home` pose `html.home-locked` tant que l'accueil est affiché (et la retire en le quittant) : `overscroll-behavior-y: none` (pas de rebond ; sans risque ici car l'accueil ne défile jamais), `user-select: none` et `-webkit-touch-callout: none` (pas de menu Copier / Chercher à l'appui long). Sous 600 px de large, `.page-wrapper` est en `position: fixed; inset: 0` et la photo prend tout l'écran ; au-dessus, l'accueil reste une carte centrée de 430 × 852 px (les iPhone les plus larges font 440 px : un seuil à 430 px les laissait en mode carte, avec du vide en haut et en bas). **Sous 600 px, le document dépasse volontairement l'écran de 2 px** (`body { min-height: calc(100lvh + 2px) }`, `overflow: visible`, `height: auto`) : sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812 (innerHeight, `100dvh`, bas d'un élément `fixed`) et la photo s'arrêtait 50 pt avant le bas ; dès qu'il peut défiler, iOS donne les 812 pt. Cette règle ne doit pas être supprimée sans retester sur iPhone. Le thème clair n'a aucune bande sous la barre d'état : sombre et clair ne diffèrent que par les couleurs. Le diagnostic temporaire du viewport (`core/diag.js` et son script du `<head>`) a été retiré le 19/10/2026.
+Page d'accueil : fond selon l'heure (`getBackgroundByHour`, images `images/FondEcranHomePage*.webp`), prénom du profil (lu dans `golfAppState`), Expose `window.renderHomeGreeting` (rappelée par `menu.js`). Le panneau du bas de l'accueil (objectif de la semaine, dernière séance) est rempli par `renderGolfHome()` dans `putting.js`. L'objectif de la semaine se règle en touchant sa colonne (`editWeeklyGoal()`, popup `appPrompt`) : la valeur est stockée dans `golfModulePrefs` (module `home`, clé `weeklyGoal`) et lue par `golfWeeklyGoal()`. Le type de la dernière séance est celui de l'activité la plus récente (Putting, ou Parcours pour une partie venue de Stats). Les symboles des deux encadrés ont la même boîte de 22 px (`.column_icon`), ce qui aligne les titres ; la date et le type de la dernière séance sont dans `.column_line`. Toutes ses requêtes DOM sont limitées à `#page-home`. Un `MutationObserver` sur `#page-home` pose `html.home-locked` tant que l'accueil est affiché (et la retire en le quittant) : `overscroll-behavior-y: none` (pas de rebond ; sans risque ici car l'accueil ne défile jamais), `user-select: none` et `-webkit-touch-callout: none` (pas de menu Copier / Chercher à l'appui long). Sous 600 px de large, `.page-wrapper` est en `position: fixed; inset: 0` et la photo prend tout l'écran ; au-dessus, l'accueil reste une carte centrée de 430 × 852 px (les iPhone les plus larges font 440 px : un seuil à 430 px les laissait en mode carte, avec du vide en haut et en bas). **Sous 600 px, le document dépasse volontairement l'écran de 2 px** (`body { min-height: calc(100lvh + 2px) }`, `overflow: visible`, `height: auto`) : sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812 (innerHeight, `100dvh`, bas d'un élément `fixed`) et la photo s'arrêtait 50 pt avant le bas ; dès qu'il peut défiler, iOS donne les 812 pt. Cette règle ne doit pas être supprimée sans retester sur iPhone. Le thème clair n'a aucune bande sous la barre d'état : sombre et clair ne diffèrent que par les couleurs. Le diagnostic temporaire du viewport (`core/diag.js` et son script du `<head>`) a été retiré le 19/10/2026.
 
 ### `modules/auth/auth.js` / `auth.css`
 Connexion et création de compte. La session est uniquement la clé `golfSession` du `localStorage` (`{ email, createdAt }`) : aucun serveur, la validation ne vérifie que le format de l'e-mail et la longueur du mot de passe (8 caractères minimum à l'inscription). Choisit la page de départ (`home` si session, sinon `login`), expose `window.authLogout` (appelée par le bouton de déconnexion de `menu.js`). Réutilise `getBackgroundByHour()` de `HomePage.js`. Les liens légaux sous les formulaires (dans `index.html`) appellent `openHelpPage('cgu' | 'confidentialite', 'login' | 'signup')` de `menu.js` : le texte s'ouvre dans la page Menu et le bouton retour ramène à l'écran d'origine. Un `MutationObserver` sur `#page-login` pose `html.login-locked` tant que la page de connexion est affichée : sous 600 px, `html` et `body` en `overflow: visible`, `body` en `min-height: calc(100lvh + 2px)` et `overscroll-behavior-y: none`, comme pour l'accueil (sur iPhone en appli installée, un document qui ne défile pas n'obtient que 762 pt sur 812 et le bas de la page restait noir ; voir `HomePage.css`).
@@ -313,7 +313,7 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 | `wedgingShots`, `wedgingExercises`, `wedgingInProgressSessions` | `wedging.js` | coups (dont ceux importés de Stats : `source: 'stats'`, `statsKey`), exercices, sessions en cours |
 | `gym-programs-saved`, `gym-history`, `gym-goals`, `gym-active-program-id` | `gym.js` | programmes, historique, objectifs, programme actif |
 | `gym-session-draft` | `gym.js` | brouillon de la séance en cours (séries, exercice affiché, temps écoulé), effacé à la fin de la séance |
-| `golfModulePrefs` | `commun.js` (`appPrefSet`) | réglages d'affichage des menus 3 points (Putting, Wedging, Parcours, Gym) |
+| `golfModulePrefs` | `commun.js` (`appPrefSet`) | réglages d'affichage des menus 3 points (Putting, Wedging, Parcours, Gym) et objectif de la semaine de l'accueil (`home.weeklyGoal`) |
 | `golfStatsRounds` | `stats.js` | parties saisies dans Stats |
 | `golfStatsKpis` | `stats.js` | clés des indicateurs affichés dans "Mes indicateurs" (ordre d'affichage) |
 | `golfStatsRoundDraft` | `stats.js` | partie en cours (saisie rapide ou détaillée), effacée à l'enregistrement, ignorée après 24 h |
@@ -321,6 +321,14 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 ## Suivi des bugs
 
 Les bugs en cours, les tests à faire sur téléphone, les décisions attendues et l'historique des corrections ne sont plus dans ce fichier : ils sont dans `Suivi-des-bugs.docx` (statuts en couleur, répartition entre Claude et le propriétaire). Ce README décrit l'application et son code, plus les anomalies relevées lors des audits et les fonctionnalités à venir.
+
+### Anomalies relevées (correctifs du 19/10/2026, Accueil et Wedging)
+
+- **Wedging, récapitulatif d'exercice : valeurs mal alignées et mots « Réussi » / « Raté » inutiles.** Les colonnes distance et résultat étaient respectivement alignées à gauche et à droite, ce qui donnait des valeurs en escalier. Distance alignée à droite et résultat à gauche, sans les deux mots (la pastille indique déjà le résultat). Corrigé (`wedgeExRecapShotLabel`, `.wg-recap-dist`, `.wg-recap-result`) ; à contrôler sur téléphone.
+- **Accueil, encadrés du bas : titres et symboles désalignés.** L'anneau de l'objectif (22 px) et l'icône du calendrier (13 px) n'avaient pas la même largeur, donc les deux titres ne partaient pas du même point. Les deux symboles sont dans une boîte de 22 px. Corrigé ; à contrôler sur téléphone.
+- **Accueil, objectif de la semaine non modifiable** (valeur fixe `GOLF_WEEKLY_GOAL = 5`). Corrigé : réglable en touchant l'encadré.
+- **Accueil, dernière séance : date et type sur deux lignes.** Mis sur la même ligne. Le type ne dépendait que de la date de l'activité et pouvait afficher « Putting » alors que la dernière activité était une partie Stats ; il est maintenant tiré de l'activité la plus récente. Corrigé.
+- **README : numéro de version de cache.** Il annonçait un `?v=46` commun à tous les fichiers alors que `index.html` en utilise plusieurs (54 à 57). Texte corrigé.
 
 ### Anomalies relevées (correctifs du 18/10/2026)
 
@@ -343,7 +351,7 @@ Les bugs en cours, les tests à faire sur téléphone, les décisions attendues 
 - **Menus 3 points non testés sur appareil** : le code a été vérifié par des tests automatiques (bottom sheet, conversions kg/lb, paliers, ordre des outils) mais pas dans un navigateur ; l'effet du texte plus grand et du contraste renforcé de Parcours (marques du Fairway et du Green) est à contrôler sur téléphone.
 - **Putting : une saisie de "Nouveau parcours" interrompue n'a pas de reprise.** Quitter l'écran efface le formulaire (`closeNewParcoursModal`) ; seuls les exercices (créés ou rapides) peuvent être repris.
 - **Parcours : deux réglages d'unité encore stockés** (`parcours-settings` et `parcours-fairway-unit`) : le menu 3 points les règle ensemble, mais ils restent deux clés, et Menu garde son propre réglage (voir plus haut).
-- **Formats figés** : dates en `fr-FR` en dur (Putting, Stats), objectif hebdomadaire de Putting fixé dans le code (`GOLF_WEEKLY_GOAL = 5`).
+- **Formats figés** : dates en `fr-FR` en dur (Putting, Stats).
 
 ## Fonctionnalités à venir
 
@@ -364,7 +372,6 @@ Les menus de Putting, Wedging, Parcours et Gym existent (voir "Menu 3 points des
 ### Autres personnalisations envisagées
 
 - **Unités** : une seule unité de distance partagée par tous les modules (Parcours en a déjà une pour ses schémas et ses calculs ; Putting, Wedging et Stats restent en mètres), vent suivant `speedUnit`, °F, ft, in et oz pour température, altitude et driver.
-- **Objectif hebdomadaire** réglable depuis l'Accueil.
 - **Index cible** (scratch, 10, 20) comme référence Strokes Gained.
 - **Gaucher ou droitier**, pour les schémas Fairway et Green.
 - **Écran toujours allumé** pendant une partie ou une séance.

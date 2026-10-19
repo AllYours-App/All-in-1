@@ -1126,9 +1126,10 @@ function finishWedgeExElevatorSession() {
 
 /* ---------- Récapitulatif modifiable avant enregistrement ---------- */
 function wedgeExRecapShotLabel(ex, s) {
-  if (ex.resultMode === 'zone') return `${s.direction || s.zone} — ${s.made ? 'Réussi' : 'Raté'}`;
+  // La pastille (verte / rouge) indique déjà réussi ou raté : pas de mot en plus
+  if (ex.resultMode === 'zone') return `${s.direction || s.zone}`;
   if (ex.resultMode === 'distance') return `${s.resultDistance}m`;
-  return s.made ? 'Réussi' : 'Raté';
+  return '';
 }
 function toggleWedgeRecapShot(i) {
   const ex = wedgeExercises.find(e => e.id === wedgeExRecap.exerciseId); if (!ex) return;

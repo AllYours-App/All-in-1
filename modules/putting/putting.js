@@ -1231,7 +1231,27 @@ function renderExercicesStats() {
    Alimentés par l'activité putting : parcours + exercices rapides + exercices créés.
    Distance moyenne et Index ne dépendent pas du putting : non touchés ici.
    ============================================================ */
-const GOLF_WEEKLY_GOAL = 5; // séances par semaine
+const GOLF_WEEKLY_GOAL_DEFAULT = 5; // séances par semaine, valeur par défaut
+const GOLF_WEEKLY_GOAL_MAX = 14;
+
+// Objectif lu dans golfModulePrefs (module 'home', clé 'weeklyGoal')
+function golfWeeklyGoal() {
+  const n = parseInt(appPrefGet('home', 'weeklyGoal', GOLF_WEEKLY_GOAL_DEFAULT), 10);
+  return n >= 1 && n <= GOLF_WEEKLY_GOAL_MAX ? n : GOLF_WEEKLY_GOAL_DEFAULT;
+}
+
+// Appui sur l'encadré "Objectif semaine" de l'accueil
+async function editWeeklyGoal() {
+  const saisie = await appPrompt('Objectif de la semaine (séances, 1 à ' + GOLF_WEEKLY_GOAL_MAX + ')', String(golfWeeklyGoal()));
+  if (saisie === null) return;
+  const n = parseInt(String(saisie).trim(), 10);
+  if (!(n >= 1 && n <= GOLF_WEEKLY_GOAL_MAX)) {
+    await appAlert('Saisis un nombre entier entre 1 et ' + GOLF_WEEKLY_GOAL_MAX + '.');
+    return;
+  }
+  appPrefSet('home', 'weeklyGoal', n);
+  renderGolfHome();
+}
 const RING_CIRCUMFERENCE = 2 * Math.PI * 9; // r=9 dans le SVG de l'accueil
 
 function allActivityDates() {
@@ -1256,10 +1276,11 @@ function renderGolfHome() {
   const weekMs = 7 * 24 * 60 * 60 * 1000;
   const now = Date.now();
   const count = dates.filter(function (d) { return (now - new Date(d).getTime()) <= weekMs; }).length;
-  const ratio = Math.min(1, count / GOLF_WEEKLY_GOAL);
+  const goal = golfWeeklyGoal();
+  const ratio = Math.min(1, count / goal);
 
   const ring = q('goal-ring');
-  if (ring) ring.textContent = count + '/' + GOLF_WEEKLY_GOAL;
+  if (ring) ring.textContent = count + '/' + goal;
   const val = q('goal-value');
   if (val) val.textContent = count + (count > 1 ? ' séances' : ' séance');
   const fill = q('goal-progress-fill');
@@ -1273,13 +1294,15 @@ function renderGolfHome() {
 
   const lastVal = q('last-session-value');
   const lastSec = q('last-session-secondary');
-  if (dates.length) {
-    const lastISO = dates.slice().sort().pop();
-    // Une partie saisie dans Stats (source 'stats') est une partie sur le parcours, pas du putting
-    const lastIsStatsRound = puttingRounds.some(function (r) { return r.dateISO === lastISO && r.source === 'stats'; })
-      && !puttingSessions.some(function (s) { return s.dateISO === lastISO; });
-    if (lastVal) lastVal.textContent = relativeDayLabel(lastISO);
-    if (lastSec) lastSec.textContent = lastIsStatsRound ? 'Parcours' : 'Putting';
+  // Un seul type d'entraînement : celui de l'activité la plus récente
+  const entries = puttingSessions.map(function (s) { return { iso: s.dateISO, type: 'Putting' }; })
+    .concat(puttingRounds.map(function (r) { return { iso: r.dateISO, type: r.source === 'stats' ? 'Parcours' : 'Putting' }; }))
+    .filter(function (e) { return e.iso; });
+  if (entries.length) {
+    // Tri par date ; à égalité exacte, l'entrée ajoutée en dernier l'emporte
+    const last = entries.reduce(function (best, e) { return new Date(e.iso) >= new Date(best.iso) ? e : best; });
+    if (lastVal) lastVal.textContent = relativeDayLabel(last.iso);
+    if (lastSec) lastSec.textContent = last.type;
   } else {
     if (lastVal) lastVal.textContent = '--';
     if (lastSec) lastSec.textContent = '';
@@ -3878,4 +3901,5 @@ renderGolfHome();
 // Expose renderPuttingTab globalement pour être appelée depuis index.html
 window.renderPuttingTab = renderPuttingTab;
 window.renderGolfHome = renderGolfHome;
+window.editWeeklyGoal = editWeeklyGoal;
 

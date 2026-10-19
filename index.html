@@ -16,9 +16,9 @@
 <meta name="apple-mobile-web-app-title" content="Golf App">
 <link rel="stylesheet" href="core/base.css?v=54">
 <link rel="stylesheet" href="core/commun.css?v=54">
-<link rel="stylesheet" href="modules/home/HomePage.css?v=54">
+<link rel="stylesheet" href="modules/home/HomePage.css?v=55">
 <link rel="stylesheet" href="modules/parcours/parcours-ui.css?v=54">
-<link rel="stylesheet" href="modules/wedging/wedging.css?v=56">
+<link rel="stylesheet" href="modules/wedging/wedging.css?v=57">
 <link rel="stylesheet" href="modules/gym/gym.css?v=56">
 <link rel="stylesheet" href="modules/putting/putting.css?v=56">
 <link rel="stylesheet" href="modules/vitesse/vitesse.css?v=54">
@@ -145,7 +145,7 @@
     <!-- PANNEAU STATISTIQUES -->
     <div class="bottom-panel_wrapper">
 
-      <div class="bottom-panel_column is-goal">
+      <div class="bottom-panel_column is-goal" role="button" tabindex="0" aria-label="Modifier l'objectif de la semaine" onclick="editWeeklyGoal()" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); editWeeklyGoal(); }">
         <div class="column_header">
           <span class="progress-ring_wrapper">
             <svg class="progress-ring_svg" viewBox="0 0 22 22">
@@ -174,8 +174,10 @@
           </span>
           <span class="column_label">Dernière séance</span>
         </div>
-        <span class="column_value" data-stat="last-session-value">--</span>
-        <span class="column_secondary" data-stat="last-session-secondary"></span>
+        <div class="column_line">
+          <span class="column_value" data-stat="last-session-value">--</span>
+          <span class="column_secondary" data-stat="last-session-secondary"></span>
+        </div>
       </div>
 
     </div>
@@ -1020,9 +1022,9 @@
 <script src="core/strokes-gained.js?v=54"></script>
 <script src="modules/home/HomePage.js?v=54"></script>
 <script src="modules/parcours/parcours-ui.js?v=54"></script>
-<script src="modules/wedging/wedging.js?v=55"></script>
+<script src="modules/wedging/wedging.js?v=56"></script>
 <script src="modules/gym/gym.js?v=55"></script>
-<script src="modules/putting/putting.js?v=55"></script>
+<script src="modules/putting/putting.js?v=56"></script>
 <script src="modules/vitesse/vitesse.js?v=54"></script>
 <script src="modules/stats/stats.js?v=55"></script>
 <script src="modules/menu/menu.js?v=54"></script>
