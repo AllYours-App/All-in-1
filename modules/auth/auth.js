@@ -28,6 +28,53 @@
   // showPage() vient de app-shell.js, chargé en premier ; le typeof protège seulement d'un oubli de la balise <script>
   const goTo = (page) => { if (typeof showPage === 'function') showPage(page); };
 
+  /* ---------- Données locales et comptes ----------
+     Tant que les données ne sont pas synchronisées avec Supabase, elles restent dans le localStorage de l'appareil.
+     - Le premier compte qui se connecte reprend celles qui sont déjà là (elles datent d'avant les comptes).
+     - Si un autre compte se connecte ensuite, les données du précédent sont mises de côté (clé golfStash_<id>) et
+       celles de ce compte, s'il en avait déjà, sont remises en place. Rien n'est effacé.
+     À retirer quand la synchronisation sera en place (les données seront alors sur le serveur). */
+  const ACCOUNT_KEY = 'golfAccountUserId';
+  const STASH_PREFIX = 'golfStash_';
+
+  // Retourne true si les données ont été échangées : la page doit alors être rechargée
+  // (les modules gardent leurs données en mémoire).
+  function claimLocalData(userId) {
+    if (!userId) return false;
+    try {
+      const previous = localStorage.getItem(ACCOUNT_KEY);
+      if (previous === userId) return false;
+      if (!previous) { localStorage.setItem(ACCOUNT_KEY, userId); return false; }
+
+      const appKeys = Object.keys(localStorage).filter(
+        (k) => k !== SESSION_KEY && k !== ACCOUNT_KEY && !k.startsWith(STASH_PREFIX)
+      );
+      const snapshot = {};
+      appKeys.forEach((k) => { snapshot[k] = localStorage.getItem(k); });
+      // Si la mise de côté échoue (place insuffisante), on ne touche à rien
+      localStorage.setItem(STASH_PREFIX + previous, JSON.stringify(snapshot));
+      appKeys.forEach((k) => localStorage.removeItem(k));
+
+      const saved = localStorage.getItem(STASH_PREFIX + userId);
+      if (saved) {
+        const entries = JSON.parse(saved);
+        Object.keys(entries).forEach((k) => localStorage.setItem(k, entries[k]));
+        localStorage.removeItem(STASH_PREFIX + userId);
+      }
+      localStorage.setItem(ACCOUNT_KEY, userId);
+      return true;
+    } catch (e) {
+      console.warn('Auth : échange des données locales impossible', e);
+      return false;
+    }
+  }
+
+  // Session déjà présente au chargement (appli ouverte avec un compte connecté)
+  try {
+    const stored = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (stored && stored.user && claimLocalData(stored.user.id)) location.reload();
+  } catch (e) {}
+
   /* ---------- Session ---------- */
 
   // Lecture synchrone du localStorage (pour afficher tout de suite la bonne page, sans attendre le réseau).
@@ -217,12 +264,13 @@
 
   const HANDLERS = {
     async login(form) {
-      const { error } = await sb.auth.signInWithPassword({
+      const { data, error } = await sb.auth.signInWithPassword({
         email: form.elements.email.value.trim(),
         password: form.elements.password.value,
       });
       if (error) throw error;
       resetForm(form);
+      if (data.user && claimLocalData(data.user.id)) { location.reload(); return; }
       goTo('home');
     },
 
@@ -240,7 +288,11 @@
         throw { code: 'user_already_exists' };
       }
       resetForm(form);
-      if (data.session) { goTo('home'); return; } // confirmation d'e-mail désactivée : déjà connecté
+      if (data.session) { // confirmation d'e-mail désactivée : déjà connecté
+        if (data.user && claimLocalData(data.user.id)) { location.reload(); return; }
+        goTo('home');
+        return;
+      }
       goTo('login');
       showNotice('login', 'Compte créé. Ouvrez le lien envoyé à ' + email + ' pour le confirmer, puis connectez-vous.');
     },
@@ -255,9 +307,10 @@
     },
 
     async reset(form) {
-      const { error } = await sb.auth.updateUser({ password: form.elements.password.value });
+      const { data, error } = await sb.auth.updateUser({ password: form.elements.password.value });
       if (error) throw error;
       resetForm(form);
+      if (data.user && claimLocalData(data.user.id)) { location.reload(); return; }
       goTo('home');
     },
   };
@@ -309,10 +362,11 @@
     };
 
     if (p.get('access_token') && p.get('refresh_token') && sb) {
-      sb.auth.setSession({ access_token: p.get('access_token'), refresh_token: p.get('refresh_token') }).then(({ error }) => {
+      sb.auth.setSession({ access_token: p.get('access_token'), refresh_token: p.get('refresh_token') }).then(({ data, error }) => {
         if (error) { done('login', 'Ce lien n\'est plus valable. Connectez-vous, ou refaites une demande.'); return; }
-        if (p.get('type') === 'recovery') done('reset-password');
-        else done('home');
+        if (p.get('type') === 'recovery') { done('reset-password'); return; } // l'échange des données se fait après le nouveau mot de passe
+        if (data && data.user && claimLocalData(data.user.id)) { location.reload(); return; }
+        done('home');
       }).catch(() => done('login', 'Connexion impossible. Vérifiez votre réseau et réessayez.'));
     } else if (p.get('error') || p.get('error_code')) {
       const expired = p.get('error_code') === 'otp_expired';

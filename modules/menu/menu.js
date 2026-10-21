@@ -1035,6 +1035,8 @@ async function exportMenuData() {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
+      // Jamais dans l'export : les jetons de session, l'identifiant du compte et les données d'un autre compte (voir auth.js)
+      if (key === (window.APP_SESSION_KEY || "golfSupabaseAuth") || key === "golfAccountUserId" || key.startsWith("golfStash_")) continue;
       const raw = localStorage.getItem(key);
       try { data[key] = JSON.parse(raw); } catch (e) { data[key] = raw; }
     }
