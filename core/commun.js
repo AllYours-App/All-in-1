@@ -89,6 +89,8 @@ function appNotifyStorageError() {
 function appSafeSetItem(key, value) {
   try {
     localStorage.setItem(key, value);
+    // Synchronisation avec Supabase (core/data.js, chargé après ce fichier : absent pendant le chargement)
+    if (window.appData) window.appData.onWrite(key);
     return true;
   } catch (e) {
     console.warn('Écriture localStorage impossible (' + key + ') :', e);

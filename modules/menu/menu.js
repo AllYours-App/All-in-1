@@ -1072,11 +1072,20 @@ async function exportMenuData() {
 function askDeleteMenuData() { menuDeleteConfirm = true; currentRender(); }
 function cancelDeleteMenuData() { menuDeleteConfirm = false; currentRender(); }
 
-function deleteMenuData() {
-  // TODO Supabase : appeler d'abord une Edge Function qui supprime l'utilisateur (auth.admin.deleteUser) et ses lignes,
-  // et n'effacer en local qu'après sa confirmation. Tant que ce n'est pas fait, la suppression ne touche que l'appareil.
+async function deleteMenuData() {
+  // Les données sont sur le serveur : on les efface d'abord là-bas, sinon elles reviendraient à la prochaine ouverture.
+  // En cas d'échec (réseau), on n'efface rien en local et on prévient la personne.
+  try {
+    if (window.appData) await window.appData.deleteRemote();
+  } catch (e) {
+    console.warn('Suppression des données impossible', e);
+    if (typeof appAlert === 'function') await appAlert('Suppression impossible : vérifiez votre connexion et réessayez.');
+    return;
+  }
+  // TODO Supabase : appeler une Edge Function qui supprime aussi l'utilisateur (auth.admin.deleteUser).
+  // Tant que ce n'est pas fait, le compte lui-même reste : seules ses données sont effacées.
   try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
-  // Rechargement : remet à zéro l'état gardé en mémoire par tous les modules ; sans session, la page de connexion s'affiche
+  // Rechargement : remet à zéro l'état gardé en mémoire par tous les modules
   location.replace(location.pathname);
 }
 

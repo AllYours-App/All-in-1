@@ -46,7 +46,7 @@ let parcoursSettings = { distanceUnit: "m" };
 })();
 
 function saveSettings() {
-  try { localStorage.setItem(PARCOURS_SETTINGS_KEY, JSON.stringify(parcoursSettings)); } catch (e) { /* pas grave */ }
+  appSafeSetItem(PARCOURS_SETTINGS_KEY, JSON.stringify(parcoursSettings));
 }
 
 function convertDistance(meters, unit) {
@@ -73,7 +73,7 @@ function trackDistance(meters) {
 }
 function toggleTrackUnit() {
   trackUnit = trackUnit === "m" ? "yd" : "m";
-  try { localStorage.setItem(TRACK_UNIT_KEY, trackUnit); } catch (e) { /* pas grave */ }
+  appSafeSetItem(TRACK_UNIT_KEY, trackUnit);
   renderFairway();
   renderGreen();
 }
@@ -1481,7 +1481,7 @@ function parcoursApplyPrefs() {
 function setParcoursUnit(unit) {
   if (unit !== "m" && unit !== "yd") return;
   trackUnit = unit;
-  try { localStorage.setItem(TRACK_UNIT_KEY, trackUnit); } catch (e) { /* pas grave */ }
+  appSafeSetItem(TRACK_UNIT_KEY, trackUnit);
   setDistanceUnit(unit); // enregistre parcoursSettings et redessine les modales
   renderFairway();
   renderGreen();
