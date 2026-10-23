@@ -3,15 +3,35 @@
    Expose window.appData. Chargé après commun.js et avant les modules.
 
    Principe : les données appartiennent au COMPTE, pas à l'appareil.
-   - Le serveur (Supabase) est la référence. Le localStorage n'en est qu'une copie de travail :
+   - Le serveur (Supabase) est la référence. Le localStorage en est la copie de travail :
      les modules continuent de lire et d'écrire dedans comme avant.
    - Écriture : appSafeSetItem (commun.js) prévient ce module à chaque écriture d'une clé connue.
-     Il compare avec ce que le serveur a déjà et n'envoie que ce qui a changé.
-     Une suppression n'efface pas la ligne : elle renseigne deleted_at (suppression douce).
-   - Lecture : au démarrage avec une session, tout est relu depuis le serveur. Si la copie locale
-     diffère, elle est remplacée et la page se recharge une fois (les modules gardent leurs
-     données en mémoire).
+     La clé est notée "en attente" (golfSyncPending, dans le localStorage : elle survit à la fermeture
+     de l'appli). Dès que le réseau et les données du serveur sont là, il compare avec ce que le serveur
+     contient et n'envoie que ce qui a changé. Une suppression n'efface pas la ligne : elle renseigne
+     deleted_at (suppression douce).
+   - MODE HORS LIGNE : sans réseau, tout continue de fonctionner sur la copie locale. Les clés modifiées
+     restent en attente et partent au retour du réseau, même si l'appli a été fermée entre-temps.
+   - Lecture : au démarrage avec une session, tout est relu depuis le serveur. Une clé sans modification
+     en attente est remplacée par la version du serveur. Une clé avec modifications en attente est
+     FUSIONNÉE élément par élément (voir "Fusion") : rien de ce qui a été saisi hors ligne n'est perdu.
    - Changement de compte ou déconnexion : la copie locale est vidée. Rien n'est partagé entre comptes.
+
+   Fusion (clé avec modifications en attente). Pour chaque élément, on compare 3 versions :
+     base (ce que le serveur contenait la dernière fois que cet appareil s'est synchronisé, golfSyncBase),
+     locale, serveur.
+   - modifié ici seulement          -> la version locale part sur le serveur
+   - modifié sur le serveur seulement -> la version du serveur est reprise
+   - modifié des deux côtés         -> la dernière modification gagne : date de la dernière écriture locale
+                                       de la clé (golfSyncPending) contre updated_at du serveur
+   La date locale est celle de la clé entière, pas de chaque élément : deux appareils qui modifient le
+   MÊME élément, dont un hors ligne, peuvent se départager à tort.
+
+   Mise à jour en cours d'utilisation ("late") : si les données du serveur arrivent alors que la personne
+   utilise déjà l'appli (retour du réseau après un démarrage hors ligne, ou réponse très lente), la copie
+   locale n'est PAS remplacée : les modules gardent leurs données en mémoire et les réécriraient par-dessus.
+   Seules les modifications locales sont envoyées ; si le serveur a des données plus récentes, l'événement
+   'appdata:status' passe en état 'reload' et offline.js propose d'actualiser. Aucun rechargement forcé.
 
    Tables (supabase/schema.sql) :
    - 10 tables de listes : user_id, id (texte), occurred_at, data (jsonb), created_at, updated_at, deleted_at.
@@ -21,8 +41,10 @@
    Hors périmètre (reste sur l'appareil) : brouillons et parties en cours (golfStatsRoundDraft,
    gym-session-draft, putting_resume*, wedgingInProgressSessions, parcours-fairway-round,
    parcours-green-round).
-   Pas de mode hors ligne : sans réseau, la copie locale reste utilisable mais rien n'est envoyé,
-   et la copie est remplacée par celle du serveur à la prochaine ouverture avec réseau.
+
+   Événement window 'appdata:status' (detail : { state, pending, reload }) :
+     state = 'pending' (modifications à envoyer), 'syncing' (envoi en cours), 'error' (envoi impossible,
+     nouvel essai automatique), 'idle' (tout est envoyé), 'reload' (données plus récentes sur le serveur).
    ============================================================ */
 (function () {
   'use strict';
@@ -31,11 +53,16 @@
   const SESSION_KEY = window.APP_SESSION_KEY || 'golfSupabaseAuth';
   // Compte auquel appartient la copie locale (permet de la vider quand un autre compte se connecte)
   const ACCOUNT_KEY = 'golfAccountUserId';
+  // Clés d'état de la synchronisation. Vidées avec le reste des données (wipeApp), sauf si la clé est protégée.
+  const BASE_KEY = 'golfSyncBase';        // { v, uid, lists: { clé: { id: [hash, occurred_at] } }, profile: { colonne: hash } }
+  const PENDING_KEY = 'golfSyncPending';  // { clé: date (ms) de la dernière modification locale non envoyée }
 
-  const SEND_DELAY_MS = 200;     // regroupe les écritures rapprochées en un seul envoi
-  const RETRY_DELAY_MS = 5000;   // nouvel essai après un échec d'envoi
-  const PAGE_SIZE = 1000;        // PostgREST renvoie au plus 1000 lignes par requête
-  const UPSERT_CHUNK = 50;       // une partie Stats peut être lourde : paquets de 50 lignes
+  const SEND_DELAY_MS = 200;      // regroupe les écritures rapprochées en un seul envoi
+  const RETRY_MIN_MS = 5000;      // nouvel essai après un échec d'envoi, doublé à chaque échec...
+  const RETRY_MAX_MS = 60000;     // ...jusqu'à une minute
+  const FLUSH_WAIT_MS = 6000;     // attente maximale de l'envoi avant de recharger la page
+  const PAGE_SIZE = 1000;         // PostgREST renvoie au plus 1000 lignes par requête
+  const UPSERT_CHUNK = 50;        // une partie Stats peut être lourde : paquets de 50 lignes
   const DELETE_CHUNK = 100;
 
   // Clé localStorage -> table. newestFirst : le module range les plus récents en premier (unshift)
@@ -63,15 +90,17 @@
   };
 
   let userId = null;
-  let ready = false;          // vrai une fois les données du serveur lues : avant, aucune écriture n'est envoyée
+  let ready = false;          // vrai une fois les données du serveur lues : avant, aucun envoi
   let startPromise = null;
-  const snaps = {};           // clé de liste -> Map(id -> { canon, occurredAt }) : ce que le serveur contient
-  const profileSnap = {};     // colonne -> forme canonique de ce que le serveur contient
-  const dirty = new Set();    // clés modifiées en attente d'envoi
+  let syncing = false;
+  let needsReload = false;    // le serveur a des données plus récentes que celles affichées (mode "late")
+  let pending = {};           // clé -> date (ms) de la dernière modification locale non envoyée (copie de golfSyncPending)
+  const base = {};            // clé de liste -> Map(id -> { h, o }) : hash de l'élément tel que le serveur le contenait, occurred_at
+  const profBase = {};        // colonne -> hash de la valeur que le serveur contenait
   let sendTimer = null;
   let retryTimer = null;
+  let retryDelay = RETRY_MIN_MS;
   let chain = Promise.resolve();
-  let lastWarnAt = 0;
 
   /* ---------- Utilitaires ---------- */
 
@@ -82,6 +111,22 @@
     return '{' + Object.keys(v).filter((k) => v[k] !== undefined).sort()
       .map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
   }
+
+  // Empreinte courte d'une chaîne (cyrb53 + longueur) : de quoi retrouver si un élément a changé sans garder son contenu
+  function hash(str) {
+    let h1 = 0xdeadbeef;
+    let h2 = 0x41c6ce57;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return str.length.toString(36) + '.' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+
+  const hashOf = (value) => hash(canon(value));
 
   function parse(raw) {
     try { return raw === null || raw === undefined ? null : JSON.parse(raw); } catch (e) { return undefined; }
@@ -126,19 +171,60 @@
     } catch (e) { return null; }
   }
 
-  // Message court, sans empiler les alertes
-  function notify(message) {
-    const now = Date.now();
-    if (now - lastWarnAt < 30000 || !document.body) return;
-    lastWarnAt = now;
-    const toast = document.createElement('div');
-    toast.setAttribute('role', 'alert');
-    toast.textContent = message;
-    toast.style.cssText = 'position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom, 0px));' +
-      'z-index:10000;padding:14px 16px;border-radius:14px;background:#2a1215;color:#ffd9d9;' +
-      'border:1px solid rgba(255,120,120,.45);font-size:14px;line-height:1.35;text-align:center;';
-    document.body.appendChild(toast);
-    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 6000);
+  const isOnline = () => navigator.onLine !== false;
+  const isKnownKey = (k) => !!(LISTS[k] || PROFILE[k]);
+  const pendingKeys = () => Object.keys(pending).filter(isKnownKey);
+
+  /* ---------- État de la synchronisation (survit à la fermeture de l'appli) ---------- */
+
+  function savePending() {
+    try {
+      if (pendingKeys().length) localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+      else localStorage.removeItem(PENDING_KEY);
+    } catch (e) { console.warn('Données : file d\'attente non enregistrée', e); }
+  }
+
+  function saveBase() {
+    if (!userId) return;
+    try {
+      const lists = {};
+      Object.keys(base).forEach((k) => {
+        const o = {};
+        base[k].forEach((v, id) => { o[id] = [v.h, v.o]; });
+        lists[k] = o;
+      });
+      localStorage.setItem(BASE_KEY, JSON.stringify({ v: 1, uid: userId, lists, profile: profBase }));
+    } catch (e) { console.warn('Données : état de synchronisation non enregistré', e); }
+  }
+
+  function loadState(uid) {
+    pending = {};
+    Object.keys(base).forEach((k) => delete base[k]);
+    Object.keys(profBase).forEach((c) => delete profBase[c]);
+    const p = parse(localStorage.getItem(PENDING_KEY));
+    if (p && typeof p === 'object' && !Array.isArray(p)) {
+      Object.keys(p).forEach((k) => { if (isKnownKey(k) && typeof p[k] === 'number') pending[k] = p[k]; });
+    }
+    const b = parse(localStorage.getItem(BASE_KEY));
+    if (b && b.v === 1 && b.uid === uid) {
+      Object.keys(b.lists || {}).forEach((k) => {
+        if (!LISTS[k]) return;
+        base[k] = new Map(Object.keys(b.lists[k]).map((id) => [id, { h: b.lists[k][id][0], o: b.lists[k][id][1] }]));
+      });
+      Object.assign(profBase, b.profile || {});
+    }
+  }
+
+  /* ---------- État visible par l'interface (offline.js) ---------- */
+
+  function status() {
+    return { pending: pendingKeys().length, syncing, ready, reload: needsReload, online: isOnline() };
+  }
+
+  function emit(state) {
+    const s = status();
+    if (!state) state = needsReload && !s.pending ? 'reload' : (s.syncing ? 'syncing' : (s.pending ? 'pending' : 'idle'));
+    try { window.dispatchEvent(new CustomEvent('appdata:status', { detail: { state, pending: s.pending, reload: s.reload } })); } catch (e) {}
   }
 
   /* ---------- Copie locale ---------- */
@@ -173,8 +259,11 @@
     try { had = !!localStorage.getItem(ACCOUNT_KEY); } catch (e) {}
     wipeApp();
     try { localStorage.removeItem(ACCOUNT_KEY); } catch (e) {}
-    userId = null; ready = false; startPromise = null;
-    dirty.clear();
+    userId = null; ready = false; startPromise = null; needsReload = false;
+    clearTimeout(sendTimer); clearTimeout(retryTimer);
+    pending = {};
+    Object.keys(base).forEach((k) => delete base[k]);
+    Object.keys(profBase).forEach((c) => delete profBase[c]);
     return had;
   }
 
@@ -186,7 +275,7 @@
     const rows = [];
     for (let from = 0; ; from += PAGE_SIZE) {
       const { data, error } = await sb.from(cfg.table)
-        .select('id,data,occurred_at')
+        .select('id,data,occurred_at,updated_at')
         .is('deleted_at', null)
         .order('occurred_at', { ascending: asc, nullsFirst: false })
         .order('created_at', { ascending: asc })
@@ -205,61 +294,170 @@
     return data; // null si la ligne n'existe pas encore
   }
 
-  // Remplace la copie locale par les données du serveur. Renvoie true si quelque chose a changé.
-  async function pull() {
+  const sortedHashes = (hashes) => hashes.slice().sort().join('\n');
+
+  function writeLocal(key, value) {
+    try {
+      if (value === null || (Array.isArray(value) && !value.length)) localStorage.removeItem(key);
+      else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+      return true;
+    } catch (e) { console.warn('Données : écriture locale impossible (' + key + ')', e); return false; }
+  }
+
+  // Une liste avec modifications en attente : fusion élément par élément (voir l'en-tête du fichier).
+  // Renvoie { final, differs } : la liste fusionnée et si elle diffère de la copie locale.
+  function mergeList(key, rows, serverMap, localItems, late) {
+    const cfg = LISTS[key];
+    const b = base[key] || new Map();
+    const localTs = pending[key] || 0;
+
+    const localMap = new Map();
+    localItems.forEach((item) => {
+      if (!item || typeof item !== 'object') return;
+      const id = idOf(item);
+      if (id === null || localMap.has(id)) return;
+      localMap.set(id, { item, h: hashOf(item) });
+    });
+
+    const ids = new Set([...localMap.keys(), ...serverMap.keys(), ...b.keys()]);
+    const merged = new Map();   // id -> élément retenu
+    ids.forEach((id) => {
+      const L = localMap.get(id);
+      const S = serverMap.get(id);
+      const B = b.get(id);
+      const lh = L ? L.h : null;
+      const sh = S ? S.h : null;
+      const bh = B ? B.h : null;
+      if (lh === sh) { if (L) merged.set(id, L.item); return; }   // identiques (ou absents des deux côtés)
+      const lChanged = lh !== bh;
+      const sChanged = sh !== bh;
+      let localWins;
+      if (lChanged && !sChanged) localWins = true;
+      else if (!lChanged && sChanged) localWins = false;
+      else localWins = late || !S || !S.u || localTs >= S.u;   // modifié des deux côtés : la dernière modification gagne
+      if (localWins) { if (L) merged.set(id, L.item); }         // absent en local : suppression locale, envoyée ensuite
+      else if (S) merged.set(id, S.data);                       // absent du serveur : supprimé là-bas
+    });
+
+    // Ordre : celui du serveur ; les éléments créés ici s'ajoutent là où le module les met (fin, ou début si newestFirst)
+    const ordered = [];
+    const used = new Set();
+    rows.forEach((r) => {
+      const id = String(r.id);
+      if (merged.has(id)) { ordered.push(merged.get(id)); used.add(id); }
+    });
+    const extra = [];
+    localItems.forEach((item) => {
+      if (!item || typeof item !== 'object') return;
+      const id = idOf(item);
+      if (id !== null && merged.has(id) && !used.has(id)) { extra.push(merged.get(id)); used.add(id); }
+    });
+    const final = cfg.newestFirst ? extra.concat(ordered) : ordered.concat(extra);
+    const differs = sortedHashes(final.map(hashOf)) !== sortedHashes(localItems.filter((i) => i && typeof i === 'object').map(hashOf));
+    return { final, differs };
+  }
+
+  // Lit le serveur et met la copie locale au même état (voir l'en-tête). isLate() est évalué une fois les données reçues.
+  // Renvoie { changed, reload } : changed = la copie locale a été modifiée (la page doit être rechargée) ;
+  // reload = le serveur a des données plus récentes mais la copie locale n'a pas été touchée (mode "late").
+  async function pull(isLate) {
     const keys = Object.keys(LISTS);
     const [lists, profile] = await Promise.all([Promise.all(keys.map(fetchAll)), fetchProfile()]);
+    const late = !!isLate();
     let changed = false;
+    let reload = false;
 
     keys.forEach((key, i) => {
       const rows = lists[i];
-      const server = rows.map((r) => r.data);
-      const local = readArray(key) || [];
-      const a = local.map(canon).sort().join('\n');
-      const b = server.map(canon).sort().join('\n');
-      if (a !== b) {
-        try {
-          if (server.length) localStorage.setItem(key, JSON.stringify(server)); else localStorage.removeItem(key);
-          changed = true;
-        } catch (e) { console.warn('Données : écriture locale impossible (' + key + ')', e); }
+      const serverMap = new Map(rows.map((r) => {
+        const c = canon(r.data);
+        return [String(r.id), { data: r.data, h: hash(c), o: r.occurred_at, u: r.updated_at ? Date.parse(r.updated_at) : null }];
+      }));
+      const serverBase = () => new Map(Array.from(serverMap, ([id, s]) => [id, { h: s.h, o: s.o }]));
+      const localItems = readArray(key);
+
+      // Aucune modification en attente (ou contenu local illisible) : la version du serveur remplace la copie locale
+      if (!pending[key] || localItems === null) {
+        const local = localItems || [];
+        const differs = sortedHashes(local.map(hashOf)) !== sortedHashes(rows.map((r) => serverMap.get(String(r.id)).h));
+        if (!differs) { base[key] = serverBase(); return; }
+        if (late) { reload = true; return; }   // la copie locale n'est pas touchée, la base non plus
+        if (writeLocal(key, rows.map((r) => r.data))) { changed = true; base[key] = serverBase(); }
+        return;
       }
-      snaps[key] = new Map(rows.map((r) => [String(r.id), { canon: canon(r.data), occurredAt: r.occurred_at }]));
+
+      // Modifications en attente : fusion
+      const { final, differs } = mergeList(key, rows, serverMap, localItems, late);
+      if (late) {
+        // La copie locale reste telle quelle. La base ne retient que ce qui est identique des deux côtés :
+        // le reste est envoyé par pushList (modifié ici : on envoie) ou attend l'actualisation (modifié là-bas)
+        const b = base[key] || (base[key] = new Map());
+        localItems.forEach((item) => {
+          if (!item || typeof item !== 'object') return;
+          const id = idOf(item);
+          const s = id === null ? null : serverMap.get(id);
+          if (s && s.h === hashOf(item)) b.set(id, { h: s.h, o: s.o });
+        });
+        if (differs) reload = true;
+        return;
+      }
+      if (differs && !writeLocal(key, final)) return;
+      if (differs) changed = true;
+      base[key] = serverBase();   // pushList enverra la différence entre la copie locale fusionnée et le serveur
     });
 
     Object.keys(PROFILE).forEach((key) => {
       const cfg = PROFILE[key];
-      const serverVal = profile ? profile[cfg.col] : null;
+      const serverRaw = profile ? profile[cfg.col] : null;
+      const serverEmpty = cfg.json ? isEmptyJson(serverRaw) : (serverRaw === null || serverRaw === undefined || serverRaw === '');
+      const serverVal = serverEmpty ? (cfg.json ? cfg.empty : null) : serverRaw;
+      const sh = hashOf(serverVal);
+
       const localRaw = localStorage.getItem(key);
-      let same;
-      let serverEmpty;
+      let localVal;
+      let localEmpty;
       if (cfg.json) {
-        serverEmpty = isEmptyJson(serverVal);
-        const localVal = parse(localRaw);
-        const localEmpty = isEmptyJson(localVal);
-        same = (serverEmpty && localEmpty) || (!serverEmpty && !localEmpty && canon(serverVal) === canon(localVal));
-        profileSnap[cfg.col] = profile ? canon(serverEmpty ? cfg.empty : serverVal) : undefined;
+        localVal = parse(localRaw);
+        if (localVal === undefined || localVal === null) localVal = cfg.empty;
+        localEmpty = isEmptyJson(localVal);
       } else {
-        serverEmpty = serverVal === null || serverVal === undefined || serverVal === '';
-        same = serverEmpty ? !localRaw : serverVal === localRaw;
-        profileSnap[cfg.col] = profile ? canon(serverEmpty ? null : serverVal) : undefined;
+        localVal = localRaw || null;
+        localEmpty = !localRaw;
       }
-      if (!same) {
-        try {
-          if (serverEmpty) localStorage.removeItem(key);
-          else localStorage.setItem(key, cfg.json ? JSON.stringify(serverVal) : serverVal);
-          changed = true;
-        } catch (e) { console.warn('Données : écriture locale impossible (' + key + ')', e); }
+      const lh = hashOf(localVal);
+      if (lh === sh) { profBase[cfg.col] = sh; return; }
+
+      // Modification locale en attente : garde-t-elle le dessus ?
+      let localWins = false;
+      if (pending[key]) {
+        const bh = profBase[cfg.col];
+        if (bh === undefined) {
+          localWins = serverEmpty && !localEmpty;   // base inconnue : on ne remplace jamais une valeur du serveur
+        } else {
+          const lChanged = lh !== bh;
+          const sChanged = sh !== bh;
+          if (lChanged && !sChanged) localWins = true;
+          else if (lChanged && sChanged) localWins = late || !profile || !profile.updated_at || pending[key] >= Date.parse(profile.updated_at);
+        }
+      }
+      if (localWins) { profBase[cfg.col] = sh; return; }   // l'envoi partira avec le reste de la file
+
+      if (late) { reload = true; return; }                  // copie locale et base inchangées
+      if (writeLocal(key, serverEmpty ? null : (cfg.json ? JSON.stringify(serverVal) : serverVal))) {
+        changed = true;
+        profBase[cfg.col] = sh;
       }
     });
 
-    return changed;
+    saveBase();
+    return { changed, reload };
   }
 
   /* ---------- Écriture (appareil -> serveur) ---------- */
 
   async function pushList(key) {
     const cfg = LISTS[key];
-    const snap = snaps[key] || (snaps[key] = new Map());
+    const b = base[key] || (base[key] = new Map());
     const items = readArray(key);
     if (items === null) return; // contenu illisible : on ne touche à rien côté serveur
 
@@ -273,24 +471,26 @@
       if (id === null) { console.warn('Données : élément sans identifiant ignoré (' + key + ')'); return; }
       if (seen.has(id)) return;
       seen.add(id);
-      const c = canon(item);
-      const prev = snap.get(id);
-      if (prev && prev.canon === c) return; // déjà à jour sur le serveur
+      const h = hashOf(item);
+      const prev = b.get(id);
+      if (prev && prev.h === h) return; // déjà à jour sur le serveur
       // Éléments sans date : on garde l'ordre d'insertion grâce à un horodatage croissant, conservé ensuite
-      const occurredAt = occurredOf(item, id) || (prev && prev.occurredAt) || new Date(Date.now() + order++).toISOString();
+      const occurredAt = occurredOf(item, id) || (prev && prev.o) || new Date(Date.now() + order++).toISOString();
       // deleted_at: null : ré-ajouter un élément supprimé auparavant le fait réapparaître
       rows.push({ user_id: userId, id, occurred_at: occurredAt, data: item, deleted_at: null });
-      marks.push([id, { canon: c, occurredAt }]);
+      marks.push([id, { h, o: occurredAt }]);
     });
 
     for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {
       const { error } = await sb.from(cfg.table).upsert(rows.slice(i, i + UPSERT_CHUNK), { onConflict: 'user_id,id' });
       if (error) throw error;
-      marks.slice(i, i + UPSERT_CHUNK).forEach(([id, m]) => snap.set(id, m));
+      marks.slice(i, i + UPSERT_CHUNK).forEach(([id, m]) => b.set(id, m));
     }
 
-    // Éléments retirés de la liste : suppression douce (deleted_at), la ligne reste sur le serveur
-    const gone = Array.from(snap.keys()).filter((id) => !seen.has(id));
+    // Éléments retirés de la liste : suppression douce (deleted_at), la ligne reste sur le serveur.
+    // Seuls les éléments connus de cet appareil (la base) sont concernés : un élément arrivé d'un autre appareil
+    // et pas encore affiché ici n'est jamais supprimé.
+    const gone = Array.from(b.keys()).filter((id) => !seen.has(id));
     for (let i = 0; i < gone.length; i += DELETE_CHUNK) {
       const part = gone.slice(i, i + DELETE_CHUNK);
       const { error } = await sb.from(cfg.table)
@@ -298,7 +498,7 @@
         .eq('user_id', userId)
         .in('id', part);
       if (error) throw error;
-      part.forEach((id) => snap.delete(id));
+      part.forEach((id) => b.delete(id));
     }
   }
 
@@ -316,33 +516,59 @@
       } else {
         value = raw || null;
       }
-      const c = canon(value);
-      if (c === profileSnap[cfg.col]) return;
+      const h = hashOf(value);
+      if (h === profBase[cfg.col]) return;
       row[cfg.col] = value;
-      marks.push([cfg.col, c]);
+      marks.push([cfg.col, h]);
     });
     if (!marks.length) return;
     const { error } = await sb.from('profiles').upsert(row, { onConflict: 'user_id' });
     if (error) throw error;
-    marks.forEach(([col, c]) => { profileSnap[col] = c; });
+    marks.forEach(([col, h]) => { profBase[col] = h; });
+  }
+
+  // Nouvel essai automatique : l'envoi si les données du serveur sont lues, sinon leur lecture (qui envoie ensuite).
+  // Après un retour du réseau, supabase-js peut refuser le renouvellement de la session pendant une minute
+  // environ : le premier essai échoue alors et les suivants réussissent.
+  function scheduleRetry() {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    if (!isOnline()) return;   // sans réseau, l'envoi reprend à l'événement 'online'
+    retryTimer = setTimeout(() => { retryTimer = null; if (ready) flush(); else resume(); }, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, RETRY_MAX_MS);
   }
 
   async function sendPending() {
     if (!ready || !userId) return;
-    const keys = Array.from(dirty);
-    dirty.clear();
+    const snapshot = pendingKeys().map((k) => [k, pending[k]]);
+    if (!snapshot.length) { emit(); return; }
+
+    syncing = true;
+    emit('syncing');
     let failed = false;
-    const profileKeys = keys.filter((k) => PROFILE[k]);
-    for (const key of keys.filter((k) => LISTS[k])) {
-      try { await pushList(key); } catch (e) { failed = true; dirty.add(key); console.warn('Données : envoi impossible (' + key + ')', e); }
+    const profileKeys = [];
+    for (const [key, ts] of snapshot) {
+      if (!LISTS[key]) { profileKeys.push([key, ts]); continue; }
+      try {
+        await pushList(key);
+        if (pending[key] === ts) delete pending[key];   // une écriture arrivée pendant l'envoi garde la clé en attente
+      } catch (e) { failed = true; console.warn('Données : envoi impossible (' + key + ')', e); }
     }
     if (profileKeys.length) {
-      try { await pushProfile(profileKeys); } catch (e) { failed = true; profileKeys.forEach((k) => dirty.add(k)); console.warn('Données : envoi impossible (profil)', e); }
+      try {
+        await pushProfile(profileKeys.map((p) => p[0]));
+        profileKeys.forEach(([k, ts]) => { if (pending[k] === ts) delete pending[k]; });
+      } catch (e) { failed = true; console.warn('Données : envoi impossible (profil)', e); }
     }
+    syncing = false;
+    savePending();
+    saveBase();
     if (failed) {
-      notify('Synchronisation impossible pour le moment. Les modifications sont gardées sur cet appareil, nouvel essai automatique.');
-      clearTimeout(retryTimer);
-      retryTimer = setTimeout(flush, RETRY_DELAY_MS);
+      scheduleRetry();
+      emit('error');
+    } else {
+      retryDelay = RETRY_MIN_MS;
+      emit();
     }
   }
 
@@ -350,14 +576,18 @@
   function flush() {
     clearTimeout(sendTimer);
     sendTimer = null;
-    chain = chain.then(sendPending).catch((e) => console.warn('Données : envoi', e));
+    chain = chain.then(sendPending).catch((e) => { syncing = false; console.warn('Données : envoi', e); });
     return chain;
   }
 
-  // Appelé par appSafeSetItem (commun.js) après chaque écriture dans le localStorage
+  // Appelé par appSafeSetItem (commun.js) après chaque écriture dans le localStorage.
+  // La clé est notée en attente même sans réseau ou avant la lecture du serveur : elle sera envoyée plus tard.
   function onWrite(key) {
-    if (!ready || !userId || (!LISTS[key] && !PROFILE[key])) return;
-    dirty.add(key);
+    if (!userId || !isKnownKey(key)) return;
+    pending[key] = Date.now();
+    savePending();
+    emit(syncing ? 'syncing' : 'pending');
+    if (!ready || !isOnline()) return;
     clearTimeout(sendTimer);
     sendTimer = setTimeout(flush, SEND_DELAY_MS);
   }
@@ -366,20 +596,33 @@
 
   // À appeler quand un compte est connecté (connexion, inscription, lien e-mail). Renvoie une promesse :
   // true si la copie locale a été remplacée, la page doit alors être rechargée.
-  function start(uid) {
+  // opts.late : les données du serveur arrivent en cours d'utilisation (copie locale non remplacée, voir l'en-tête).
+  // opts.lateAfterMs : idem si la réponse arrive plus de N ms après le chargement de la page.
+  function start(uid, opts) {
+    opts = opts || {};
     if (!sb || !uid) return Promise.resolve(false);
     if (userId === uid && startPromise) return startPromise;
     userId = uid;
     ready = false;
     startPromise = (async () => {
       let changed = adoptAccount(uid);
+      loadState(uid);
       try {
-        changed = (await pull()) || changed;
+        const isLate = () => opts.late === true || (opts.lateAfterMs > 0 && performance.now() > opts.lateAfterMs);
+        const res = await pull(isLate);
+        changed = res.changed || changed;
+        needsReload = res.reload;
         ready = true;
+        // Modifications faites hors ligne : envoyées avant un éventuel rechargement de la page
+        if (pendingKeys().length) {
+          await Promise.race([flush(), new Promise((r) => setTimeout(r, FLUSH_WAIT_MS))]);
+        }
+        emit();
       } catch (e) {
         console.warn('Données : lecture du serveur impossible', e);
-        notify('Synchronisation impossible : vérifiez votre connexion. Les données affichées peuvent ne pas être à jour.');
         startPromise = null;
+        scheduleRetry();
+        emit(pendingKeys().length ? 'pending' : 'idle');
       }
       return changed;
     })();
@@ -404,33 +647,43 @@
     const uid = userId || storedUserId();
     if (!sb || !uid) throw new Error('Aucun compte connecté');
     clearTimeout(sendTimer);
-    dirty.clear();
+    clearTimeout(retryTimer);
     const tables = Object.keys(LISTS).map((k) => LISTS[k].table).concat('profiles');
     for (const table of tables) {
       const { error } = await sb.from(table).delete().eq('user_id', uid);
       if (error) throw error;
     }
+    // Rien ne doit plus partir : les modifications en attente concernaient des données qui n'existent plus
+    pending = {};
+    savePending();
   }
 
   window.appData = {
-    start, flush, onWrite, clearLocal, deleteRemote,
+    start, flush, onWrite, clearLocal, deleteRemote, status,
     isReady: () => ready,
+    hasPending: () => pendingKeys().length > 0,
   };
 
   /* ---------- Au chargement ---------- */
+
+  function resume() {
+    const uid = userId || storedUserId();
+    if (!uid || !sb || !isOnline()) return;
+    if (!ready) start(uid, { late: true });   // démarrage hors ligne : on est déjà en train d'utiliser l'appli
+    else if (pendingKeys().length) flush();
+  }
 
   const initialUid = storedUserId();
   if (initialUid && sb) {
     // Avant que les modules ne lisent leurs données : si la copie locale est celle d'un autre compte, on la vide
     adoptAccount(initialUid);
-    start(initialUid).then((changed) => { if (changed) reloadOnce(); });
+    // Hors ligne, la lecture échoue : l'appli démarre sur la copie locale et les écritures sont mises en attente
+    start(initialUid, { lateAfterMs: 4000 }).then((changed) => { if (changed) reloadOnce(); });
   }
 
-  window.addEventListener('online', () => {
-    const uid = userId || storedUserId();
-    if (uid && !ready) start(uid).then((changed) => { if (changed) reloadOnce(); });
-    else flush();
+  window.addEventListener('online', resume);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush(); else resume();
   });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
   window.addEventListener('pagehide', flush);
 })();

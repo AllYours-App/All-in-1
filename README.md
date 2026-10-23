@@ -2,16 +2,23 @@
 
 Application golf mobile-first : parcours, putting, wedging, stats, gym, profil. Tout est en HTML/CSS/JS vanilla, sans framework ni étape de build. Hébergée sur Cloudflare (`all-in-1.ducoin-co.workers.dev`), qui remplace Vercel : le plan gratuit de Vercel excluait l'usage commercial. À revérifier dans les conditions de Cloudflare avant la mise en ligne publique (voir "Mise en ligne et conformité").
 
-La connexion passe par Supabase Auth (e-mail et mot de passe ; pas de connexion Apple ni Google). Les données de jeu, de profil et de réglages appartiennent au compte : `core/data.js` les synchronise avec les tables Supabase, le `localStorage` n'en est qu'une copie de travail (voir "Brancher Supabase" et la section `core/data.js`). Pas de mode hors ligne pour l'instant.
+La connexion passe par Supabase Auth (e-mail et mot de passe ; pas de connexion Apple ni Google). Les données de jeu, de profil et de réglages appartiennent au compte : `core/data.js` les synchronise avec les tables Supabase, le `localStorage` n'en est qu'une copie de travail (voir "Brancher Supabase" et la section `core/data.js`). Un mode hors ligne permet d'ouvrir et d'utiliser l'appli sans réseau : un service worker (`sw.js`) garde une copie de l'appli, et `core/data.js` met les saisies en file d'attente puis les envoie au retour de la connexion (voir "Mode hors ligne" et les sections `sw.js`, `core/offline.js`).
 
 ## Guide fonctionnel
 
 Cette partie décrit l'application du point de vue de l'utilisateur, sans vocabulaire technique. La documentation technique commence à la section "Architecture".
 
-All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur téléphone. On s'y connecte, on arrive sur un accueil qui propose six parties de travail, et chacune se concentre sur un aspect du jeu. Les données sont enregistrées sur l'appareil.
+All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur téléphone. On s'y connecte, on arrive sur un accueil qui propose six parties de travail, et chacune se concentre sur un aspect du jeu. Les données sont enregistrées sur l'appareil puis envoyées au compte ; sans réseau, l'appli reste utilisable (voir "Mode hors ligne").
 
 ### Connexion et création de compte
 Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. À la création du compte, un e-mail de confirmation est envoyé : on ouvre son lien, puis on se connecte. "Mot de passe oublié ?" envoie un lien par e-mail ; il ouvre l'écran "Nouveau mot de passe". Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
+
+### Mode hors ligne
+Sur un parcours, le réseau est souvent mauvais ou absent. Une fois l'appli ouverte une première fois avec du réseau, elle s'ouvre et s'utilise ensuite sans connexion : Putting, Wedging, Parcours, Gym et Stats fonctionnent comme d'habitude, et les saisies sont gardées sur le téléphone. Au retour du réseau, elles sont envoyées automatiquement au compte, même si l'appli a été fermée entre-temps.
+
+Si la connexion tombe pendant qu'on utilise l'appli, rien ne s'interrompt et il n'y a rien à relancer : un message en bas de l'écran prévient (« Hors ligne… »), puis disparaît, et une petite pastille « Hors ligne » reste en haut de l'écran tant que le réseau manque. Elle ne capte aucun appui. Au retour du réseau, un message annonce la reconnexion puis « Données synchronisées ». Si une autre installation (un autre téléphone) a ajouté des données entre-temps, un message propose « Actualiser » : c'est toujours au choix de la personne, la page n'est jamais rechargée d'elle-même en cours d'utilisation.
+
+Ce qui demande du réseau : se connecter, créer un compte, mot de passe oublié, la recherche de parcours dans Stats (la saisie manuelle reste possible) et la suppression des données du compte. Se déconnecter alors que des saisies n'ont pas encore été envoyées demande une confirmation, car la déconnexion vide la copie de l'appareil.
 
 ### Accueil
 Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon l'heure (matin, midi, soir, nuit). Six boutons mènent aux parties : Putting, Stats, Gym, Parcours, Vitesse, Wedging. Un petit panneau résume l'activité : objectif de séances de la semaine (réglé dans le Menu, de 1 à 14 séances, 5 par défaut) et dernière séance (date et type d'entraînement sur la même ligne, un seul type : celui de l'activité la plus récente). Un bouton de profil ouvre le Menu.
@@ -90,6 +97,7 @@ Pas encore disponible : l'écran annonce "Fonctionnalités à venir".
 ```
 index.html                 point d'entrée unique (HTML des pages + balises <link>/<script>)
 manifest.webmanifest       manifeste PWA
+sw.js                      service worker : copie de l'appli pour l'utiliser sans réseau (doit rester à la racine)
 README.md
 core/                      socle commun à tous les modules
   base.css                 reset, tokens :root, règles globales
@@ -98,7 +106,8 @@ core/                      socle commun à tous les modules
   app-shell.js             showPage()
   supabase-client.js       client Supabase unique (window.appSupabase)
   commun.js                appKeypad(), popups, appPrefGet/Set(), appSheet(), applyAppTheme()
-  data.js                  synchronisation des données du compte avec Supabase (window.appData)
+  data.js                  synchronisation des données du compte avec Supabase (window.appData), file d'attente hors ligne
+  offline.js               enregistre sw.js, messages de connexion (window.appNet)
   sg-data.js               tables Strokes Gained
   strokes-gained.js        calculs Strokes Gained
 vendor/
@@ -146,7 +155,8 @@ Chart.js 4.5.0 (vendor/chart.umd.min.js)
 supabase-js 2.117.2 (vendor/supabase.umd.min.js)   -> global `supabase`
 core/app-shell.js            -> showPage()
 core/supabase-client.js      -> window.appSupabase, window.APP_SESSION_KEY
-core/data.js                 -> window.appData (start, flush, onWrite, clearLocal, deleteRemote, isReady)
+core/data.js                 -> window.appData (start, flush, onWrite, clearLocal, deleteRemote, status, isReady, hasPending)
+core/offline.js              -> enregistre sw.js, window.appNet, messages hors ligne (écoute 'appdata:status')
 core/commun.js               -> appKeypad(), appPrefGet/Set(), appSheet(), applyAppTheme()
 core/sg-data.js              -> SG_BASELINES
 core/strokes-gained.js       -> sgExpected(), sgShot()   (dépend de sg-data.js)
@@ -213,7 +223,7 @@ L'appli est déployée sur Cloudflare (Workers, adresse `all-in-1.ducoin-co.work
 - **RLS (Row Level Security) obligatoire** sur toutes les tables, avec une règle du type "un utilisateur ne lit et n'écrit que les lignes dont `user_id = auth.uid()`". La clé publique (`anon`) est visible par tous dans le code : c'est la RLS qui protège les données. Sans elle, n'importe qui peut lire les données de tous les utilisateurs. Ne jamais mettre la clé `service_role` dans le code client.
 - **Schéma de données** : tableau ci-dessous. Les tables sont créées dans Supabase.
 - **Un seul module d'accès aux données : fait.** `core/data.js` se branche sur `appSafeSetItem` : les modules gardent leur code de lecture et d'écriture du `localStorage`, rien à y changer. Toute nouvelle clé à synchroniser s'ajoute dans `LISTS` (liste d'éléments) ou `PROFILE` (réglage) de `data.js`, et doit être écrite avec `appSafeSetItem`, jamais avec `localStorage.setItem` direct.
-- **Hors-ligne (à faire).** Sur un parcours, le réseau est souvent mauvais. Aujourd'hui, sans réseau, la copie locale reste utilisable mais rien n'est envoyé, et elle est remplacée par celle du serveur à la prochaine ouverture avec réseau : les saisies faites hors ligne sont perdues. À faire : file d'attente persistée, envoi au retour du réseau, conflits résolus par `updated_at` (la dernière modification gagne). Idem si l'onglet est fermé moins de 200 ms après une saisie (délai d'envoi groupé).
+- **Hors-ligne : fait (23/10/2026).** Voir "Mode hors ligne" ci-dessous, la section `core/data.js` (file d'attente, fusion) et les sections `sw.js` et `core/offline.js`. Les saisies faites sans réseau sont gardées dans le `localStorage`, notées dans `golfSyncPending`, envoyées au retour du réseau (même après une fermeture de l'appli) et fusionnées avec le serveur sans perte. Limites connues : voir "Anomalies relevées (mode hors ligne, 23/10/2026)".
 - **Migration des données existantes** : sans objet, l'appli est en test et aucune donnée n'est conservée. Au premier démarrage avec la synchronisation, la copie locale d'avant est vidée.
 - **Connexion Apple et Google** : retirées. Si elles reviennent un jour, Apple exige un compte Apple Developer payant.
 - Calculs (Strokes Gained, indicateurs de `stats.js`) : peuvent rester côté client dans un premier temps. Ne pas les déplacer côté serveur sans besoin.
@@ -248,6 +258,30 @@ Points de vigilance pour le module d'accès aux données (non résolus, à trait
 - **Parties Stats, copies dans Putting et Wedging** : les éléments `source: 'stats'` (`statsKey`) sont des copies. Ils seront synchronisés comme les autres ; la suppression d'une partie doit continuer à retirer ses copies (`removePuttingRoundFromStats`, Wedging) puis marquer chaque ligne `deleted_at`.
 - **Suppression du compte (à faire avant toute mise en ligne publique, des comptes existent maintenant).** Aujourd'hui `deleteMenuData()` efface les données du compte (serveur et appareil) mais pas le compte Supabase, alors que l'écran annonce aussi la suppression du compte. `deleteMenuData()` doit appeler une Edge Function qui exécute `auth.admin.deleteUser`. Les clés étrangères sont en `on delete cascade` : supprimer l'utilisateur supprime toutes ses lignes.
 
+### Mode hors ligne
+
+Trois pièces, qui ne se parlent que par des événements et par le `localStorage` :
+
+| Pièce | Rôle |
+|---|---|
+| `sw.js` | Garde une copie des fichiers de l'appli : la page, les CSS, les JS, `vendor/`, le manifeste et les 28 images. L'appli s'ouvre sans réseau. Ne touche jamais aux appels vers Supabase ni vers l'API FlyAway. |
+| `core/data.js` | Les écritures de chaque clé synchronisée sont notées dans `golfSyncPending` (clé -> date de la dernière écriture) même sans réseau ou avant la lecture du serveur. Au retour du réseau, ce qui est en attente est envoyé et fusionné avec le serveur. |
+| `core/offline.js` | Enregistre `sw.js` et affiche l'état : message à la perte et au retour de la connexion, pastille « Hors ligne », « Données synchronisées », proposition « Actualiser ». |
+
+**Pourquoi aucun redémarrage n'est demandé quand la connexion tombe.** L'appli est une page unique : au moment où le réseau disparaît, tous les fichiers sont déjà chargés en mémoire, et les saisies passent par le `localStorage`, pas par le réseau. Il n'y a donc rien à relancer ; la personne n'est pas interrompue (les messages ne captent aucun appui). Le seul message qui propose de recharger la page (« Actualiser ») apparaît quand le serveur a des données plus récentes que celles affichées, et il est toujours au choix de la personne : les brouillons et parties en cours (`gym-session-draft`, `putting_resume*`, etc.) n'existent que sur l'appareil, un rechargement en pleine séance n'est donc jamais imposé.
+
+**Condition de départ.** L'appli doit avoir été ouverte au moins une fois avec du réseau, le temps que le service worker copie les fichiers (environ 8 Mo, dont 7 Mo d'images, surtout les fonds). Sur un appareil où ce n'est pas fait, une ouverture sans réseau affiche une erreur du navigateur. Se connecter ou créer un compte demande toujours du réseau ; ensuite, la session (`golfSupabaseAuth`) reste valable hors ligne : `auth.js` choisit la page de départ d'après le `localStorage`, et supabase-js ne déconnecte pas sur une simple erreur réseau.
+
+**Scénarios gérés par `core/data.js`** (testés avec un faux serveur, voir plus bas) :
+- appli ouverte sans réseau, saisies, retour du réseau sans fermer l'appli : tout part sur le serveur, aucun rechargement ;
+- saisies sans réseau, appli fermée, rouverte plus tard avec réseau : la file d'attente est relue, les saisies sont fusionnées avec le serveur (y compris ce qu'un autre appareil a ajouté) puis envoyées ;
+- élément supprimé hors ligne : suppression douce (`deleted_at`) au retour du réseau ;
+- même élément modifié ici et sur le serveur : la dernière modification gagne (date de la dernière écriture locale de la clé contre `updated_at` du serveur) ;
+- « réseau présent mais inutilisable » (`navigator.onLine` vrai, requêtes en échec) : les saisies restent en attente, nouvel essai à 5 s puis 10, 20, 40 et 60 s ; la même relance vaut pour la lecture des données du serveur qui a échoué (par exemple quand supabase-js refuse un moment de renouveler la session juste après un retour du réseau) ;
+- changement de compte : la file d'attente et la base de synchronisation sont vidées avec le reste.
+
+**Tests.** `core/data.js` et `sw.js` ont été exécutés dans un faux navigateur (faux `localStorage`, faux `caches`, faux client Supabase qui simule le réseau coupé) : 16 scénarios pour `data.js` (envoi en ligne, écriture avant la fin de la lecture, démarrage hors ligne puis retour du réseau, fermeture entre-temps, suppression hors ligne, données plus récentes sur le serveur pendant l'utilisation, conflits dans les deux sens, profil et compte neuf, échec d'envoi puis reprise, lecture refusée puis relancée seule, coupures répétées, autre compte) et 16 vérifications pour `sw.js` (installation, page et fichiers servis sans réseau, Supabase et requêtes POST jamais interceptés, remplacement d'un `?v=`, 404 non gardé, anciens caches supprimés). Ces tests ne sont pas dans le dépôt. Pas encore testé sur un vrai téléphone ni sur le vrai Supabase (voir les anomalies).
+
 ### Publication
 - Google Play Console : politique de confidentialité = `<url>/?legal=confidentialite` ; suppression de compte = `<url>/?legal=donnees` (compléter le formulaire "Sécurité des données" avec les données listées dans la politique).
 - App Store (plus tard) : mêmes URL, plus suppression de compte dans l'appli.
@@ -255,7 +289,7 @@ Points de vigilance pour le module d'accès aux données (non résolus, à trait
 
 ## Fichiers partagés
 
-### `index.html` (1149 lignes)
+### `index.html` (1150 lignes)
 Contient le HTML de Home, Parcours, Stats, Menu, Login, Signup, Mot de passe oublié et Nouveau mot de passe, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Deux scripts en `<head>` : le premier met de côté le hash d'un lien reçu par e-mail (`window.__authHash`) puis le vide ; le second ajoute la classe `has-session` sur `<html>` si la session Supabase (`golfSupabaseAuth`) existe ou si un lien e-mail est en cours de traitement, pour éviter le flash de la page de connexion.
 
 ### `core/app-shell.js`
@@ -276,15 +310,34 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login, Signup, Mot de passe oub
 Crée le client Supabase unique (`window.appSupabase`, ou `null` si `vendor/supabase.umd.min.js` n'a pas chargé) et expose `window.APP_SESSION_KEY` (`'golfSupabaseAuth'`, clé `localStorage` de la session). Contient l'URL du projet et la clé publique. Options : session gardée et renouvelée automatiquement, `detectSessionInUrl: false` (les liens e-mail sont lus par `auth.js`), flux `implicit`. Le futur module d'accès aux données (`data.js`) utilisera ce même client.
 
 ### `core/data.js`
-Synchronise les données du compte avec Supabase. Expose `window.appData`. Chargé après `commun.js`, avant les modules. Le serveur est la référence ; le `localStorage` est une copie de travail que les modules continuent de lire et d'écrire comme avant.
+Synchronise les données du compte avec Supabase. Expose `window.appData`. Chargé après `commun.js`, avant les modules. Le serveur est la référence ; le `localStorage` est une copie de travail que les modules continuent de lire et d'écrire comme avant. Fonctionne aussi sans réseau (voir "Mode hors ligne").
 
-- **Écriture** : `appSafeSetItem` (commun.js) appelle `appData.onWrite(clé)`. Après 200 ms, `data.js` compare la valeur locale à ce que le serveur contient (forme canonique, clés triées) et n'envoie que les éléments nouveaux ou modifiés (`upsert` sur `user_id,id`, par paquets de 50). Un élément retiré de la liste reçoit `deleted_at` (suppression douce) ; ré-ajouté, il revient (`deleted_at: null`). Rien n'est envoyé tant que les données du serveur n'ont pas été lues (`isReady()`), pour ne jamais écraser le serveur avec des valeurs par défaut. Envoi aussi à la mise en arrière-plan (`visibilitychange`) et à `pagehide`. Échec : message, nouvel essai toutes les 5 s et au retour du réseau.
-- **Lecture** : `start(userId)` vide la copie locale si elle appartient à un autre compte (`golfAccountUserId`), lit les 10 tables (hors lignes `deleted_at`) et le profil, remplace la copie locale si elle diffère et renvoie `true` : la page est alors rechargée une fois (garde-fou `golfSyncReload` en `sessionStorage`). Au chargement avec une session, `data.js` démarre seul ; après une connexion, une inscription ou un lien e-mail, c'est `auth.js` (`loadAccountData`).
+- **Écriture** : `appSafeSetItem` (commun.js) appelle `appData.onWrite(clé)`. La clé est notée dans `golfSyncPending` (en mémoire et dans le `localStorage`, donc conservée si l'appli est fermée), même sans réseau ou avant la lecture du serveur. Dès que le réseau et les données du serveur sont là, après 200 ms, `data.js` compare chaque élément à ce que le serveur contenait (`golfSyncBase`) et n'envoie que les éléments nouveaux ou modifiés (`upsert` sur `user_id,id`, par paquets de 50). Un élément retiré de la liste reçoit `deleted_at` (suppression douce) ; ré-ajouté, il revient (`deleted_at: null`). Seuls les éléments connus de l'appareil (la base) peuvent être supprimés : un élément arrivé d'un autre appareil et pas encore affiché ici n'est jamais supprimé par erreur. Une clé n'est retirée de la file que si elle n'a pas été réécrite pendant l'envoi. Envoi aussi à la mise en arrière-plan (`visibilitychange`) et à `pagehide`. Échec : état `error`, nouvel essai avec délai doublé (5 s à 60 s, `scheduleRetry`) ; sans réseau (`navigator.onLine` faux), pas de nouvel essai avant l'événement `online`.
+- **Lecture** : `start(userId, opts)` vide la copie locale si elle appartient à un autre compte (`golfAccountUserId`), lit les 10 tables (hors lignes `deleted_at`, avec `updated_at`) et le profil. Une clé sans modification en attente est remplacée par la version du serveur si elle diffère ; la page est alors rechargée une fois (garde-fou `golfSyncReload` en `sessionStorage`) car les modules gardent leurs données en mémoire. Une clé avec modifications en attente est fusionnée (ci-dessous). Au chargement avec une session, `data.js` démarre seul (`lateAfterMs: 4000`) ; après une connexion, une inscription ou un lien e-mail, c'est `auth.js` (`loadAccountData`, sans option). Hors ligne, la lecture échoue : l'appli démarre sur la copie locale, `isReady()` reste faux, et `start` est relancé à l'événement `online` ou au retour au premier plan.
+- **Fusion** (clé avec modifications en attente), par élément et sur trois versions : la base (`golfSyncBase` : empreinte de chaque élément tel que le serveur le contenait à la dernière synchronisation), la version locale et la version du serveur. Modifié ici seulement : la version locale part. Modifié sur le serveur seulement : celle du serveur est reprise. Modifié des deux côtés : la dernière modification gagne, `updated_at` du serveur contre la date de la dernière écriture locale de la clé. Pour le profil (une ligne, plusieurs colonnes) le principe est le même par colonne ; si la base est inconnue, la valeur du serveur n'est jamais remplacée, sauf si elle est vide et que la valeur locale ne l'est pas. L'ordre de la liste fusionnée est celui du serveur ; les éléments créés ici s'ajoutent à la fin (ou au début pour `newestFirst`).
+- **Mode "late"** (`opts.late`, ou `opts.lateAfterMs` dépassé) : les données du serveur arrivent alors que la personne utilise déjà l'appli (retour du réseau après un démarrage hors ligne, réponse très lente au chargement). La copie locale n'est PAS remplacée : les modules gardent leurs données en mémoire et les réécriraient par-dessus, ce qui supprimerait sur le serveur ce qu'ils ne connaissent pas. Seules les modifications locales partent ; en cas de conflit, la version locale gagne (rien n'est perdu de ce qui a été saisi hors ligne). Si le serveur a des données plus récentes, `status().reload` passe à vrai et `offline.js` propose « Actualiser ». Rien n'est rechargé automatiquement.
 - **Correspondance clés -> tables** (`LISTS`) : `golfStatsRounds` -> `stats_rounds`, `parcours-captures` -> `parcours_captures`, `putting_combines`, `putting_sessions`, `putting_rounds`, `wedgingShots` -> `wedging_shots`, `wedgingExercises` -> `wedging_exercises`, `gym-programs-saved` -> `gym_programs`, `gym-history` -> `gym_history`, `gym-goals` -> `gym_goals`. Chaque élément du tableau devient une ligne : `id` = `item.id`, sinon `statsKey`, sinon `date` (les captures Parcours n'ont pas d'id) ; `occurred_at` = sa date (`dateISO`, `date`, `createdAt`...) ou, pour un id créé par `Date.now()`, cet horodatage ; sinon un horodatage croissant conservé. `data` = l'élément entier. Relecture triée par `occurred_at` (décroissant pour `gym-history` et `gym-goals`, rangés du plus récent au plus ancien).
 - **Profil** (`PROFILE`, table `profiles`, une ligne par personne) : `golfAppState` -> `app_state` (profil, réglages, radars, sac, `driverSettings`, `personalDistances`, `wedgeDistances`), `golfModulePrefs` -> `module_prefs`, `parcours-settings` -> `parcours_settings`, `parcours-fairway-unit` -> `parcours_fairway_unit`, `golfStatsKpis` -> `stats_kpis`, `gym-active-program-id` -> `gym_active_program_id`.
 - **Hors synchronisation** (restent sur l'appareil) : brouillons et parties en cours (`golfStatsRoundDraft`, `gym-session-draft`, `putting_resume`, `putting_resume_quick`, `wedgingInProgressSessions`, `parcours-fairway-round`, `parcours-green-round`).
-- `clearLocal()` : déconnexion, vide la copie locale. `flush()` : envoie tout de suite. `deleteRemote()` : supprime réellement les lignes de l'utilisateur dans les 11 tables (utilisé par `deleteMenuData()`).
-- **Vérifications côté Supabase** : clé primaire `(user_id, id)` sur les 10 tables de listes et `user_id` sur `profiles` (nécessaires aux `upsert`) ; colonne `updated_at` mise à jour par un déclencheur.
+- **API** : `start(uid, opts)`, `flush()` (promesse, se termine quand l'envoi est fini), `onWrite(clé)`, `clearLocal()` (déconnexion, vide la copie locale, la file d'attente et la base), `deleteRemote()` (supprime réellement les lignes de l'utilisateur dans les 11 tables et vide la file d'attente ; utilisé par `deleteMenuData()`), `status()` (`{ pending, syncing, ready, reload, online }`), `isReady()`, `hasPending()` (utilisé par `authLogout`).
+- **Événement `appdata:status`** sur `window` (`detail: { state, pending, reload }`) : `pending` (modifications à envoyer), `syncing`, `error` (envoi impossible, nouvel essai automatique), `idle` (tout est envoyé), `reload` (données plus récentes sur le serveur). C'est ce qu'écoute `offline.js`. `data.js` n'affiche plus lui-même de message d'erreur.
+- **Vérifications côté Supabase** : clé primaire `(user_id, id)` sur les 10 tables de listes et `user_id` sur `profiles` (nécessaires aux `upsert`) ; colonne `updated_at` mise à jour par un déclencheur sur chaque table (la lecture la demande : si elle manquait, la lecture échouerait).
+
+### `sw.js`
+Service worker, à la racine du site (il ne contrôle que les pages situées dans son dossier ; ne pas le déplacer dans `core/`). Enregistré par `core/offline.js` après l'événement `load`.
+
+- **Installation** : récupère la page, lit ses balises `<link href>`, `<script src>` et `<img src>` et copie chaque fichier avec son `?v=` exact (rien à tenir à jour à la main pour les CSS et JS), puis le manifeste, puis les 28 images de la liste `IMAGES` (au mieux : une image manquante ne bloque pas l'installation). Si la page ou un CSS / JS échoue, l'installation est réessayée plus tard.
+- **Page** : réseau d'abord, copie gardée si le réseau est absent ou si la réponse dépasse 4 s (`NAV_TIMEOUT_MS`) ; la requête lente continue en arrière-plan et met la copie à jour. La page est gardée sous l'adresse racine, quelle que soit la requête (`/?legal=...` par exemple).
+- **CSS et JS de l'appli** : copie servie tout de suite, rafraîchie en arrière-plan. Le `?v=` sert toujours à forcer la récupération d'un fichier modifié ; l'ancienne version du même fichier est retirée du cache.
+- **Images et `vendor/`** : copie d'abord, réseau seulement si elle manque.
+- **Jamais interceptés** : les autres origines (Supabase, FlyAway), les requêtes autres que GET et `sw.js` lui-même. Les réponses en erreur (404...) et les redirections ne sont pas gardées.
+- **Mise en ligne** : après l'ajout ou le changement de nom d'une image dans `images/`, compléter `IMAGES` et incrémenter `VERSION` (le service worker est alors réinstallé, tous les fichiers sont recopiés et les anciens caches supprimés). Pas d'attente de l'ancienne version : `skipWaiting` et `clients.claim`.
+- **Cloudflare** : les fichiers du dépôt sont servis tels quels, aucun en-tête n'est configuré. À vérifier après la mise en ligne : que `sw.js` ne soit pas servi avec un cache long (le navigateur redemande de toute façon `sw.js` au plus tard toutes les 24 h), et que `/` renvoie bien la page sans redirection (une réponse redirigée ne peut pas être servie hors ligne).
+
+### `core/offline.js`
+Enregistre `sw.js` (HTTPS ou `localhost` seulement) et affiche l'état de la connexion. Expose `window.appNet.isOnline()`. Injecte ses propres styles (`.app-net_pill`, `.app-net_toast`) : pas de fichier CSS. Aucun élément n'intercepte les appuis (`pointer-events: none`), sauf le bouton « Actualiser ».
+- **Pastille** `.app-net_pill` (haut de l'écran, sous la zone de sécurité, z-index 8000, sous les feuilles et popups) : « Hors ligne », « Hors ligne · à envoyer », « Synchronisation… » ou « Envoi en attente ». Masquée quand tout va bien.
+- **Message** `.app-net_toast` (bas de l'écran, z-index 10000) : à la perte du réseau (7 s), au retour (« Connexion rétablie »), après un envoi qui avait été en attente (« Données synchronisées »), et, sans limite de durée, « Des données plus récentes sont disponibles » avec le bouton « Actualiser » (envoie ce qui reste à envoyer, attend au plus 4 s, puis recharge). Un seul message à la fois ; celui d'actualisation n'est pas remplacé par les autres.
 
 ### `core/base.css`, `core/commun.css`
 `base.css` : reset, tokens `:root` (dont les couleurs `--wg-*` partagées par tous les modules), règles globales. `commun.css` : composants partagés (`.app-keypad`, `.app-keypad-value`, en-têtes de page, etc.). Les styles de la bottom sheet (`.app-sheet_*`) sont à la fin de `commun.css` (z-index 8900, sous les popups `.app-dialog` à 9000 : une confirmation ouverte depuis une entrée passe au-dessus). Ils n'utilisent que des jetons de `:root`, donc le thème clair s'applique sans règle dédiée.
@@ -357,12 +410,14 @@ Non référencés dans le code (à confirmer avant suppression) : `FondEcranBout
 
 ## Données persistées (`localStorage`)
 
-Copie de travail des données du compte. Toutes les clés ci-dessous sont synchronisées avec Supabase par `core/data.js` (correspondance clés -> tables dans sa section), sauf `golfSupabaseAuth`, `golfAccountUserId` et les brouillons ou parties en cours (`parcours-fairway-round`, `parcours-green-round`, `putting_resume`, `putting_resume_quick`, `wedgingInProgressSessions`, `gym-session-draft`, `golfStatsRoundDraft`), qui restent sur l'appareil.
+Copie de travail des données du compte. Toutes les clés ci-dessous sont synchronisées avec Supabase par `core/data.js` (correspondance clés -> tables dans sa section), sauf `golfSupabaseAuth`, `golfAccountUserId`, `golfSyncBase`, `golfSyncPending` et les brouillons ou parties en cours (`parcours-fairway-round`, `parcours-green-round`, `putting_resume`, `putting_resume_quick`, `wedgingInProgressSessions`, `gym-session-draft`, `golfStatsRoundDraft`), qui restent sur l'appareil.
 
 | Clé | Écrite par | Contenu |
 |---|---|---|
 | `golfSupabaseAuth` | supabase-js (`core/supabase-client.js`) | session Supabase (jetons). L'ancienne clé `golfSession` est supprimée au chargement par `auth.js` |
 | `golfAccountUserId` | `data.js` | identifiant du compte auquel la copie locale appartient |
+| `golfSyncBase` | `data.js` | état de la synchronisation : pour chaque élément connu du serveur, son empreinte et son `occurred_at`, plus l'empreinte de chaque colonne de profil. Sert à reconnaître ce qui a changé ici ou sur le serveur. Mis à jour après chaque lecture et chaque envoi |
+| `golfSyncPending` | `data.js` | file d'attente hors ligne : clé synchronisée -> date (ms) de sa dernière modification non encore envoyée. Retirée une fois tout envoyé |
 | `golfAppState` | `menu.js` | profil, réglages, radars, sac, distances |
 | `parcours-settings`, `parcours-fairway-unit` | `parcours-ui.js` | unités |
 | `parcours-fairway-round`, `parcours-green-round` | `parcours-ui.js` | tour en cours (Fairway, Green) |
@@ -379,6 +434,24 @@ Copie de travail des données du compte. Toutes les clés ci-dessous sont synchr
 ## Suivi des bugs
 
 Les bugs en cours, les tests à faire sur téléphone, les décisions attendues et l'historique des corrections ne sont plus dans ce fichier : ils sont dans `Suivi-des-bugs.docx` (statuts en couleur, répartition entre Claude et le propriétaire). Ce README décrit l'application et son code, plus les anomalies relevées lors des audits et les fonctionnalités à venir.
+
+### Anomalies relevées (mode hors ligne, 23/10/2026)
+
+Problèmes non résolus ou limites connues après l'ajout du mode hors ligne :
+
+- **Pas testé sur un vrai téléphone ni sur le vrai Supabase.** Les tests ont tourné dans un faux navigateur (voir "Mode hors ligne"). À faire sur iPhone, appli installée : ouvrir une première fois avec du réseau, passer en mode avion, relancer l'appli, saisir dans Putting, Wedging, Gym et Parcours, couper le réseau en pleine saisie, rétablir le réseau, puis vérifier les lignes dans Supabase.
+- **Première ouverture sans réseau impossible.** L'appli doit avoir été ouverte au moins une fois avec du réseau (copie d'environ 8 Mo, dont 7 Mo d'images). Un téléphone installé « à la dernière minute » sur un parcours sans réseau n'a rien à afficher.
+- **Conflits : la date de comparaison est celle de la clé, pas celle de l'élément.** Si le même élément est modifié sur deux appareils, dont un hors ligne, un changement plus ancien peut l'emporter sur un plus récent quand la clé a été réécrite plus tard pour une autre raison. Cas rare (un seul appareil en pratique) ; il faudrait une date par élément.
+- **Données d'un autre appareil non affichées après un démarrage hors ligne.** Tant que la personne n'appuie pas sur « Actualiser » (ou ne relance pas l'appli), les listes restent celles du démarrage. Rien n'est supprimé ni écrasé sur le serveur dans l'intervalle, mais les modules affichent une liste incomplète.
+- **Les brouillons et parties en cours ne sont pas synchronisés** (liste dans `core/data.js`) : une séance commencée hors ligne ne se retrouve pas sur un autre appareil. Inchangé.
+- **Ce qui demande toujours du réseau** : connexion, création de compte, mot de passe oublié, suppression des données du compte (`deleteMenuData`), recherche de parcours dans Stats (l'API FlyAway ; la saisie à la main reste possible, `stats.js` n'a pas été modifié).
+- **Déconnexion forcée.** Si Supabase invalide la session (révoquée depuis un autre appareil, expirée), `SIGNED_OUT` vide la copie locale, y compris ce qui n'a pas été envoyé. Une simple coupure réseau ne déclenche pas cet événement.
+- **Retour du réseau : premiers envois parfois refusés.** Après une longue période hors ligne (jeton d'accès expiré), supabase-js peut refuser le renouvellement de la session pendant environ une minute : l'envoi échoue puis réussit tout seul (nouveaux essais à 5, 10, 20 s...). La pastille indique « Envoi en attente » entre-temps.
+- **Fichiers copiés : une modification sans `?v=` incrémenté** s'affiche à l'ouverture suivante seulement (CSS et JS servis depuis la copie puis rafraîchis) ; la page elle-même est toujours demandée au réseau d'abord. Une image ajoutée dans `images/` sans être ajoutée à `IMAGES` dans `sw.js` n'est disponible hors ligne qu'après avoir été affichée une fois avec du réseau.
+- **iPhone, à vérifier** : dans un onglet Safari (appli non installée), le système peut vider le stockage d'un site resté longtemps sans visite, saisies non envoyées comprises ; l'appli installée sur l'écran d'accueil n'est normalement pas concernée. À confirmer sur l'appareil.
+- **Pastille « Hors ligne » en haut de l'écran** : placée sous la zone de sécurité, elle peut recouvrir un peu le haut de certains headers (centre). Elle ne capte aucun appui. À contrôler sur téléphone ; elle se déplace en changeant `top` dans `.app-net_pill` (`core/offline.js`).
+- **Mentions légales** : les textes (`MENU_DOCS`, `menu.js`) ne parlent pas de la copie d'attente gardée sur l'appareil ni du service worker. `menu.js` n'a pas été modifié.
+- **Fichiers inutiles dans le dépôt** : `core/diag.js` (plus référencé depuis le 19/10/2026) peut être supprimé ; `Suivi-des-bugs.docx` existe en deux exemplaires (racine et `docs/`), seul celui de `docs/` est cité plus haut. Le suivi n'a pas été mis à jour pour ce chantier.
 
 ### Anomalies relevées (correctifs du 19/10/2026, Accueil et Wedging)
 
@@ -431,6 +504,13 @@ Les menus de Putting, Wedging, Parcours et Gym existent (voir "Menu 3 points des
 - **Parcours** : mélanger les zones (Green, Fairway) et les outils dans un même ordre. Aujourd'hui les deux zones s'ordonnent entre elles et les quatre outils entre eux, la rangée d'outils restant sous les zones.
 - **Accueil** : réordonner ou masquer les six tuiles (Vitesse, par exemple), choisir les infos du panneau du bas. L'Accueil n'a pas de header avec bouton.
 - **Déplacer et redimensionner** : mode édition (appui long, glisser avec Pointer Events), deux tailles par bloc (compact ou large), layout stocké en JSON par module. Réservé à l'Accueil et au dashboard Stats : ailleurs, le coût dépasse le gain.
+
+### Hors ligne : pistes
+
+- Date de modification par élément (au lieu de la date par clé) pour départager deux appareils.
+- Appliquer les données d'un autre appareil sans recharger la page (chaque module relirait ses données).
+- Synchroniser aussi les brouillons et parties en cours.
+- Indicateur « données non envoyées » dans le Menu (`appData.status()` le fournit déjà).
 
 ### Autres personnalisations envisagées
 

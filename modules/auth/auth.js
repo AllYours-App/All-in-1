@@ -66,8 +66,19 @@
 
   // Déconnexion : window.authLogout()
   window.authLogout = async function () {
-    // Envoie d'abord les dernières modifications : ensuite la session et la copie locale sont retirées
-    try { if (window.appData) await window.appData.flush(); } catch (e) {}
+    // Envoie d'abord les dernières modifications : ensuite la session et la copie locale sont retirées.
+    // Attente limitée : sans réseau, l'envoi ne peut pas aboutir.
+    try {
+      if (window.appData) await Promise.race([window.appData.flush(), new Promise((r) => setTimeout(r, 8000))]);
+    } catch (e) {}
+    // Mode hors ligne : des saisies n'ont pas encore été envoyées. Se déconnecter vide la copie locale, elles seraient perdues.
+    if (window.appData && window.appData.hasPending() && typeof appConfirm === 'function') {
+      const ok = await appConfirm(
+        'Des modifications n\'ont pas encore été envoyées au serveur (pas de connexion). Si vous vous déconnectez maintenant, elles seront perdues.',
+        { confirmLabel: 'Se déconnecter', cancelLabel: 'Rester connecté', danger: true }
+      );
+      if (!ok) return;
+    }
     // scope 'local' : déconnecte cet appareil seulement. Hors ligne, l'appel réseau peut échouer : on efface la clé à la main.
     if (sb) sb.auth.signOut({ scope: 'local' }).catch(() => {});
     try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
