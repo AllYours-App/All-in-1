@@ -21,7 +21,7 @@ function renderHomeGreeting() {
   let firstName = "";
   try {
     // Même clé que STORAGE_KEY dans menu.js
-    firstName = JSON.parse(localStorage.getItem("golfAppState"))?.userProfile?.firstName ?? "";
+    firstName = JSON.parse(localStorage.getItem("golfevolution_app_state"))?.userProfile?.firstName ?? "";
   } catch (e) {
     console.error("Erreur de lecture du localStorage", e);
   }

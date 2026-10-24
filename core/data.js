@@ -6,7 +6,7 @@
    - Le serveur (Supabase) est la référence. Le localStorage en est la copie de travail :
      les modules continuent de lire et d'écrire dedans comme avant.
    - Écriture : appSafeSetItem (commun.js) prévient ce module à chaque écriture d'une clé connue.
-     La clé est notée "en attente" (golfSyncPending, dans le localStorage : elle survit à la fermeture
+     La clé est notée "en attente" (golfevolution_sync_pending, dans le localStorage : elle survit à la fermeture
      de l'appli). Dès que le réseau et les données du serveur sont là, il compare avec ce que le serveur
      contient et n'envoie que ce qui a changé. Un élément retiré d'une liste est effacé du serveur
      (delete réel de la ligne).
@@ -18,12 +18,12 @@
    - Changement de compte ou déconnexion : la copie locale est vidée. Rien n'est partagé entre comptes.
 
    Fusion (clé avec modifications en attente). Pour chaque élément, on compare 3 versions :
-     base (ce que le serveur contenait la dernière fois que cet appareil s'est synchronisé, golfSyncBase),
+     base (ce que le serveur contenait la dernière fois que cet appareil s'est synchronisé, golfevolution_sync_base),
      locale, serveur.
    - modifié ici seulement          -> la version locale part sur le serveur
    - modifié sur le serveur seulement -> la version du serveur est reprise
    - modifié des deux côtés         -> la dernière modification gagne : date de la dernière écriture locale
-                                       de la clé (golfSyncPending) contre updated_at du serveur
+                                       de la clé (golfevolution_sync_pending) contre updated_at du serveur
    La date locale est celle de la clé entière, pas de chaque élément : deux appareils qui modifient le
    MÊME élément, dont un hors ligne, peuvent se départager à tort.
 
@@ -49,9 +49,9 @@
      prévient auth.js, qui propose d'annuler la suppression ou de se déconnecter.
    - cancelDeletion() remet la colonne à null : le compte et toutes les données sont conservés.
 
-   Hors périmètre (reste sur l'appareil) : brouillons et parties en cours (golfStatsRoundDraft,
-   gym-session-draft, putting_resume*, wedgingInProgressSessions, parcours-fairway-round,
-   parcours-green-round).
+   Hors périmètre (reste sur l'appareil) : brouillons et parties en cours (golfevolution_stats_round_draft,
+   golfevolution_gym_session_draft, golfevolution_putting_resume*, golfevolution_wedging_in_progress_sessions, golfevolution_parcours_fairway_round,
+   golfevolution_parcours_green_round).
 
    Événement window 'appdata:status' (detail : { state, pending, reload }) :
      state = 'pending' (modifications à envoyer), 'syncing' (envoi en cours), 'error' (envoi impossible,
@@ -61,12 +61,12 @@
   'use strict';
 
   const sb = window.appSupabase;
-  const SESSION_KEY = window.APP_SESSION_KEY || 'golfSupabaseAuth';
+  const SESSION_KEY = window.APP_SESSION_KEY || 'golfevolution_auth';
   // Compte auquel appartient la copie locale (permet de la vider quand un autre compte se connecte)
-  const ACCOUNT_KEY = 'golfAccountUserId';
+  const ACCOUNT_KEY = 'golfevolution_account_user_id';
   // Clés d'état de la synchronisation. Vidées avec le reste des données (wipeApp), sauf si la clé est protégée.
-  const BASE_KEY = 'golfSyncBase';        // { v, uid, lists: { clé: { id: [hash, occurred_at] } }, profile: { colonne: hash } }
-  const PENDING_KEY = 'golfSyncPending';  // { clé: date (ms) de la dernière modification locale non envoyée }
+  const BASE_KEY = 'golfevolution_sync_base';        // { v, uid, lists: { clé: { id: [hash, occurred_at] } }, profile: { colonne: hash } }
+  const PENDING_KEY = 'golfevolution_sync_pending';  // { clé: date (ms) de la dernière modification locale non envoyée }
 
   const SEND_DELAY_MS = 200;      // regroupe les écritures rapprochées en un seul envoi
   const RETRY_MIN_MS = 5000;      // nouvel essai après un échec d'envoi, doublé à chaque échec...
@@ -79,26 +79,26 @@
 
   // Clé localStorage -> table. newestFirst : le module range les plus récents en premier (unshift)
   const LISTS = {
-    'golfStatsRounds':    { table: 'stats_rounds' },
-    'parcours-captures':  { table: 'parcours_captures' },
-    'putting_combines':   { table: 'putting_combines' },
-    'putting_sessions':   { table: 'putting_sessions' },
-    'putting_rounds':     { table: 'putting_rounds' },
-    'wedgingShots':       { table: 'wedging_shots' },
-    'wedgingExercises':   { table: 'wedging_exercises' },
-    'gym-programs-saved': { table: 'gym_programs' },
-    'gym-history':        { table: 'gym_history', newestFirst: true },
-    'gym-goals':          { table: 'gym_goals', newestFirst: true },
+    'golfevolution_stats_rounds':    { table: 'stats_rounds' },
+    'golfevolution_parcours_captures':  { table: 'parcours_captures' },
+    'golfevolution_putting_combines':   { table: 'putting_combines' },
+    'golfevolution_putting_sessions':   { table: 'putting_sessions' },
+    'golfevolution_putting_rounds':     { table: 'putting_rounds' },
+    'golfevolution_wedging_shots':       { table: 'wedging_shots' },
+    'golfevolution_wedging_exercises':   { table: 'wedging_exercises' },
+    'golfevolution_gym_programs_saved': { table: 'gym_programs' },
+    'golfevolution_gym_history':        { table: 'gym_history', newestFirst: true },
+    'golfevolution_gym_goals':          { table: 'gym_goals', newestFirst: true },
   };
 
   // Clé localStorage -> colonne de profiles. json : valeur JSON ; sinon texte brut. empty : valeur "vide" du serveur
   const PROFILE = {
-    'golfAppState':          { col: 'app_state', json: true, empty: {} },
-    'golfModulePrefs':       { col: 'module_prefs', json: true, empty: {} },
-    'parcours-settings':     { col: 'parcours_settings', json: true, empty: {} },
-    'golfStatsKpis':         { col: 'stats_kpis', json: true, empty: [] },
-    'parcours-fairway-unit': { col: 'parcours_fairway_unit', json: false },
-    'gym-active-program-id': { col: 'gym_active_program_id', json: false },
+    'golfevolution_app_state':          { col: 'app_state', json: true, empty: {} },
+    'golfevolution_module_prefs':       { col: 'module_prefs', json: true, empty: {} },
+    'golfevolution_parcours_settings':     { col: 'parcours_settings', json: true, empty: {} },
+    'golfevolution_stats_kpis':         { col: 'stats_kpis', json: true, empty: [] },
+    'golfevolution_parcours_fairway_unit': { col: 'parcours_fairway_unit', json: false },
+    'golfevolution_gym_active_program_id': { col: 'gym_active_program_id', json: false },
   };
 
   let userId = null;
@@ -107,7 +107,7 @@
   let syncing = false;
   let needsReload = false;    // le serveur a des données plus récentes que celles affichées (mode "late")
   let deletionAt = null;      // date (ISO) à laquelle la suppression du compte a été demandée, null sinon
-  let pending = {};           // clé -> date (ms) de la dernière modification locale non envoyée (copie de golfSyncPending)
+  let pending = {};           // clé -> date (ms) de la dernière modification locale non envoyée (copie de golfevolution_sync_pending)
   const base = {};            // clé de liste -> Map(id -> { h, o }) : hash de l'élément tel que le serveur le contenait, occurred_at
   const profBase = {};        // colonne -> hash de la valeur que le serveur contenait
   let sendTimer = null;
@@ -647,9 +647,9 @@
   // Rechargement unique : évite toute boucle si la copie locale ne se stabilise pas
   function reloadOnce() {
     try {
-      const last = Number(sessionStorage.getItem('golfSyncReload')) || 0;
+      const last = Number(sessionStorage.getItem('golfevolution_sync_reload')) || 0;
       if (Date.now() - last < 15000) return;
-      sessionStorage.setItem('golfSyncReload', String(Date.now()));
+      sessionStorage.setItem('golfevolution_sync_reload', String(Date.now()));
     } catch (e) {}
     location.reload();
   }

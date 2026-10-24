@@ -2,12 +2,12 @@
    AUTH — connexion, création de compte, mot de passe oublié
    Première page affichée tant qu'aucune session n'existe.
    Authentification : Supabase Auth (client : core/supabase-client.js, window.appSupabase).
-   La session est gardée par supabase-js dans le localStorage, sous la clé 'golfSupabaseAuth'.
+   La session est gardée par supabase-js dans le localStorage, sous la clé 'golfevolution_auth'.
    ============================================================ */
 (function () {
   'use strict';
 
-  const SESSION_KEY = window.APP_SESSION_KEY || 'golfSupabaseAuth';
+  const SESSION_KEY = window.APP_SESSION_KEY || 'golfevolution_auth';
   const sb = window.appSupabase || null;
 
   // Ancienne "session" locale (avant Supabase) : plus utilisée

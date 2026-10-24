@@ -38,7 +38,7 @@ function wedgeZoneDisplayLabel(zone) { return zone === 'Green' ? 'Trou' : zone; 
 /* ============================== 2. STORAGE ================================= */
 
 const WedgeStorage = (function () {
-  const KEYS = { SHOTS: "wedgingShots", EXERCISES: "wedgingExercises", IN_PROGRESS: "wedgingInProgressSessions" };
+  const KEYS = { SHOTS: "golfevolution_wedging_shots", EXERCISES: "golfevolution_wedging_exercises", IN_PROGRESS: "golfevolution_wedging_in_progress_sessions" };
   function read(key) {
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
     catch (e) { console.error("Wedging: lecture impossible", key, e); return []; }
@@ -378,7 +378,7 @@ window.removeWedgeShotsFromStats = removeWedgeShotsFromStats;
 function wedgeBucketFor(distance) { return Math.round(distance / 5) * 5; }
 
 // Paliers des écrans d'analyse (Dispersion, Distance, SG). Le pas (5 ou 10 m) est un réglage d'affichage du menu 3 points
-// (golfModulePrefs.wedging.step) : les coups restent enregistrés par paliers de 5 m, rien n'est modifié dans les données.
+// (golfevolution_module_prefs.wedging.step) : les coups restent enregistrés par paliers de 5 m, rien n'est modifié dans les données.
 // Au pas de 10 m, les paliers sont 30-39m, 40-49m ... 100-110m (le dernier prend la limite haute, comme au pas de 5 m).
 function wedgeAnalysisStep() { return appPrefGet('wedging', 'step', 5) === 10 ? 10 : 5; }
 function wedgeAnalysisBuckets() {
@@ -1595,7 +1595,7 @@ WedgeViews.exercices = function () {
 };
 
 /* ============================ MENU 3 POINTS ================================ */
-// Réglages d'affichage enregistrés dans golfModulePrefs.wedging (voir commun.js) :
+// Réglages d'affichage enregistrés dans golfevolution_module_prefs.wedging (voir commun.js) :
 //   defaultAnalysis : 'dispersion' | 'distance' | 'sg'  — analyse ouverte par "Voir mes analyses"
 //   step            : 5 | 10                            — pas des paliers des analyses (affichage seulement)
 // Ce menu est aussi le seul accès aux écrans d'analyse depuis le Journal et les Exercices.

@@ -638,8 +638,8 @@ let selectedCombineId = null;
 let editingCombineId = null;
 let puttingCreativeModalOpen = false;
 let puttingCreativeForm = null;
-let resumableSession = null; // exercice créé à reprendre, onglet Exercices (clé putting_resume), voir loadPuttingState()
-let resumableQuick = null; // exercice rapide à reprendre, onglet Parcours (clé putting_resume_quick). Indépendant de resumableSession : les deux peuvent exister en même temps
+let resumableSession = null; // exercice créé à reprendre, onglet Exercices (clé golfevolution_putting_resume), voir loadPuttingState()
+let resumableQuick = null; // exercice rapide à reprendre, onglet Parcours (clé golfevolution_putting_resume_quick). Indépendant de resumableSession : les deux peuvent exister en même temps
 
 /* ============================================================
    PAVÉ NUMÉRIQUE — popup générique remplaçant prompt() natif pour
@@ -778,7 +778,7 @@ const filterState = {
   stats: { sessions: '20', distance: 'all', parcours: 'all', compareA: null, compareB: null },
 };
 
-// Période par défaut choisie dans le menu 3 points (golfModulePrefs.putting.defaultSessions) : appliquée aux trois écrans d'analyse
+// Période par défaut choisie dans le menu 3 points (golfevolution_module_prefs.putting.defaultSessions) : appliquée aux trois écrans d'analyse
 (function () {
   const saved = appPrefGet('putting', 'defaultSessions', null);
   if (saved && FILTER_SESSIONS_OPTIONS.some(function (o) { return o.value === saved; })) {
@@ -1647,19 +1647,19 @@ function renderFilterSheet() {
 function savePuttingState() {
   // Stockage plein ou indisponible : appSafeSetItem (commun.js) prévient la personne.
   const persistable = puttingCombines.filter(function (c) { return !c.isQuick; });
-  appSafeSetItem('putting_combines', JSON.stringify(persistable));
-  appSafeSetItem('putting_sessions', JSON.stringify(puttingSessions));
-  appSafeSetItem('putting_rounds', JSON.stringify(puttingRounds));
+  appSafeSetItem('golfevolution_putting_combines', JSON.stringify(persistable));
+  appSafeSetItem('golfevolution_putting_sessions', JSON.stringify(puttingSessions));
+  appSafeSetItem('golfevolution_putting_rounds', JSON.stringify(puttingRounds));
   refreshAllAnalytics();
 }
 
 function loadPuttingState() {
   try {
-    const combines = localStorage.getItem('putting_combines');
-    const sessions = localStorage.getItem('putting_sessions');
-    const rounds = localStorage.getItem('putting_rounds');
-    const resume = localStorage.getItem('putting_resume');
-    const resumeQuick = localStorage.getItem('putting_resume_quick');
+    const combines = localStorage.getItem('golfevolution_putting_combines');
+    const sessions = localStorage.getItem('golfevolution_putting_sessions');
+    const rounds = localStorage.getItem('golfevolution_putting_rounds');
+    const resume = localStorage.getItem('golfevolution_putting_resume');
+    const resumeQuick = localStorage.getItem('golfevolution_putting_resume_quick');
     puttingCombines = combines ? JSON.parse(combines) : [];
     puttingSessions = sessions ? JSON.parse(sessions) : [];
     puttingRounds = rounds ? JSON.parse(rounds) : [];
@@ -1686,12 +1686,12 @@ function saveResumableSession() {
     session: activeSession,
     dateISO: new Date().toISOString(),
   };
-  appSafeSetItem('putting_resume', JSON.stringify(resumableSession));
+  appSafeSetItem('golfevolution_putting_resume', JSON.stringify(resumableSession));
 }
 
 function clearResumableSession() {
   resumableSession = null;
-  try { localStorage.removeItem('putting_resume'); } catch (e) {}
+  try { localStorage.removeItem('golfevolution_putting_resume'); } catch (e) {}
 }
 
 function resumeSession() {
@@ -1710,7 +1710,7 @@ function resumeSession() {
 }
 
 /* Exercice rapide (onglet Parcours) : sa séance est enregistrée avec son exercice, qui n'existe que le temps de la séance
-   (il n'est jamais dans putting_combines) ; on le remet dans puttingCombines à la reprise. */
+   (il n'est jamais dans golfevolution_putting_combines) ; on le remet dans puttingCombines à la reprise. */
 function saveResumableQuick() {
   const c = getCombineById(activeCombineId);
   if (!c) return;
@@ -1721,12 +1721,12 @@ function saveResumableQuick() {
     session: activeSession,
     dateISO: new Date().toISOString(),
   };
-  appSafeSetItem('putting_resume_quick', JSON.stringify(resumableQuick));
+  appSafeSetItem('golfevolution_putting_resume_quick', JSON.stringify(resumableQuick));
 }
 
 function clearResumableQuick() {
   resumableQuick = null;
-  try { localStorage.removeItem('putting_resume_quick'); } catch (e) {}
+  try { localStorage.removeItem('golfevolution_putting_resume_quick'); } catch (e) {}
 }
 
 function resumeQuickSession() {
@@ -3812,7 +3812,7 @@ function renderRoundDetailScreen(r) {
 
 /* ============================================================
    MENU 3 POINTS (headers Putting et Performance)
-   Réglages d'affichage enregistrés dans golfModulePrefs.putting (voir commun.js) :
+   Réglages d'affichage enregistrés dans golfevolution_module_prefs.putting (voir commun.js) :
    showHistory (écran principal), showPerfSg / showPerfRate / showPerfPutts
    (cartes de Performance), defaultSessions (période par défaut des filtres).
    L'affichage passe par des classes pref-hide-* sur #page-putting (CSS dans putting.css) :

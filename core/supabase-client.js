@@ -14,7 +14,7 @@
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_JWKI64mBjmEh7mY5ShL7BA_iqHlYwcc';
 
   // Clé localStorage de la session. Lue aussi par le <head> de index.html (anti-flash) et par menu.js.
-  window.APP_SESSION_KEY = 'golfSupabaseAuth';
+  window.APP_SESSION_KEY = 'golfevolution_auth';
 
   if (!window.supabase || typeof window.supabase.createClient !== 'function') {
     console.error('Supabase : bibliothèque absente (vendor/supabase.umd.min.js).');

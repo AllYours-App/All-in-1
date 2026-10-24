@@ -9,7 +9,7 @@ const menuBackLabel = document.querySelector("#page-menu .nav_back-label");
 /* ==========================================================================
    State global de l'app + persistance localStorage
    ========================================================================== */
-const MENU_STORAGE_KEY = "golfAppState";
+const MENU_STORAGE_KEY = "golfevolution_app_state";
 
 let userProfile = { firstName: "", index: null };
 
@@ -1036,7 +1036,7 @@ async function exportMenuData() {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       // Jamais dans l'export : les jetons de session, l'identifiant du compte, l'état interne de la synchronisation (data.js) et les données d'un autre compte (voir auth.js)
-      if (key === (window.APP_SESSION_KEY || "golfSupabaseAuth") || key === "golfAccountUserId" || key === "golfSyncBase" || key === "golfSyncPending" || key.startsWith("golfStash_")) continue;
+      if (key === (window.APP_SESSION_KEY || "golfevolution_auth") || key === "golfevolution_account_user_id" || key === "golfevolution_sync_base" || key === "golfevolution_sync_pending" || key.startsWith("golfevolution_stash_")) continue;
       const raw = localStorage.getItem(key);
       try { data[key] = JSON.parse(raw); } catch (e) { data[key] = raw; }
     }
@@ -1128,7 +1128,7 @@ window.addEventListener("load", () => {
   const id = new URLSearchParams(location.search).get("legal");
   if (!["cgu", "confidentialite", "mentions", "donnees"].includes(id)) return;
   let hasSession = false;
-  try { hasSession = !!localStorage.getItem(window.APP_SESSION_KEY || "golfSupabaseAuth"); } catch (e) {}
+  try { hasSession = !!localStorage.getItem(window.APP_SESSION_KEY || "golfevolution_auth"); } catch (e) {}
   openHelpPage(id, hasSession ? null : "login");
 });
 

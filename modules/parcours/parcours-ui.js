@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
    Réglages (unité de distance m / yd), persistés dans le navigateur
    -------------------------------------------------------------------------- */
 const M_TO_YD = 1.09361;
-const PARCOURS_SETTINGS_KEY = "parcours-settings";
+const PARCOURS_SETTINGS_KEY = "golfevolution_parcours_settings";
 
 let parcoursSettings = { distanceUnit: "m" };
 (function loadSettings() {
@@ -65,7 +65,7 @@ function setDistanceUnit(u) {
   renderCourseModals();
 }
 // Unité du fairway ET du green : m <-> yd (indépendante du réglage m/yd des calculs Vent / Dénivelé)
-const TRACK_UNIT_KEY = "parcours-fairway-unit";
+const TRACK_UNIT_KEY = "golfevolution_parcours_fairway_unit";
 let trackUnit = "m";
 try { if (localStorage.getItem(TRACK_UNIT_KEY) === "yd") trackUnit = "yd"; } catch (e) { /* défaut : m */ }
 function trackDistance(meters) {
@@ -854,7 +854,7 @@ function grRingsHtml() {
    FAIRWAY — suivi des mises en jeu sur 18 trous (front-end uniquement,
    juste de l'état local + persistance navigateur, aucun calcul de stats)
    ========================================================================== */
-const FW_STORAGE_KEY = "parcours-fairway-round";
+const FW_STORAGE_KEY = "golfevolution_parcours_fairway_round";
 const MARK_HIT_RADIUS_PX = 22; // tolérance de tap pour sélectionner un point déjà placé
 
 function fwDefaultHoles() {
@@ -1029,7 +1029,7 @@ function renderFairway() {
    Fairway, mais une seule zone non divisée : on place une marque à
    l'endroit exact touché, qui reste affichée sur le green du round entier)
    ========================================================================== */
-const GR_STORAGE_KEY = "parcours-green-round";
+const GR_STORAGE_KEY = "golfevolution_parcours_green_round";
 
 function grDefaultHoles() {
   return Array.from({ length: 18 }, () => ({ marks: [], skipped: false }));
@@ -1210,7 +1210,7 @@ function renderGreen() {
    dominante) + historique de progression, enregistrés en localStorage.
    ========================================================================== */
 let historyOpen = false;
-const CAPTURE_STORAGE_KEY = "parcours-captures";
+const CAPTURE_STORAGE_KEY = "golfevolution_parcours_captures";
 
 function openHistoryModal() { historyOpen = true; renderCourseModals(); }
 function closeHistoryModal() { historyOpen = false; renderCourseModals(); }
@@ -1406,7 +1406,7 @@ function saveHistoryEntry() {
 
 /* ==========================================================================
    MENU 3 POINTS (accueil Parcours)
-   Réglages d'affichage enregistrés dans golfModulePrefs.parcours (voir commun.js) :
+   Réglages d'affichage enregistrés dans golfevolution_module_prefs.parcours (voir commun.js) :
      zoneOrder / zoneHidden : ordre et visibilité du Green et du Fairway
      toolOrder / toolHidden : ordre et visibilité de Vent, Dénivelé, Distance, Historique
      largeText, highContrast : lisibilité en plein soleil (classes pc-large-text / pc-high-contrast

@@ -7,7 +7,7 @@
 /* ---------------------------------------------------------------------------
    THÈME — sombre (par défaut) ou clair. Le thème clair est défini dans
    theme-light.css et s'active avec <html data-theme="light">. Le réglage est
-   enregistré dans golfAppState.settings.theme (Menu > Apparence) ; un petit
+   enregistré dans golfevolution_app_state.settings.theme (Menu > Apparence) ; un petit
    script dans le <head> d'index.html le pose avant le premier affichage.
    --------------------------------------------------------------------------- */
 function applyAppTheme(theme) {
@@ -216,13 +216,13 @@ function appPrompt(label, defaultValue, options) {
 /* ---------------------------------------------------------------------------
    PRÉFÉRENCES PAR MODULE — réglages d'affichage choisis depuis le menu "3 points"
    des headers (Putting, Wedging, Parcours, Gym). Une seule clé localStorage,
-   golfModulePrefs, de la forme { putting: {...}, wedging: {...}, ... }.
-   Volontairement séparée de golfAppState (gérée par menu.js, qui la réécrit en
+   golfevolution_module_prefs, de la forme { putting: {...}, wedging: {...}, ... }.
+   Volontairement séparée de golfevolution_app_state (gérée par menu.js, qui la réécrit en
    entier depuis sa propre copie en mémoire).
      appPrefGet(module, clé, valeurParDéfaut)  -> valeur enregistrée ou défaut
      appPrefSet(module, clé, valeur)           -> true | false (écriture via appSafeSetItem)
    --------------------------------------------------------------------------- */
-var APP_PREFS_KEY = 'golfModulePrefs';
+var APP_PREFS_KEY = 'golfevolution_module_prefs';
 
 function appPrefsRead() {
   try {

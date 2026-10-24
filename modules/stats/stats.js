@@ -1006,7 +1006,7 @@
      puis chaque écran recalcule ses données depuis ces parties (computeXxx).
      ======================================================================== */
 
-  const ROUNDS_KEY = 'golfStatsRounds';
+  const ROUNDS_KEY = 'golfevolution_stats_rounds';
   const ALL_COURSES = 'Tous parcours';
   const ALL_LIES = 'Tous lies';
   const FIR_HIT = 'Centre';          // choix Gauche / Centre / Droite : Centre = fairway touché
@@ -1077,8 +1077,8 @@
   /* ---------- Brouillon de la partie en cours (point 29) ----------
      Les deux saisies l'écrivent à chaque changement : un rechargement, une fermeture de l'appli ou un déchargement
      par iOS ne fait plus perdre la partie. Effacé à l'enregistrement ; ignoré au-delà de 24 h.
-     Modèles : `gym-session-draft` (gym.js), `resumableSession` (putting.js). */
-  const DRAFT_KEY = 'golfStatsRoundDraft';
+     Modèles : `golfevolution_gym_session_draft` (gym.js), `resumableSession` (putting.js). */
+  const DRAFT_KEY = 'golfevolution_stats_round_draft';
   const DRAFT_MAX_AGE = 24 * 60 * 60 * 1000;
   const DRAFT_SCREENS = ['saisie-rapide', 'saisie-detaillee'];
 
@@ -1423,7 +1423,7 @@
   }
 
   /* ---------- Indicateurs choisis ("Mes indicateurs") ---------- */
-  const KPI_KEY = 'golfStatsKpis';
+  const KPI_KEY = 'golfevolution_stats_kpis';
 
   function loadKpiKeys() {
     try {

@@ -869,7 +869,7 @@ document.getElementById("app-root-gym").innerHTML = `
 
 /* ==========================================================================
    GYM — Menu 3 points des headers
-   Réglages d'affichage enregistrés dans golfModulePrefs.gym (voir commun.js) :
+   Réglages d'affichage enregistrés dans golfevolution_module_prefs.gym (voir commun.js) :
      weightUnit  : 'kg' | 'lb'  — unité d'affichage et de saisie des poids
      defaultRest : 'auto' | '30s' | '45s' | '60s' | '90s' | '120s'  — repos quand l'exercice n'en précise pas
    Les poids restent STOCKÉS EN KG (séances, historique, objectifs) : l'unité ne change que
@@ -2538,7 +2538,7 @@ const TEMPO_OPTIONS = ["2-0-2-0", "3-1-1-0", "4-0-1-0"];
 
 /* Enregistrement des programmes dans le localStorage du navigateur.
    Seuls les programmes enregistrés via le bouton sont rechargés au démarrage. */
-const GYM_STORAGE_KEY = "gym-programs-saved";
+const GYM_STORAGE_KEY = "golfevolution_gym_programs_saved";
 
 function gymReadSavedPrograms() {
   try {
@@ -2564,8 +2564,8 @@ const PROGRAMS = gymReadSavedPrograms();
    historique des séances et objectifs sont réécrits à chaque modification,
    pour que Progression, Historique et Objectifs retrouvent les mêmes données
    après un rechargement. */
-const GYM_HISTORY_KEY = "gym-history";
-const GYM_GOALS_KEY = "gym-goals";
+const GYM_HISTORY_KEY = "golfevolution_gym_history";
+const GYM_GOALS_KEY = "golfevolution_gym_goals";
 
 function gymReadList(key) {
   try {
@@ -2607,7 +2607,7 @@ function gymGetProgram(id) {
 
 /* ---- Programme en cours (sélection manuelle depuis la liste des programmes) --- */
 
-const GYM_ACTIVE_PROGRAM_KEY = "gym-active-program-id";
+const GYM_ACTIVE_PROGRAM_KEY = "golfevolution_gym_active_program_id";
 
 function gymGetActiveProgramId() {
   try {
@@ -4962,7 +4962,7 @@ function gymRenderDualChart(points, series, selected) {
      déchargement de l'appli par le téléphone ne fasse pas perdre une séance d'une
      heure. Un seul brouillon à la fois ; il est effacé quand la séance est
      terminée, et ignoré au-delà de 12 h. */
-  const GYM_DRAFT_KEY = "gym-session-draft";
+  const GYM_DRAFT_KEY = "golfevolution_gym_session_draft";
   const GYM_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
   function saveDraft() {
