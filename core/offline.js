@@ -4,6 +4,10 @@
    1) enregistrer sw.js (copie de l'appli pour l'ouvrir et l'utiliser sans réseau) ;
    2) prévenir la personne, sans jamais la gêner, quand la connexion tombe ou revient.
 
+   Affichage : un message en bas de l'écran apparaît quelques secondes quand la connexion tombe ou
+   revient, sur n'importe quelle page. La pastille « Hors ligne » en haut de l'écran, elle, reste affichée
+   SEULEMENT sur la page d'accueil (#page-home) tant que la situation dure ; ailleurs elle est masquée.
+
    Rien ici ne bloque l'écran : les messages ne captent aucun appui (pointer-events: none), sauf le
    bouton « Actualiser », et la perte de connexion n'impose PAS de redémarrer l'appli. Tout est déjà
    chargé en mémoire et les saisies sont gardées sur l'appareil (voir data.js). Le seul message qui
@@ -31,6 +35,7 @@
   let hadWork = false;          // des modifications attendaient d'être envoyées : on confirmera l'envoi
   let reloadDismissed = false;
   let reloadShown = false;      // le message « Actualiser » est affiché : les autres ne le remplacent pas
+  let reloadAwayShown = false;  // déjà proposé (10 s) hors de l'accueil : pas de répétition à chaque événement
 
   window.appNet = { isOnline: function () { return online; } };
 
@@ -64,10 +69,28 @@
   toast.setAttribute('role', 'status');
   toast.setAttribute('aria-live', 'polite');
 
+  const homeActive = function () {
+    const home = document.getElementById('page-home');
+    return !!home && home.classList.contains('active');
+  };
+
   function mount() {
     document.body.appendChild(pill);
     document.body.appendChild(toast);
     render();
+    // La pastille suit la page affichée (showPage change la classe "active" des pages)
+    const home = document.getElementById('page-home');
+    if (home && window.MutationObserver) {
+      let wasHome = homeActive();
+      new MutationObserver(function () {
+        const isHome = homeActive();
+        if (isHome === wasHome) return;
+        wasHome = isHome;
+        render();
+        if (isHome) { reloadAwayShown = false; offerReload(); }
+        else if (reloadShown) hideToast();   // on quitte l'accueil : le choix « Actualiser » est retiré, il reviendra au retour
+      }).observe(home, { attributes: true, attributeFilter: ['class'] });
+    }
   }
   if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
 
@@ -95,7 +118,7 @@
     toast.classList.remove('is-visible');
   }
 
-  // Pastille d'état en haut de l'écran : visible seulement quand quelque chose est à signaler
+  // Pastille d'état en haut de l'écran : visible seulement sur la page d'accueil, et seulement quand quelque chose est à signaler
   function render() {
     if (!pill.parentNode) return;
     let label = '';
@@ -104,14 +127,16 @@
     else if (data.state === 'syncing') { label = 'Synchronisation…'; syncing = true; }
     else if (data.state === 'error') label = 'Envoi en attente';
     pill.textContent = label;
-    pill.classList.toggle('is-visible', !!label);
+    pill.classList.toggle('is-visible', !!label && homeActive());
     pill.classList.toggle('is-syncing', syncing);
   }
 
   function offerReload() {
     if (reloadDismissed || !data.reload || reloadShown) return;
+    if (!homeActive()) { if (reloadAwayShown) return; reloadAwayShown = true; }
     reloadShown = true;
-    showToast('Des données plus récentes sont disponibles. Vos saisies sont déjà enregistrées.', 0, {
+    // Sur l'accueil le choix reste affiché ; ailleurs il disparaît au bout de quelques secondes (il revient en retournant à l'accueil)
+    showToast('Des données plus récentes sont disponibles. Vos saisies sont déjà enregistrées.', homeActive() ? 0 : 10000, {
       label: 'Actualiser',
       onClick: function () {
         reloadDismissed = true;
