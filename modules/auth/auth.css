@@ -96,10 +96,12 @@ html.login-locked {
 
 .auth_logo-text {
   color: var(--auth-text);
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 800;
-  letter-spacing: 0.35em;
-  padding-left: 0.35em;
+  letter-spacing: 0.22em;
+  padding-left: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .auth_header {

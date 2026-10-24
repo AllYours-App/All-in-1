@@ -619,7 +619,7 @@ function updateWedgeDistanceValue(clubId, entryId, value) {
 const menuTodo = (label) => `[À COMPLÉTER : ${label}]`;
 
 const MENU_LEGAL = {
-  appName: "All-in-1",
+  appName: "GolfEvolution",
   appVersion: "1.0.0",
   updatedAt: "24 octobre 2026",
   editorName: "Pierre-Antton Ducoin",

@@ -1,6 +1,6 @@
 {
-  "name": "Golf App",
-  "short_name": "Golf App",
+  "name": "GolfEvolution",
+  "short_name": "GolfEvolution",
   "lang": "fr",
   "start_url": "/",
   "display": "standalone",

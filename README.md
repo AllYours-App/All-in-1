@@ -1,6 +1,8 @@
-# All-in-1
+# GolfEvolution
 
 Application golf mobile-first : parcours, putting, wedging, stats, gym, profil. Tout est en HTML/CSS/JS vanilla, sans framework ni étape de build. Hébergée sur Cloudflare (`all-in-1.ducoin-co.workers.dev`), qui remplace Vercel : le plan gratuit de Vercel excluait l'usage commercial. À revérifier dans les conditions de Cloudflare avant la mise en ligne publique (voir "Mise en ligne et conformité").
+
+**Nom de l'appli : GolfEvolution** (anciennement « All-in-1 » puis « Golf App »). Il est défini dans `index.html` (`<title>`, titre de l'appli sur l'écran d'accueil iPhone, logo des quatre écrans de connexion), `manifest.webmanifest` (`name`, `short_name`) et `modules/menu/menu.js` (`MENU_LEGAL.appName`, repris automatiquement dans les CGU, la page « À propos », l'objet du mail de support et le nom du fichier d'export JSON). Les identifiants techniques gardent volontairement leurs anciens noms pour ne pas casser les données déjà enregistrées : clés `localStorage` (`golfAppState`, `golfModulePrefs`, `golfSupabaseAuth`…), colonnes Supabase, nom du dépôt GitHub (`AllYours-App/All-in-1`) et adresse Cloudflare (`all-in-1.ducoin-co.workers.dev`).
 
 La connexion passe par Supabase Auth (e-mail et mot de passe ; pas de connexion Apple ni Google). Les données de jeu, de profil et de réglages appartiennent au compte : `core/data.js` les synchronise avec les tables Supabase, le `localStorage` n'en est qu'une copie de travail (voir "Brancher Supabase" et la section `core/data.js`). Un mode hors ligne permet d'ouvrir et d'utiliser l'appli sans réseau : un service worker (`sw.js`) garde une copie de l'appli, et `core/data.js` met les saisies en file d'attente puis les envoie au retour de la connexion (voir "Mode hors ligne" et les sections `sw.js`, `core/offline.js`).
 
@@ -8,7 +10,7 @@ La connexion passe par Supabase Auth (e-mail et mot de passe ; pas de connexion 
 
 Cette partie décrit l'application du point de vue de l'utilisateur, sans vocabulaire technique. La documentation technique commence à la section "Architecture".
 
-All-in-1 est un carnet d'entraînement et de jeu pour golfeur, utilisable sur téléphone. On s'y connecte, on arrive sur un accueil qui propose six parties de travail, et chacune se concentre sur un aspect du jeu. Les données sont enregistrées sur l'appareil puis envoyées au compte ; sans réseau, l'appli reste utilisable (voir "Mode hors ligne").
+GolfEvolution est un carnet d'entraînement et de jeu pour golfeur, utilisable sur téléphone. On s'y connecte, on arrive sur un accueil qui propose six parties de travail, et chacune se concentre sur un aspect du jeu. Les données sont enregistrées sur l'appareil puis envoyées au compte ; sans réseau, l'appli reste utilisable (voir "Mode hors ligne").
 
 ### Connexion et création de compte
 Écran de départ tant qu'on n'est pas connecté. On saisit son adresse e-mail et son mot de passe (8 caractères minimum à la création du compte). On peut afficher ou masquer le mot de passe. À la création du compte, un e-mail de confirmation est envoyé : on ouvre son lien, puis on se connecte. "Mot de passe oublié ?" envoie un lien par e-mail ; il ouvre l'écran "Nouveau mot de passe". Une fois connecté, on retombe directement sur l'accueil aux ouvertures suivantes. La déconnexion se fait depuis le Menu. Sous les formulaires, les liens "conditions d'utilisation" et "politique de confidentialité" ouvrent les textes correspondants sans qu'il faille être connecté.
@@ -333,7 +335,7 @@ Service worker, à la racine du site (il ne contrôle que les pages situées dan
 - **CSS et JS de l'appli** : copie servie tout de suite, rafraîchie en arrière-plan. Le `?v=` sert toujours à forcer la récupération d'un fichier modifié ; l'ancienne version du même fichier est retirée du cache.
 - **Images et `vendor/`** : copie d'abord, réseau seulement si elle manque.
 - **Jamais interceptés** : les autres origines (Supabase, FlyAway), les requêtes autres que GET et `sw.js` lui-même. Les réponses en erreur (404...) et les redirections ne sont pas gardées.
-- **Ajouter une image** (par exemple `images/NouveauFond.webp` ajoutée au dépôt) : dans `sw.js`, ajouter son chemin dans la liste `IMAGES` (même forme que les autres, sans `/` au début : `'images/NouveauFond.webp',`, avec une virgule) et changer `VERSION` (`'golf-v1'` devient `'golf-v2'`). Le téléphone détecte alors un `sw.js` différent, le réinstalle, recopie tous les fichiers (images comprises) et supprime l'ancienne copie. Sans cela, l'image s'affiche quand même avec du réseau (et est gardée à ce moment-là), mais pas avant. Renommer ou supprimer une image : même chose. Modifier le contenu d'une image en gardant son nom : changer `VERSION` aussi. Les CSS et JS n'ont pas besoin de ça (le `?v=` suffit). Pas d'attente de l'ancienne version : `skipWaiting` et `clients.claim`.
+- **Ajouter une image** (par exemple `images/NouveauFond.webp` ajoutée au dépôt) : dans `sw.js`, ajouter son chemin dans la liste `IMAGES` (même forme que les autres, sans `/` au début : `'images/NouveauFond.webp',`, avec une virgule) et changer `VERSION` (`'golfevolution-v1'` devient `'golfevolution-v2'`). Le téléphone détecte alors un `sw.js` différent, le réinstalle, recopie tous les fichiers (images comprises) et supprime l'ancienne copie. Sans cela, l'image s'affiche quand même avec du réseau (et est gardée à ce moment-là), mais pas avant. Renommer ou supprimer une image : même chose. Modifier le contenu d'une image en gardant son nom : changer `VERSION` aussi. Les CSS et JS n'ont pas besoin de ça (le `?v=` suffit). Pas d'attente de l'ancienne version : `skipWaiting` et `clients.claim`.
 - **Cloudflare** : les fichiers du dépôt sont servis tels quels, aucun en-tête n'est configuré. À vérifier après la mise en ligne : que `sw.js` ne soit pas servi avec un cache long (le navigateur redemande de toute façon `sw.js` au plus tard toutes les 24 h), et que `/` renvoie bien la page sans redirection (une réponse redirigée ne peut pas être servie hors ligne).
 
 ### `core/offline.js`
@@ -436,6 +438,14 @@ Copie de travail des données du compte. Toutes les clés ci-dessous sont synchr
 ## Suivi des bugs
 
 Les bugs en cours, les tests à faire sur téléphone, les décisions attendues et l'historique des corrections ne sont plus dans ce fichier : ils sont dans `Suivi-des-bugs.docx` (statuts en couleur, répartition entre Claude et le propriétaire). Ce README décrit l'application et son code, plus les anomalies relevées lors des audits et les fonctionnalités à venir.
+
+### Points en suspens après le changement de nom (24/10/2026)
+
+- **Dépôt, adresse et projet toujours nommés « All-in-1 ».** Le dépôt GitHub, l'adresse Cloudflare `all-in-1.ducoin-co.workers.dev` et l'ancienne adresse Vercel n'ont pas été renommés (les changer oblige à mettre à jour les URL autorisées de Supabase, voir « Brancher Supabase »). Le nom visible dans l'appli est bien GolfEvolution.
+- **Nom déjà installé sur les téléphones.** L'icône ajoutée à l'écran d'accueil garde l'ancien titre (« Golf App ») tant qu'elle n'est pas supprimée puis réajoutée ; Android relit le manifeste, mais pas toujours tout de suite.
+- **Logo de connexion en majuscules.** Le logo des écrans de connexion s'affiche en majuscules (`GOLFEVOLUTION`) pour garder le style d'origine, avec une taille réduite pour tenir sur un écran étroit. À vérifier sur téléphone.
+- **`docs/Suivi-des-bugs.docx` et `Suivi-des-bugs.docx`** n'ont pas été modifiés (fichiers Word) : ils peuvent encore citer l'ancien nom.
+- **Nom des programmes de Gym.** Les programmes « Golf · … » de `gym.js` désignent le sport et n'ont pas été renommés.
 
 ### Anomalies relevées (suppression du compte, 24/10/2026)
 

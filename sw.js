@@ -15,7 +15,7 @@
    ============================================================ */
 'use strict';
 
-const VERSION = 'golf-v1';
+const VERSION = 'golfevolution-v1';
 const CACHE = VERSION;
 const NAV_TIMEOUT_MS = 4000;
 
