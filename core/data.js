@@ -8,8 +8,8 @@
    - Écriture : appSafeSetItem (commun.js) prévient ce module à chaque écriture d'une clé connue.
      La clé est notée "en attente" (golfSyncPending, dans le localStorage : elle survit à la fermeture
      de l'appli). Dès que le réseau et les données du serveur sont là, il compare avec ce que le serveur
-     contient et n'envoie que ce qui a changé. Une suppression n'efface pas la ligne : elle renseigne
-     deleted_at (suppression douce).
+     contient et n'envoie que ce qui a changé. Un élément retiré d'une liste est effacé du serveur
+     (delete réel de la ligne).
    - MODE HORS LIGNE : sans réseau, tout continue de fonctionner sur la copie locale. Les clés modifiées
      restent en attente et partent au retour du réseau, même si l'appli a été fermée entre-temps.
    - Lecture : au démarrage avec une session, tout est relu depuis le serveur. Une clé sans modification
@@ -35,8 +35,19 @@
 
    Tables (supabase/schema.sql) :
    - 10 tables de listes : user_id, id (texte), occurred_at, data (jsonb), created_at, updated_at, deleted_at.
-     Clé primaire (user_id, id). Une ligne = un élément de la liste.
-   - profiles : une ligne par personne, une colonne par clé de réglages.
+     Clé primaire (user_id, id). Une ligne = un élément de la liste. deleted_at ne sert plus : l'ancienne
+     suppression douce a été remplacée par un delete réel (supabase/suppression-compte.sql efface les
+     lignes encore marquées) ; la lecture ignore par prudence toute ligne où deleted_at est renseigné.
+   - profiles : une ligne par personne, une colonne par clé de réglages, plus deletion_requested_at
+     (suppression du compte programmée, voir plus bas).
+
+   Suppression du compte (30 jours pour changer d'avis) :
+   - requestDeletion() inscrit la date dans profiles.deletion_requested_at : le serveur garde le compte et
+     les données ; supabase/suppression-compte.sql supprime le compte (auth.users) et ses lignes au bout de
+     DELETION_DELAY_DAYS jours, chaque nuit (pg_cron). Le délai doit rester le même des deux côtés.
+   - À chaque lecture du profil, l'événement 'appdata:account' (detail : { deletionRequestedAt, purgeAt })
+     prévient auth.js, qui propose d'annuler la suppression ou de se déconnecter.
+   - cancelDeletion() remet la colonne à null : le compte et toutes les données sont conservés.
 
    Hors périmètre (reste sur l'appareil) : brouillons et parties en cours (golfStatsRoundDraft,
    gym-session-draft, putting_resume*, wedgingInProgressSessions, parcours-fairway-round,
@@ -61,6 +72,7 @@
   const RETRY_MIN_MS = 5000;      // nouvel essai après un échec d'envoi, doublé à chaque échec...
   const RETRY_MAX_MS = 60000;     // ...jusqu'à une minute
   const FLUSH_WAIT_MS = 6000;     // attente maximale de l'envoi avant de recharger la page
+  const DELETION_DELAY_DAYS = 30; // délai avant la suppression réelle du compte (identique dans supabase/suppression-compte.sql)
   const PAGE_SIZE = 1000;         // PostgREST renvoie au plus 1000 lignes par requête
   const UPSERT_CHUNK = 50;        // une partie Stats peut être lourde : paquets de 50 lignes
   const DELETE_CHUNK = 100;
@@ -94,6 +106,7 @@
   let startPromise = null;
   let syncing = false;
   let needsReload = false;    // le serveur a des données plus récentes que celles affichées (mode "late")
+  let deletionAt = null;      // date (ISO) à laquelle la suppression du compte a été demandée, null sinon
   let pending = {};           // clé -> date (ms) de la dernière modification locale non envoyée (copie de golfSyncPending)
   const base = {};            // clé de liste -> Map(id -> { h, o }) : hash de l'élément tel que le serveur le contenait, occurred_at
   const profBase = {};        // colonne -> hash de la valeur que le serveur contenait
@@ -259,7 +272,7 @@
     try { had = !!localStorage.getItem(ACCOUNT_KEY); } catch (e) {}
     wipeApp();
     try { localStorage.removeItem(ACCOUNT_KEY); } catch (e) {}
-    userId = null; ready = false; startPromise = null; needsReload = false;
+    userId = null; ready = false; startPromise = null; needsReload = false; deletionAt = null;
     clearTimeout(sendTimer); clearTimeout(retryTimer);
     pending = {};
     Object.keys(base).forEach((k) => delete base[k]);
@@ -276,7 +289,7 @@
     for (let from = 0; ; from += PAGE_SIZE) {
       const { data, error } = await sb.from(cfg.table)
         .select('id,data,occurred_at,updated_at')
-        .is('deleted_at', null)
+        .is('deleted_at', null)   // ancienne suppression douce : ces lignes sont ignorées (et effacées par supabase/suppression-compte.sql)
         .order('occurred_at', { ascending: asc, nullsFirst: false })
         .order('created_at', { ascending: asc })
         .order('id', { ascending: asc })
@@ -366,6 +379,7 @@
     const late = !!isLate();
     let changed = false;
     let reload = false;
+    deletionAt = profile && profile.deletion_requested_at ? profile.deletion_requested_at : null;
 
     keys.forEach((key, i) => {
       const rows = lists[i];
@@ -476,7 +490,7 @@
       if (prev && prev.h === h) return; // déjà à jour sur le serveur
       // Éléments sans date : on garde l'ordre d'insertion grâce à un horodatage croissant, conservé ensuite
       const occurredAt = occurredOf(item, id) || (prev && prev.o) || new Date(Date.now() + order++).toISOString();
-      // deleted_at: null : ré-ajouter un élément supprimé auparavant le fait réapparaître
+      // deleted_at: null : une ligne encore marquée par l'ancienne suppression douce redevient visible
       rows.push({ user_id: userId, id, occurred_at: occurredAt, data: item, deleted_at: null });
       marks.push([id, { h, o: occurredAt }]);
     });
@@ -487,14 +501,14 @@
       marks.slice(i, i + UPSERT_CHUNK).forEach(([id, m]) => b.set(id, m));
     }
 
-    // Éléments retirés de la liste : suppression douce (deleted_at), la ligne reste sur le serveur.
+    // Éléments retirés de la liste : la ligne est effacée du serveur.
     // Seuls les éléments connus de cet appareil (la base) sont concernés : un élément arrivé d'un autre appareil
     // et pas encore affiché ici n'est jamais supprimé.
     const gone = Array.from(b.keys()).filter((id) => !seen.has(id));
     for (let i = 0; i < gone.length; i += DELETE_CHUNK) {
       const part = gone.slice(i, i + DELETE_CHUNK);
       const { error } = await sb.from(cfg.table)
-        .update({ deleted_at: new Date().toISOString() })
+        .delete()
         .eq('user_id', userId)
         .in('id', part);
       if (error) throw error;
@@ -613,6 +627,7 @@
         changed = res.changed || changed;
         needsReload = res.reload;
         ready = true;
+        announceAccount();
         // Modifications faites hors ligne : envoyées avant un éventuel rechargement de la page
         if (pendingKeys().length) {
           await Promise.race([flush(), new Promise((r) => setTimeout(r, FLUSH_WAIT_MS))]);
@@ -639,29 +654,45 @@
     location.reload();
   }
 
-  /* ---------- Suppression de toutes les données du compte ---------- */
+  /* ---------- Suppression du compte (programmée, 30 jours pour changer d'avis) ---------- */
 
-  // Efface sur le serveur toutes les lignes de l'utilisateur (suppression réelle, pas douce).
-  // La suppression du compte lui-même demande une Edge Function (auth.admin.deleteUser), voir menu.js.
-  async function deleteRemote() {
-    const uid = userId || storedUserId();
-    if (!sb || !uid) throw new Error('Aucun compte connecté');
-    clearTimeout(sendTimer);
-    clearTimeout(retryTimer);
-    const tables = Object.keys(LISTS).map((k) => LISTS[k].table).concat('profiles');
-    for (const table of tables) {
-      const { error } = await sb.from(table).delete().eq('user_id', uid);
-      if (error) throw error;
-    }
-    // Rien ne doit plus partir : les modifications en attente concernaient des données qui n'existent plus
-    pending = {};
-    savePending();
+  const purgeDate = (requestedAt) => new Date(Date.parse(requestedAt) + DELETION_DELAY_DAYS * 86400000).toISOString();
+
+  // Prévient auth.js de l'état de la suppression du compte (à chaque lecture du profil et après chaque changement)
+  function announceAccount() {
+    const detail = { deletionRequestedAt: deletionAt, purgeAt: deletionAt ? purgeDate(deletionAt) : null };
+    try { window.dispatchEvent(new CustomEvent('appdata:account', { detail })); } catch (e) {}
+  }
+
+  // Programme la suppression du compte : le serveur garde tout pendant DELETION_DELAY_DAYS jours, puis supprime
+  // le compte et ses données. Demande du réseau. Renvoie la date de suppression définitive (ISO).
+  // L'appelant (menu.js) déconnecte ensuite l'appareil et vide la copie locale.
+  async function requestDeletion() {
+    if (!sb || !userId) throw new Error('Aucun compte connecté');
+    // Ce qui n'est pas encore envoyé part d'abord : l'annulation de la suppression doit tout retrouver
+    await Promise.race([flush(), new Promise((r) => setTimeout(r, FLUSH_WAIT_MS))]);
+    if (pendingKeys().length) throw new Error('Des données ne sont pas encore envoyées');
+    const at = new Date().toISOString();
+    const { error } = await sb.from('profiles').upsert({ user_id: userId, deletion_requested_at: at }, { onConflict: 'user_id' });
+    if (error) throw error;
+    deletionAt = at;
+    return purgeDate(at);
+  }
+
+  // Annule la suppression programmée : le compte et toutes les données sont conservés
+  async function cancelDeletion() {
+    if (!sb || !userId) throw new Error('Aucun compte connecté');
+    const { error } = await sb.from('profiles').upsert({ user_id: userId, deletion_requested_at: null }, { onConflict: 'user_id' });
+    if (error) throw error;
+    deletionAt = null;
+    announceAccount();
   }
 
   window.appData = {
-    start, flush, onWrite, clearLocal, deleteRemote, status,
+    start, flush, onWrite, clearLocal, requestDeletion, cancelDeletion, status,
     isReady: () => ready,
     hasPending: () => pendingKeys().length > 0,
+    deletionRequestedAt: () => deletionAt,
   };
 
   /* ---------- Au chargement ---------- */

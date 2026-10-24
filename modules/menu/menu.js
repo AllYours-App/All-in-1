@@ -621,7 +621,7 @@ const menuTodo = (label) => `[À COMPLÉTER : ${label}]`;
 const MENU_LEGAL = {
   appName: "All-in-1",
   appVersion: "1.0.0",
-  updatedAt: "20 octobre 2026",
+  updatedAt: "24 octobre 2026",
   editorName: "Pierre-Antton Ducoin",
   editorStatus: "éditeur non professionnel",
   contactEmail: "contactgolfevolution@gmail.com",
@@ -708,7 +708,7 @@ const MENU_FAQ = [
     items: [
       ["Où sont enregistrées mes données ?", "Sur nos serveurs sécurisés, liées à votre compte, avec une copie de travail sur votre téléphone. Désinstaller l'application n'efface donc pas votre compte : reconnectez-vous pour tout retrouver."],
       ["Comment changer de téléphone sans tout perdre ?", "Connectez-vous avec le même compte sur le nouvel appareil : vos données sont retrouvées. Vous pouvez aussi conserver une copie depuis Aide & support, rubrique Mes données."],
-      ["Comment supprimer mon compte ?", "Menu, Aide & support, Mes données, puis Supprimer mon compte et mes données. Votre compte et vos données sont effacés de nos serveurs et de l'appareil, de façon définitive."],
+      ["Comment supprimer mon compte ?", "Menu, Aide & support, Mes données, puis Supprimer mon compte et mes données. Vous êtes déconnecté et la suppression est programmée : pendant 30 jours, vous pouvez l'annuler en vous reconnectant. Passé ce délai, votre compte et vos données sont effacés de nos serveurs, de façon définitive. La copie de l'appareil est effacée tout de suite."],
       ["Mes données sont-elles revendues ?", "Non. Vos données ne sont ni vendues, ni utilisées à des fins publicitaires."],
     ],
   },
@@ -916,7 +916,7 @@ const MENU_DOCS = {
         "Respecter nos obligations légales.",
       ] },
       { h: "7. Durées de conservation", ul: [
-        "Données du compte, du profil, des réglages et d'entraînement : conservées tant que votre compte existe. À sa suppression, elles sont effacées de nos serveurs ; d'éventuelles sauvegardes techniques sont purgées à l'issue de leur cycle de rotation.",
+        "Données du compte, du profil, des réglages et d'entraînement : conservées tant que votre compte existe. Après une demande de suppression du compte, elles sont conservées 30 jours (délai laissé pour annuler), puis effacées de nos serveurs ; d'éventuelles sauvegardes techniques sont purgées à l'issue de leur cycle de rotation.",
         "Messages envoyés au support : conservés le temps nécessaire au traitement de votre demande, puis au maximum 3 ans.",
         "Données techniques de connexion : conservées par nos prestataires pour une durée limitée, selon leurs politiques.",
       ] },
@@ -1010,9 +1010,9 @@ function renderDataScreen(back, label) {
       </section>
       <section class="data_card is-danger">
         <h2 class="data_title">Supprimer mon compte et mes données</h2>
-        <p class="data_text">Efface définitivement votre compte et toutes vos données, sur nos serveurs et sur cet appareil : profil, réglages, sac, distances, parties, putting, wedging et gym. Cette action est irréversible.</p>
+        <p class="data_text">Programme la suppression de votre compte et de toutes vos données : profil, réglages, sac, distances, parties, putting, wedging et gym. Vous êtes déconnecté tout de suite et la copie de cet appareil est effacée. Pendant 30 jours, vous pouvez changer d'avis : reconnectez-vous et choisissez d'annuler la suppression. Passé ce délai, la suppression est définitive et irréversible.</p>
         ${menuDeleteConfirm ? `
-        <p class="data_text is-strong">Confirmer la suppression définitive ?</p>
+        <p class="data_text is-strong">Confirmer la suppression du compte ?</p>
         <div class="data_actions">
           <button type="button" class="data_button is-neutral" onclick="cancelDeleteMenuData()">Annuler</button>
           <button type="button" class="data_button is-danger" onclick="deleteMenuData()">Supprimer</button>
@@ -1035,8 +1035,8 @@ async function exportMenuData() {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      // Jamais dans l'export : les jetons de session, l'identifiant du compte et les données d'un autre compte (voir auth.js)
-      if (key === (window.APP_SESSION_KEY || "golfSupabaseAuth") || key === "golfAccountUserId" || key.startsWith("golfStash_")) continue;
+      // Jamais dans l'export : les jetons de session, l'identifiant du compte, l'état interne de la synchronisation (data.js) et les données d'un autre compte (voir auth.js)
+      if (key === (window.APP_SESSION_KEY || "golfSupabaseAuth") || key === "golfAccountUserId" || key === "golfSyncBase" || key === "golfSyncPending" || key.startsWith("golfStash_")) continue;
       const raw = localStorage.getItem(key);
       try { data[key] = JSON.parse(raw); } catch (e) { data[key] = raw; }
     }
@@ -1073,19 +1073,25 @@ function askDeleteMenuData() { menuDeleteConfirm = true; currentRender(); }
 function cancelDeleteMenuData() { menuDeleteConfirm = false; currentRender(); }
 
 async function deleteMenuData() {
-  // Les données sont sur le serveur : on les efface d'abord là-bas, sinon elles reviendraient à la prochaine ouverture.
-  // En cas d'échec (réseau), on n'efface rien en local et on prévient la personne.
+  // La suppression est programmée sur le serveur, qui garde tout 30 jours (la personne peut annuler en se reconnectant).
+  // En cas d'échec (réseau), rien n'est effacé et la personne est prévenue.
+  let purgeAt;
   try {
-    if (window.appData) await window.appData.deleteRemote();
+    purgeAt = await window.appData.requestDeletion();
   } catch (e) {
-    console.warn('Suppression des données impossible', e);
-    if (typeof appAlert === 'function') await appAlert('Suppression impossible : vérifiez votre connexion et réessayez.');
+    console.warn('Suppression du compte impossible', e);
+    menuDeleteConfirm = false;
+    if (typeof appAlert === 'function') await appAlert('Suppression impossible : vérifiez votre connexion et réessayez. Rien n\'a été effacé.');
+    currentRender();
     return;
   }
-  // TODO Supabase : appeler une Edge Function qui supprime aussi l'utilisateur (auth.admin.deleteUser).
-  // Tant que ce n'est pas fait, le compte lui-même reste : seules ses données sont effacées.
+  const date = new Date(purgeAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (typeof appAlert === 'function') {
+    await appAlert('Suppression programmée. Votre compte et vos données seront effacés définitivement le ' + date + '. Pour annuler, reconnectez-vous avant cette date.');
+  }
+  // Déconnexion de cet appareil : copie locale vidée, puis rechargement (remet à zéro la mémoire des modules)
+  if (typeof window.authLogout === 'function') { await window.authLogout({ force: true }); return; }
   try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
-  // Rechargement : remet à zéro l'état gardé en mémoire par tous les modules
   location.replace(location.pathname);
 }
 

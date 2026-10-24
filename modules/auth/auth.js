@@ -64,15 +64,17 @@
     document.documentElement.classList.remove('has-session');
   }
 
-  // Déconnexion : window.authLogout()
-  window.authLogout = async function () {
+  // Déconnexion : window.authLogout(). Option { force: true } : sans envoi ni confirmation (suppression du compte,
+  // dont les données sont déjà sur le serveur ; ou choix de se déconnecter plutôt que d'annuler la suppression).
+  window.authLogout = async function (opts) {
+    const force = !!(opts && opts.force === true);
     // Envoie d'abord les dernières modifications : ensuite la session et la copie locale sont retirées.
     // Attente limitée : sans réseau, l'envoi ne peut pas aboutir.
     try {
-      if (window.appData) await Promise.race([window.appData.flush(), new Promise((r) => setTimeout(r, 8000))]);
+      if (!force && window.appData) await Promise.race([window.appData.flush(), new Promise((r) => setTimeout(r, 8000))]);
     } catch (e) {}
     // Mode hors ligne : des saisies n'ont pas encore été envoyées. Se déconnecter vide la copie locale, elles seraient perdues.
-    if (window.appData && window.appData.hasPending() && typeof appConfirm === 'function') {
+    if (!force && window.appData && window.appData.hasPending() && typeof appConfirm === 'function') {
       const ok = await appConfirm(
         'Des modifications n\'ont pas encore été envoyées au serveur (pas de connexion). Si vous vous déconnectez maintenant, elles seront perdues.',
         { confirmLabel: 'Se déconnecter', cancelLabel: 'Rester connecté', danger: true }
@@ -86,6 +88,33 @@
     // Rechargement : remet à zéro les données gardées en mémoire par les modules ; sans session, la connexion s'affiche
     location.reload();
   };
+
+  // Suppression du compte programmée (voir core/data.js) : à chaque lecture du profil, si une suppression est en attente,
+  // on propose de l'annuler ou de se déconnecter. Tant qu'aucun choix n'est fait, la fenêtre reste affichée.
+  let deletionPrompt = false;
+  window.addEventListener('appdata:account', function (e) {
+    const purgeAt = e.detail && e.detail.purgeAt;
+    if (!purgeAt || deletionPrompt || typeof appConfirm !== 'function') return;
+    deletionPrompt = true;
+    (async function () {
+      const date = new Date(purgeAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      for (;;) {
+        const keep = await appConfirm(
+          'La suppression de votre compte est programmée pour le ' + date + '. Vos données sont conservées jusque-là. Voulez-vous annuler la suppression et garder votre compte ?',
+          { confirmLabel: 'Annuler la suppression', cancelLabel: 'Se déconnecter' }
+        );
+        if (!keep) { await window.authLogout({ force: true }); return; }
+        try {
+          await window.appData.cancelDeletion();
+          await appAlert('La suppression est annulée. Votre compte et vos données sont conservés.');
+          return;
+        } catch (err) {
+          console.warn('Auth : annulation de la suppression impossible', err);
+          await appAlert('Annulation impossible : vérifiez votre connexion et réessayez.');
+        }
+      }
+    })().finally(function () { deletionPrompt = false; });
+  });
 
   // Session perdue (expirée, révoquée, supprimée depuis un autre appareil) : retour à la connexion
   if (sb) {
