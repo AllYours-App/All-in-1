@@ -369,7 +369,7 @@
           </div>
         `).join('')}
       </div>
-    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun round trouvé.</p>';
+    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun tour trouvé.</p>';
     if (onSelect) {
       container.querySelectorAll('[data-id]').forEach((row) => {
         const round = rounds.find((r) => r.id === row.dataset.id);
@@ -396,7 +396,7 @@
           </div>
         `).join('')}
       </div>
-    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun round trouvé.</p>';
+    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun tour trouvé.</p>';
     if (onSelect) {
       container.querySelectorAll('[data-id]').forEach((row) => {
         const round = rounds.find((r) => r.id === row.dataset.id);
@@ -2071,8 +2071,8 @@
   const DISTANCE_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Bunker'];
   const CLUB_TABS = [
     { value: 'driving', label: 'Driving' },
-    { value: 'approach', label: 'Approach' },
-    { value: 'shortGame', label: 'Short Game' },
+    { value: 'approach', label: 'Approche' },
+    { value: 'shortGame', label: 'Petit jeu' },
     { value: 'putting', label: 'Putting' },
   ];
   // Distance du 1er putt, en mètres : chaque borne haute est la borne basse de la tranche suivante
@@ -2348,8 +2348,8 @@
       defs: [
         { key: 'sgTotal', title: 'SG Total', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
         { key: 'sgDriving', title: 'SG Driving', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
-        { key: 'sgApproach', title: 'SG Approach', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
-        { key: 'sgShortGame', title: 'SG Short Game', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
+        { key: 'sgApproach', title: 'SG Approche', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
+        { key: 'sgShortGame', title: 'SG Petit jeu', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
         { key: 'sgPutting', title: 'SG Putting', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
       ],
     },
@@ -2524,7 +2524,7 @@
   let refreshHistorique = () => {};
 
   /* Performance putting : filtres Parcours / Distance du 1er putt / Nombre de parties, courbe de la moyenne par partie */
-  const puttState = { course: ALL_COURSES, distance: 'Toutes distances', range: '20 derniers rounds' };
+  const puttState = { course: ALL_COURSES, distance: 'Toutes distances', range: '20 derniers tours' };
   let puttChart = null;
 
   function initPutting() { refreshPutting(); }
@@ -2535,7 +2535,7 @@
     renderFilterBar(document.getElementById('put-filters'), [
       { ...DEFAULT_FILTERS.course, label: puttState.course, options: courses },
       { key: 'distance', icon: 'target', label: puttState.distance, options: ['Toutes distances', '< 3 m', '3 – 5 m', '5 – 10 m', '> 10 m'] },
-      { key: 'range', icon: 'calendar', label: puttState.range, options: ['10 derniers rounds', '20 derniers rounds', '50 derniers rounds'] },
+      { key: 'range', icon: 'calendar', label: puttState.range, options: ['10 derniers tours', '20 derniers tours', '50 derniers tours'] },
     ], (key, value) => { puttState[key] = value; renderPutting(); });
     renderPutting();
   }
