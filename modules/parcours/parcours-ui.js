@@ -240,8 +240,8 @@ function trackInfoHtml() {
           <strong>+</strong> : ajoute un point à l'endroit touché<br>
           <strong>−</strong> : touche un point pour le retirer<br>
           <strong>Modifier</strong> : touche un point pour changer son numéro de trou<br>
-          <strong>Reset</strong> : efface le parcours et repart du trou 1<br>
-          <strong>Skip</strong> : passe au trou suivant<br>
+          <strong>Réinitialiser</strong> : efface le parcours et repart du trou 1<br>
+          <strong>Passer</strong> : passe au trou suivant<br>
           <strong>Hors green</strong> : le prochain point posé compte hors green<br>
           <strong>m / yd</strong> : change l'unité des distances
         </p>
@@ -1011,7 +1011,7 @@ function fwVisualHtml() {
       </div>
 
       <div class="track-corner-br">
-        <button type="button" class="mode-btn track-skip-btn" onclick="event.stopPropagation(); fwSkipHole();" aria-label="Passer au trou suivant">Skip</button>
+        <button type="button" class="mode-btn track-skip-btn" onclick="event.stopPropagation(); fwSkipHole();" aria-label="Passer au trou suivant">Passer</button>
       </div>
 
       ${fwLastLogged ? `<div class="fw-toast">Trou ${fwLastLogged.hole + 1} — ${fwLastLogged.label}</div>` : ""}
@@ -1192,7 +1192,7 @@ function grVisualHtml() {
 
       <div class="track-corner-br">
         <span class="quick-action-info track-info-corner" aria-label="À propos du suivi fairway et green" onclick="event.stopPropagation(); openTrackInfo();">i</span>
-        <button type="button" class="mode-btn track-skip-btn" onclick="event.stopPropagation(); grSkipHole();" aria-label="Passer au trou suivant">Skip</button>
+        <button type="button" class="mode-btn track-skip-btn" onclick="event.stopPropagation(); grSkipHole();" aria-label="Passer au trou suivant">Passer</button>
       </div>
 
       ${grLastLogged !== null ? `<div class="fw-toast">Trou ${grLastLogged.hole + 1} — ${grLastLogged.label}</div>` : ""}
