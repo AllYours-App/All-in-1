@@ -422,7 +422,7 @@ function renderPuttingTab() {
   <div class="chart-card" data-perf-card="sg">
     <div class="line-chart_header">
       <div>
-        <div class="line-chart_title">SG vs Tour par round</div>
+        <div class="line-chart_title">SG vs Tour par partie</div>
         <div class="line-chart_subtitle">Évolution</div>
       </div>
       <div class="line-chart_legend">
@@ -437,7 +437,7 @@ function renderPuttingTab() {
   <div class="chart-card" data-perf-card="rate">
     <div class="line-chart_header">
       <div>
-        <div class="line-chart_title">Taux de réussite &amp; mètres par round</div>
+        <div class="line-chart_title">Taux de réussite &amp; mètres par partie</div>
         <div class="line-chart_subtitle">Évolution</div>
       </div>
       <div class="line-chart_legend">
@@ -458,7 +458,7 @@ function renderPuttingTab() {
   <div class="chart-card" data-perf-card="putts">
     <div class="line-chart_header">
       <div>
-        <div class="line-chart_title">1 putt &amp; 3 putts par round</div>
+        <div class="line-chart_title">1 putt &amp; 3 putts par partie</div>
         <div class="line-chart_subtitle">Évolution</div>
       </div>
       <div class="line-chart_legend">
@@ -3859,9 +3859,9 @@ function openPuttingMenu(context) {
   const perfSection = {
     title: 'Cartes de Performance',
     items: [
-      toggle('showPerfSg', 'SG vs Tour par round'),
+      toggle('showPerfSg', 'SG vs Tour par partie'),
       toggle('showPerfRate', 'Taux de réussite et mètres'),
-      toggle('showPerfPutts', '1 putt et 3 putts par round'),
+      toggle('showPerfPutts', '1 putt et 3 putts par partie'),
     ],
   };
   const periodSection = {
