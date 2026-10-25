@@ -411,7 +411,7 @@
 </section>
 
 <!-- ======================================================================
-     ÉCRAN 5 — HISTORIQUE DES ROUNDS
+     ÉCRAN 5 — HISTORIQUE DES TOURS
      ====================================================================== -->
 <section id="screen-historique" class="screen">
   <main class="app">
@@ -420,7 +420,7 @@
         <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" width="20" height="20"><path d="M15 18l-6-6 6-6"/></svg>
         Stats
       </button>
-      <h1 class="page-header__title">HISTORIQUE DES ROUNDS</h1>
+      <h1 class="page-header__title">HISTORIQUE DES TOURS</h1>
     </header>
 
     <section class="section">
@@ -443,7 +443,7 @@
     <section class="section">
       <div id="hist-roundTable"></div>
       <div class="text-center" style="margin-top:var(--space-md);">
-        <button id="hist-loadMore" type="button" class="filter-chip" style="margin:0 auto;">Charger plus de rounds</button>
+        <button id="hist-loadMore" type="button" class="filter-chip" style="margin:0 auto;">Charger plus de tours</button>
       </div>
     </section>
   </main>
@@ -472,7 +472,7 @@
       <article class="card chart-card fade-up">
         <div class="chart-card__head">
           <div>
-            <div style="font-size:var(--fs-md); font-weight:var(--fw-bold);">Putts moyens par round</div>
+            <div style="font-size:var(--fs-md); font-weight:var(--fw-bold);">Putts moyens par partie</div>
             <div class="chart-card__unit">Évolution</div>
           </div>
           <div class="chart-card__legend">
@@ -486,7 +486,7 @@
         </div>
 
         <div class="chart-canvas-wrap">
-          <canvas id="put-chart" role="img" aria-label="Évolution des putts moyens par round"></canvas>
+          <canvas id="put-chart" role="img" aria-label="Évolution des putts moyens par partie"></canvas>
         </div>
       </article>
     </section>
@@ -736,7 +736,7 @@
           <button class="saisie-detaillee_delete" type="button" data-sd-delete aria-label="Supprimer le coup">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/></svg>
           </button>
-          <button class="saisie-detaillee_holed" type="button" data-sd-holed aria-pressed="false">Holed</button>
+          <button class="saisie-detaillee_holed" type="button" data-sd-holed aria-pressed="false">Rentré</button>
         </div>
 
       </section>
@@ -1139,12 +1139,12 @@
 <script src="core/sg-data.js?v=54"></script>
 <script src="core/strokes-gained.js?v=54"></script>
 <script src="modules/home/HomePage.js?v=55"></script>
-<script src="modules/parcours/parcours-ui.js?v=56"></script>
+<script src="modules/parcours/parcours-ui.js?v=57"></script>
 <script src="modules/wedging/wedging.js?v=58"></script>
 <script src="modules/gym/gym.js?v=56"></script>
-<script src="modules/putting/putting.js?v=58"></script>
+<script src="modules/putting/putting.js?v=59"></script>
 <script src="modules/vitesse/vitesse.js?v=54"></script>
-<script src="modules/stats/stats.js?v=57"></script>
+<script src="modules/stats/stats.js?v=58"></script>
 <script src="modules/menu/menu.js?v=62"></script>
 <script src="modules/auth/auth.js?v=63"></script>
 </body>
