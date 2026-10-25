@@ -152,6 +152,22 @@ body {
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* écran d'application : un appui long ne sélectionne pas le texte (plus de surbrillance bleue)
+     et n'ouvre pas le menu Copier / Chercher / Traduire. Les champs de saisie restent exclus ci-dessous. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Champs de saisie : la sélection et le collage doivent continuer à fonctionner */
+input,
+textarea,
+select,
+[contenteditable=""],
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 button {
