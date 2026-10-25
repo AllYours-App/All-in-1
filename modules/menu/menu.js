@@ -21,6 +21,7 @@ let settings = {
   distanceUnit: "m", // "ft" = yards (voir MENU_M_TO_YD)
   defaultRadarId: "radar_default",
   theme: "dark", // "dark" ou "light" (voir applyAppTheme dans commun.js)
+  language: "fr", // "fr", "en" ou "es" (voir core/i18n.js)
   weeklyGoal: 5, // objectif de séances par semaine affiché sur l'Accueil (1 à 14)
 };
 
@@ -249,6 +250,8 @@ function topRowHtml(showLogout = false) {
 /* ==========================================================================
    Écran Menu (paramètres)
    ========================================================================== */
+// Noms des langues : toujours écrits dans leur propre langue (non traduits)
+const LANGUAGE_OPTIONS = [['fr', 'Français'], ['en', 'English'], ['es', 'Español']];
 const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
 const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'KPH']];
 const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'KPH']];
@@ -324,6 +327,7 @@ function renderMenuTab() {
     <div class="field-list">
       <h3>Apparence</h3>
       ${settingSwitchRow('Thème', 'theme', settings.theme !== 'light', ['Clair', 'light'], ['Sombre', 'dark'])}
+      ${settingSelectRow('Langue', 'language', LANGUAGE_OPTIONS)}
     </div>
     <div class="field-list">
       <h3>Entraînement</h3>
@@ -410,6 +414,8 @@ function updateMenuSetting(key, value) {
   }
   if (key === 'theme') applyAppTheme(value);
   saveMenuState();
+  // Changer de langue recharge la page (la traduction est faite au chargement, voir core/i18n.js)
+  if (key === 'language' && typeof appSetLanguage === 'function') { appSetLanguage(value); return; }
   if (key === 'weeklyGoal' && typeof renderGolfHome === 'function') renderGolfHome();
 }
 

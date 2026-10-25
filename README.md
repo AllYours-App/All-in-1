@@ -106,6 +106,8 @@ core/                      socle commun à tous les modules
   commun.css               composants partagés (pavé numérique, en-têtes, popups, boutons ronds, bottom sheet)
   theme-light.css          thème clair (activé par <html data-theme="light">)
   app-shell.js             showPage()
+  i18n.js                  langue de l'appli (français, anglais, espagnol) : traduit la page au chargement
+  i18n-dict.js             dictionnaire [français, anglais, espagnol] utilisé par i18n.js
   supabase-client.js       client Supabase unique (window.appSupabase)
   commun.js                appKeypad(), popups, appPrefGet/Set(), appSheet(), applyAppTheme()
   data.js                  synchronisation des données du compte avec Supabase (window.appData), file d'attente hors ligne
@@ -161,6 +163,7 @@ core/supabase-client.js      -> window.appSupabase, window.APP_SESSION_KEY
 core/data.js                 -> window.appData (start, flush, onWrite, clearLocal, requestDeletion, cancelDeletion, deletionRequestedAt, status, isReady, hasPending)
 core/offline.js              -> enregistre sw.js, window.appNet, messages hors ligne (écoute 'appdata:status')
 core/commun.js               -> appKeypad(), appPrefGet/Set(), appSheet(), applyAppTheme()
+core/i18n.js                  -> appLang(), appT(), appLocale(), appSetLanguage()   (dépend de i18n-dict.js ; chargé avant les modules)
 core/sg-data.js              -> SG_BASELINES
 core/strokes-gained.js       -> sgExpected(), sgShot()   (dépend de sg-data.js)
 modules/home/HomePage.js
@@ -309,6 +312,14 @@ Contient le HTML de Home, Parcours, Stats, Menu, Login, Signup, Mot de passe oub
 
 `appSheet({ title, sections: [{ title, items }] })` : bottom sheet partagée par les menus 3 points (renvoie la fonction `close()`). Types d'entrées : `toggle` (`value`, `onChange`), `segment` (`options`, `value`, `onChange`), `action` (`onClick`, `selected`, `danger`, `keepOpen`) et `reorder` (liste `[{ key, label, visible }]` avec oeil et flèches haut / bas, `onChange` reçoit la liste dans le nouvel ordre). Tous les textes passent par `textContent`. Une seule feuille à la fois ; `Échap`, un appui sur le fond ou "Fermer" la referment ; une action la ferme avant d'appeler `onClick` (sauf `keepOpen`). Chaque module fournit ses entrées dans sa fonction `open…Menu()` et applique ses préférences au chargement.
 
+### `core/i18n.js` et `core/i18n-dict.js`
+Langue de l'appli : français (par défaut), anglais, espagnol. Choix dans Menu > Réglages > Apparence > Langue (`settings.language`, synchronisé avec le compte), la page se recharge ensuite. Le français reste la langue source écrite dans le HTML et le JS : en français, `i18n.js` ne fait rien. Dans une autre langue, il traduit les nœuds de texte et les attributs `placeholder`, `aria-label`, `title`, `alt` au chargement puis à chaque ajout dans la page (MutationObserver), sans modifier les modules.
+- **Dictionnaire** (`i18n-dict.js`) : lignes `[français, anglais, espagnol]`. Une valeur variable s'écrit `§` (ou `{{nom}}` pour les textes légaux) : `§ séance§` traduit « 5 séances » ; les `§` doivent rester dans le même ordre dans les trois colonnes. Un texte absent du dictionnaire reste en français.
+- **Dates et nombres** : les appels `toLocaleDateString('fr-FR')`, `toLocaleString`, `Intl.DateTimeFormat` suivent la langue. Les noms de mois et de jours écrits dans le code sont traduits mot à mot.
+- **Graphiques** : `Chart` est enveloppé pour traduire les libellés (étiquettes, séries, titres d'axes).
+- **Hors du périmètre** : les noms des 1324 exercices de la bibliothèque Gym (`EXERCISES`, en anglais), les noms saisis par la personne, le mail envoyé au support (reste en français), les messages de la console. Les textes légaux traduits sont une traduction de confort : la version française fait foi.
+- **Ajouter un texte** : une ligne dans `i18n-dict.js`. **Ajouter une langue** : son code dans `SUPPORTED`, `LOCALES` et `COLUMN` de `i18n.js`, une colonne dans le dictionnaire, une entrée dans `LANGUAGE_OPTIONS` (`menu.js`).
+
 ### `core/supabase-client.js`
 Crée le client Supabase unique (`window.appSupabase`, ou `null` si `vendor/supabase.umd.min.js` n'a pas chargé) et expose `window.APP_SESSION_KEY` (`'golfevolution_auth'`, clé `localStorage` de la session). Contient l'URL du projet et la clé publique. Options : session gardée et renouvelée automatiquement, `detectSessionInUrl: false` (les liens e-mail sont lus par `auth.js`), flux `implicit`. Le futur module d'accès aux données (`data.js`) utilisera ce même client.
 
@@ -431,6 +442,7 @@ Copie de travail des données du compte. Toutes les clés ci-dessous sont synchr
 | `golfevolution_gym_programs_saved`, `golfevolution_gym_history`, `golfevolution_gym_goals`, `golfevolution_gym_active_program_id` | `gym.js` | programmes, historique, objectifs, programme actif |
 | `golfevolution_gym_session_draft` | `gym.js` | brouillon de la séance en cours (séries, exercice affiché, temps écoulé), effacé à la fin de la séance |
 | `golfevolution_module_prefs` | `commun.js` (`appPrefSet`) | réglages d'affichage des menus 3 points (Putting, Wedging, Parcours, Gym) |
+| `golfevolution_language` | `i18n.js` (`appSetLanguage`) | langue choisie sur l'appareil (`fr`, `en`, `es`), lue avant tout le reste ; le réglage du compte est `settings.language` dans `golfevolution_app_state` |
 | `golfevolution_stats_rounds` | `stats.js` | parties saisies dans Stats |
 | `golfevolution_stats_kpis` | `stats.js` | clés des indicateurs affichés dans "Mes indicateurs" (ordre d'affichage) |
 | `golfevolution_stats_round_draft` | `stats.js` | partie en cours (saisie rapide ou détaillée), effacée à l'enregistrement, ignorée après 24 h |
