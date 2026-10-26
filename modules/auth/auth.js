@@ -76,7 +76,7 @@
     // Mode hors ligne : des saisies n'ont pas encore été envoyées. Se déconnecter vide la copie locale, elles seraient perdues.
     if (!force && window.appData && window.appData.hasPending() && typeof appConfirm === 'function') {
       const ok = await appConfirm(
-        'Des modifications n\'ont pas encore été envoyées au serveur (pas de connexion). Si vous vous déconnectez maintenant, elles seront perdues.',
+        'Des modifications n\'ont pas encore été envoyées au serveur (pas de connexion). Si tu te déconnectes maintenant, elles seront perdues.',
         { confirmLabel: 'Se déconnecter', cancelLabel: 'Rester connecté', danger: true }
       );
       if (!ok) return;
@@ -100,17 +100,17 @@
       const date = new Date(purgeAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
       for (;;) {
         const keep = await appConfirm(
-          'La suppression de votre compte est programmée pour le ' + date + '. Vos données sont conservées jusque-là. Voulez-vous annuler la suppression et garder votre compte ?',
+          'La suppression de ton compte est programmée pour le ' + date + '. Vos données sont conservées jusque-là. Voulez-vous annuler la suppression et garder votre compte ?',
           { confirmLabel: 'Annuler la suppression', cancelLabel: 'Se déconnecter' }
         );
         if (!keep) { await window.authLogout({ force: true }); return; }
         try {
           await window.appData.cancelDeletion();
-          await appAlert('La suppression est annulée. Votre compte et vos données sont conservés.');
+          await appAlert('La suppression est annulée. Ton compte et tes données sont conservés.');
           return;
         } catch (err) {
           console.warn('Auth : annulation de la suppression impossible', err);
-          await appAlert('Annulation impossible : vérifiez votre connexion et réessayez.');
+          await appAlert('Annulation impossible : vérifie ta connexion et réessaie.');
         }
       }
     })().finally(function () { deletionPrompt = false; });
@@ -227,7 +227,7 @@
   const RULES = {
     login: (f) => [
       emailRule(f),
-      [f.password, f.password.value !== '', 'Saisissez votre mot de passe.'],
+      [f.password, f.password.value !== '', 'Saisis ton mot de passe.'],
     ],
     signup: (f) => [
       emailRule(f),
@@ -257,16 +257,16 @@
     const code = (err && err.code) || '';
     const msg = String((err && err.message) || '');
     if (code === 'invalid_credentials' || /invalid login credentials/i.test(msg)) return 'E-mail ou mot de passe incorrect.';
-    if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) return 'Adresse e-mail non confirmée : ouvrez le lien reçu par e-mail.';
-    if (code === 'user_already_exists' || code === 'email_exists' || /already registered/i.test(msg)) return 'Un compte existe déjà avec cette adresse. Connectez-vous.';
-    if (code === 'weak_password') return 'Mot de passe trop faible : choisissez-en un plus long ou plus varié.';
+    if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) return 'Adresse e-mail non confirmée : ouvre le lien reçu par e-mail.';
+    if (code === 'user_already_exists' || code === 'email_exists' || /already registered/i.test(msg)) return 'Un compte existe déjà avec cette adresse. Connecte-toi.';
+    if (code === 'weak_password') return 'Mot de passe trop faible : choisis-en un plus long ou plus varié.';
     if (code === 'same_password') return 'Le nouveau mot de passe doit être différent de l\'ancien.';
-    if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || (err && err.status === 429)) return 'Trop de tentatives. Réessayez dans quelques minutes.';
-    if (/session missing|not authenticated/i.test(msg)) return 'Lien expiré. Refaites une demande de mot de passe oublié.';
+    if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || (err && err.status === 429)) return 'Trop de tentatives. Réessaie dans quelques minutes.';
+    if (/session missing|not authenticated/i.test(msg)) return 'Lien expiré. Refais une demande de mot de passe oublié.';
     if ((err && err.name === 'AuthRetryableFetchError') || /failed to fetch|network|load failed/i.test(msg) || navigator.onLine === false) {
-      return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+      return 'Connexion impossible. Vérifie ton réseau et réessaie.';
     }
-    return 'Une erreur est survenue. Réessayez.';
+    return 'Une erreur est survenue. Réessaie.';
   }
 
   // Adresse de retour des e-mails : la racine du site (doit figurer dans les Redirect URLs de Supabase)
@@ -304,7 +304,7 @@
         return;
       }
       goTo('login');
-      showNotice('login', 'Compte créé. Ouvrez le lien envoyé à ' + email + ' pour le confirmer, puis connectez-vous.');
+      showNotice('login', 'Compte créé. Ouvre le lien envoyé à ' + email + ' pour le confirmer, puis connecte-toi.');
     },
 
     async forgot(form) {
@@ -338,7 +338,7 @@
       if (form.dataset.busy) return;
       if (!validate(form, type)) return;
       if (!sb || !HANDLERS[type]) {
-        showError(form, 'Service de connexion indisponible. Rechargez la page.');
+        showError(form, 'Service de connexion indisponible. Recharge la page.');
         return;
       }
 
@@ -373,14 +373,14 @@
 
     if (p.get('access_token') && p.get('refresh_token') && sb) {
       sb.auth.setSession({ access_token: p.get('access_token'), refresh_token: p.get('refresh_token') }).then(async ({ data, error }) => {
-        if (error) { done('login', 'Ce lien n\'est plus valable. Connectez-vous, ou refaites une demande.'); return; }
+        if (error) { done('login', 'Ce lien n\'est plus valable. Connecte-toi, ou refais une demande.'); return; }
         if (p.get('type') === 'recovery') { done('reset-password'); return; } // le chargement des données se fait après le nouveau mot de passe
         if (data && data.user && await loadAccountData(data.user.id)) { location.reload(); return; }
         done('home');
-      }).catch(() => done('login', 'Connexion impossible. Vérifiez votre réseau et réessayez.'));
+      }).catch(() => done('login', 'Connexion impossible. Vérifie ton réseau et réessaie.'));
     } else if (p.get('error') || p.get('error_code')) {
       const expired = p.get('error_code') === 'otp_expired';
-      done('login', expired ? 'Ce lien a expiré ou a déjà servi. Connectez-vous, ou refaites une demande.' : 'Ce lien n\'est pas valable.');
+      done('login', expired ? 'Ce lien a expiré ou a déjà servi. Connecte-toi, ou refais une demande.' : 'Ce lien n\'est pas valable.');
     } else {
       emailLinkPending = false;
     }

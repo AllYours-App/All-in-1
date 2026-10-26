@@ -11,7 +11,7 @@ function renderPuttingTab() {
 <header class="page-header" data-header="main">
   <a href="#" class="page-header_back" onclick="handleMainHeaderBack(event)">
     <svg class="page-header_back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-    <span class="page-header_back-label" id="main-header-back-label">Home</span>
+    <span class="page-header_back-label" id="main-header-back-label">Accueil</span>
   </a>
   <h1 class="page-header_title" id="main-header-title">Putting</h1>
   <button type="button" class="page-header_menu" id="puttingMenuBtn" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('main')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
@@ -108,7 +108,7 @@ function renderPuttingTab() {
 
       <div class="analyse-filters">
         <button class="analyse-filter is-active" id="filter-btn-distance-sessions" onclick="openFilterSheet(event, 'distance', 'sessions')">
-          <span class="analyse-filter_label">Sessions</span>
+          <span class="analyse-filter_label">Séances</span>
           <span class="analyse-filter_value"><span class="filter-value-text">20 dernières</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         </button>
         <button class="analyse-filter" id="filter-btn-distance-parcours" onclick="openFilterSheet(event, 'distance', 'parcours')">
@@ -267,7 +267,7 @@ function renderPuttingTab() {
 
       <div class="analyse-filters">
         <button class="analyse-filter is-active" id="filter-btn-pente-sessions" onclick="openFilterSheet(event, 'pente', 'sessions')">
-          <span class="analyse-filter_label">Sessions</span>
+          <span class="analyse-filter_label">Séances</span>
           <span class="analyse-filter_value"><span class="filter-value-text">20 dernières</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         </button>
         <button class="analyse-filter" id="filter-btn-pente-distance" onclick="openFilterSheet(event, 'pente', 'distance')">
@@ -396,11 +396,11 @@ function renderPuttingTab() {
     </a>
   </div>
 
-  <div class="page-subtitle">Suivez l'évolution de votre performance au putting.</div>
+  <div class="page-subtitle">Suis l'évolution de ta performance au putting.</div>
 
   <div class="analyse-filters">
     <button class="analyse-filter is-active" id="filter-btn-stats-sessions" onclick="openFilterSheet(event, 'stats', 'sessions')">
-      <span class="analyse-filter_label">Sessions</span>
+      <span class="analyse-filter_label">Séances</span>
       <span class="analyse-filter_value"><span class="filter-value-text">20 dernières</span><svg class="analyse-filter_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
     <button class="analyse-filter" id="filter-btn-stats-distance" onclick="openFilterSheet(event, 'stats', 'distance')">
@@ -567,7 +567,7 @@ function selectPuttingTab(event, tab) {
     puttingQueryAll('.bottom-nav_item').forEach(function (el) {
       el.classList.remove('is-active');
     });
-    document.getElementById('main-header-back-label').textContent = 'Home';
+    document.getElementById('main-header-back-label').textContent = 'Accueil';
     document.getElementById('main-header-title').textContent = 'Putting';
     renderHomeStats();
     renderExercicesStats();
@@ -589,7 +589,7 @@ function selectPuttingTab(event, tab) {
     puttingQueryAll('.bottom-nav_item').forEach(function (el) {
       el.classList.toggle('is-active', el.dataset.section === section);
     });
-    document.getElementById('main-header-back-label').textContent = section === 'home' ? 'Home' : 'Putting';
+    document.getElementById('main-header-back-label').textContent = section === 'home' ? 'Accueil' : 'Putting';
     document.getElementById('main-header-title').textContent = section === 'analyse-distance' ? 'Distance' : 'Pente';
     if (section === 'analyse-distance') renderAnalyseDistance();
     if (section === 'analyse-pente') renderAnalysePente();
@@ -1041,7 +1041,7 @@ function svgLineChart(values, opts) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
   }).join('') + '<line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" class="line-chart-grid-solid"/>';
-  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Parties') + '</text>';
   if (!vals.length) {
     return grid + '<text x="465" y="240" text-anchor="middle" class="line-chart-axis-label">Pas encore de données</text>' + axisTitle;
   }
@@ -1098,7 +1098,7 @@ function svgDualLineChart(valuesA, valuesB, opts) {
   }
   const scaleA = scaleOf(valuesA, opts.forceZeroMinA);
   const scaleB = scaleOf(valuesB, opts.forceZeroMinB);
-  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Parties') + '</text>';
   let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
@@ -1136,7 +1136,7 @@ function svgDualLineChart(valuesA, valuesB, opts) {
 function svgDualColumnChart(valuesA, valuesB, opts) {
   opts = opts || {};
   const left = 40, right = 890, top = 20, bottom = 420;
-  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Rounds') + '</text>';
+  const axisTitle = '<text x="465" y="505" text-anchor="middle" class="line-chart-axis-title">' + (opts.axisTitle || 'Parties') + '</text>';
   let grid = [0.2, 0.4, 0.6, 0.8].map(function (f) {
     const y = top + f * (bottom - top);
     return '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" class="line-chart-grid"/>';
@@ -1451,15 +1451,15 @@ function renderStatsPerformance() {
   });
   const dateLabels = rounds.map(function (r, i) { return (cmp ? (i ? 'B · ' : 'A · ') : '') + new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }); });
 
-  svgSG.innerHTML = svgLineChart(sgVals, Object.assign({ centered: true, fmt: fmtSG, axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels }, cmpOpts));
+  svgSG.innerHTML = svgLineChart(sgVals, Object.assign({ centered: true, fmt: fmtSG, axisTitle: cmp ? 'Séances comparées' : 'Parties', labels: dateLabels }, cmpOpts));
   const rateMeterEl = document.getElementById('stats-rate-meters-line');
   if (rateMeterEl) rateMeterEl.innerHTML = svgDualLineChart(rateVals, meterVals, Object.assign({
     forceZeroMinA: true, forceZeroMinB: true,
     fmtA: fmtPct, fmtB: function (v) { return Math.round(v) + 'm'; },
-    axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels,
+    axisTitle: cmp ? 'Séances comparées' : 'Parties', labels: dateLabels,
   }, cmpOpts));
   const puttsEl = document.getElementById('stats-putts-bars');
-  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, Object.assign({ axisTitle: cmp ? 'Sessions comparées' : 'Rounds', labels: dateLabels }, cmpOpts));
+  if (puttsEl) puttsEl.innerHTML = svgDualColumnChart(oneVals, threeVals, Object.assign({ axisTitle: cmp ? 'Séances comparées' : 'Parties', labels: dateLabels }, cmpOpts));
   renderCompareCard('stats');
 }
 
@@ -1504,7 +1504,7 @@ function filterButtonLabel(group, type) {
     return opt ? opt.label : 'Tous les parcours';
   }
   if (type === 'compare') {
-    return (s.compareA && s.compareB) ? '2 sessions' : 'Aucune';
+    return (s.compareA && s.compareB) ? '2 séances' : 'Aucune';
   }
   return '';
 }
@@ -1588,10 +1588,10 @@ function renderCompareCard(group) {
 }
 
 function filterSheetTitle(type) {
-  if (type === 'sessions') return 'Nombre de sessions';
+  if (type === 'sessions') return 'Nombre de séances';
   if (type === 'distance') return 'Distance';
   if (type === 'parcours') return 'Parcours';
-  if (type === 'compare') return 'Comparer 2 sessions';
+  if (type === 'compare') return 'Comparer 2 séances';
   return '';
 }
 
@@ -1822,7 +1822,7 @@ function renderExerciseList() {
       + ' — ' + c.attempts + (c.attempts > 1 ? ' tentatives' : ' tentative') + '/trou'
       + (c.slopedGreen === false ? ' — green plat' : '');
     const lastLine = last
-      ? 'Dernière session : ' + last.dateLabel + (rate && rate.total ? ' — ' + rate.made + '/' + rate.total + ' réussis (' + rate.pct + '%)' : '')
+      ? 'Dernière séance : ' + last.dateLabel + (rate && rate.total ? ' — ' + rate.made + '/' + rate.total + ' réussis (' + rate.pct + '%)' : '')
       : '';
 
     return `
@@ -1983,7 +1983,7 @@ async function exitExerciseFlow(event) {
   window.scrollTo(0, 0);
 }
 
-/* ---------- 1. Session en cours ---------- */
+/* ---------- 1. Séance en cours ---------- */
 
 function startCombine(id) {
   const c = getCombineById(id);
@@ -3093,7 +3093,7 @@ function closeNewParcoursModal(event) {
   parcoursPopup = null;
   renderParcoursPopup();
   document.getElementById('parcours-entry-root').classList.add('is-hidden');
-  document.getElementById('main-header-back-label').textContent = 'Home';
+  document.getElementById('main-header-back-label').textContent = 'Accueil';
   document.getElementById('main-header-title').textContent = 'Putting';
   puttingQueryAll('.fab-group').forEach(function (el) {
     el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
@@ -3741,7 +3741,7 @@ function openRoundDetail(id) {
 function closeRoundDetail() {
   viewingRoundId = null;
   document.getElementById('parcours-entry-root').classList.add('is-hidden');
-  document.getElementById('main-header-back-label').textContent = 'Home';
+  document.getElementById('main-header-back-label').textContent = 'Accueil';
   document.getElementById('main-header-title').textContent = 'Putting';
   puttingQueryAll('.fab-group').forEach(function (el) {
     el.classList.toggle('is-hidden', el.dataset.fab !== 'parcours');
@@ -3853,7 +3853,7 @@ function openPuttingMenu(context) {
   const mainSection = {
     title: 'Écran principal',
     items: [
-      toggle('showHistory', 'Activité récente', 'Dernières sessions de l\'onglet Parcours.'),
+      toggle('showHistory', 'Activité récente', 'Dernières séances de l\'onglet Parcours.'),
     ],
   };
   const perfSection = {
@@ -3867,7 +3867,7 @@ function openPuttingMenu(context) {
   const periodSection = {
     title: 'Filtres',
     items: [{
-      type: 'segment', label: 'Période par défaut', hint: 'Nombre de sessions prises en compte dans les analyses.',
+      type: 'segment', label: 'Période par défaut', hint: 'Nombre de séances prises en compte dans les analyses.',
       value: filterState.stats.sessions,
       options: FILTER_SESSIONS_OPTIONS.map(function (o) { return { value: o.value, label: o.value === 'all' ? 'Toutes' : o.value }; }),
       onChange: puttingSetDefaultSessions,

@@ -81,7 +81,7 @@ const backToHelp = () => renderHelpScreen();
 let backTarget = backToHome;
 let currentRender = renderMenuTab;
 
-function enterScreen(renderFn, title, back = backToMenu, label = back === backToHome ? "Home" : "Menu") {
+function enterScreen(renderFn, title, back = backToMenu, label = back === backToHome ? "Accueil" : "Menu") {
   currentRender = renderFn;
   backTarget = back;
   menuHeaderTitle.textContent = title;
@@ -712,27 +712,27 @@ const MENU_FAQ = [
   {
     title: "Compte et données",
     items: [
-      ["Où sont enregistrées mes données ?", "Sur nos serveurs sécurisés, liées à votre compte, avec une copie de travail sur votre téléphone. Désinstaller l'application n'efface donc pas votre compte : reconnectez-vous pour tout retrouver."],
-      ["Comment changer de téléphone sans tout perdre ?", "Connectez-vous avec le même compte sur le nouvel appareil : vos données sont retrouvées. Vous pouvez aussi conserver une copie depuis Aide & support, rubrique Mes données."],
-      ["Comment supprimer mon compte ?", "Menu, Aide & support, Mes données, puis Supprimer mon compte et mes données. Vous êtes déconnecté et la suppression est programmée : pendant 30 jours, vous pouvez l'annuler en vous reconnectant. Passé ce délai, votre compte et vos données sont effacés de nos serveurs, de façon définitive. La copie de l'appareil est effacée tout de suite."],
-      ["Mes données sont-elles revendues ?", "Non. Vos données ne sont ni vendues, ni utilisées à des fins publicitaires."],
+      ["Où sont enregistrées mes données ?", "Sur nos serveurs sécurisés, liées à ton compte, avec une copie de travail sur ton téléphone. Désinstaller l'application n'efface donc pas ton compte : reconnecte-toi pour tout retrouver."],
+      ["Comment changer de téléphone sans tout perdre ?", "Connecte-toi avec le même compte sur le nouvel appareil : tes données sont retrouvées. Tu peux aussi conserver une copie depuis Aide & support, rubrique Mes données."],
+      ["Comment supprimer mon compte ?", "Menu, Aide & support, Mes données, puis Supprimer mon compte et mes données. Tu es déconnecté et la suppression est programmée : pendant 30 jours, tu peux l'annuler en te reconnectant. Passé ce délai, ton compte et tes données sont effacés de nos serveurs, de façon définitive. La copie de l'appareil est effacée tout de suite."],
+      ["Mes données sont-elles revendues ?", "Non. Tes données ne sont ni vendues, ni utilisées à des fins publicitaires."],
     ],
   },
   {
     title: "Fonctions",
     items: [
-      ["Pourquoi l'application demande-t-elle la position et les capteurs ?", "La position sert uniquement à rechercher les golfs proches quand vous créez une partie dans Stats. L'orientation du téléphone sert à mesurer le dénivelé. Ces accès sont facultatifs et révocables dans les réglages du téléphone : seules les fonctions concernées deviennent indisponibles."],
-      ["Pourquoi mes statistiques sont-elles vides ?", "Les statistiques sont calculées à partir des parties que vous saisissez dans Stats, en saisie rapide ou détaillée. Enregistrez une partie terminée pour les voir apparaître."],
-      ["D'où viennent les distances affichées dans Parcours ?", "Des clubs de votre sac et des distances renseignées dans Menu, rubriques Mon sac de golf et Mes distances. L'unité (mètres ou yards) se règle aussi dans le Menu."],
-      ["Que signifie Strokes Gained ?", "Le Strokes Gained compare chacun de vos coups à une référence statistique. Un résultat positif signifie que vous avez fait mieux que la référence, un résultat négatif moins bien. Il est calculé par catégorie : driving, attaque de green, approches et putting."],
-      ["Puis-je utiliser le vent et le dénivelé en compétition ?", "Pas forcément. Les Règles de golf (règle 4.3) interdisent en principe de mesurer le dénivelé ou d'évaluer le vent avec un appareil, sauf règle locale qui l'autorise. Renseignez-vous auprès du comité de l'épreuve avant de jouer."],
-      ["Les programmes de gym conviennent-ils à tout le monde ?", "Ils sont donnés à titre informatif et ne remplacent pas l'avis d'un médecin ou d'un coach. Demandez un avis avant de commencer et arrêtez en cas de douleur."],
+      ["Pourquoi l'application demande-t-elle la position et les capteurs ?", "La position sert uniquement à rechercher les golfs proches quand tu crées une partie dans Stats. L'orientation du téléphone sert à mesurer le dénivelé. Ces accès sont facultatifs et révocables dans les réglages du téléphone : seules les fonctions concernées deviennent indisponibles."],
+      ["Pourquoi mes statistiques sont-elles vides ?", "Les statistiques sont calculées à partir des parties que tu saisis dans Stats, en saisie rapide ou détaillée. Enregistre une partie terminée pour les voir apparaître."],
+      ["D'où viennent les distances affichées dans Parcours ?", "Des clubs de ton sac et des distances renseignées dans Menu, rubriques Mon sac de golf et Mes distances. L'unité (mètres ou yards) se règle aussi dans le Menu."],
+      ["Que signifie Strokes Gained ?", "Le Strokes Gained compare chacun de tes coups à une référence statistique. Un résultat positif signifie que tu as fait mieux que la référence, un résultat négatif moins bien. Il est calculé par catégorie : driving, attaque de green, approches et putting."],
+      ["Puis-je utiliser le vent et le dénivelé en compétition ?", "Pas forcément. Les Règles de golf (règle 4.3) interdisent en principe de mesurer le dénivelé ou d'évaluer le vent avec un appareil, sauf règle locale qui l'autorise. Renseigne-toi auprès du comité de l'épreuve avant de jouer."],
+      ["Les programmes de gym conviennent-ils à tout le monde ?", "Ils sont donnés à titre informatif et ne remplacent pas l'avis d'un médecin ou d'un coach. Demande un avis avant de commencer et arrête en cas de douleur."],
     ],
   },
   {
     title: "Application",
     items: [
-      ["L'application est-elle gratuite ?", "Oui. Elle ne contient ni publicité ni abonnement. Si cela devait changer, vous en seriez informé dans l'application avant toute mise en place, et rien ne serait facturé sans votre accord."],
+      ["L'application est-elle gratuite ?", "Oui. Elle ne contient ni publicité ni abonnement. Si cela devait changer, tu en serais informé dans l'application avant toute mise en place, et rien ne serait facturé sans ton accord."],
       ["Sur quels appareils est-elle disponible ?", "Sur Android, via Google Play. Une version iOS est prévue ensuite."],
       ["Comment signaler un problème ou proposer une idée ?", "Depuis Aide & support, rubrique Contacter le support, en choisissant Problème technique ou Suggestion."],
     ],
@@ -786,18 +786,18 @@ function renderContactScreen(back = backToHelp, label = "Aide") {
   const email = appEscapeHtml(MENU_LEGAL.contactEmail);
   menuPaintPage(`
     <div class="contact_component">
-      <p class="contact_text">Une question, un problème ou une idée ? Écrivez-nous : votre application de messagerie s'ouvrira avec le message prêt à envoyer.</p>
+      <p class="contact_text">Une question, un problème ou une idée ? Écris-nous : ton application de messagerie s'ouvrira avec le message prêt à envoyer.</p>
       <label class="contact_field">
         <span class="contact_label">Sujet</span>
         <select class="contact_select" aria-label="Sujet" onchange="menuSetContactTopic(this.value)">${optionsHtml(MENU_CONTACT_TOPICS, menuContactDraft.topic)}</select>
       </label>
       <label class="contact_field">
         <span class="contact_label">Message</span>
-        <textarea class="contact_textarea" maxlength="2000" placeholder="Décrivez votre demande" oninput="menuSetContactMessage(this.value)">${appEscapeHtml(menuContactDraft.message)}</textarea>
+        <textarea class="contact_textarea" maxlength="2000" placeholder="Décris ta demande" oninput="menuSetContactMessage(this.value)">${appEscapeHtml(menuContactDraft.message)}</textarea>
       </label>
       <p class="contact_error" id="menu-contact-error" role="alert"></p>
       <button type="button" class="btn btn-primary" onclick="menuSendContactMessage()">Envoyer</button>
-      <p class="contact_note">La version de l'application et le type d'appareil sont ajoutés au message pour faciliter le diagnostic. Vous pouvez aussi écrire directement à <a class="contact_link" href="mailto:${email}">${email}</a>.</p>
+      <p class="contact_note">La version de l'application et le type d'appareil sont ajoutés au message pour faciliter le diagnostic. Tu peux aussi écrire directement à <a class="contact_link" href="mailto:${email}">${email}</a>.</p>
     </div>
   `);
 }
@@ -805,7 +805,7 @@ function renderContactScreen(back = backToHelp, label = "Aide") {
 function menuSendContactMessage() {
   const message = menuContactDraft.message.trim();
   if (message.length < 10) {
-    document.getElementById("menu-contact-error").textContent = "Écrivez un message d'au moins 10 caractères.";
+    document.getElementById("menu-contact-error").textContent = "Écris un message d'au moins 10 caractères.";
     return;
   }
   const topicLabel = (MENU_CONTACT_TOPICS.find(([value]) => value === menuContactDraft.topic) || [])[1] || "Contact";
@@ -1010,13 +1010,13 @@ function renderDataScreen(back, label) {
     <div class="data_component">
       <section class="data_card">
         <h2 class="data_title">Exporter mes données</h2>
-        <p class="data_text">Enregistrez une copie de votre profil, de vos réglages et de vos données de jeu et d'entraînement dans un fichier lisible (JSON).</p>
+        <p class="data_text">Enregistre une copie de ton profil, de tes réglages et de tes données de jeu et d'entraînement dans un fichier lisible (JSON).</p>
         <button type="button" class="data_button" onclick="exportMenuData()">Exporter mes données</button>
         <p class="data_feedback" id="menu-data-feedback" role="status"></p>
       </section>
       <section class="data_card is-danger">
         <h2 class="data_title">Supprimer mon compte et mes données</h2>
-        <p class="data_text">Programme la suppression de votre compte et de toutes vos données : profil, réglages, sac, distances, parties, putting, wedging et gym. Vous êtes déconnecté tout de suite et la copie de cet appareil est effacée. Pendant 30 jours, vous pouvez changer d'avis : reconnectez-vous et choisissez d'annuler la suppression. Passé ce délai, la suppression est définitive et irréversible.</p>
+        <p class="data_text">Programme la suppression de ton compte et de toutes tes données : profil, réglages, sac, distances, parties, putting, wedging et gym. Tu es déconnecté tout de suite et la copie de cet appareil est effacée. Pendant 30 jours, tu peux changer d'avis : reconnecte-toi et choisis d'annuler la suppression. Passé ce délai, la suppression est définitive et irréversible.</p>
         ${menuDeleteConfirm ? `
         <p class="data_text is-strong">Confirmer la suppression du compte ?</p>
         <div class="data_actions">
@@ -1025,7 +1025,7 @@ function renderDataScreen(back, label) {
         </div>` : `
         <button type="button" class="data_button is-outline-danger" onclick="askDeleteMenuData()">Supprimer mon compte et mes données</button>`}
       </section>
-      <p class="data_text">Vous pouvez aussi demander l'accès à vos données ou leur effacement par e-mail à ${appEscapeHtml(MENU_LEGAL.contactEmail)}. Nous répondons dans un délai d'un mois.</p>
+      <p class="data_text">Tu peux aussi demander l'accès à tes données ou leur effacement par e-mail à ${appEscapeHtml(MENU_LEGAL.contactEmail)}. Nous répondons dans un délai d'un mois.</p>
     </div>
   `);
 }
@@ -1087,13 +1087,13 @@ async function deleteMenuData() {
   } catch (e) {
     console.warn('Suppression du compte impossible', e);
     menuDeleteConfirm = false;
-    if (typeof appAlert === 'function') await appAlert('Suppression impossible : vérifiez votre connexion et réessayez. Rien n\'a été effacé.');
+    if (typeof appAlert === 'function') await appAlert('Suppression impossible : vérifie ta connexion et réessaie. Rien n\'a été effacé.');
     currentRender();
     return;
   }
   const date = new Date(purgeAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   if (typeof appAlert === 'function') {
-    await appAlert('Suppression programmée. Votre compte et vos données seront effacés définitivement le ' + date + '. Pour annuler, reconnectez-vous avant cette date.');
+    await appAlert('Suppression programmée. Ton compte et tes données seront effacés définitivement le ' + date + '. Pour annuler, reconnectez-vous avant cette date.');
   }
   // Déconnexion de cet appareil : copie locale vidée, puis rechargement (remet à zéro la mémoire des modules)
   if (typeof window.authLogout === 'function') { await window.authLogout({ force: true }); return; }

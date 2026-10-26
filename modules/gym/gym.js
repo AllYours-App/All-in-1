@@ -26,8 +26,8 @@ document.getElementById("app-root-gym").innerHTML = `
         <div class="home-hero gym-anim-in">
           <div class="home-hero__media"></div>
           <div class="home-hero__content">
-            <h1 class="gym-title-xl">Développez votre <span class="home-hero__highlight">puissance</span> physique.</h1>
-            <p class="gym-subtitle">Planifiez, entraînez-vous et suivez vos progrès.</p>
+            <h1 class="gym-title-xl">Développe ta <span class="home-hero__highlight">puissance</span> physique.</h1>
+            <p class="gym-subtitle">Planifie, entraîne-toi et suis tes progrès.</p>
             <span class="home-hero__bar"></span>
           </div>
         </div>
@@ -48,7 +48,7 @@ document.getElementById("app-root-gym").innerHTML = `
               </div>
               <span class="feature-card__bar"></span>
               <span class="feature-card__title">Programmes</span>
-              <p class="feature-card__desc">Créez et gérez vos programmes d'entraînement.</p>
+              <p class="feature-card__desc">Crée et gère tes programmes d'entraînement.</p>
               <span class="feature-card__arrow">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </span>
@@ -69,7 +69,7 @@ document.getElementById("app-root-gym").innerHTML = `
               </div>
               <span class="feature-card__bar"></span>
               <span class="feature-card__title">Exercices</span>
-              <p class="feature-card__desc">Recherchez dans notre banque d'exercices et ajoutez-les à vos programmes.</p>
+              <p class="feature-card__desc">Cherche dans notre banque d'exercices et ajoute-les à tes programmes.</p>
               <span class="feature-card__arrow">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </span>
@@ -88,7 +88,7 @@ document.getElementById("app-root-gym").innerHTML = `
               </div>
               <span class="feature-card__bar"></span>
               <span class="feature-card__title">Historique</span>
-              <p class="feature-card__desc">Consultez vos séances passées et vos entraînements.</p>
+              <p class="feature-card__desc">Consulte tes séances passées et tes entraînements.</p>
               <span class="feature-card__arrow">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </span>
@@ -105,7 +105,7 @@ document.getElementById("app-root-gym").innerHTML = `
               </div>
               <span class="feature-card__bar"></span>
               <span class="feature-card__title">Progression</span>
-              <p class="feature-card__desc">Analysez vos performances et suivez votre évolution dans le temps.</p>
+              <p class="feature-card__desc">Analyse tes performances et suis ton évolution dans le temps.</p>
               <span class="feature-card__arrow">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </span>
@@ -178,7 +178,7 @@ document.getElementById("app-root-gym").innerHTML = `
       <main class="gym-main">
         <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
           <h1 class="gym-title-xl">Programmes</h1>
-          <p class="gym-subtitle">Créez et suivez vos programmes d'entraînement.</p>
+          <p class="gym-subtitle">Crée et suis tes programmes d'entraînement.</p>
         </div>
 
         <a class="btn btn-primary" href="#" onclick="gymNavigate('creer-programme'); return false;">
@@ -434,7 +434,7 @@ document.getElementById("app-root-gym").innerHTML = `
           <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
             <span class="gym-eyebrow">Exercices</span>
             <h1 class="gym-title-xl">Tous les exercices</h1>
-            <p class="gym-subtitle">Découvrez et explorez tous les exercices pour progresser à votre rythme.</p>
+            <p class="gym-subtitle">Découvre et explore tous les exercices pour progresser à ton rythme.</p>
           </div>
           <div class="hero-photo" style="width:110px; height:110px; flex-shrink:0; min-height:0;">
             <img class="hero-photo__image" src="images/FondBoutonExercices.webp" alt="" loading="lazy">
@@ -571,7 +571,7 @@ document.getElementById("app-root-gym").innerHTML = `
         <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
           <span class="gym-eyebrow">Progression</span>
           <h1 class="gym-title-xl">Progression</h1>
-          <p class="gym-subtitle">Suivez l'évolution de vos performances et de votre condition physique.</p>
+          <p class="gym-subtitle">Suis l'évolution de tes performances et de ta condition physique.</p>
         </div>
 
         <!-- État vide : aucune séance terminée pour le moment -->
@@ -624,7 +624,7 @@ document.getElementById("app-root-gym").innerHTML = `
         <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
           <span class="gym-eyebrow">Historique</span>
           <h1 class="gym-title-xl">Historique</h1>
-          <p class="gym-subtitle">Consultez vos séances et suivez vos entraînements.</p>
+          <p class="gym-subtitle">Consulte tes séances et suis tes entraînements.</p>
         </div>
 
         <div class="tabs gym-anim-in" id="gym-history-tabs">
@@ -708,8 +708,8 @@ document.getElementById("app-root-gym").innerHTML = `
       <main class="gym-main">
         <div class="gym-anim-in" style="display:flex; flex-direction:column; gap:8px;">
           <span class="gym-eyebrow">Objectifs</span>
-          <h1 class="gym-title-xl">Vos objectifs</h1>
-          <p class="gym-subtitle">Fixez-vous des objectifs et suivez vos progrès pour atteindre vos rêves.</p>
+          <h1 class="gym-title-xl">Tes objectifs</h1>
+          <p class="gym-subtitle">Fixe-toi des objectifs et suis tes progrès pour les atteindre.</p>
         </div>
 
         <div class="card gym-anim-in" style="display:flex; align-items:center; gap:16px;">
@@ -820,7 +820,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <div style="padding:4px 20px 12px;">
       <label class="search-bar">
         <span id="gym-icon-sheet-search"></span>
-        <input type="search" id="gym-sheet-search-input" placeholder="Rechercher un exercice (nom, muscle...)" />
+        <input type="search" id="gym-sheet-search-input" placeholder="Rechercher un exercice (nom, muscle…)" />
       </label>
     </div>
     <div class="sheet__body" id="gym-sheet-body"></div>
@@ -946,7 +946,7 @@ function openGymMenu() {
           // Pendant une séance, les champs déjà remplis resteraient dans l'ancienne unité : on attend la fin de la séance
           ? { type: "action", label: "Unité de poids : " + gymWeightUnit(), hint: "Modifiable hors séance, depuis l'accueil Gym.", keepOpen: true }
           : {
-            type: "segment", label: "Unité de poids", hint: "Saisie et affichage. Vos données restent enregistrées en kg.",
+            type: "segment", label: "Unité de poids", hint: "Saisie et affichage. Tes données restent enregistrées en kg.",
             value: gymWeightUnit(),
             options: [{ value: "kg", label: "kg" }, { value: "lb", label: "lb" }],
             onChange: (v) => { appPrefSet("gym", "weightUnit", v); gymRefreshCurrentView(); },
@@ -2302,10 +2302,10 @@ const EXERCISES = [
   { id: "3304", name: "Skin the cat", muscle: "Haut du dos", bodyRegion: "haut-du-corps", equipment: "poids-du-corps", icon: "backMuscle" },
   { id: "1425", name: "Sled 45 degrees one leg press", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
   { id: "1463", name: "Sled 45° leg press (side pov)", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
-  { id: "0738", name: "Sled 45в° calf press", muscle: "Mollets", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
-  { id: "0739", name: "Sled 45в° leg press", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
-  { id: "1464", name: "Sled 45в° leg press (back pov)", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
-  { id: "0740", name: "Sled 45в° leg wide press", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
+  { id: "0738", name: "Sled 45° calf press", muscle: "Mollets", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
+  { id: "0739", name: "Sled 45° leg press", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
+  { id: "1464", name: "Sled 45° leg press (back pov)", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
+  { id: "0740", name: "Sled 45° leg wide press", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
   { id: "1391", name: "Sled calf press on leg press", muscle: "Mollets", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
   { id: "0741", name: "Sled closer hack squat", muscle: "Fessiers", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
   { id: "0742", name: "Sled forward angled calf raise", muscle: "Mollets", bodyRegion: "bas-du-corps", equipment: "avec-materiel", icon: "legs" },
@@ -6157,10 +6157,10 @@ function gymRenderDualChart(points, series, selected) {
 
   function renderHowto() {
     const steps = [
-      { icon: "target", label: "1. Choisissez votre objectif" },
-      { icon: "sliders", label: "2. Configurez vos critères" },
-      { icon: "barChart", label: "3. Suivez vos progrès" },
-      { icon: "star", label: "4. Atteignez vos résultats" },
+      { icon: "target", label: "1. Choisis ton objectif" },
+      { icon: "sliders", label: "2. Configure tes critères" },
+      { icon: "barChart", label: "3. Suis tes progrès" },
+      { icon: "star", label: "4. Atteins tes résultats" },
     ];
 
     document.getElementById("gym-howto-steps").innerHTML = steps

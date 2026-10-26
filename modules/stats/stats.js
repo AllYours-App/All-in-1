@@ -30,11 +30,11 @@
     { key: 'scoreGross', group: 'Score', title: 'Score moyen', unit: '', icon: 'bars' },
     { key: 'scoreToPar', group: 'Score', title: 'Score moyen vs par', unit: '', icon: 'bars', signed: true },
     { key: 'bestScore', group: 'Score', title: 'Meilleur score', unit: '', icon: 'flag' },
-    { key: 'eagles', group: 'Score', title: 'Aigles par tour', unit: '', icon: 'bird' },
-    { key: 'birdies', group: 'Score', title: 'Birdies par tour', unit: '', icon: 'bird' },
-    { key: 'pars', group: 'Score', title: 'Pars par tour', unit: '', icon: 'bars' },
-    { key: 'bogeys', group: 'Score', title: 'Bogeys par tour', unit: '', icon: 'bars' },
-    { key: 'doubles', group: 'Score', title: 'Double bogeys ou pire par tour', unit: '', icon: 'bars' },
+    { key: 'eagles', group: 'Score', title: 'Aigles par partie', unit: '', icon: 'bird' },
+    { key: 'birdies', group: 'Score', title: 'Birdies par partie', unit: '', icon: 'bird' },
+    { key: 'pars', group: 'Score', title: 'Pars par partie', unit: '', icon: 'bars' },
+    { key: 'bogeys', group: 'Score', title: 'Bogeys par partie', unit: '', icon: 'bars' },
+    { key: 'doubles', group: 'Score', title: 'Double bogeys ou pire par partie', unit: '', icon: 'bars' },
     { key: 'par3', group: 'Score', title: 'Score moyen sur par 3', unit: '', icon: 'flag' },
     { key: 'par4', group: 'Score', title: 'Score moyen sur par 4', unit: '', icon: 'flag' },
     { key: 'par5', group: 'Score', title: 'Score moyen sur par 5', unit: '', icon: 'flag' },
@@ -53,7 +53,7 @@
     { key: 'upDown', group: 'Petit jeu', title: 'Up & down', unit: '%', icon: 'wedge' },
     { key: 'upDownBunker', group: 'Petit jeu', title: 'Up & down depuis le bunker', unit: '%', icon: 'wedge' },
     // Putting
-    { key: 'putts', group: 'Putting', title: 'Putts par tour', unit: '', icon: 'putter' },
+    { key: 'putts', group: 'Putting', title: 'Putts par partie', unit: '', icon: 'putter' },
     { key: 'puttsGir', group: 'Putting', title: 'Putts par green touché', unit: '', icon: 'putter' },
     { key: 'onePutt', group: 'Putting', title: '1 putt', unit: '%', icon: 'putter' },
     { key: 'threePutt', group: 'Putting', title: '3 putts ou plus', unit: '%', icon: 'putter' },
@@ -369,7 +369,7 @@
           </div>
         `).join('')}
       </div>
-    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun tour trouvé.</p>';
+    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucune partie trouvée.</p>';
     if (onSelect) {
       container.querySelectorAll('[data-id]').forEach((row) => {
         const round = rounds.find((r) => r.id === row.dataset.id);
@@ -396,7 +396,7 @@
           </div>
         `).join('')}
       </div>
-    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucun tour trouvé.</p>';
+    ` : '<p style="color:var(--color-text-tertiary); text-align:center; padding:var(--space-xl) 0;">Aucune partie trouvée.</p>';
     if (onSelect) {
       container.querySelectorAll('[data-id]').forEach((row) => {
         const round = rounds.find((r) => r.id === row.dataset.id);
@@ -2066,13 +2066,13 @@
      ÉCRAN "PAR CLUB" — graphes par club (Driving / Approach / Short Game / Putting)
      ======================================================================== */
 
-  const INSIGHTS_ROUNDS = ['5 derniers parcours', '10 derniers parcours', '15 derniers parcours', '20 derniers parcours', 'Tout'];
+  const INSIGHTS_ROUNDS = ['5 dernières parties', '10 dernières parties', '15 dernières parties', '20 dernières parties', 'Tout'];
   const CLUB_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Bunker', 'Green'];
   const DISTANCE_LIES = ['Tous lies', 'Tee', 'Fairway', 'Rough', 'Bunker'];
   const CLUB_TABS = [
     { value: 'driving', label: 'Driving' },
-    { value: 'approach', label: 'Approche' },
-    { value: 'shortGame', label: 'Petit jeu' },
+    { value: 'approach', label: 'A.G.' },
+    { value: 'shortGame', label: 'Approches' },
     { value: 'putting', label: 'Putting' },
   ];
   // Distance du 1er putt, en mètres : chaque borne haute est la borne basse de la tranche suivante
@@ -2176,7 +2176,7 @@
     if (only('putting')) {
       add('3 putts', bucketRows(put.threePutt), { ...PCT, caption: '(% des trous)' });
       add('Putts par GIR', bucketRows(put.puttsPerGir), { format: fx });
-      add('Fréquence des 3 putts', bucketRows(put.holesPer3Putt), { format: fx, caption: '(trous pour 1 three-putt)' });
+      add('Fréquence des 3 putts', bucketRows(put.holesPer3Putt), { format: fx, caption: '(trous pour un 3 putts)' });
       add('Coups par partie', rowsOf(m.shotsPerRound, ['All']), { format: fx });
     }
 
@@ -2348,8 +2348,8 @@
       defs: [
         { key: 'sgTotal', title: 'SG Total', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.total },
         { key: 'sgDriving', title: 'SG Driving', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.driving },
-        { key: 'sgApproach', title: 'SG Approche', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
-        { key: 'sgShortGame', title: 'SG Petit jeu', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
+        { key: 'sgApproach', title: 'SG A.G.', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.approach },
+        { key: 'sgShortGame', title: 'SG Approches', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.shortGame },
         { key: 'sgPutting', title: 'SG Putting', unit: '', caption: '', decimals: 2, better: 'high', signed: true, get: (r) => r.sg && r.sg.putting },
       ],
     },
@@ -2524,7 +2524,7 @@
   let refreshHistorique = () => {};
 
   /* Performance putting : filtres Parcours / Distance du 1er putt / Nombre de parties, courbe de la moyenne par partie */
-  const puttState = { course: ALL_COURSES, distance: 'Toutes distances', range: '20 derniers tours' };
+  const puttState = { course: ALL_COURSES, distance: 'Toutes distances', range: '20 dernières parties' };
   let puttChart = null;
 
   function initPutting() { refreshPutting(); }
@@ -2535,7 +2535,7 @@
     renderFilterBar(document.getElementById('put-filters'), [
       { ...DEFAULT_FILTERS.course, label: puttState.course, options: courses },
       { key: 'distance', icon: 'target', label: puttState.distance, options: ['Toutes distances', '< 3 m', '3 – 5 m', '5 – 10 m', '> 10 m'] },
-      { key: 'range', icon: 'calendar', label: puttState.range, options: ['10 derniers tours', '20 derniers tours', '50 derniers tours'] },
+      { key: 'range', icon: 'calendar', label: puttState.range, options: ['10 dernières parties', '20 dernières parties', '50 dernières parties'] },
     ], (key, value) => { puttState[key] = value; renderPutting(); });
     renderPutting();
   }
@@ -2649,7 +2649,7 @@
     if (nearbyStatus === 'loading' || nearbyStatus === 'ready') return;
     if (!navigator.geolocation) {
       nearbyStatus = 'error';
-      nearbyError = 'Géolocalisation indisponible, saisissez le parcours manuellement.';
+      nearbyError = 'Géolocalisation indisponible, saisis le parcours manuellement.';
       refreshCourseStatus();
       return;
     }
@@ -2664,14 +2664,14 @@
           nearbyStatus = 'ready';
         } catch (err) {
           nearbyStatus = 'error';
-          nearbyError = 'Recherche indisponible, saisissez le parcours manuellement.';
+          nearbyError = 'Recherche indisponible, saisis le parcours manuellement.';
         }
         renderCourseResults();
         refreshCourseStatus();
       },
       () => {
         nearbyStatus = 'error';
-        nearbyError = 'Position refusée, saisissez le parcours manuellement.';
+        nearbyError = 'Position refusée, saisis le parcours manuellement.';
         refreshCourseStatus();
       },
       { timeout: 10000 }
@@ -2709,7 +2709,7 @@
     else if (courseError) text = courseError;
     else if (nearbyStatus === 'loading') text = 'Recherche des parcours proches…';
     else if (nearbyStatus === 'error') text = nearbyError;
-    else if (nearbyStatus === 'ready' && typed && !findCourses().length) text = 'Aucun parcours trouvé près de vous';
+    else if (nearbyStatus === 'ready' && typed && !findCourses().length) text = 'Aucun parcours trouvé près de toi';
     el.textContent = text;
   }
 
@@ -2745,7 +2745,7 @@
       newRound.course = { ...mapped, name: mapped.name || picked.name, city: picked.city || mapped.city };
     } catch (err) {
       if (token !== courseToken) return;
-      courseError = 'Impossible de charger ce parcours, saisissez-le manuellement.';
+      courseError = 'Impossible de charger ce parcours, saisis-le manuellement.';
     }
     courseLoading = false;
     applyCourseTees();
@@ -2792,7 +2792,7 @@
         <span class="new-round_icon">${icon('flag')}</span>
         <div class="new-round_heading">
           <h2 class="new-round_title" id="nr-title">Nouvelle partie</h2>
-          <p class="new-round_subtitle">Réglez les paramètres de votre partie</p>
+          <p class="new-round_subtitle">Règle les paramètres de ta partie</p>
         </div>
         <button type="button" class="new-round_close" data-nr-close aria-label="Fermer">${icon('close')}</button>
       </div>

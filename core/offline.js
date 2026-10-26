@@ -136,7 +136,7 @@
     if (!homeActive()) { if (reloadAwayShown) return; reloadAwayShown = true; }
     reloadShown = true;
     // Sur l'accueil le choix reste affiché ; ailleurs il disparaît au bout de quelques secondes (il revient en retournant à l'accueil)
-    showToast('Des données plus récentes sont disponibles. Vos saisies sont déjà enregistrées.', homeActive() ? 0 : 10000, {
+    showToast('Des données plus récentes sont disponibles. Tes saisies sont déjà enregistrées.', homeActive() ? 0 : 10000, {
       label: 'Actualiser',
       onClick: function () {
         reloadDismissed = true;
@@ -153,7 +153,7 @@
   window.addEventListener('offline', function () {
     online = false;
     render();
-    showToast('Hors ligne. Continuez normalement : vos saisies sont gardées sur l\'appareil et seront envoyées au retour du réseau.', 7000);
+    showToast('Hors ligne. Continue normalement : tes saisies sont gardées sur l\'appareil et seront envoyées au retour du réseau.', 7000);
   });
 
   window.addEventListener('online', function () {
@@ -187,7 +187,7 @@
   // Démarrage hors ligne : prévenir une fois
   if (!online) {
     window.addEventListener('load', function () {
-      showToast('Mode hors ligne. Vos saisies sont gardées sur l\'appareil et seront envoyées au retour du réseau.', 6000);
+      showToast('Mode hors ligne. Tes saisies sont gardées sur l\'appareil et seront envoyées au retour du réseau.', 6000);
     });
   }
 })();
