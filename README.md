@@ -28,11 +28,11 @@ Message de bienvenue avec le prénom du joueur et fond d'écran qui change selon
 ### Menu (profil et réglages)
 C'est ici que le joueur renseigne ses informations personnelles, utilisées ensuite dans le reste de l'application :
 - **Profil** : prénom et index de golf.
-- **Réglages** : température de référence et altitude, puis un seul encadré **Unité utilisée** qui regroupe toutes les unités : distance (mètres ou yards), vitesse affichée (MPH ou KPH), vitesse du radar (MPS, MPH ou KPH) et température (°C ou °F).
-- **Radars** : un ou plusieurs radars de mesure, avec leurs décalages de mesure pour le club et pour la balle. On choisit un radar par défaut.
+- **Réglages** : température de référence et altitude, puis un seul encadré **Unité utilisée** qui regroupe toutes les unités : distance (mètres ou yards), unité de vitesse à afficher (MPH ou km/h) et température (°C ou °F).
+- **Radars** (masqué pour l'instant, réservé au module Vitesse en développement) : un ou plusieurs radars de mesure, avec leurs décalages de mesure pour le club et pour la balle. On choisit un radar par défaut. La ligne « Vitesse du radar » de l'encadré Unité utilisée est masquée avec eux.
 - **Mon sac de golf** : cocher les clubs que l'on possède.
 - **Mes distances** : saisir la distance de chaque club. Les wedges peuvent avoir plusieurs distances (par exemple un coup plein et un trois-quarts).
-- **Driver** : longueur et poids.
+- **Driver** (masqué pour l'instant, réservé au module Vitesse) : longueur et poids.
 - **Aide & support** : FAQ (questions regroupées par thème), contact, textes légaux (conditions d'utilisation, politique de confidentialité, mentions légales), gestion des données personnelles et page À propos (version, crédits).
 - **Déconnexion**.
 
@@ -47,7 +47,7 @@ C'est ici que le joueur renseigne ses informations personnelles, utilisées ensu
 Outils à utiliser pendant une partie :
 - **Fairway** : sur un schéma de fairway, on touche l'endroit où chaque départ est tombé, trou par trou (18 trous). On peut zoomer avec deux doigts, corriger un trou ou le passer.
 - **Green** : même principe pour les approches, avec le point d'arrivée de la balle autour du green.
-- **Vent** : donne la distance à jouer et la déviation à prévoir selon la distance du coup, la force du vent et sa direction (face, dos, travers), réglée sur une boussole. La distance suit l'unité de Parcours (m / yd) et la vitesse du vent suit « Vitesse affichée » du Menu (km/h ou mph) : les deux sont indépendantes, on peut donc avoir des km/h avec des yards ou des mph avec des mètres.
+- **Vent** : donne la distance à jouer et la déviation à prévoir selon la distance du coup, la force du vent et sa direction (face, dos, travers), réglée sur une boussole. La distance suit l'unité de Parcours (m / yd) et la vitesse du vent suit « Unité de vitesse à afficher » du Menu (km/h ou mph) : les deux sont indépendantes, on peut donc avoir des km/h avec des yards ou des mph avec des mètres.
 - **Dénivelé** : mesure la différence de hauteur entre soi et la cible en visant avec le téléphone, puis en indiquant la distance.
 - **Distance** ("Mes distances") : affiche les distances de chaque club du sac sous forme de barres, classées de la plus longue à la plus courte.
 - **Historique** : bilan de la partie en cours (pourcentage de fairways touchés, de greens touchés, tendance dominante des erreurs : gauche, droite, court, long).
@@ -381,7 +381,8 @@ Connexion, création de compte, mot de passe oublié et nouveau mot de passe, vi
 
 ### `modules/menu/menu.js` / `menu.css`
 Profil et réglages. Gère l'état global persisté dans `golfevolution_app_state` : `userProfile`, `settings` (température et son unité, altitude, unités de distance et de vitesse), `radars`, `golfBag`, `driverSettings`, `personalDistances`, `wedgeDistances`. Écrans : menu principal, sac de golf (`golfClubCatalog`), distances par club, et le groupe Aide & support (voir ci-dessous). Contient son propre pavé numérique (`openMenuKeypad`...) construit sur `appKeypad`. Expose `window.renderMenuTab`.
-La température est toujours stockée en °C (`settings.temperatureC`) ; `settings.temperatureUnit` (`"c"` ou `"f"`) ne change que l'affichage et la saisie (`temperatureDisplayValue()`, `fahrenheitToCelsius()` : la cible du pavé `setting:temperature` convertit avant d'enregistrer). Toutes les unités sont réunies dans l'encadré « Unité utilisée » de l'écran Menu.
+La température est toujours stockée en °C (`settings.temperatureC`) ; `settings.temperatureUnit` (`"c"` ou `"f"`) ne change que l'affichage et la saisie (`temperatureDisplayValue()`, `fahrenheitToCelsius()` : la cible du pavé `setting:temperature` convertit avant d'enregistrer). Toutes les unités sont réunies dans l'encadré « Unité utilisée » de l'écran Menu. Les encadrés Radars et Driver et la ligne « Vitesse du radar » ne s'affichent pas tant que `MENU_SHOW_SPEED_MODULE_SETTINGS` vaut `false` (début de l'écran Réglages) ; leurs données restent enregistrées. Les unités de vitesse sont enregistrées `"mph"`, `"kph"` ou `"mps"`, mais `"kph"` s'affiche « km/h ».
+**Convention des unités de distance** (aussi écrite en tête de `menu.js`) : les **yards** servent pour toutes les distances de jeu (coups pleins, wedges, distances par club, Fairway, Green, Vent, Dénivelé, tables Strokes Gained hors green) ; les **pieds (feet)** uniquement pour les courtes distances, comme au putting (table Strokes Gained `green`) ; les mètres sont l'autre choix possible et l'unité de stockage de référence. Piège de nom : dans `settings.distanceUnit`, la valeur `"ft"` (libellé « Yards/Feet ») signifie **yards**, pas des pieds ; elle est gardée parce qu'elle est déjà enregistrée sur les comptes.
 Ses variables globales (`golfBag`, `golfClubCatalog`, `personalDistances`, `wedgeDistances`, `settings`) sont lues directement par `parcours-ui.js` et `stats.js`.
 Ses fonctions de sauvegarde sont `saveMenuState()` / `loadMenuState()` (préfixées pour ne pas entrer en collision avec celles de `putting.js`).
 
@@ -465,13 +466,14 @@ Les bugs en cours, les tests à faire sur téléphone, les décisions attendues 
 
 Limites connues après le regroupement des unités et le lien entre la vitesse du vent et le Menu :
 
-- **Valeur par défaut en mph.** `settings.speedUnit` vaut `"mph"` par défaut (Menu). Sur un compte qui n'a jamais touché ce réglage, le vent de Parcours passe donc de km/h à mph à la mise à jour, même en mètres. Il suffit de choisir KPH dans Menu > Unité utilisée > Vitesse affichée. Il reste à décider si le défaut doit devenir `"kph"`.
+- **Valeur par défaut en mph.** `settings.speedUnit` vaut `"mph"` par défaut (Menu). Sur un compte qui n'a jamais touché ce réglage, le vent de Parcours passe donc de km/h à mph à la mise à jour, même en mètres. Il suffit de choisir km/h dans Menu > Unité utilisée > Unité de vitesse à afficher. Il reste à décider si le défaut doit devenir `"kph"`.
 - **La vitesse du vent ne se règle que dans Menu.** Les boutons m / yd de Parcours ne changent plus que les distances ; il n'y a pas de bouton km/h / mph dans le calculateur de vent ni dans le menu 3 points de Parcours.
 - **Conversion arrondie à l'entier.** Quand l'unité de vitesse change, la valeur déjà saisie est convertie puis arrondie (le pavé n'a pas de virgule) : un aller-retour km/h, mph, km/h peut perdre 1 km/h (20 donne 12, puis 19).
 - **Unité de distance toujours en double** : Menu (`settings.distanceUnit`) et Parcours (`parcoursSettings.distanceUnit`) restent indépendants (voir l'audit du 14/10).
 - **Altitude toujours en mètres**, quelle que soit l'unité de distance ou de température choisie.
-- **`temperatureC`, `radarUnit` et les décalages des radars** ne sont toujours lus par aucun autre module que Menu.
-- **Traductions** : les textes « Unité de distance » (encore utilisé par le menu 3 points de Parcours), « Unités de vitesse », « Unité affichée » et « Unité du radar » restent dans `i18n-dict.js` ; les trois derniers ne s'affichent plus dans Menu (remplacés par « Unité utilisée », « Vitesse affichée » et « Vitesse du radar »).
+- **`temperatureC`, `altitudeM`, `radarUnit` et les décalages des radars** ne sont lus par aucun autre module que Menu : température et altitude sont enregistrées mais ne servent à aucun calcul pour l'instant (pas de correction de distance).
+- **Radars, Driver et « Vitesse du radar » masqués dans Menu** (module Vitesse en développement) : à réafficher avec `MENU_SHOW_SPEED_MODULE_SETTINGS` quand le module Vitesse les utilisera.
+- **Traductions** : les textes « Unité de distance » (encore utilisé par le menu 3 points de Parcours), « Unités de vitesse », « Unité affichée », « Unité du radar » et « Vitesse du radar » restent dans `i18n-dict.js` mais ne s'affichent plus dans Menu.
 - **`Suivi-des-bugs.docx`** n'a pas été mis à jour (fichier Word).
 
 ### Anomalies relevées (suppression du compte, 24/10/2026)
@@ -532,7 +534,7 @@ Problèmes non résolus ou limites connues après l'ajout du mode hors ligne :
 
 ### Anomalies relevées (audit des unités et réglages, 14/10/2026)
 
-- **Unité de distance en double.** Menu stocke `settings.distanceUnit` (`golfevolution_app_state`, `"m"` ou `"ft"` = yards) et Parcours a son propre `parcoursSettings.distanceUnit` (`golfevolution_parcours_settings`, `"m"` ou `"yd"`). Les deux ne sont pas synchronisés. Putting, Wedging et Stats n'en lisent aucun : leurs distances restent en mètres.
+- **Unité de distance en double.** Menu stocke `settings.distanceUnit` (`golfevolution_app_state`, `"m"` ou `"ft"` = yards, voir la convention des unités de distance) et Parcours a son propre `parcoursSettings.distanceUnit` (`golfevolution_parcours_settings`, `"m"` ou `"yd"`). Les deux ne sont pas synchronisés. Putting, Wedging et Stats n'en lisent aucun : leurs distances restent en mètres.
 - **Réglages enregistrés mais jamais lus.** `temperatureC`, `altitudeM`, `radarUnit` et les radars (`golfevolution_app_state`) ne sont utilisés par aucun autre module que Menu. Depuis le 27/10/2026, `speedUnit` est lu par le calculateur de vent de Parcours.
 - **Menu : altitude (m), longueur (cm) et poids (g) du driver** n'ont pas d'unité alternative (ft, in, oz). La température a désormais le °F (27/10/2026).
 - **Stats et Accueil sans menu 3 points** : le header de Stats n'a pas de bouton, l'Accueil non plus. Les menus de Putting, Wedging, Parcours et Gym existent (voir plus haut).

@@ -11,6 +11,18 @@ const menuBackLabel = document.querySelector("#page-menu .nav_back-label");
    ========================================================================== */
 const MENU_STORAGE_KEY = "golfevolution_app_state";
 
+/* ==========================================================================
+   CONVENTION DES UNITÉS DE DISTANCE (à lire avant de toucher aux unités)
+   - Yards (yd) : toutes les distances de jeu au-delà du green (coups pleins, wedges, distances par club,
+     Fairway, Green, Vent, Dénivelé, tables Strokes Gained tee / fairway / rough / sand / recovery).
+   - Feet / pieds (ft) : UNIQUEMENT les courtes distances, comme au putting (table Strokes Gained « green »).
+   - Mètres (m) : l'autre choix possible pour les distances de jeu ; c'est aussi l'unité de stockage de référence.
+   ⚠ Piège de nom : dans settings.distanceUnit, la valeur "ft" (libellé « Yards/Feet ») signifie YARDS pour
+   tout ce qui est suivi dans Menu (distances par club), pas des pieds. Le putter n'a pas de distance suivie
+   ici. La valeur "ft" est gardée telle quelle parce qu'elle est déjà enregistrée sur les comptes.
+   Putting, Wedging et Stats n'utilisent aucun de ces réglages : leurs distances restent en mètres.
+   ========================================================================== */
+
 let userProfile = { firstName: "", index: null };
 
 let settings = {
@@ -19,7 +31,7 @@ let settings = {
   altitudeM: 0,
   radarUnit: "mps",
   speedUnit: "mph",
-  distanceUnit: "m", // "ft" = yards (voir MENU_M_TO_YD)
+  distanceUnit: "m", // "m" ou "ft" ; ATTENTION "ft" = YARDS, pas des pieds (voir CONVENTION DES UNITÉS DE DISTANCE plus haut)
   defaultRadarId: "radar_default",
   theme: "dark", // "dark" ou "light" (voir applyAppTheme dans commun.js)
   language: "fr", // "fr", "en" ou "es" (voir core/i18n.js)
@@ -253,10 +265,16 @@ function topRowHtml(showLogout = false) {
    ========================================================================== */
 // Noms des langues : toujours écrits dans leur propre langue (non traduits)
 const LANGUAGE_OPTIONS = [['fr', 'Français'], ['en', 'English'], ['es', 'Español']];
+// "ft" = yards (nom historique, voir CONVENTION DES UNITÉS DE DISTANCE) ; les pieds ne servent qu'aux courtes distances (putting)
 const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
-const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'KPH']];
-const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'KPH']];
-const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'KPH']];
+// La valeur enregistrée reste "kph" (réglages déjà sauvegardés) ; seul le libellé affiché est « km/h »
+const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'km/h']];
+const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'km/h']];
+const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'km/h']];
+
+// Radars, Driver et « Vitesse du radar » servent au module Vitesse, encore en développement :
+// masqués dans le Menu (leurs données restent enregistrées). Passer à true pour les réafficher.
+const MENU_SHOW_SPEED_MODULE_SETTINGS = false;
 const TEMPERATURE_UNITS = [['c', 'Celsius (°C)'], ['f', 'Fahrenheit (°F)']];
 
 function optionsHtml(options, current) {
@@ -303,7 +321,7 @@ function temperatureDisplayValue() {
 function radarOffsetRowHtml(r, label, key) {
   const value = r[key + 'Value'];
   const unit = r[key + 'Unit'];
-  const symbol = unit === 'pct' ? '%' : unit.toUpperCase();
+  const symbol = unit === 'pct' ? '%' : unit === 'kph' ? 'km/h' : unit.toUpperCase();
   return `
         <div class="field-row"><span class="label">${label}</span><span class="val">
           ${numButton({ title: label, target: `radar:${r.id}:${key}Value`, value, decimal: true, sign: true, unit: symbol }, formatSigned(value), 'w-70')}
@@ -360,10 +378,11 @@ function renderMenuTab() {
     <div class="field-list">
       <h3>Unité utilisée</h3>
       ${settingSelectRow('Distance', 'distanceUnit', DISTANCE_UNITS)}
-      ${settingSelectRow('Vitesse affichée', 'speedUnit', SPEED_UNITS)}
-      ${settingSelectRow('Vitesse du radar', 'radarUnit', RADAR_UNITS)}
+      ${settingSelectRow('Unité de vitesse à afficher', 'speedUnit', SPEED_UNITS)}
+      ${MENU_SHOW_SPEED_MODULE_SETTINGS ? settingSelectRow('Vitesse du radar', 'radarUnit', RADAR_UNITS) : ''}
       ${settingSelectRow('Température', 'temperatureUnit', TEMPERATURE_UNITS)}
     </div>
+    ${MENU_SHOW_SPEED_MODULE_SETTINGS ? `
     <div class="field-list">
       <h3>Radars</h3>
       ${radars.map(radarBlockHtml).join('')}
@@ -377,7 +396,7 @@ function renderMenuTab() {
       <div class="field-row"><span class="label">Poids (g)</span><span class="val">
         ${numButton({ title: 'Poids du driver', target: 'driver:weight', value: driverSettings.weight, unit: 'g' })}
       </span></div>
-    </div>
+    </div>` : ''}
     <nav class="menu_list">
       <button class="menu_item" type="button" onclick="renderHelpScreen()">
         <span class="menu_icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.7-2.4 3.4"/><circle cx="12" cy="16.8" r="0.2" fill="currentColor"/></svg></span>
@@ -391,7 +410,8 @@ function renderMenuTab() {
   `);
 }
 
-// 1 mètre en yards ("ft" = yards pour les coups pleins ; le putter n'a pas de distance suivie ici)
+// 1 mètre en yards. Ici "ft" = yards (coups pleins) ; les pieds ne servent qu'aux courtes distances comme le putting,
+// qui n'a pas de distance suivie dans Menu (voir CONVENTION DES UNITÉS DE DISTANCE en haut du fichier)
 const MENU_M_TO_YD = 1.09361;
 
 function convertMenuDistanceValue(value, fromUnit, toUnit) {

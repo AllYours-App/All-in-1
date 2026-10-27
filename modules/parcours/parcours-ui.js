@@ -694,8 +694,9 @@ function goToMenuDistances() {
   renderDistancesScreen(); // menu.js : écran "Mes distances" (retour -> Menu)
 }
 
-// Dans Menu, l'unité "Yards/Feet" représente des yards pour tous les clubs de
-// cet écran (le putter, en feet, n'a plus de distance suivie et est exclu ici).
+// Dans Menu, l'unité "Yards/Feet" (valeur "ft") représente des YARDS pour tous les clubs de cet écran :
+// les pieds ne servent qu'aux courtes distances comme le putting (le putter n'a plus de distance suivie
+// et est exclu ici). Voir CONVENTION DES UNITÉS DE DISTANCE en haut de menu.js.
 function distancesMenuIsYards() {
   return typeof settings !== "undefined" && settings.distanceUnit === "ft";
 }
