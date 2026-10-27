@@ -11,27 +11,15 @@ const menuBackLabel = document.querySelector("#page-menu .nav_back-label");
    ========================================================================== */
 const MENU_STORAGE_KEY = "golfevolution_app_state";
 
-/* ==========================================================================
-   CONVENTION DES UNITÉS DE DISTANCE (à lire avant de toucher aux unités)
-   - Yards (yd) : toutes les distances de jeu au-delà du green (coups pleins, wedges, distances par club,
-     Fairway, Green, Vent, Dénivelé, tables Strokes Gained tee / fairway / rough / sand / recovery).
-   - Feet / pieds (ft) : UNIQUEMENT les courtes distances, comme au putting (table Strokes Gained « green »).
-   - Mètres (m) : l'autre choix possible pour les distances de jeu ; c'est aussi l'unité de stockage de référence.
-   ⚠ Piège de nom : dans settings.distanceUnit, la valeur "ft" (libellé « Yards/Feet ») signifie YARDS pour
-   tout ce qui est suivi dans Menu (distances par club), pas des pieds. Le putter n'a pas de distance suivie
-   ici. La valeur "ft" est gardée telle quelle parce qu'elle est déjà enregistrée sur les comptes.
-   Putting, Wedging et Stats n'utilisent aucun de ces réglages : leurs distances restent en mètres.
-   ========================================================================== */
-
 let userProfile = { firstName: "", index: null };
 
 let settings = {
-  temperatureC: 20, // toujours stockée en °C, quelle que soit l'unité affichée
-  temperatureUnit: "c", // "c" (°C) ou "f" (°F) : unité d'affichage et de saisie
+  temperatureC: 20, // toujours stockée en °C ; temperatureUnit ne change que l'affichage et la saisie
+  temperatureUnit: "c", // "c" (Celsius) ou "f" (Fahrenheit)
   altitudeM: 0,
   radarUnit: "mps",
-  speedUnit: "mph",
-  distanceUnit: "m", // "m" ou "ft" ; ATTENTION "ft" = YARDS, pas des pieds (voir CONVENTION DES UNITÉS DE DISTANCE plus haut)
+  windSpeedUnit: null, // "kph" ou "mph" (vent de Parcours). null = pas encore choisi : suit la distance (m -> km/h, yd -> mph), voir menuWindSpeedUnit()
+  distanceUnit: "m", // "ft" = yards (voir MENU_M_TO_YD)
   defaultRadarId: "radar_default",
   theme: "dark", // "dark" ou "light" (voir applyAppTheme dans commun.js)
   language: "fr", // "fr", "en" ou "es" (voir core/i18n.js)
@@ -265,17 +253,11 @@ function topRowHtml(showLogout = false) {
    ========================================================================== */
 // Noms des langues : toujours écrits dans leur propre langue (non traduits)
 const LANGUAGE_OPTIONS = [['fr', 'Français'], ['en', 'English'], ['es', 'Español']];
-// "ft" = yards (nom historique, voir CONVENTION DES UNITÉS DE DISTANCE) ; les pieds ne servent qu'aux courtes distances (putting)
-const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
-// La valeur enregistrée reste "kph" (réglages déjà sauvegardés) ; seul le libellé affiché est « km/h »
-const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'km/h']];
-const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'km/h']];
-const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'km/h']];
-
-// Radars, Driver et « Vitesse du radar » servent au module Vitesse, encore en développement :
-// masqués dans le Menu (leurs données restent enregistrées). Passer à true pour les réafficher.
-const MENU_SHOW_SPEED_MODULE_SETTINGS = false;
+const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards (yd)']];
+const RADAR_UNITS    = [['mps', 'm/s'], ['mph', 'mph'], ['kph', 'km/h']];
+const WIND_SPEED_UNITS = [['kph', 'km/h'], ['mph', 'mph']];
 const TEMPERATURE_UNITS = [['c', 'Celsius (°C)'], ['f', 'Fahrenheit (°F)']];
+const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'KPH']];
 
 function optionsHtml(options, current) {
   return options.map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
@@ -297,31 +279,41 @@ function settingSwitchRow(label, key, checked, [offLabel, offValue], [onLabel, o
       </span></div>`;
 }
 
-function settingSelectRow(label, key, options) {
+// current : valeur affichée comme choisie (par défaut, celle de settings[key])
+function settingSelectRow(label, key, options, current = settings[key]) {
   return `
       <div class="field-row"><span class="label">${label}</span><span class="val">
-        <select aria-label="${label}" onchange="updateMenuSetting('${key}',this.value)">${optionsHtml(options, settings[key])}</select>
+        <select aria-label="${label}" onchange="updateMenuSetting('${key}',this.value)">${optionsHtml(options, current)}</select>
       </span></div>`;
 }
 
-const formatSigned = v => (v > 0 ? '+' + v : String(v));
-
-/* Température : settings.temperatureC reste toujours en °C (donnée de référence).
-   Seuls l'affichage et la saisie suivent l'unité choisie (°C ou °F). */
-const menuRound = (v, decimals) => Math.round(v * 10 ** decimals) / 10 ** decimals;
-const celsiusToFahrenheit = c => c * 9 / 5 + 32;
-const fahrenheitToCelsius = f => (f - 32) * 5 / 9;
-function temperatureSymbol() { return settings.temperatureUnit === 'f' ? '°F' : '°C'; }
-function temperatureDisplayValue() {
-  const c = Number(settings.temperatureC) || 0;
-  return menuRound(settings.temperatureUnit === 'f' ? celsiusToFahrenheit(c) : c, 1);
+// Vitesse du vent de Parcours : "kph" ou "mph". Tant que rien n'est choisi, elle suit l'unité de
+// distance (m -> km/h, yd -> mph), comme avant. Ensuite les deux unités sont indépendantes.
+function menuWindSpeedUnit() {
+  if (settings.windSpeedUnit === 'kph' || settings.windSpeedUnit === 'mph') return settings.windSpeedUnit;
+  return settings.distanceUnit === 'ft' ? 'mph' : 'kph';
 }
+
+// Température : stockée en °C (settings.temperatureC), affichée et saisie dans l'unité choisie
+function menuTemperatureIsF() { return settings.temperatureUnit === 'f'; }
+function menuTemperatureToDisplay(c) {
+  const n = Number(c);
+  if (!Number.isFinite(n)) return 0;
+  return menuTemperatureIsF() ? Math.round(n * 9 / 5 + 32) : Math.round(n * 10) / 10;
+}
+function menuTemperatureFromInput(v) {
+  const n = parseFloat(v);
+  if (!Number.isFinite(n)) return 0;
+  return menuTemperatureIsF() ? Math.round((n - 32) * 5 / 9 * 100) / 100 : n;
+}
+
+const formatSigned = v => (v > 0 ? '+' + v : String(v));
 
 // key : 'clubOffset' ou 'ballOffset'. Le signe se saisit directement dans le pavé.
 function radarOffsetRowHtml(r, label, key) {
   const value = r[key + 'Value'];
   const unit = r[key + 'Unit'];
-  const symbol = unit === 'pct' ? '%' : unit === 'kph' ? 'km/h' : unit.toUpperCase();
+  const symbol = unit === 'pct' ? '%' : unit.toUpperCase();
   return `
         <div class="field-row"><span class="label">${label}</span><span class="val">
           ${numButton({ title: label, target: `radar:${r.id}:${key}Value`, value, decimal: true, sign: true, unit: symbol }, formatSigned(value), 'w-70')}
@@ -368,8 +360,8 @@ function renderMenuTab() {
     </div>
     <div class="field-list">
       <h3>Conditions de référence</h3>
-      <div class="field-row"><span class="label">Température (${temperatureSymbol()})</span><span class="val">
-        ${numButton({ title: 'Température', target: 'setting:temperature', value: temperatureDisplayValue(), sign: true, unit: temperatureSymbol() }, `${temperatureDisplayValue()}${temperatureSymbol()}`)}
+      <div class="field-row"><span class="label">Température</span><span class="val">
+        ${numButton({ title: 'Température', target: 'setting:temperatureInput', value: menuTemperatureToDisplay(settings.temperatureC), sign: true, unit: menuTemperatureIsF() ? '°F' : '°C' }, `${menuTemperatureToDisplay(settings.temperatureC)}${menuTemperatureIsF() ? '°F' : '°C'}`)}
       </span></div>
       <div class="field-row"><span class="label">Altitude (m)</span><span class="val">
         ${numButton({ title: 'Altitude', target: 'setting:altitudeM', value: settings.altitudeM, unit: 'm' }, `${settings.altitudeM} m`)}
@@ -378,11 +370,10 @@ function renderMenuTab() {
     <div class="field-list">
       <h3>Unité utilisée</h3>
       ${settingSelectRow('Distance', 'distanceUnit', DISTANCE_UNITS)}
-      ${settingSelectRow('Unité de vitesse à afficher', 'speedUnit', SPEED_UNITS)}
-      ${MENU_SHOW_SPEED_MODULE_SETTINGS ? settingSelectRow('Vitesse du radar', 'radarUnit', RADAR_UNITS) : ''}
+      ${settingSelectRow('Vitesse du vent', 'windSpeedUnit', WIND_SPEED_UNITS, menuWindSpeedUnit())}
+      ${settingSelectRow('Unité du radar', 'radarUnit', RADAR_UNITS)}
       ${settingSelectRow('Température', 'temperatureUnit', TEMPERATURE_UNITS)}
     </div>
-    ${MENU_SHOW_SPEED_MODULE_SETTINGS ? `
     <div class="field-list">
       <h3>Radars</h3>
       ${radars.map(radarBlockHtml).join('')}
@@ -396,7 +387,7 @@ function renderMenuTab() {
       <div class="field-row"><span class="label">Poids (g)</span><span class="val">
         ${numButton({ title: 'Poids du driver', target: 'driver:weight', value: driverSettings.weight, unit: 'g' })}
       </span></div>
-    </div>` : ''}
+    </div>
     <nav class="menu_list">
       <button class="menu_item" type="button" onclick="renderHelpScreen()">
         <span class="menu_icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.7-2.4 3.4"/><circle cx="12" cy="16.8" r="0.2" fill="currentColor"/></svg></span>
@@ -410,8 +401,7 @@ function renderMenuTab() {
   `);
 }
 
-// 1 mètre en yards. Ici "ft" = yards (coups pleins) ; les pieds ne servent qu'aux courtes distances comme le putting,
-// qui n'a pas de distance suivie dans Menu (voir CONVENTION DES UNITÉS DE DISTANCE en haut du fichier)
+// 1 mètre en yards ("ft" = yards pour les coups pleins ; le putter n'a pas de distance suivie ici)
 const MENU_M_TO_YD = 1.09361;
 
 function convertMenuDistanceValue(value, fromUnit, toUnit) {
@@ -434,25 +424,29 @@ function convertStoredDistances(fromUnit, toUnit) {
 // Auto-save des réglages simples, sans re-render (évite d'effacer une saisie en cours ailleurs)
 function updateMenuSetting(key, value) {
   if (key === 'distanceUnit' && value !== settings.distanceUnit) {
+    // La vitesse du vent ne suit plus la distance : si elle n'a jamais été choisie, on fige
+    // d'abord l'unité actuellement affichée pour qu'elle ne change pas avec la distance
+    if (settings.windSpeedUnit !== 'kph' && settings.windSpeedUnit !== 'mph') settings.windSpeedUnit = menuWindSpeedUnit();
     convertStoredDistances(settings.distanceUnit, value);
   }
   if (key === 'weeklyGoal') {
     // Entier entre 1 et 14 ; une saisie invalide garde l'objectif actuel
     const n = parseInt(value, 10);
     settings.weeklyGoal = n >= 1 && n <= 14 ? n : settings.weeklyGoal;
-  } else if (key === 'temperature') {
-    // Saisie dans l'unité affichée (°C ou °F) : on range toujours des °C
-    const v = parseFloat(value) || 0;
-    settings.temperatureC = settings.temperatureUnit === 'f' ? menuRound(fahrenheitToCelsius(v), 2) : v;
+  } else if (key === 'temperatureInput') {
+    // Saisie dans l'unité affichée (°C ou °F), enregistrée en °C
+    settings.temperatureC = menuTemperatureFromInput(value);
+  } else if (key === 'windSpeedUnit') {
+    settings.windSpeedUnit = value === 'mph' ? 'mph' : 'kph';
   } else if (key === 'temperatureUnit') {
-    settings.temperatureUnit = value === 'f' ? 'f' : 'c'; // la valeur en °C ne change pas
+    settings.temperatureUnit = value === 'f' ? 'f' : 'c';
   } else {
     settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
   }
   if (key === 'theme') applyAppTheme(value);
   saveMenuState();
-  // La température figure sur cet écran : elle doit s'afficher dans la nouvelle unité tout de suite
-  if (key === 'temperatureUnit') renderMenuTab();
+  // La température affichée plus haut dans l'écran change d'unité : on redessine
+  if (key === 'temperatureUnit') currentRender();
   // Changer de langue recharge la page (la traduction est faite au chargement, voir core/i18n.js)
   if (key === 'language' && typeof appSetLanguage === 'function') { appSetLanguage(value); return; }
   if (key === 'weeklyGoal' && typeof renderGolfHome === 'function') renderGolfHome();
@@ -1192,6 +1186,11 @@ window.MenuData = {
   get personalDistances() { return personalDistances; },
   get wedgeDistances() { return wedgeDistances; },
   get settings() { return settings; },
+  // Unités (réglées dans Menu > Unité utilisée), lues et écrites par Parcours
+  get distanceUnit() { return settings.distanceUnit === 'ft' ? 'yd' : 'm'; },
+  get windSpeedUnit() { return menuWindSpeedUnit() === 'mph' ? 'mph' : 'kmh'; },
+  setDistanceUnit(unit) { updateMenuSetting('distanceUnit', unit === 'yd' ? 'ft' : 'm'); },
+  setWindSpeedUnit(unit) { updateMenuSetting('windSpeedUnit', unit === 'mph' ? 'mph' : 'kph'); },
 };
 
 /* ==========================================================================

@@ -785,6 +785,19 @@ body.no-scroll :where(#page-parcours) .screen-view.active .screen {
   font-size: 12.5px;
 }
 
+/* Ligne « Vitesse du vent » + bascule km/h / mph sous l'en-tête des calculateurs de vent */
+.unit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.unit-row-label {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
 .hint-text {
   color: var(--text-secondary);
   font-size: 13.5px;
@@ -1289,6 +1302,7 @@ a:focus-visible, button:focus-visible, .dropdown-trigger:focus-visible, .select-
 #page-parcours.pc-large-text .segmented button { font-size: 15.5px; }
 #page-parcours.pc-large-text .select-card span { font-size: 14.5px; }
 #page-parcours.pc-large-text .unit-toggle button { font-size: 14.5px; }
+#page-parcours.pc-large-text .unit-row-label { font-size: 15.5px; }
 #page-parcours.pc-large-text .hint-text { font-size: 15.5px; }
 #page-parcours.pc-large-text .input-box .input-box-label,
 #page-parcours.pc-large-text .result-box .result-label { font-size: 13.5px; }

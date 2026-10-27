@@ -31,23 +31,46 @@ document.addEventListener("DOMContentLoaded", () => {
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   Réglages (unité de distance m / yd), persistés dans le navigateur
+   Unités. Une seule source : Menu > Réglages > Unité utilisée (window.MenuData).
+   - distance : m ou yd (Fairway, Green, Vent, Dénivelé, Mes distances)
+   - vitesse du vent : km/h ou mph, INDÉPENDANTE de la distance (m + mph, yd + km/h...)
+   Les calculs se font toujours en mètres et en km/h : chaque valeur saisie est convertie
+   avec SON unité (distanceToMeters, speedToKmh) avant le calcul.
+   La copie locale ci-dessous ne sert que de secours si Menu n'est pas chargé.
    -------------------------------------------------------------------------- */
 const M_TO_YD = 1.09361;
 const KMH_PER_MPH = 1.609344; // 1 mph = 1,609344 km/h
 const PARCOURS_SETTINGS_KEY = "golfevolution_parcours_settings";
+const TRACK_UNIT_KEY = "golfevolution_parcours_fairway_unit";
 
-let parcoursSettings = { distanceUnit: "m" };
+let parcoursSettings = { distanceUnit: "m" }; // copie locale (secours)
 (function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(PARCOURS_SETTINGS_KEY) || "{}");
     if (saved && saved.distanceUnit === "m") parcoursSettings.distanceUnit = "m";
     else if (saved && (saved.distanceUnit === "yd" || saved.distanceUnit === "ft")) parcoursSettings.distanceUnit = "yd"; // "ft" : ancienne valeur, migrée en yards
+    const savedTrackUnit = localStorage.getItem(TRACK_UNIT_KEY);
+    if (savedTrackUnit === "m" || savedTrackUnit === "yd") parcoursSettings.distanceUnit = savedTrackUnit;
   } catch (e) { /* localStorage indisponible : on garde la valeur par défaut */ }
 })();
 
 function saveSettings() {
   appSafeSetItem(PARCOURS_SETTINGS_KEY, JSON.stringify(parcoursSettings));
+}
+
+function parcoursMenuData() {
+  return window.MenuData && window.MenuData.settings ? window.MenuData : null;
+}
+// "m" ou "yd" : unité de distance de tout Parcours
+function parcoursDistanceUnit() {
+  const md = parcoursMenuData();
+  return md ? md.distanceUnit : parcoursSettings.distanceUnit;
+}
+// "kmh" ou "mph" : unité de la vitesse du vent (sans lien avec la distance)
+function parcoursSpeedUnit() {
+  const md = parcoursMenuData();
+  if (md) return md.windSpeedUnit;
+  return parcoursSettings.distanceUnit === "yd" ? "mph" : "kmh";
 }
 
 function convertDistance(meters, unit) {
@@ -58,59 +81,56 @@ function distanceToMeters(value, unit) {
   return unit === "yd" ? Number(value) / M_TO_YD : Number(value);
 }
 function distanceUnitLabel() {
-  return parcoursSettings.distanceUnit === "yd" ? "yd" : "m";
-}
-// Vitesse du vent : liée au réglage « Vitesse affichée » du Menu (settings.speedUnit : "kph" ou "mph"),
-// indépendante de l'unité de distance (km/h avec des yards ou mph avec des mètres sont possibles).
-// menu.js est chargé après ce fichier : on lit `settings` au moment de l'appel, jamais au chargement.
-function windSpeedUnit() {
-  return (typeof settings !== "undefined" && settings.speedUnit === "mph") ? "mph" : "kph";
+  return parcoursDistanceUnit() === "yd" ? "yd" : "m";
 }
 function speedUnitLabel() {
-  return windSpeedUnit() === "mph" ? "mph" : "km/h";
+  return parcoursSpeedUnit() === "mph" ? "mph" : "km/h";
 }
-function speedToKmh(value, unit) {
+// Vitesse saisie (dans l'unité de vitesse choisie) -> km/h pour le calcul
+function speedToKmh(value) {
   const v = Number(value);
   if (isNaN(v)) return 0;
-  return (unit || windSpeedUnit()) === "mph" ? v * KMH_PER_MPH : v;
+  return parcoursSpeedUnit() === "mph" ? v * KMH_PER_MPH : v;
 }
-// La vitesse saisie reste dans l'unité où elle a été tapée (windCalc.speedUnit). Si le réglage du Menu a
-// changé depuis, on la convertit pour que la force du vent reste la même (arrondie : le pavé n'a pas de virgule).
-function syncWindSpeedUnit() {
-  const unit = windSpeedUnit();
-  if (!windCalc.speedUnit) { windCalc.speedUnit = unit; return; } // première utilisation : la valeur par défaut suit l'unité
-  if (windCalc.speedUnit === unit) return;
-  const kmh = speedToKmh(windCalc.speed, windCalc.speedUnit);
-  windCalc.speed = Math.round(unit === "mph" ? kmh / KMH_PER_MPH : kmh);
-  windCalc.speedUnit = unit;
-}
-// Unité du Fairway, du Green, du Vent et du Dénivelé : une seule valeur (m ou yd)
-const TRACK_UNIT_KEY = "golfevolution_parcours_fairway_unit";
-let trackUnit = parcoursSettings.distanceUnit;
-try {
-  const savedTrackUnit = localStorage.getItem(TRACK_UNIT_KEY);
-  if (savedTrackUnit === "m" || savedTrackUnit === "yd") trackUnit = savedTrackUnit;
-} catch (e) { /* défaut : réglage des calculs */ }
-parcoursSettings.distanceUnit = trackUnit; // les deux copies de l'unité partent toujours d'accord
 
-// Point d'entrée unique pour changer d'unité (menu ⋯, bouton du Fairway/Green, bascule des calculs)
+// Point d'entrée unique pour changer l'unité de distance (menu ⋯, bouton du Fairway/Green, bascule des calculs)
 function setParcoursUnit(unit) {
   if (unit !== "m" && unit !== "yd") return;
-  trackUnit = unit;
-  parcoursSettings.distanceUnit = unit;
-  appSafeSetItem(TRACK_UNIT_KEY, trackUnit);
+  parcoursSettings.distanceUnit = unit; // copie de secours
+  appSafeSetItem(TRACK_UNIT_KEY, unit);
   saveSettings();
+  const md = parcoursMenuData();
+  if (md) md.setDistanceUnit(unit); // réglage de Menu : les distances des clubs suivent aussi
   renderFairway();
   renderGreen();
-  renderCourseModals(); // vitesse (km/h <-> mph) et résultats recalculés dans l'unité choisie
+  renderCourseModals(); // résultats recalculés dans l'unité choisie
 }
 function setDistanceUnit(u) { setParcoursUnit(u); }
-function toggleTrackUnit() { setParcoursUnit(trackUnit === "m" ? "yd" : "m"); }
+function toggleTrackUnit() { setParcoursUnit(parcoursDistanceUnit() === "m" ? "yd" : "m"); }
 function unitToggleHtml() {
   return `
     <div class="segmented unit-toggle">
-      <button type="button" class="${parcoursSettings.distanceUnit === "m" ? "active" : ""}" onclick="setDistanceUnit('m')">m</button>
-      <button type="button" class="${parcoursSettings.distanceUnit === "yd" ? "active" : ""}" onclick="setDistanceUnit('yd')">yd</button>
+      <button type="button" class="${parcoursDistanceUnit() === "m" ? "active" : ""}" onclick="setDistanceUnit('m')">m</button>
+      <button type="button" class="${parcoursDistanceUnit() === "yd" ? "active" : ""}" onclick="setDistanceUnit('yd')">yd</button>
+    </div>
+  `;
+}
+
+// Point d'entrée unique pour changer l'unité de vitesse du vent (menu ⋯ et calculateurs)
+function setParcoursSpeedUnit(unit) {
+  if (unit !== "kmh" && unit !== "mph") return;
+  const md = parcoursMenuData();
+  if (md) md.setWindSpeedUnit(unit);
+  renderCourseModals();
+}
+function speedToggleHtml() {
+  return `
+    <div class="unit-row">
+      <span class="unit-row-label">Vitesse du vent</span>
+      <div class="segmented unit-toggle">
+        <button type="button" class="${parcoursSpeedUnit() === "kmh" ? "active" : ""}" onclick="setParcoursSpeedUnit('kmh')">km/h</button>
+        <button type="button" class="${parcoursSpeedUnit() === "mph" ? "active" : ""}" onclick="setParcoursSpeedUnit('mph')">mph</button>
+      </div>
     </div>
   `;
 }
@@ -125,8 +145,7 @@ let elevationOpen = false;
 let distancesCalcOpen = false;
 let trackInfoOpen = false;
 
-// speed : saisie dans l'unité de vitesse du Menu (km/h ou mph, voir speedUnit) ; distanceInput : dans l'unité de distance (m ou yd)
-let windCalc = { angle: 0, speed: 20, speedUnit: null, distanceInput: 150 };
+let windCalc = { angle: 0, speed: 20, distanceInput: 150 }; // speed et distanceInput : saisis dans l'unité affichée (km/h ou mph, m ou yd)
 let elevCalc = { angleHorizon: 0, angleCible: null, distanceInput: 150, permissionGranted: false, listening: false };
 let lastBeta = null;
 
@@ -236,7 +255,6 @@ function courseKeypadHtml() {
 function renderCourseModals() {
   const root = document.getElementById("course-modal-root");
   if (!root) return;
-  syncWindSpeedUnit(); // le réglage de vitesse du Menu a pu changer depuis la dernière ouverture
   const previousCount = root.querySelectorAll(".modal-overlay").length;
   root.innerHTML = [
     windCalcOpen ? windCalcHtml() : "",
@@ -286,8 +304,7 @@ function trackInfoHtml() {
    (règle TrackMan 1%/mph face, 0.5%/mph dos, 1yd/mph travers)
    Le calcul se fait toujours en mètres et en km/h : la distance saisie (m ou yd)
    et la vitesse saisie (km/h ou mph) sont converties avant (distanceToMeters,
-   speedToKmh), le résultat est reconverti après (convertDistance). Les deux unités
-   sont indépendantes : la distance suit m / yd de Parcours, la vitesse suit le Menu.
+   speedToKmh), le résultat est reconverti après (convertDistance).
    -------------------------------------------------------------------------- */
 const WIND_HEAD_COEF = 0.006214;
 const WIND_TAIL_COEF = 0.003107;
@@ -313,19 +330,18 @@ function windDirectionLabel(angle) {
 }
 
 function windCalcResult() {
-  syncWindSpeedUnit();
-  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursSettings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursDistanceUnit());
   return computeWindResult(distanceM, speedToKmh(windCalc.speed), windCalc.angle);
 }
 function windResultDistanceLabel() {
   const r = windCalcResult();
   if (r.distance === null || isNaN(r.distance)) return "--";
-  return Math.round(convertDistance(r.distance, parcoursSettings.distanceUnit)) + " " + distanceUnitLabel();
+  return Math.round(convertDistance(r.distance, parcoursDistanceUnit())) + " " + distanceUnitLabel();
 }
 function windResultDeviationLabel() {
   const r = windCalcResult();
   if (r.deviation === null || isNaN(r.deviation)) return "--";
-  const v = Math.round(convertDistance(r.deviation, parcoursSettings.distanceUnit));
+  const v = Math.round(convertDistance(r.deviation, parcoursDistanceUnit()));
   const side = v > 0 ? "droite" : v < 0 ? "gauche" : "";
   return Math.abs(v) + " " + distanceUnitLabel() + (side ? "<br>" + side : "");
 }
@@ -393,6 +409,7 @@ function windCalcHtml() {
             <button class="icon-btn" aria-label="Fermer" onclick="closeWindCalc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
         </div>
+        ${speedToggleHtml()}
 
         <div class="compass-wrap">
           <svg id="wind-compass-svg" viewBox="0 0 220 220" width="220" height="220" onpointerdown="windCompassPointerDown(event)">
@@ -455,11 +472,11 @@ function closeWindInfo() { windInfoOpen = false; renderCourseModals(); }
 function windChartTableHtml(title, angleDeg, valueKey) {
   const unit = distanceUnitLabel();
   const rows = WIND_CHART_DISTANCES.map((dDisplay) => {
-    const dM = distanceToMeters(dDisplay, parcoursSettings.distanceUnit);
+    const dM = distanceToMeters(dDisplay, parcoursDistanceUnit());
     const cells = WIND_CHART_SPEEDS.map((speed) => {
       const r = computeWindResult(dM, speedToKmh(speed), angleDeg);
       const raw = valueKey === "distance" ? r.distance : Math.abs(r.deviation);
-      return Math.round(convertDistance(raw, parcoursSettings.distanceUnit));
+      return Math.round(convertDistance(raw, parcoursDistanceUnit()));
     });
     return { dDisplay, cells };
   });
@@ -490,6 +507,7 @@ function windInfoHtml() {
             <button class="icon-btn" aria-label="Fermer" onclick="closeWindInfo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
         </div>
+        ${speedToggleHtml()}
         ${windChartTableHtml("↓ Vent de face", 0, "distance")}
         ${windChartTableHtml("↑ Vent dans le dos", 180, "distance")}
         ${windChartTableHtml("← Travers →", 90, "deviation")}
@@ -511,14 +529,14 @@ function openWindDetail() { windDetailOpen = true; renderCourseModals(); }
 function closeWindDetail() { windDetailOpen = false; renderCourseModals(); }
 
 function windDetailRows() {
-  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursSettings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursDistanceUnit());
   const unit = distanceUnitLabel();
   return WIND_DETAIL_DIRECTIONS.map((d) => {
     const r = computeWindResult(distanceM, speedToKmh(windCalc.speed), d.angle);
-    const dist = (r.distance === null || isNaN(r.distance)) ? "--" : Math.round(convertDistance(r.distance, parcoursSettings.distanceUnit)) + " " + unit;
+    const dist = (r.distance === null || isNaN(r.distance)) ? "--" : Math.round(convertDistance(r.distance, parcoursDistanceUnit())) + " " + unit;
     let dev = "--";
     if (r.deviation !== null && !isNaN(r.deviation)) {
-      const v = Math.round(Math.abs(convertDistance(r.deviation, parcoursSettings.distanceUnit)));
+      const v = Math.round(Math.abs(convertDistance(r.deviation, parcoursDistanceUnit())));
       dev = v === 0 ? "—" : v + " " + unit;
     }
     return { label: d.label, dist, dev };
@@ -613,7 +631,7 @@ function updateElevationInputDistance(v) {
 function computeElevationResult() {
   if (elevCalc.angleHorizon === null || elevCalc.angleCible === null) return { deniv: null, angle: null };
   const angle = elevCalc.angleCible - elevCalc.angleHorizon;
-  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), parcoursSettings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), parcoursDistanceUnit());
   if (distanceM === null || isNaN(distanceM)) return { deniv: null, angle };
   const deniv = distanceM * Math.tan(angle * Math.PI / 180);
   return { deniv, angle };
@@ -621,10 +639,10 @@ function computeElevationResult() {
 function elevationResultLabel() {
   const r = computeElevationResult();
   if (r.deniv === null || isNaN(r.deniv)) return "--";
-  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), parcoursSettings.distanceUnit);
+  const distanceM = distanceToMeters(parseFloat(elevCalc.distanceInput), parcoursDistanceUnit());
   if (distanceM === null || isNaN(distanceM)) return "--";
   const distanceAJouer = distanceM + r.deniv;
-  return Math.round(convertDistance(distanceAJouer, parcoursSettings.distanceUnit)) + " " + distanceUnitLabel();
+  return Math.round(convertDistance(distanceAJouer, parcoursDistanceUnit())) + " " + distanceUnitLabel();
 }
 function updateElevationOutputs() {
   const cibleEl = document.getElementById("elev-cible-value");
@@ -694,9 +712,8 @@ function goToMenuDistances() {
   renderDistancesScreen(); // menu.js : écran "Mes distances" (retour -> Menu)
 }
 
-// Dans Menu, l'unité "Yards/Feet" (valeur "ft") représente des YARDS pour tous les clubs de cet écran :
-// les pieds ne servent qu'aux courtes distances comme le putting (le putter n'a plus de distance suivie
-// et est exclu ici). Voir CONVENTION DES UNITÉS DE DISTANCE en haut de menu.js.
+// Dans Menu, l'unité "Yards/Feet" représente des yards pour tous les clubs de
+// cet écran (le putter, en feet, n'a plus de distance suivie et est exclu ici).
 function distancesMenuIsYards() {
   return typeof settings !== "undefined" && settings.distanceUnit === "ft";
 }
@@ -864,11 +881,11 @@ const FW_RULER_Y_FIRST_PCT = 80; // hauteur du 1er repère (100), en % depuis le
 const FW_RULER_Y_LAST_PCT = 14; // hauteur du dernier repère : marge gardée en haut (zone du green)
 
 function fwRulerHtml() {
-  const marks = FW_RULER_MARKS[trackUnit] || FW_RULER_MARKS.m;
+  const marks = FW_RULER_MARKS[parcoursDistanceUnit()] || FW_RULER_MARKS.m;
   let html = "";
   marks.forEach((d) => {
     const y = FW_RULER_Y_FIRST_PCT + ((d - marks[0]) / (marks[marks.length - 1] - marks[0])) * (FW_RULER_Y_LAST_PCT - FW_RULER_Y_FIRST_PCT);
-    html += `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;">${d} ${trackUnit}</span>`;
+    html += `<div class="fw-ruler-line" style="top:${y}%;"></div><span class="fw-ruler-label" style="top:${y}%;">${d} ${parcoursDistanceUnit()}</span>`;
   });
   return html;
 }
@@ -886,7 +903,7 @@ const GR_GREEN_RADIUS_PCT = GR_GREEN_DIAMETER_CQMIN / 2; // rayon du green, en %
 function grRingsHtml() {
   return GR_RINGS.map((r) => {
     const label = r.value + (r.plus ? "+" : "");
-    return `<div class="gr-ring" style="width:${r.diameter}cqmin;height:${r.diameter}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${r.diameter / 2}cqmin);">${label} ${trackUnit}</span>`;
+    return `<div class="gr-ring" style="width:${r.diameter}cqmin;height:${r.diameter}cqmin;"></div><span class="gr-ring-label" style="top:calc(50% - ${r.diameter / 2}cqmin);">${label} ${parcoursDistanceUnit()}</span>`;
   }).join("");
 }
 
@@ -1226,7 +1243,7 @@ function grVisualHtml() {
       </div>
 
       <div class="track-corner-bl">
-        <button type="button" class="mode-btn track-unit-btn" onclick="event.stopPropagation(); toggleTrackUnit();" aria-label="Changer l'unité de distance">${trackUnit}</button>
+        <button type="button" class="mode-btn track-unit-btn" onclick="event.stopPropagation(); toggleTrackUnit();" aria-label="Changer l'unité de distance">${parcoursDistanceUnit()}</button>
         <button type="button" class="mode-btn mode-btn-offgreen ${grOffNext ? "active" : ""}" onclick="event.stopPropagation(); grToggleOffNext();" aria-label="Prochain point hors green">Hors green</button>
       </div>
 
@@ -1453,8 +1470,8 @@ function saveHistoryEntry() {
                                sur #page-parcours, règles dans parcours-ui.css)
    Le Green, le Fairway et la barre d'outils (rangée Vent / Dénivelé / Distance / Historique) sont
    ordonnés ensemble : la barre peut être montée à n'importe quelle hauteur de l'écran. Les quatre
-   outils sont ordonnés entre eux. L'unité m / yd (et km/h / mph pour le vent) est réglée
-   par setParcoursUnit() (voir plus haut).
+   outils sont ordonnés entre eux. Les unités m / yd (distance) et km/h / mph (vent) sont réglées
+   dans Menu > Unité utilisée, via setParcoursUnit() et setParcoursSpeedUnit() (voir plus haut).
    ========================================================================== */
 const PARCOURS_ZONES = [
   { key: "green", label: "Green" },
@@ -1553,12 +1570,20 @@ function openParcoursMenu() {
       },
       {
         title: "Unité",
-        items: [{
-          type: "segment", label: "Unité de distance", hint: "Appliquée au Fairway, au Green, au Vent et au Dénivelé.",
-          value: trackUnit,
-          options: [{ value: "m", label: "Mètres" }, { value: "yd", label: "Yards" }],
-          onChange: setParcoursUnit,
-        }],
+        items: [
+          {
+            type: "segment", label: "Unité de distance", hint: "Appliquée au Fairway, au Green, au Vent et au Dénivelé.",
+            value: parcoursDistanceUnit(),
+            options: [{ value: "m", label: "Mètres" }, { value: "yd", label: "Yards" }],
+            onChange: setParcoursUnit,
+          },
+          {
+            type: "segment", label: "Unité de vitesse du vent", hint: "Indépendante de la distance : km/h avec des yards, mph avec des mètres.",
+            value: parcoursSpeedUnit(),
+            options: [{ value: "kmh", label: "km/h" }, { value: "mph", label: "mph" }],
+            onChange: setParcoursSpeedUnit,
+          },
+        ],
       },
       {
         title: "Lisibilité",
