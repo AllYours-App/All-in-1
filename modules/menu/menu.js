@@ -14,7 +14,8 @@ const MENU_STORAGE_KEY = "golfevolution_app_state";
 let userProfile = { firstName: "", index: null };
 
 let settings = {
-  temperatureC: 20,
+  temperatureC: 20, // toujours stockée en °C, quelle que soit l'unité affichée
+  temperatureUnit: "c", // "c" (°C) ou "f" (°F) : unité d'affichage et de saisie
   altitudeM: 0,
   radarUnit: "mps",
   speedUnit: "mph",
@@ -256,6 +257,7 @@ const DISTANCE_UNITS = [['m', 'Mètres (m)'], ['ft', 'Yards/Feet']];
 const RADAR_UNITS    = [['mps', 'MPS (m/s)'], ['mph', 'MPH'], ['kph', 'KPH']];
 const SPEED_UNITS    = [['mph', 'MPH'], ['kph', 'KPH']];
 const OFFSET_UNITS   = [['pct', '%'], ['mph', 'MPH'], ['mps', 'MPS'], ['kph', 'KPH']];
+const TEMPERATURE_UNITS = [['c', 'Celsius (°C)'], ['f', 'Fahrenheit (°F)']];
 
 function optionsHtml(options, current) {
   return options.map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
@@ -285,6 +287,17 @@ function settingSelectRow(label, key, options) {
 }
 
 const formatSigned = v => (v > 0 ? '+' + v : String(v));
+
+/* Température : settings.temperatureC reste toujours en °C (donnée de référence).
+   Seuls l'affichage et la saisie suivent l'unité choisie (°C ou °F). */
+const menuRound = (v, decimals) => Math.round(v * 10 ** decimals) / 10 ** decimals;
+const celsiusToFahrenheit = c => c * 9 / 5 + 32;
+const fahrenheitToCelsius = f => (f - 32) * 5 / 9;
+function temperatureSymbol() { return settings.temperatureUnit === 'f' ? '°F' : '°C'; }
+function temperatureDisplayValue() {
+  const c = Number(settings.temperatureC) || 0;
+  return menuRound(settings.temperatureUnit === 'f' ? celsiusToFahrenheit(c) : c, 1);
+}
 
 // key : 'clubOffset' ou 'ballOffset'. Le signe se saisit directement dans le pavé.
 function radarOffsetRowHtml(r, label, key) {
@@ -337,21 +350,19 @@ function renderMenuTab() {
     </div>
     <div class="field-list">
       <h3>Conditions de référence</h3>
-      <div class="field-row"><span class="label">Température (°C)</span><span class="val">
-        ${numButton({ title: 'Température', target: 'setting:temperatureC', value: settings.temperatureC, sign: true, unit: '°C' }, `${settings.temperatureC}°C`)}
+      <div class="field-row"><span class="label">Température (${temperatureSymbol()})</span><span class="val">
+        ${numButton({ title: 'Température', target: 'setting:temperature', value: temperatureDisplayValue(), sign: true, unit: temperatureSymbol() }, `${temperatureDisplayValue()}${temperatureSymbol()}`)}
       </span></div>
       <div class="field-row"><span class="label">Altitude (m)</span><span class="val">
         ${numButton({ title: 'Altitude', target: 'setting:altitudeM', value: settings.altitudeM, unit: 'm' }, `${settings.altitudeM} m`)}
       </span></div>
     </div>
     <div class="field-list">
-      <h3>Unité de distance</h3>
+      <h3>Unité utilisée</h3>
       ${settingSelectRow('Distance', 'distanceUnit', DISTANCE_UNITS)}
-    </div>
-    <div class="field-list">
-      <h3>Unités de vitesse</h3>
-      ${settingSelectRow('Unité du radar', 'radarUnit', RADAR_UNITS)}
-      ${settingSelectRow('Unité affichée', 'speedUnit', SPEED_UNITS)}
+      ${settingSelectRow('Vitesse affichée', 'speedUnit', SPEED_UNITS)}
+      ${settingSelectRow('Vitesse du radar', 'radarUnit', RADAR_UNITS)}
+      ${settingSelectRow('Température', 'temperatureUnit', TEMPERATURE_UNITS)}
     </div>
     <div class="field-list">
       <h3>Radars</h3>
@@ -409,11 +420,19 @@ function updateMenuSetting(key, value) {
     // Entier entre 1 et 14 ; une saisie invalide garde l'objectif actuel
     const n = parseInt(value, 10);
     settings.weeklyGoal = n >= 1 && n <= 14 ? n : settings.weeklyGoal;
+  } else if (key === 'temperature') {
+    // Saisie dans l'unité affichée (°C ou °F) : on range toujours des °C
+    const v = parseFloat(value) || 0;
+    settings.temperatureC = settings.temperatureUnit === 'f' ? menuRound(fahrenheitToCelsius(v), 2) : v;
+  } else if (key === 'temperatureUnit') {
+    settings.temperatureUnit = value === 'f' ? 'f' : 'c'; // la valeur en °C ne change pas
   } else {
     settings[key] = (key === 'temperatureC' || key === 'altitudeM') ? (parseFloat(value) || 0) : value;
   }
   if (key === 'theme') applyAppTheme(value);
   saveMenuState();
+  // La température figure sur cet écran : elle doit s'afficher dans la nouvelle unité tout de suite
+  if (key === 'temperatureUnit') renderMenuTab();
   // Changer de langue recharge la page (la traduction est faite au chargement, voir core/i18n.js)
   if (key === 'language' && typeof appSetLanguage === 'function') { appSetLanguage(value); return; }
   if (key === 'weeklyGoal' && typeof renderGolfHome === 'function') renderGolfHome();

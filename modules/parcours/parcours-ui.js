@@ -60,14 +60,29 @@ function distanceToMeters(value, unit) {
 function distanceUnitLabel() {
   return parcoursSettings.distanceUnit === "yd" ? "yd" : "m";
 }
-// Vitesse du vent : liée à l'unité de distance (yd <-> mph, m <-> km/h). Pas de réglage séparé.
-function speedUnitLabel() {
-  return parcoursSettings.distanceUnit === "yd" ? "mph" : "km/h";
+// Vitesse du vent : liée au réglage « Vitesse affichée » du Menu (settings.speedUnit : "kph" ou "mph"),
+// indépendante de l'unité de distance (km/h avec des yards ou mph avec des mètres sont possibles).
+// menu.js est chargé après ce fichier : on lit `settings` au moment de l'appel, jamais au chargement.
+function windSpeedUnit() {
+  return (typeof settings !== "undefined" && settings.speedUnit === "mph") ? "mph" : "kph";
 }
-function speedToKmh(value) {
+function speedUnitLabel() {
+  return windSpeedUnit() === "mph" ? "mph" : "km/h";
+}
+function speedToKmh(value, unit) {
   const v = Number(value);
   if (isNaN(v)) return 0;
-  return parcoursSettings.distanceUnit === "yd" ? v * KMH_PER_MPH : v;
+  return (unit || windSpeedUnit()) === "mph" ? v * KMH_PER_MPH : v;
+}
+// La vitesse saisie reste dans l'unité où elle a été tapée (windCalc.speedUnit). Si le réglage du Menu a
+// changé depuis, on la convertit pour que la force du vent reste la même (arrondie : le pavé n'a pas de virgule).
+function syncWindSpeedUnit() {
+  const unit = windSpeedUnit();
+  if (!windCalc.speedUnit) { windCalc.speedUnit = unit; return; } // première utilisation : la valeur par défaut suit l'unité
+  if (windCalc.speedUnit === unit) return;
+  const kmh = speedToKmh(windCalc.speed, windCalc.speedUnit);
+  windCalc.speed = Math.round(unit === "mph" ? kmh / KMH_PER_MPH : kmh);
+  windCalc.speedUnit = unit;
 }
 // Unité du Fairway, du Green, du Vent et du Dénivelé : une seule valeur (m ou yd)
 const TRACK_UNIT_KEY = "golfevolution_parcours_fairway_unit";
@@ -110,7 +125,8 @@ let elevationOpen = false;
 let distancesCalcOpen = false;
 let trackInfoOpen = false;
 
-let windCalc = { angle: 0, speed: 20, distanceInput: 150 }; // speed et distanceInput : saisis dans l'unité affichée (km/h ou mph, m ou yd)
+// speed : saisie dans l'unité de vitesse du Menu (km/h ou mph, voir speedUnit) ; distanceInput : dans l'unité de distance (m ou yd)
+let windCalc = { angle: 0, speed: 20, speedUnit: null, distanceInput: 150 };
 let elevCalc = { angleHorizon: 0, angleCible: null, distanceInput: 150, permissionGranted: false, listening: false };
 let lastBeta = null;
 
@@ -220,6 +236,7 @@ function courseKeypadHtml() {
 function renderCourseModals() {
   const root = document.getElementById("course-modal-root");
   if (!root) return;
+  syncWindSpeedUnit(); // le réglage de vitesse du Menu a pu changer depuis la dernière ouverture
   const previousCount = root.querySelectorAll(".modal-overlay").length;
   root.innerHTML = [
     windCalcOpen ? windCalcHtml() : "",
@@ -269,7 +286,8 @@ function trackInfoHtml() {
    (règle TrackMan 1%/mph face, 0.5%/mph dos, 1yd/mph travers)
    Le calcul se fait toujours en mètres et en km/h : la distance saisie (m ou yd)
    et la vitesse saisie (km/h ou mph) sont converties avant (distanceToMeters,
-   speedToKmh), le résultat est reconverti après (convertDistance).
+   speedToKmh), le résultat est reconverti après (convertDistance). Les deux unités
+   sont indépendantes : la distance suit m / yd de Parcours, la vitesse suit le Menu.
    -------------------------------------------------------------------------- */
 const WIND_HEAD_COEF = 0.006214;
 const WIND_TAIL_COEF = 0.003107;
@@ -295,6 +313,7 @@ function windDirectionLabel(angle) {
 }
 
 function windCalcResult() {
+  syncWindSpeedUnit();
   const distanceM = distanceToMeters(parseFloat(windCalc.distanceInput), parcoursSettings.distanceUnit);
   return computeWindResult(distanceM, speedToKmh(windCalc.speed), windCalc.angle);
 }
