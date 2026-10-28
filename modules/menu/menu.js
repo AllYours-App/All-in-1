@@ -447,6 +447,8 @@ function updateMenuSetting(key, value) {
   saveMenuState();
   // La température affichée plus haut dans l'écran change d'unité : on redessine
   if (key === 'temperatureUnit') currentRender();
+  // Parcours (Fairway, Green, calculateurs) et Wedging se redessinent dans la nouvelle unité, même s'ils sont masqués
+  if (key === 'distanceUnit' || key === 'windSpeedUnit') window.dispatchEvent(new CustomEvent('golf-units-changed'));
   // Changer de langue recharge la page (la traduction est faite au chargement, voir core/i18n.js)
   if (key === 'language' && typeof appSetLanguage === 'function') { appSetLanguage(value); return; }
   if (key === 'weeklyGoal' && typeof renderGolfHome === 'function') renderGolfHome();

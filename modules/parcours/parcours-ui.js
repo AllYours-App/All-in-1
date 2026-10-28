@@ -100,11 +100,20 @@ function setParcoursUnit(unit) {
   appSafeSetItem(TRACK_UNIT_KEY, unit);
   saveSettings();
   const md = parcoursMenuData();
-  if (md) md.setDistanceUnit(unit); // réglage de Menu : les distances des clubs suivent aussi
+  if (md) {
+    md.setDistanceUnit(unit); // réglage de Menu : les distances des clubs suivent aussi (Menu prévient ensuite Parcours, voir plus bas)
+  } else {
+    renderFairway();
+    renderGreen();
+    renderCourseModals(); // résultats recalculés dans l'unité choisie
+  }
+}
+// Une unité a changé (depuis Menu ou depuis Parcours) : tout Parcours se redessine, Fairway et Green compris, même masqué
+window.addEventListener("golf-units-changed", () => {
   renderFairway();
   renderGreen();
-  renderCourseModals(); // résultats recalculés dans l'unité choisie
-}
+  renderCourseModals();
+});
 function setDistanceUnit(u) { setParcoursUnit(u); }
 function toggleTrackUnit() { setParcoursUnit(parcoursDistanceUnit() === "m" ? "yd" : "m"); }
 function unitToggleHtml() {
@@ -120,8 +129,8 @@ function unitToggleHtml() {
 function setParcoursSpeedUnit(unit) {
   if (unit !== "kmh" && unit !== "mph") return;
   const md = parcoursMenuData();
-  if (md) md.setWindSpeedUnit(unit);
-  renderCourseModals();
+  if (md) md.setWindSpeedUnit(unit); // Menu prévient ensuite Parcours (golf-units-changed)
+  else renderCourseModals();
 }
 function speedToggleHtml() {
   return `

@@ -924,8 +924,10 @@ function gymDefaultRestLabel(goalId) {
 
 // Vue Gym actuellement affichée (id sans le préfixe "view-")
 function gymVisibleViewId() {
-  const el = document.querySelector("#app-root-gym .gym-view:not([hidden])");
-  return el ? el.id.replace(/^view-/, "") : null;
+  // Les sections ont pour id "gym-view-<vue>" (voir gymActivateView) : le préfixe doit être retiré en entier,
+  // sinon aucune vue n'est reconnue (pas de rafraîchissement en direct, et la protection « séance en cours » ne se déclenche pas)
+  const el = document.querySelector("#page-gym .gym-view:not([hidden])");
+  return el ? el.id.replace(/^gym-view-/, "") : null;
 }
 
 // Redessine la vue affichée (nouvelle unité de poids) sans navigation ni retour en haut de page
