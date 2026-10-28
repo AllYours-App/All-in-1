@@ -168,6 +168,8 @@
   grid-template-columns:repeat(4,1fr);
   gap:8px;
 }
+/* Journal : 12 paliers en 3 colonnes (4 lignes pleines) ; les étiquettes à 3 chiffres (« 100-104m », « 115-120yd ») restent sur une ligne */
+.wg-range-grid--3{grid-template-columns:repeat(3,1fr);}
 .wg-range-btn{
   background:var(--wg-bg);
   border:1px solid var(--wg-border);
@@ -187,7 +189,7 @@
 /* Seuil à 330 px : un Android courant fait 360 px de large et doit garder 4 colonnes de distances
    et les deux cartes Parcours / Exercices côte à côte ; seuls les très petits écrans (320 px) se replient. */
 @media (max-width:330px){
-  .wg-range-grid{grid-template-columns:repeat(2,1fr);}
+  .wg-range-grid,.wg-range-grid--3{grid-template-columns:repeat(2,1fr);}
   /* .wg-nav-cards : règle venant du media query mixte d'origine (était mélangée avec Home) */
   .wg-nav-cards{grid-template-columns:1fr;}
 }

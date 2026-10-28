@@ -37,7 +37,7 @@ const WEDGE_M_TO_YD = 1.09361;
 function wedgeUnit() { const md = window.MenuData; return md && md.settings ? md.distanceUnit : 'm'; } // "m" ou "yd"
 function wedgeIsYd() { return wedgeUnit() === 'yd'; }
 // mètres -> valeur affichée : yards arrondis à l'entier, mètres inchangés
-function wedgeToDisplay(m) { const n = Number(m); return isFinite(n) ? (wedgeIsYd() ? Math.round(n * WEDGE_M_TO_YD) : n) : m; }
+function wedgeToDisplay(m) { const n = Number(m); return isFinite(n) ? (wedgeIsYd() ? Math.round(n * WEDGE_M_TO_YD) : Math.round(n * 10) / 10) : m; }
 // idem pour les moyennes et résultats libres : mètres inchangés, yards à 0,1 près
 function wedgeToDisplayAvg(m) { const n = Number(m); return isFinite(n) ? (wedgeIsYd() ? Math.round(n * WEDGE_M_TO_YD * 10) / 10 : n) : m; }
 // une décimale dans les deux unités (jauges et dispersion)
@@ -51,16 +51,53 @@ function wedgeFmt1(m) { return `${wedgeToDisplay1(m)}${wedgeUnit()}`; }
 // Rayon de validation : en mètres enregistrés, ou en % de la distance à faire
 function wedgeRadiusText(r, u) { return u === '%' ? `${r}%` : wedgeFmtAvg(r); }
 
-// Plage [lo, nextLo[ (en mètres) écrite dans l'unité affichée. En yards les bornes sont arrondies
-// de façon à ce que les paliers restent contigus, sans chevauchement ni trou.
-function wedgeRangeLabel(lo, nextLo, isLast) {
-  if (!wedgeIsYd()) return `${lo}-${isLast ? WEDGE_MAX_DISTANCE : nextLo - 1}m`;
-  const a = Math.round(lo * WEDGE_M_TO_YD);
-  const b = isLast ? Math.round(WEDGE_MAX_DISTANCE * WEDGE_M_TO_YD) : Math.round(nextLo * WEDGE_M_TO_YD) - 1;
-  return `${a}-${b}yd`;
+/* Paliers de distance : mêmes limites basse et haute dans les deux unités (55 m = 60 yd, 110 m = 120 yd).
+   Un premier bouton « < » regroupe tout ce qui est plus court (un coup à 30 m y entre en mètres comme en yards).
+   La clé d'un palier est sa borne basse dans l'unité affichée (0 pour « < »).
+   - saisie (pas de 5) : 12 boutons. Mètres : <55, 55-59 ... 100-104, 105-110. Yards : <60, 60-69, 70-74 ... 110-114, 115-120.
+     Les yards ne peuvent pas avoir 12 boutons de 5 entre 60 et 120 : 60-69 couvre 10 yd.
+   - analyses (pas de 10) : chaque palier réunit deux boutons de 5. Mètres : <55, 55-64 ... 95-104, 105-110. Yards : <60, 60-69, 70-79 ... 110-120.
+   Les coups restent enregistrés en mètres : un bouton enregistre la distance du milieu de sa fourchette (« < » : 50 m). */
+const WEDGE_BUCKET_EDGES = {
+  m:  { 5: [0, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105], 10: [0, 55, 65, 75, 85, 95, 105] },
+  yd: { 5: [0, 60, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115], 10: [0, 60, 70, 80, 90, 100, 110] },
+};
+const WEDGE_LOW_LIMIT = { m: 55, yd: 60 };    // « < 55 m » / « < 60 yd »
+const WEDGE_HIGH_LIMIT = { m: 110, yd: 120 }; // 110 m = 120 yd : limite haute, comprise dans le dernier palier
+const WEDGE_SHORT_SHOT_M = 50;                // distance enregistrée pour un coup du bouton « < »
+function wedgeUnitKey() { return wedgeIsYd() ? 'yd' : 'm'; }
+function wedgeBucketList(step) { return WEDGE_BUCKET_EDGES[wedgeUnitKey()][step === 10 ? 10 : 5]; }
+// Palier (borne basse, unité affichée) d'une distance enregistrée en mètres
+function wedgeBucketFor(distanceM, step = 5) {
+  const v = wedgeIsYd() ? Number(distanceM) * WEDGE_M_TO_YD : Number(distanceM);
+  let key = 0;
+  wedgeBucketList(step).forEach(e => { if (v + 1e-6 >= e) key = e; });
+  return key;
 }
-// Libellé d'un palier : "30-34m" ... "100-104m", puis "105-110m" (le dernier palier va jusqu'à la limite haute comprise)
-function wedgeBucketLabel(b) { return wedgeRangeLabel(b, b + 5, b === WEDGE_BUCKETS[WEDGE_BUCKETS.length - 1]); }
+function wedgeBucketLabelStep(b, step) {
+  const list = wedgeBucketList(step);
+  if (b === 0) return `<${WEDGE_LOW_LIMIT[wedgeUnitKey()]}${wedgeUnit()}`;
+  const next = list[list.indexOf(b) + 1];
+  return `${b}-${next === undefined ? WEDGE_HIGH_LIMIT[wedgeUnitKey()] : next - 1}${wedgeUnit()}`;
+}
+// Libellé d'un palier de saisie (pas de 5)
+function wedgeBucketLabel(b) { return wedgeBucketLabelStep(b, 5); }
+// Libellé du palier d'un coup enregistré
+function wedgeShotBucketLabel(w) { return wedgeBucketLabel(wedgeBucketFor(w.distanceToCover)); }
+// Distance (en mètres) enregistrée quand on touche le bouton b : le milieu de sa fourchette
+function wedgeButtonMeters(b) {
+  if (b === 0) return WEDGE_SHORT_SHOT_M;
+  const list = wedgeBucketList(5);
+  const next = list[list.indexOf(b) + 1];
+  return wedgeFromInput((b + (next === undefined ? WEDGE_HIGH_LIMIT[wedgeUnitKey()] : next)) / 2); // milieu, unité affichée -> mètres
+}
+// Distances proposées pour construire un exercice (en mètres enregistrés) : 30 à 110 m, ou 40 à 120 yd, par 5
+function wedgeExerciseDistanceChoices(selected) {
+  const out = [];
+  for (let d = wedgeIsYd() ? 40 : 30; d <= WEDGE_HIGH_LIMIT[wedgeUnitKey()]; d += 5) out.push(wedgeFromInput(d)); // distances réelles : 30 à 110 m, 40 à 120 yd
+  (selected ? Array.from(selected) : []).forEach(d => { if (!out.includes(d)) out.push(d); }); // distances d'une autre unité déjà cochées
+  return out.sort((a, b) => a - b);
+}
 function wedgeRadarShortLabel(zone) { return zone.split('-').map(w => w[0]).join('-'); }
 function wedgeZoneDisplayLabel(zone) { return zone === 'Green' ? 'Trou' : zone; }
 
@@ -312,7 +349,7 @@ function rerender() { if (wedgeExSession) saveCurrentSessionAsInProgress(); Wedg
 
 // --- Journal (Parcours) ---
 let wedgeRounds = normalizeWedgeRounds(WedgeStorage.getShots());
-let wedgeNewShotBucket = WEDGE_BUCKETS[0];
+let wedgeNewShotBucket; // borne basse du palier choisi (unité affichée) ; undefined = premier palier, null = aucun
 let wedgeNewShotFinal = '';
 let wedgeNewShotZone = null;
 let wedgeFinalPopupOpen = false;
@@ -348,7 +385,9 @@ function wedgeFinalPopupHtml() {
 }
 function addWedgeRound() {
   if (wedgeNewShotBucket === null || wedgeNewShotFinal === '' || !wedgeNewShotZone) return;
-  wedgeRounds.push({ id: Date.now(), date: new Date().toISOString(), distanceToCover: wedgeNewShotBucket, zone: wedgeNewShotZone, finalDistance: wedgeFromInput(parseFloat(wedgeNewShotFinal)) }); // saisi dans l'unité affichée, enregistré en mètres
+  // Le bouton enregistre le milieu de sa fourchette, la distance finale est saisie dans l'unité affichée ; tout est enregistré en mètres
+  const shot = { id: Date.now(), date: new Date().toISOString(), distanceToCover: wedgeButtonMeters(wedgeNewShotBucket), zone: wedgeNewShotZone, finalDistance: wedgeFromInput(parseFloat(wedgeNewShotFinal)) };
+  wedgeRounds.push(shot);
   wedgeNewShotBucket = null; wedgeNewShotFinal = ''; wedgeNewShotZone = null;
   persistWedgeRounds();
   WedgeUI.toast('Coup ajouté');
@@ -404,32 +443,20 @@ function removeWedgeShotsFromStats(roundId) {
 }
 window.removeWedgeShotsFromStats = removeWedgeShotsFromStats;
 
-function wedgeBucketFor(distance) { return Math.round(distance / 5) * 5; }
 
-// Paliers des écrans d'analyse (Dispersion, Distance, SG). Le pas (5 ou 10 m) est un réglage d'affichage du menu 3 points
-// (golfevolution_module_prefs.wedging.step) : les coups restent enregistrés par paliers de 5 m, rien n'est modifié dans les données.
-// Au pas de 10 m, les paliers sont 30-39m, 40-49m ... 100-110m (le dernier prend la limite haute, comme au pas de 5 m).
+// Paliers du Journal et des écrans d'analyse (Dispersion, Distance, SG). Le pas (5 ou 10 m / yd) est un réglage du menu 3 points
+// (golfevolution_module_prefs.wedging.step) : il change les boutons de saisie et le regroupement des analyses, sans toucher aux données enregistrées.
 function wedgeAnalysisStep() { return appPrefGet('wedging', 'step', 5) === 10 ? 10 : 5; }
-function wedgeAnalysisBuckets() {
-  if (wedgeAnalysisStep() === 5) return WEDGE_BUCKETS;
-  const arr = [];
-  for (let d = WEDGE_MIN_DISTANCE; d < WEDGE_MAX_DISTANCE; d += 10) arr.push(d);
-  return arr;
+function wedgeAnalysisBuckets() { return wedgeBucketList(wedgeAnalysisStep()); }
+function wedgeAnalysisBucketFor(distance) { return wedgeBucketFor(distance, wedgeAnalysisStep()); }
+// Libellé complet : "55-59m" (pas de 5) ou "55-64m" (pas de 10), en yards "70-74yd" ou "70-79yd"
+function wedgeAnalysisBucketLabel(b) { return wedgeBucketLabelStep(b, wedgeAnalysisStep()); }
+// Libellé court (barres et titres) : "60m" pour un palier de 5, sinon la plage ("<55m", "60-69yd", "105-110m", "55-64m")
+function wedgeAnalysisShortLabel(b) {
+  const list = wedgeBucketList(wedgeAnalysisStep());
+  const next = list[list.indexOf(b) + 1];
+  return (b !== 0 && next !== undefined && next - b === 5) ? `${b}${wedgeUnit()}` : wedgeAnalysisBucketLabel(b);
 }
-function wedgeAnalysisBucketFor(distance) {
-  const b = wedgeBucketFor(distance);
-  if (wedgeAnalysisStep() === 5) return b;
-  const buckets = wedgeAnalysisBuckets();
-  return Math.min(WEDGE_MIN_DISTANCE + Math.floor((b - WEDGE_MIN_DISTANCE) / 10) * 10, buckets[buckets.length - 1]);
-}
-// Libellé complet : "30-34m" (pas de 5) ou "30-39m" (pas de 10)
-function wedgeAnalysisBucketLabel(b) {
-  if (wedgeAnalysisStep() === 5) return wedgeBucketLabel(b);
-  const buckets = wedgeAnalysisBuckets();
-  return wedgeRangeLabel(b, b + 10, b === buckets[buckets.length - 1]);
-}
-// Libellé court (barres et titres) : "30m" au pas de 5, plage au pas de 10
-function wedgeAnalysisShortLabel(b) { return wedgeAnalysisStep() === 5 ? wedgeFmt(b) : wedgeAnalysisBucketLabel(b); }
 function wedgeLimitedRounds() {
   const sorted = wedgeRounds.slice().sort((a, b) => b.id - a.id);
   return wedgeShotsLimit === 'all' ? sorted : sorted.slice(0, wedgeShotsLimit);
@@ -453,7 +480,7 @@ function wedgeShotsWithResult() { return wedgeLimitedRounds().filter(w => w.zone
 
 function wedgeHistoryFilteredRounds() {
   return wedgeLimitedRounds().filter(w => {
-    const okDistance = wedgeHistoryDistanceFilter.size === 0 || wedgeHistoryDistanceFilter.has(w.distanceToCover);
+    const okDistance = wedgeHistoryDistanceFilter.size === 0 || wedgeHistoryDistanceFilter.has(wedgeBucketFor(w.distanceToCover));
     const okZone = wedgeHistoryZoneFilter.size === 0 || wedgeHistoryZoneFilter.has(w.zone);
     return okDistance && okZone;
   });
@@ -478,7 +505,7 @@ function wedgeHistoryItemHtml(w) {
     <div class="wg-history-item">
       <span class="wg-history-bar"></span>
       <div class="wg-history-mid">
-        <b>${wedgeBucketLabel(w.distanceToCover)}</b>
+        <b>${wedgeShotBucketLabel(w)}</b>
         <span class="wg-text-muted-sm">${wedgeZoneDisplayLabel(w.zone)} — ${wedgeFmt(w.finalDistance)}</span>
       </div>
       <button class="wg-btn-danger" onclick="deleteWedgeRound(${w.id})">${WedgeUI.ICONS.close}</button>
@@ -563,7 +590,7 @@ function openWedgeHistoryDistancePopup() { wedgeHistoryDistancePopupOpen = true;
 function closeWedgeHistoryDistancePopup() { wedgeHistoryDistancePopupOpen = false; rerender(); }
 function toggleWedgeHistoryDistance(d) { wedgeHistoryDistanceFilter.has(d) ? wedgeHistoryDistanceFilter.delete(d) : wedgeHistoryDistanceFilter.add(d); rerender(); }
 function wedgeHistoryDistancePopupHtml() {
-  const buckets = Array.from(new Set(wedgeRounds.map(w => w.distanceToCover))).sort((a, b) => a - b);
+  const buckets = Array.from(new Set(wedgeRounds.map(w => wedgeBucketFor(w.distanceToCover)))).sort((a, b) => a - b);
   return WedgeUI.modal('Trier par distance', `
     <div class="wg-chip-row">${buckets.length ? buckets.map(b => `<button type="button" class="wg-chip ${wedgeHistoryDistanceFilter.has(b) ? 'active' : ''}" onclick="toggleWedgeHistoryDistance(${b})">${wedgeBucketLabel(b)}</button>`).join('') : '<p class="wg-text-muted">Aucun coup enregistré.</p>'}</div>
     <button class="wg-btn-primary mt-8" onclick="closeWedgeHistoryDistancePopup()">OK</button>
@@ -609,7 +636,7 @@ function normalizeWedgeRounds(list) {
   const lastBucket = WEDGE_BUCKETS[WEDGE_BUCKETS.length - 1];
   return (Array.isArray(list) ? list : [])
     .filter(w => w && typeof w.distanceToCover === 'number' && typeof w.zone === 'string' && typeof w.finalDistance === 'number')
-    .map(w => w.distanceToCover > lastBucket ? Object.assign({}, w, { distanceToCover: lastBucket }) : w);
+    .map(w => w.distanceToCover >= WEDGE_MAX_DISTANCE ? Object.assign({}, w, { distanceToCover: lastBucket }) : w);
 }
 let wedgeExercises = normalizeWedgeExercises(WedgeStorage.getExercises());
 let wedgeExerciseModalOpen = false;
@@ -830,7 +857,7 @@ function toggleWedgeExerciseDistance(d) { const f = wedgeExerciseForm; f.distanc
 function wedgeDistancesPopupHtml() {
   const f = wedgeExerciseForm;
   return WedgeUI.modal('Distances', `
-    <div class="wg-chip-row">${WEDGE_EXERCISE_DISTANCES.map(d => `<button type="button" class="wg-chip ${f.distances.has(d) ? 'active' : ''}" onclick="toggleWedgeExerciseDistance(${d})">${wedgeFmt(d)}</button>`).join('')}</div>
+    <div class="wg-chip-row">${wedgeExerciseDistanceChoices(f.distances).map(d => `<button type="button" class="wg-chip ${f.distances.has(d) ? 'active' : ''}" onclick="toggleWedgeExerciseDistance(${d})">${wedgeFmt(d)}</button>`).join('')}</div>
     <button class="wg-btn-primary mt-8" onclick="closeWedgeDistancesPopup()">OK</button>
   `, 'closeWedgeDistancesPopup');
 }
@@ -1449,6 +1476,14 @@ WedgeViews.home = function () {
   return `${WedgeUI.header({ title: "WEDGING", backLabel: "Accueil", backHash: "app-home" })}<p class="wg-subtitle">Maîtrise tes distances, contrôle tes approches.</p>${WedgeUI.navCards(null)}`;
 };
 
+// Boutons de distance du nouveau coup : toujours les 12 paliers de 5 (le regroupement par 10 ne concerne que les analyses)
+function wedgeNewShotButtonsHtml() {
+  const list = wedgeBucketList(5);
+  if (wedgeNewShotBucket === undefined) wedgeNewShotBucket = list[0];
+  else if (wedgeNewShotBucket !== null && !list.includes(wedgeNewShotBucket)) wedgeNewShotBucket = null;
+  return list.map(b => `<button type="button" class="wg-range-btn ${wedgeNewShotBucket === b ? 'active' : ''}" onclick="setWedgeNewShotBucket(${b})">${wedgeBucketLabel(b)}</button>`).join('');
+}
+
 /* --- PARCOURS = Journal (ajout de coup + historique filtrable) --- */
 WedgeViews.parcours = function () {
   const filtered = wedgeHistoryFilteredRounds();
@@ -1458,8 +1493,7 @@ WedgeViews.parcours = function () {
 
     <section class="wg-section">
       <h4>Nouveau coup</h4>
-      <label class="wg-label mt-6">Distance à faire</label>
-      <div class="wg-range-grid">${WEDGE_BUCKETS.map(b => `<button type="button" class="wg-range-btn ${wedgeNewShotBucket === b ? 'active' : ''}" onclick="setWedgeNewShotBucket(${b})">${wedgeBucketLabel(b)}</button>`).join('')}</div>
+      <div class="wg-range-grid wg-range-grid--3 mt-6">${wedgeNewShotButtonsHtml()}</div>
 
       <label class="wg-label mt-8">Distance finale (${wedgeUnit()})</label>
       ${wedgeNewShotZone === 'Green' ? `
@@ -1536,7 +1570,7 @@ WedgeViews.distanceAnalysis = function () {
     ${WedgeUI.topbar("Wedging", "parcours", WedgeUI.ICONS.more)}
     ${WedgeUI.analysisHeader("ANALYSE", "Distance", "Distance finale moyenne par palier de distance à faire.")}
     <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
-    <section class="wg-section"><div class="wg-gauge-axis"><span>Distance à faire (paliers de ${wedgeFmt(wedgeAnalysisStep())})</span><span>Résultat moyen (${wedgeUnit()})</span></div>${rowsHtml}</section>
+    <section class="wg-section"><div class="wg-gauge-axis"><span>Distance à faire (paliers de ${wedgeAnalysisStep()} ${wedgeUnit()})</span><span>Résultat moyen (${wedgeUnit()})</span></div>${rowsHtml}</section>
     ${WedgeUI.bottomNav("distance")}
   `;
 };
@@ -1660,12 +1694,13 @@ function openWedgingMenu() {
             }
           },
           {
-            type: 'segment', label: 'Taille des paliers', hint: `Regroupe les distances à faire dans les analyses. Les coups restent enregistrés par paliers de 5 m${wedgeIsYd() ? ' (environ ' + wedgeFmtSp(5) + ')' : ''}.`,
+            type: 'segment', label: 'Taille des paliers', hint: 'Regroupe les distances dans les analyses (Dispersion, Distance, SG). Les boutons de saisie du Journal gardent les paliers de 5.',
             value: wedgeAnalysisStep(),
-            options: [{ value: 5, label: wedgeFmtSp(5) }, { value: 10, label: wedgeFmtSp(10) }],
+            options: [{ value: 5, label: `5 ${wedgeUnit()}` }, { value: 10, label: `10 ${wedgeUnit()}` }],
             onChange: v => {
               appPrefSet('wedging', 'step', v);
               wedgeRadarDistances = new Set(); // les distances cochées de la Dispersion désignaient d'anciens paliers
+              wedgeHistoryDistanceFilter = new Set();
               rerender();
             }
           },
@@ -1746,4 +1781,7 @@ const WedgeRouter = (function () {
 })();
 
 // Unité de distance changée (Menu ou Parcours) : la vue Wedging se redessine dans la nouvelle unité, même masquée
-window.addEventListener('golf-units-changed', () => { if (document.getElementById('wedging-app')) WedgeRouter.render(); });
+window.addEventListener('golf-units-changed', () => {
+  wedgeRadarDistances = new Set(); wedgeHistoryDistanceFilter = new Set(); wedgeNewShotBucket = undefined; // les paliers choisis ou cochés étaient dans l'ancienne unité
+  if (document.getElementById('wedging-app')) WedgeRouter.render();
+});
