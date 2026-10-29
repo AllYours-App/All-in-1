@@ -320,7 +320,8 @@
   background:var(--wg-bg);border:1px solid var(--wg-border);color:var(--wg-text-secondary);
   border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:pointer;
 }
-.wg-chip.active{background:var(--wg-accent-dim);color:var(--wg-accent);border-color:var(--wg-accent);font-weight:600;}
+/* Pas de font-weight ici : un texte plus gras élargirait la puce quand on la sélectionne */
+.wg-chip.active{background:var(--wg-accent-dim);color:var(--wg-accent);border-color:var(--wg-accent);}
 #page-wedging svg.wg-radar-svg{width:100%;max-width:none;height:auto;}
 .wg-radar-grid{fill:none;stroke:var(--wg-border);stroke-width:1;}
 .wg-radar-axis{stroke:var(--wg-border);stroke-width:1;}
