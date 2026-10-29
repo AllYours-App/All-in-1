@@ -2504,13 +2504,46 @@
 #page-putting .session-holes-nav_item::after,
 #page-putting .session-attempt.is-editable::after { content: ''; position: absolute; inset: -4px; } /* écart de 8 px entre items : pas de chevauchement */
 
-/* ---------- Préférences d'affichage (menu 3 points, openPuttingMenu dans putting.js) ----------
-   Classes posées sur #page-putting par puttingApplyPrefs() : elles survivent au HTML régénéré
-   à chaque ouverture du module. !important : la carte "À reprendre" alterne is-hidden par JS. */
-#page-putting.pref-hide-resume .resume-card,
-#page-putting.pref-hide-history [data-sub="home"] > .history-card,
-#page-putting.pref-hide-perf-sg [data-perf-card="sg"],
-#page-putting.pref-hide-perf-rate [data-perf-card="rate"],
-#page-putting.pref-hide-perf-putts [data-perf-card="putts"] {
-  display: none !important;
+/* ---------- Indicateurs de l'accueil Putting (onglet Parcours) : entête + bouton "Modifier" ---------- */
+#page-putting .home-kpi_header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+#page-putting .home-kpi_title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+#page-putting .home-kpi_period {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+#page-putting .home-kpi_edit {
+  font-size: 13px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 6px 0 6px 12px;
+  cursor: pointer;
+}
+
+#page-putting .home-kpi_empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  text-align: center;
 }

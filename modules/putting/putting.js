@@ -14,7 +14,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label" id="main-header-back-label">Accueil</span>
   </a>
   <h1 class="page-header_title" id="main-header-title">Putting</h1>
-  <button type="button" class="page-header_menu" id="puttingMenuBtn" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('main')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <span class="page-header_menu"></span>
 </header>
 
 <header class="page-header is-hidden" data-header="stats">
@@ -23,7 +23,7 @@ function renderPuttingTab() {
     <span class="page-header_back-label">Putting</span>
   </a>
   <h1 class="page-header_title">Performance</h1>
-  <button type="button" class="page-header_menu" aria-label="Menu" aria-haspopup="dialog" onclick="openPuttingMenu('stats')"><svg class="page-header_menu-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  <span class="page-header_menu"></span>
 </header>
 
 <header class="page-header is-hidden" data-header="exercise-flow">
@@ -74,23 +74,15 @@ function renderPuttingTab() {
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats_grid">
-        <div class="stat-card">
-          <div class="stat-card_icon-wrap">
-            <svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
-          </div>
-          <div class="stat-card_label">SG Putting</div>
-          <div class="stat-card_value" id="home-sg-value">--</div>
+      <!-- Indicateurs choisis (catalogue PUTTING_KPI_CATALOG) : "Modifier" ouvre le choix des indicateurs et de la période -->
+      <div class="home-kpi_header">
+        <div class="home-kpi_heading">
+          <div class="home-kpi_title">Mes indicateurs</div>
+          <div class="home-kpi_period" id="home-kpi-period"></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-card_icon-wrap">
-            <svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>
-          </div>
-          <div class="stat-card_label">1 Putt %</div>
-          <div class="stat-card_value" id="home-oneputt-value">--</div>
-        </div>
+        <button type="button" class="home-kpi_edit" onclick="openPuttingKpiSheet()">Modifier</button>
       </div>
+      <div class="stats_grid" id="home-kpi-grid"></div>
 
       <!-- Historique : toujours visible, liste vide si aucune activité -->
       <div class="history-card">
@@ -778,14 +770,6 @@ const filterState = {
   stats: { sessions: '20', distance: 'all', parcours: 'all', compareA: null, compareB: null },
 };
 
-// Période par défaut choisie dans le menu 3 points (golfevolution_module_prefs.putting.defaultSessions) : appliquée aux trois écrans d'analyse
-(function () {
-  const saved = appPrefGet('putting', 'defaultSessions', null);
-  if (saved && FILTER_SESSIONS_OPTIONS.some(function (o) { return o.value === saved; })) {
-    Object.keys(filterState).forEach(function (g) { filterState[g].sessions = saved; });
-  }
-})();
-
 /* ============================================================
    SG (Strokes Gained) — putting
    Le moteur (tables + interpolation) vit dans sg-data.js et strokes-gained.js.
@@ -1177,22 +1161,174 @@ function svgDualColumnChart(valuesA, valuesB, opts) {
 
 /* ---------- Fonctions de rendu : branchent les vraies données sur l'UI existante ---------- */
 
+/* ---------- Cartes d'accueil du Putting (onglet Parcours) ----------
+   Catalogue d'indicateurs calculés sur les parties (puttingRounds). Le joueur choisit ceux qu'il veut
+   afficher et la période (N dernières parties ou toutes) depuis "Modifier" (openPuttingKpiSheet).
+   Réglages enregistrés dans golfevolution_module_prefs.putting : homeKpis (liste de clés, dans l'ordre
+   d'ajout) et homePeriod ('5', '10', '15', '20' ou 'all'). */
+const PUTTING_KPI_ICONS = {
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/>',
+  flag: '<path d="M6 21V4"/><path d="M6 4l9 3.4-9 3.4"/>',
+  bars: '<path d="M5 21V10"/><path d="M12 21V4"/><path d="M19 21v-7"/>',
+  ruler: '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>',
+  arrow: '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/>',
+};
+
+const PUTTING_KPI_DEFAULT_KEYS = ['sgPutting', 'onePutt'];
+
+const PUTTING_KPI_PERIODS = [
+  { value: '5', label: '5' },
+  { value: '10', label: '10' },
+  { value: '15', label: '15' },
+  { value: '20', label: '20' },
+  { value: 'all', label: 'Toutes' },
+];
+
+function kpiMean(list) {
+  const v = list.filter(function (x) { return x != null && !isNaN(x); });
+  return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null;
+}
+// Part des trous (en %) qui vérifient le test ; null s'il n'y a aucun trou
+function kpiShare(holes, test) {
+  return holes.length ? (holes.filter(test).length / holes.length) * 100 : null;
+}
+// Part des putts manqués dont le résultat contient l'un des mots donnés (court, long, gauche, droite)
+function kpiMissShare(holes, words) {
+  const misses = holes.filter(function (h) { return h.resultat && h.resultat !== 'made'; });
+  if (!misses.length) return null;
+  const hit = misses.filter(function (h) { return words.some(function (w) { return h.resultat.indexOf(w) !== -1; }); });
+  return (hit.length / misses.length) * 100;
+}
+function kpiFmtNum(v, digits, unit) {
+  return v == null ? '--' : v.toFixed(digits) + (unit || '');
+}
+function kpiFmtMeters(v) {
+  return v == null ? '--' : Math.round(v) + ' m';
+}
+function kpiDistanceShare(ctx, idx) {
+  return kpiShare(ctx.holes.filter(function (h) { return distanceBucketIndex(h.m) === idx; }), function (h) { return h.putts === 1; });
+}
+
+// ctx = { rounds: [[trous de la partie 1], ...], holes: [tous les trous] } ; chaque calcul renvoie le texte affiché
+const PUTTING_KPI_CATALOG = [
+  // Strokes gained
+  { key: 'sgPutting', group: 'Strokes gained', title: 'SG Putting', icon: 'trend', calc: function (c) {
+    return fmtSG(kpiMean(c.holes.map(function (h) { return puttSG(h.m, h.putts); })));
+  } },
+  { key: 'sgRound', group: 'Strokes gained', title: 'SG Putting par partie', icon: 'trend', calc: function (c) {
+    return fmtSG(kpiMean(c.rounds.map(function (hs) {
+      const sg = hs.map(function (h) { return puttSG(h.m, h.putts); }).filter(function (x) { return x != null; });
+      return sg.length ? sg.reduce(function (a, b) { return a + b; }, 0) : null;
+    })));
+  } },
+  // Réussite
+  { key: 'onePutt', group: 'Réussite', title: '1 putt', icon: 'target', calc: function (c) {
+    return fmtPct(kpiShare(c.holes, function (h) { return h.putts === 1; }));
+  } },
+  { key: 'twoPutt', group: 'Réussite', title: '2 putts', icon: 'target', calc: function (c) {
+    return fmtPct(kpiShare(c.holes, function (h) { return h.putts === 2; }));
+  } },
+  { key: 'threePutt', group: 'Réussite', title: '3 putts ou plus', icon: 'target', calc: function (c) {
+    return fmtPct(kpiShare(c.holes, function (h) { return h.putts >= 3; }));
+  } },
+  { key: 'holedMeters', group: 'Réussite', title: 'Mètres rentrés par partie', icon: 'ruler', calc: function (c) {
+    return kpiFmtMeters(kpiMean(c.rounds.map(function (hs) {
+      return hs.reduce(function (sum, h) { return sum + distanceForTotal(h.putts, h.m); }, 0);
+    })));
+  } },
+  // Volume
+  { key: 'puttsRound', group: 'Volume', title: 'Putts par partie', icon: 'flag', calc: function (c) {
+    return kpiFmtNum(kpiMean(c.rounds.map(function (hs) { return hs.reduce(function (sum, h) { return sum + h.putts; }, 0); })), 1);
+  } },
+  { key: 'puttsHole', group: 'Volume', title: 'Putts par trou', icon: 'flag', calc: function (c) {
+    return kpiFmtNum(kpiMean(c.holes.map(function (h) { return h.putts; })), 2);
+  } },
+  { key: 'firstPuttDistance', group: 'Volume', title: 'Distance du 1er putt', icon: 'ruler', calc: function (c) {
+    return kpiFmtNum(kpiMean(c.holes.filter(function (h) { return h.m > 0; }).map(function (h) { return h.m; })), 1, ' m');
+  } },
+  { key: 'roundsCount', group: 'Volume', title: 'Parties jouées', icon: 'bars', calc: function (c) {
+    return c.rounds.length ? String(c.rounds.length) : '--';
+  } },
+  // Réussite par distance (part de 1 putt par tranche, mêmes tranches que le filtre Distance)
+  { key: 'onePutt0', group: 'Réussite par distance', title: '1 putt · 0 à 2 m', icon: 'target', calc: function (c) { return fmtPct(kpiDistanceShare(c, 0)); } },
+  { key: 'onePutt1', group: 'Réussite par distance', title: '1 putt · >2 à 3 m', icon: 'target', calc: function (c) { return fmtPct(kpiDistanceShare(c, 1)); } },
+  { key: 'onePutt2', group: 'Réussite par distance', title: '1 putt · >3 à 5 m', icon: 'target', calc: function (c) { return fmtPct(kpiDistanceShare(c, 2)); } },
+  { key: 'onePutt3', group: 'Réussite par distance', title: '1 putt · >5 à 9 m', icon: 'target', calc: function (c) { return fmtPct(kpiDistanceShare(c, 3)); } },
+  { key: 'onePutt4', group: 'Réussite par distance', title: '1 putt · >9 m', icon: 'target', calc: function (c) { return fmtPct(kpiDistanceShare(c, 4)); } },
+  // Erreurs (part des putts manqués dont le résultat a été saisi)
+  { key: 'missShort', group: 'Putts manqués', title: 'Manqués courts', icon: 'arrow', calc: function (c) { return fmtPct(kpiMissShare(c.holes, ['court'])); } },
+  { key: 'missLong', group: 'Putts manqués', title: 'Manqués longs', icon: 'arrow', calc: function (c) { return fmtPct(kpiMissShare(c.holes, ['long'])); } },
+  { key: 'missLeft', group: 'Putts manqués', title: 'Manqués à gauche', icon: 'arrow', calc: function (c) { return fmtPct(kpiMissShare(c.holes, ['gauche'])); } },
+  { key: 'missRight', group: 'Putts manqués', title: 'Manqués à droite', icon: 'arrow', calc: function (c) { return fmtPct(kpiMissShare(c.holes, ['droite'])); } },
+];
+
+function puttingHomePeriod() {
+  const v = appPrefGet('putting', 'homePeriod', 'all');
+  return PUTTING_KPI_PERIODS.some(function (o) { return o.value === v; }) ? v : 'all';
+}
+
+function puttingHomeKeys() {
+  const raw = appPrefGet('putting', 'homeKpis', null);
+  if (Array.isArray(raw)) return raw.filter(function (k) { return PUTTING_KPI_CATALOG.some(function (c) { return c.key === k; }); });
+  return PUTTING_KPI_DEFAULT_KEYS.slice();
+}
+
+function puttingHomePeriodLabel() {
+  const p = puttingHomePeriod();
+  return p === 'all' ? 'Toutes les parties' : p + ' dernières parties';
+}
+
 function renderHomeStats() {
-  const sgEl = document.getElementById('home-sg-value');
-  if (!sgEl) return;
-  let sum = 0, n = 0, made1 = 0, total = 0;
-  puttingRounds.forEach(function (r) {
-    (r.holes || []).forEach(function (h) {
-      if (h.putts == null) return;
-      total++;
-      if (h.putts === 1) made1++;
-      if (h.m != null) { const sg = puttSG(h.m, h.putts); if (sg != null) { sum += sg; n++; } }
+  const grid = document.getElementById('home-kpi-grid');
+  if (!grid) return;
+  const periodEl = document.getElementById('home-kpi-period');
+  if (periodEl) periodEl.textContent = puttingHomePeriodLabel();
+  const period = puttingHomePeriod();
+  const rounds = period === 'all' ? puttingRounds.slice() : puttingRounds.slice(-parseInt(period, 10));
+  const perRound = rounds.map(function (r) {
+    return (r.holes || []).filter(function (h) { return h.putts != null; });
+  }).filter(function (hs) { return hs.length; });
+  const ctx = { rounds: perRound, holes: [].concat.apply([], perRound) };
+  const cards = puttingHomeKeys().map(function (k) { return PUTTING_KPI_CATALOG.find(function (c) { return c.key === k; }); }).filter(Boolean);
+  grid.innerHTML = cards.length ? cards.map(function (c) {
+    return '<div class="stat-card" data-kpi="' + c.key + '">'
+      + '<div class="stat-card_icon-wrap"><svg class="stat-card_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + PUTTING_KPI_ICONS[c.icon] + '</svg></div>'
+      + '<div class="stat-card_label">' + c.title + '</div>'
+      + '<div class="stat-card_value">' + c.calc(ctx) + '</div>'
+      + '</div>';
+  }).join('') : '<p class="home-kpi_empty">Aucun indicateur affiché. Utilise « Modifier » pour en ajouter.</p>';
+}
+
+// Feuille "Mes indicateurs" : période + une case par indicateur (un indicateur ajouté se place à la fin)
+function openPuttingKpiSheet() {
+  let keys = puttingHomeKeys();
+  const groups = [];
+  PUTTING_KPI_CATALOG.forEach(function (c) {
+    let g = groups.find(function (x) { return x.title === c.group; });
+    if (!g) { g = { title: c.group, items: [] }; groups.push(g); }
+    g.items.push({
+      type: 'toggle', label: c.title, value: keys.indexOf(c.key) !== -1,
+      onChange: function (on) {
+        keys = on ? keys.concat(c.key) : keys.filter(function (k) { return k !== c.key; });
+        appPrefSet('putting', 'homeKpis', keys);
+        renderHomeStats();
+      },
     });
   });
-  sgEl.textContent = n ? fmtSG(sum / n) : '--';
-  const oneEl = document.getElementById('home-oneputt-value');
-  if (oneEl) oneEl.textContent = total ? fmtPct((made1 / total) * 100) : '--';
+  appSheet({
+    title: 'Mes indicateurs',
+    sections: [{
+      title: 'Période',
+      items: [{
+        type: 'segment', label: 'Dernières parties', hint: 'Nombre de parties prises en compte.',
+        value: puttingHomePeriod(), options: PUTTING_KPI_PERIODS,
+        onChange: function (v) { appPrefSet('putting', 'homePeriod', v); renderHomeStats(); },
+      }],
+    }].concat(groups),
+  });
 }
+window.openPuttingKpiSheet = openPuttingKpiSheet;
 
 // Séances "Exercices" = exercices créés (puttingSessions) + exercices rapides (puttingRounds, source 'quick')
 function exerciseActivityDates() {
@@ -3809,78 +3945,6 @@ function renderRoundDetailScreen(r) {
     </div>
   `;
 }
-
-/* ============================================================
-   MENU 3 POINTS (headers Putting et Performance)
-   Réglages d'affichage enregistrés dans golfevolution_module_prefs.putting (voir commun.js) :
-   showHistory (écran principal), showPerfSg / showPerfRate / showPerfPutts
-   (cartes de Performance), defaultSessions (période par défaut des filtres).
-   L'affichage passe par des classes pref-hide-* sur #page-putting (CSS dans putting.css) :
-   elles survivent au HTML régénéré à chaque ouverture du module.
-   ============================================================ */
-const PUTTING_PREF_CLASSES = [
-  ['showHistory', 'pref-hide-history'],
-  ['showPerfSg', 'pref-hide-perf-sg'],
-  ['showPerfRate', 'pref-hide-perf-rate'],
-  ['showPerfPutts', 'pref-hide-perf-putts'],
-];
-
-function puttingApplyPrefs() {
-  const page = document.getElementById('page-putting');
-  if (!page) return;
-  PUTTING_PREF_CLASSES.forEach(function (pair) {
-    page.classList.toggle(pair[1], appPrefGet('putting', pair[0], true) === false);
-  });
-}
-
-function puttingSetDefaultSessions(value) {
-  appPrefSet('putting', 'defaultSessions', value);
-  Object.keys(filterState).forEach(function (g) { filterState[g].sessions = value; });
-  // Libellés des boutons de filtre et graphiques réalignés tout de suite (le HTML existe déjà quand le menu est ouvert)
-  syncFilterButtons();
-  refreshAllAnalytics();
-}
-
-// contexte : 'main' (écran principal) ou 'stats' (Performance) : seul l'ordre des sections change
-function openPuttingMenu(context) {
-  const pref = function (key) { return appPrefGet('putting', key, true) !== false; };
-  const toggle = function (key, label, hint) {
-    return {
-      type: 'toggle', label: label, hint: hint, value: pref(key),
-      onChange: function (v) { appPrefSet('putting', key, v); puttingApplyPrefs(); },
-    };
-  };
-  const mainSection = {
-    title: 'Écran principal',
-    items: [
-      toggle('showHistory', 'Activité récente', 'Dernières séances de l\'onglet Parcours.'),
-    ],
-  };
-  const perfSection = {
-    title: 'Cartes de Performance',
-    items: [
-      toggle('showPerfSg', 'SG vs Tour par partie'),
-      toggle('showPerfRate', 'Taux de réussite et mètres'),
-      toggle('showPerfPutts', '1 putt et 3 putts par partie'),
-    ],
-  };
-  const periodSection = {
-    title: 'Filtres',
-    items: [{
-      type: 'segment', label: 'Période par défaut', hint: 'Nombre de séances prises en compte dans les analyses.',
-      value: filterState.stats.sessions,
-      options: FILTER_SESSIONS_OPTIONS.map(function (o) { return { value: o.value, label: o.value === 'all' ? 'Toutes' : o.value }; }),
-      onChange: puttingSetDefaultSessions,
-    }],
-  };
-  appSheet({
-    title: 'Putting',
-    sections: context === 'stats' ? [perfSection, periodSection, mainSection] : [mainSection, periodSection, perfSection],
-  });
-}
-window.openPuttingMenu = openPuttingMenu;
-
-puttingApplyPrefs();
 
 // Les encadrés de l'accueil général sont remplis dès le chargement, sans attendre l'ouverture du Putting
 renderGolfHome();
