@@ -212,7 +212,6 @@ const WedgeUI = (function () {
     chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
     info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
-    more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
@@ -234,17 +233,16 @@ const WedgeUI = (function () {
     return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
   }
 
-  function header({ title, backLabel, backHash, rightIcon }) {
+  function header({ title, backLabel, backHash }) {
     return `<header class="wg-header">
       <div class="wg-header-side"><button class="wg-back-btn" onclick="${backHash === 'app-home' ? "showPage('home')" : "WedgeRouter.go('" + backHash + "')"}">${ICONS.back} ${backLabel}</button></div>
       <h1 class="wg-title" style="${title === "WEDGING" ? "" : "font-size:16px;letter-spacing:2px;"}">${title}</h1>
-      <div class="wg-header-side wg-header-right">${rightIcon ? `<button class="wg-icon-btn" id="wedgingMenuBtn" aria-label="Options" aria-haspopup="dialog" onclick="openWedgingMenu()">${rightIcon}</button>` : ""}</div>
+      <div class="wg-header-side wg-header-right"></div>
     </header>`;
   }
-  function topbar(label, backHash, rightIcon) {
+  function topbar(label, backHash) {
     return `<div class="wg-topbar">
       <button class="wg-back-btn" onclick="WedgeRouter.go('${backHash}')">${ICONS.back} ${label}</button>
-      <button class="wg-icon-btn" style="${rightIcon ? "" : "visibility:hidden;"}" ${rightIcon ? 'aria-label="Options" aria-haspopup="dialog" onclick="openWedgingMenu()"' : 'tabindex="-1" aria-hidden="true"'}>${rightIcon || ""}</button>
     </div>`;
   }
   function analysisHeader(eyebrow, title, subtitle) {
@@ -1481,7 +1479,7 @@ function wedgeNewShotButtonsHtml() {
 WedgeViews.parcours = function () {
   const filtered = wedgeHistoryFilteredRounds();
   return `
-    ${WedgeUI.header({ title: "WEDGING", backLabel: "Accueil", backHash: "app-home", rightIcon: WedgeUI.ICONS.more })}
+    ${WedgeUI.header({ title: "WEDGING", backLabel: "Accueil", backHash: "app-home" })}
     ${WedgeUI.navCards("parcours")}
 
     <section class="wg-section">
@@ -1535,7 +1533,7 @@ WedgeViews.dispersionAnalysis = function () {
     return `<div class="wg-insight-card"><div class="wg-insight-card-title">Dispersion à ${wedgeAnalysisShortLabel(b)} (${bucketShots.length} coup${bucketShots.length > 1 ? 's' : ''})</div><div class="wg-insight-card-body">${WedgeAnalytics.buildRadarChartSvg(items)}</div></div>`;
   }).join('');
   return `
-    ${WedgeUI.topbar("Wedging", "parcours", WedgeUI.ICONS.more)}
+    ${WedgeUI.topbar("Wedging", "parcours")}
     ${WedgeUI.analysisHeader("ANALYSE", "Dispersion", "Dispersion de vos coups sur le parcours, par distance à faire.")}
     <section class="wg-section"><div class="wg-chip-row">${wedgeShotsLimitButtonHtml()}${wedgeSortBtnHtml('radarDistance')}</div></section>
     ${wedgeShotsLimitPopupOpen ? wedgeShotsLimitPopupHtml() : ''}
@@ -1560,7 +1558,7 @@ WedgeViews.distanceAnalysis = function () {
     return `<div class="wg-gauge-row"><div class="wg-gauge-label">${r.label}</div><div class="wg-gauge-track"><div class="wg-gauge-fill" style="width:${pct}%"></div><div class="wg-gauge-value" style="left:${pct}%">${r.avg}${wedgeUnit()}</div></div></div>`;
   }).join('');
   return `
-    ${WedgeUI.topbar("Wedging", "parcours", WedgeUI.ICONS.more)}
+    ${WedgeUI.topbar("Wedging", "parcours")}
     ${WedgeUI.analysisHeader("ANALYSE", "Distance", "Distance finale moyenne par palier de distance à faire.")}
     <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
     <section class="wg-section"><div class="wg-gauge-axis"><span>Distance à faire</span><span>Résultat moyen (${wedgeUnit()})</span></div>${rowsHtml}</section>
@@ -1586,7 +1584,7 @@ WedgeViews.sgAnalysis = function () {
     return `<div class="wg-sg-bar-row"><div class="wg-sg-bar-label">${e.label}</div><div class="wg-sg-bar-track"><div class="wg-sg-bar-center"></div><div class="wg-sg-bar-fill ${side}" style="${style}"></div></div><div class="wg-sg-bar-value">${WedgeAnalytics.fmtSG(e.value)}</div></div>`;
   }).join('');
   return `
-    ${WedgeUI.topbar("Wedging", "parcours", WedgeUI.ICONS.more)}
+    ${WedgeUI.topbar("Wedging", "parcours")}
     ${WedgeUI.analysisHeader("ANALYSE", "Strokes Gained", "Estimation du gain de coups par palier de distance à faire (référence PGA Tour).")}
     <section class="wg-section">${wedgeShotsLimitRowHtml()}</section>
     <section class="wg-section">${rowsHtml}</section>
@@ -1619,7 +1617,7 @@ function wedgeResumeCardsHtml() {
 function wedgeExercisesListHtml() {
   const isHistory = wedgeExercisesTab === 'history';
   return `
-    ${WedgeUI.header({ title: "WEDGING", backLabel: "Accueil", backHash: "app-home", rightIcon: WedgeUI.ICONS.more })}
+    ${WedgeUI.header({ title: "WEDGING", backLabel: "Accueil", backHash: "app-home" })}
     ${WedgeUI.navCards("exercices")}
     <div class="wg-chip-row mb-10">
       <button class="wg-chip ${isHistory ? '' : 'active'}" onclick="setWedgeExercisesTab('list')">Exercices</button>
@@ -1649,49 +1647,6 @@ WedgeViews.exercices = function () {
   if (wedgeReviewExerciseId !== null) return wedgeExerciseReviewHtml();
   return wedgeExercisesListHtml();
 };
-
-/* ============================ MENU 3 POINTS ================================ */
-// Réglages d'affichage enregistrés dans golfevolution_module_prefs.wedging (voir commun.js) :
-//   defaultAnalysis : 'dispersion' | 'distance' | 'sg'  — analyse ouverte par "Voir mes analyses"
-//   step            : 5 | 10                            — pas des paliers des analyses (affichage seulement)
-// Ce menu est aussi le seul accès aux écrans d'analyse depuis le Journal et les Exercices.
-const WEDGE_ANALYSIS_VIEWS = [
-  { value: 'dispersion', label: 'Dispersion', route: 'dispersion-analysis' },
-  { value: 'distance', label: 'Distance', route: 'distance-analysis' },
-  { value: 'sg', label: 'SG', route: 'sg-analysis' },
-];
-function wedgeDefaultAnalysis() {
-  const saved = appPrefGet('wedging', 'defaultAnalysis', 'dispersion');
-  return WEDGE_ANALYSIS_VIEWS.find(v => v.value === saved) || WEDGE_ANALYSIS_VIEWS[0];
-}
-function openWedgingMenu() {
-  const current = wedgeDefaultAnalysis();
-  const hintFor = v => `Ouvre « ${v.label} » (vue par défaut).`;
-  const openItem = {
-    type: 'action', label: 'Voir mes analyses', hint: hintFor(current),
-    onClick: () => WedgeRouter.go(wedgeDefaultAnalysis().route)
-  };
-  appSheet({
-    title: 'Wedging',
-    sections: [
-      {
-        title: 'Analyses',
-        items: [
-          openItem,
-          {
-            type: 'segment', label: 'Vue d\'analyse par défaut', value: current.value,
-            options: WEDGE_ANALYSIS_VIEWS.map(v => ({ value: v.value, label: v.label })),
-            onChange: v => {
-              appPrefSet('wedging', 'defaultAnalysis', v);
-              openItem.hint = hintFor(wedgeDefaultAnalysis());
-            }
-          },
-        ]
-      }
-    ]
-  });
-}
-window.openWedgingMenu = openWedgingMenu;
 
 /* =============================== 7. ROUTEUR =================================== */
 
