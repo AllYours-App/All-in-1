@@ -181,13 +181,19 @@
     es: { janvier: 'enero', 'février': 'febrero', mars: 'marzo', avril: 'abril', mai: 'mayo', juin: 'junio', juillet: 'julio', 'août': 'agosto', septembre: 'septiembre', octobre: 'octubre', novembre: 'noviembre', 'décembre': 'diciembre', lundi: 'lunes', mardi: 'martes', mercredi: 'miércoles', jeudi: 'jueves', vendredi: 'viernes', samedi: 'sábado', dimanche: 'domingo' }
   }[lang];
   var WORDS_RX = new RegExp('(^|[^A-Za-zÀ-ÿ])(' + Object.keys(WORDS).join('|') + ')(?![A-Za-zÀ-ÿ])', 'gi');
+  var ES_MONTHS = 'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre';
   function translateWords(text) {
-    return text.replace(WORDS_RX, function (m, pre, word) {
+    var out = text.replace(WORDS_RX, function (m, pre, word) {
       var t = WORDS[word.toLowerCase()];
       if (!t) return m;
       if (word.charAt(0) !== word.charAt(0).toLowerCase()) t = t.charAt(0).toUpperCase() + t.slice(1);
       return pre + t;
     });
+    if (lang === 'es' && out !== text) { // « 30 octubre 2026 » -> « 30 de octubre de 2026 »
+      out = out.replace(new RegExp('(\\d)\\s+(' + ES_MONTHS + ')\\b', 'gi'), '$1 de $2')
+               .replace(new RegExp('\\b(' + ES_MONTHS + ')\\s+(\\d{4})\\b', 'gi'), '$1 de $2');
+    }
+    return out;
   }
 
   /* --- Traduction d'un texte (sans espaces de début / fin) ----------------- */
@@ -203,6 +209,14 @@
     return changed ? out : null;
   }
 
+  /* Pluriel espagnol d'un mot seul : sesión -> sesiones, indicador -> indicadores, vez -> veces, bola -> bolas */
+  function pluralEs(word) {
+    if (/[aeiouáéíóú]$/i.test(word)) return word + 's';
+    if (/ón$/i.test(word)) return word.slice(0, -2) + 'ones';
+    if (/z$/i.test(word)) return word.slice(0, -1) + 'ces';
+    return word + 'es';
+  }
+
   function translateCore(text, depth) {
     var direct = lookupExact(text);
     if (direct) return direct;
@@ -210,11 +224,14 @@
       var m = patterns[i].rx.exec(text);
       if (!m || !patternOk(patterns[i], m)) continue;
       var n = 0;
-      return patterns[i].tr.replace(/§|\{\{\w+\}\}/g, function () {
+      var out = patterns[i].tr.replace(/§|\{\{\w+\}\}/g, function (ph, offset, whole) {
         var captured = m[++n] || '';
+        // « s » collé à un mot espagnol : le pluriel dépend de la lettre finale (sesión -> sesiones)
+        if (lang === 'es' && captured === 's' && offset > 0 && LETTER_RX.test(whole.charAt(offset - 1))) return '\u0001s';
         // la valeur captée peut elle-même être un texte à traduire (date, libellé...)
         return depth < 2 ? translateCore(captured, depth + 1) : captured;
       });
+      return out.indexOf('\u0001') < 0 ? out : out.replace(/([A-Za-z\u00C0-\u00FF]+)\u0001s/g, function (all, word) { return pluralEs(word); });
     }
     var words = translateWords(text);
     if (depth >= 2) return words;
