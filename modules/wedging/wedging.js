@@ -1534,7 +1534,7 @@ WedgeViews.dispersionAnalysis = function () {
   }).join('');
   return `
     ${WedgeUI.topbar("Wedging", "parcours")}
-    ${WedgeUI.analysisHeader("ANALYSE", "Dispersion", "Dispersion de vos coups sur le parcours, par distance à faire.")}
+    ${WedgeUI.analysisHeader("ANALYSE", "Dispersion", "Dispersion de tes coups sur le parcours, par distance à faire.")}
     <section class="wg-section"><div class="wg-chip-row">${wedgeShotsLimitButtonHtml()}${wedgeSortBtnHtml('radarDistance')}</div></section>
     ${wedgeShotsLimitPopupOpen ? wedgeShotsLimitPopupHtml() : ''}
     ${wedgeSortPopupHtml()}

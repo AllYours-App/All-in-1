@@ -10,6 +10,13 @@
      [français, anglais, espagnol]) ;
    - les textes avec une valeur variable sont écrits avec § (ou {{nom}} pour
      les textes légaux) : « § séances » traduit « 5 séances » en « 5 sessions ».
+   - quand le texte exact n'existe pas, il essaie : la même entrée en MAJUSCULES ou avec une
+     minuscule initiale (« PARCOURS », « rapide »), puis le texte découpé en morceaux de
+     mots (« Poids 62,5 kg » : seul « Poids » est traduit), puis les noms de mois et de jours ;
+   - un texte coupé par des <br> (« Exercice<br>rapide ») est traduit en un seul bloc ;
+   - une entrée « § Texte » (pastille ou icône devant le texte) sert aussi pour « Texte » seul ;
+   - une entrée avec « (m) » ou « §m » existe aussi en « yd » et « ft » : l'unité de distance (Menu)
+     ne dépend pas de la langue.
    En français, rien n'est actif : aucun risque pour l'appli d'origine.
 
    Changer de langue : Menu > Réglages > Apparence > Langue. Le choix est
@@ -68,28 +75,105 @@
   var exact = Object.create(null); // texte exact -> traduction
   var patterns = [];               // textes avec § ou {{x}}
   var cache = Object.create(null);
+  var LETTER = 'A-Za-z\u00C0-\u00FF';
+  var LETTER_RX = new RegExp('[' + LETTER + ']');
+  var LETTER_START_RX = new RegExp('^[' + LETTER + ']');
+  var LETTER_END_RX = new RegExp('[' + LETTER + ']$');
+  var WORD3_RX = new RegExp('[' + LETTER + ']{3}');
 
   function norm(s) { return s.replace(/\s+/g, ' ').trim(); }
   function escapeRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
   (function buildDictionary() {
-    var rows = window.APP_I18N_DICT || [];
+    var rows = (window.APP_I18N_DICT || []).slice();
+    // Unités : le dictionnaire est écrit en mètres (« (m) », « §m »). Le même texte existe aussi en yards,
+    // l'unité choisie dans Menu ne dépend pas de la langue : on ajoute les variantes « yd » et « ft ».
+    var UNIT_ROW_RX = /\(m\)|§ ?m(?![A-Za-z\u00C0-\u00FF])/;
+    function withUnit(str, u) {
+      return str.replace(/\(m\)/g, '(' + u + ')').replace(/§( ?)m(?![A-Za-z\u00C0-\u00FF])/g, '§$1' + u);
+    }
+    for (var u = 0, base = rows.length; u < base; u++) {
+      if (!UNIT_ROW_RX.test(rows[u][0])) continue;
+      ['yd', 'ft'].forEach(function (unit) {
+        rows.push([withUnit(rows[u][0], unit), withUnit(rows[u][1], unit), withUnit(rows[u][2], unit)]);
+      });
+    }
+    var stripped = []; // « § Texte » -> « Texte » (voir plus bas)
     for (var i = 0; i < rows.length; i++) {
       var fr = norm(rows[i][0]);
       var tr = rows[i][col];
       if (!tr || tr === fr) continue;
       if (/§|\{\{\w+\}\}/.test(fr)) {
-        // chaque § ou {{x}} devient un groupe de capture, dans l'ordre
         var literal = fr.replace(/§|\{\{\w+\}\}/g, '');
-        if ((literal.match(/[A-Za-zÀ-ÿ]/g) || []).length < 3) continue; // trop vague
-        var rx = escapeRx(fr).replace(/§/g, '(.*?)').replace(/\\\{\\\{\w+\\\}\\\}/g, '(.+?)');
-        patterns.push({ rx: new RegExp('^' + rx + '$'), tr: tr, weight: literal.length });
+        var letters = (literal.match(/[A-Za-zÀ-ÿ]/g) || []).length;
+        if (letters < 3) continue; // trop vague
+        // chaque § ou {{x}} devient un groupe de capture, dans l'ordre ; on note ce qui touche le §
+        var tokens = fr.split(/(§|\{\{\w+\}\})/);
+        var rx = '', checks = [], g = 0;
+        for (var t = 0; t < tokens.length; t++) {
+          if (t % 2 === 0) { rx += escapeRx(tokens[t]); continue; }
+          var before = tokens[t - 1] || '', after = tokens[t + 1] || '';
+          checks.push({
+            // § collé à la fin d'un mot (« coup§ ») : n'accepte que « s » / « x » ou un non-lettre
+            suffix: LETTER_END_RX.test(before),
+            // § collé au début d'un mot (« §Réussi ») : la valeur ne doit pas finir par une lettre
+            prefix: LETTER_START_RX.test(after)
+          });
+          rx += tokens[t] === '§' ? '(.*?)' : '(.+?)';
+          g++;
+        }
+        patterns.push({
+          rx: new RegExp('^' + rx + '$'), tr: tr, weight: literal.length, checks: checks,
+          // « § coup§ » : texte très court qui commence par une valeur, la valeur doit rester courte
+          short: letters < 10 && fr.indexOf('§') === 0
+        });
+        // « § Texte » (icône ou pastille devant) : le texte seul se traduit aussi
+        var mFr = /^§ ([^§{]+)$/.exec(fr), mTr = /^§ ([^§{]+)$/.exec(tr);
+        if (mFr && mTr) stripped.push([mFr[1], mTr[1]]);
+        var mFr2 = /^([^§{]+) §$/.exec(fr), mTr2 = /^([^§{]+) §$/.exec(tr);
+        if (mFr2 && mTr2) stripped.push([mFr2[1], mTr2[1]]);
       } else {
         exact[fr] = tr;
       }
     }
+    // les entrées écrites telles quelles dans le dictionnaire gardent la priorité
+    for (var k = 0; k < stripped.length; k++) {
+      if (!exact[stripped[k][0]] && stripped[k][0] !== stripped[k][1]) exact[stripped[k][0]] = stripped[k][1];
+    }
     patterns.sort(function (a, b) { return b.weight - a.weight; }); // le plus précis d'abord
   })();
+
+  function patternOk(p, m) {
+    for (var c = 0; c < p.checks.length; c++) {
+      var v = m[c + 1] || '';
+      if (p.checks[c].suffix && v && !/^[sx]$/.test(v) && LETTER_START_RX.test(v)) return false;
+      if (p.checks[c].prefix && v && LETTER_END_RX.test(v)) return false;
+      if (c === 0 && p.short && WORD3_RX.test(v)) return false;
+    }
+    return true;
+  }
+
+  /* Texte exact, en acceptant les MAJUSCULES (« PARCOURS ») et la minuscule initiale (« rapide ») */
+  function capFirst(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
+  function lowFirst(x) { return /^[A-ZÀ-Þ]{2}/.test(x) ? x : x.charAt(0).toLowerCase() + x.slice(1); }
+  function lookupExact(text) {
+    if (exact[text]) return exact[text];
+    var low = text.toLowerCase();
+    if (text.length > 1 && text === text.toUpperCase() && text !== low) {
+      var hit = exact[capFirst(low)] || exact[low];
+      return hit ? hit.toUpperCase() : null;
+    }
+    var f = text.charAt(0);
+    if (f !== f.toUpperCase()) { // « rapide » -> « Rapide » -> « quick »
+      var up = exact[capFirst(text)];
+      return up ? lowFirst(up) : null;
+    }
+    if (f !== f.toLowerCase()) { // « Rapide » absent mais « rapide » présent
+      var dn = exact[lowFirst(text)];
+      return dn ? capFirst(dn) : null;
+    }
+    return null;
+  }
 
   // Mois et jours : repli mot à mot pour les dates fabriquées par le code
   var WORDS = {
@@ -107,11 +191,24 @@
   }
 
   /* --- Traduction d'un texte (sans espaces de début / fin) ----------------- */
+  // Suites de mots (« Poids », « Court-Gauche », « Mètres rentrés ») séparées par des chiffres ou de la ponctuation
+  var RUN_RX = new RegExp('[' + LETTER + ']+(?:[\\s\'\u2019\\-][' + LETTER + ']+)*', 'g');
+  function translateRuns(text) {
+    var changed = false;
+    var out = text.replace(RUN_RX, function (run) {
+      var t = lookupExact(run);
+      if (t && t !== run) { changed = true; return t; }
+      return run;
+    });
+    return changed ? out : null;
+  }
+
   function translateCore(text, depth) {
-    if (exact[text]) return exact[text];
+    var direct = lookupExact(text);
+    if (direct) return direct;
     for (var i = 0; i < patterns.length; i++) {
       var m = patterns[i].rx.exec(text);
-      if (!m) continue;
+      if (!m || !patternOk(patterns[i], m)) continue;
       var n = 0;
       return patterns[i].tr.replace(/§|\{\{\w+\}\}/g, function () {
         var captured = m[++n] || '';
@@ -119,7 +216,9 @@
         return depth < 2 ? translateCore(captured, depth + 1) : captured;
       });
     }
-    return translateWords(text);
+    var words = translateWords(text);
+    if (depth >= 2) return words;
+    return translateRuns(words) || words;
   }
 
   function translate(raw) {
@@ -154,12 +253,15 @@
     if (out !== v) { node.__i18n = out; node.nodeValue = out; } else { node.__i18n = null; }
   }
 
+  // Le contenu d'un <textarea> n'est pas traduit, mais son placeholder oui
+  function skippedAttr(el) { return skipped(el.tagName === 'TEXTAREA' ? el.parentNode : el); }
+
   function processAttr(el, name) {
     var v = el.getAttribute(name);
     if (!v) return;
     var mine = el.__i18nA && el.__i18nA[name];
     if (mine === v) return;
-    if (skipped(el)) return;
+    if (skippedAttr(el)) return;
     var out = translate(v);
     if (out !== v) {
       (el.__i18nA = el.__i18nA || {})[name] = out;
@@ -167,13 +269,49 @@
     } else if (el.__i18nA) { delete el.__i18nA[name]; }
   }
 
+  // Texte coupé par des <br> (« Exercice<br>rapide ») : traduit en un seul bloc, puis recoupé
+  function processBreaks(root) {
+    if (!root.querySelectorAll) return;
+    var brs = root.nodeName === 'BR' ? [root] : root.querySelectorAll('br');
+    var done = [];
+    for (var b = 0; b < brs.length; b++) {
+      var parent = brs[b].parentNode;
+      if (!parent || done.indexOf(parent) >= 0) continue;
+      done.push(parent);
+      if (skipped(parent)) continue;
+      var nodes = [], simple = true;
+      for (var c = 0; c < parent.childNodes.length; c++) {
+        var child = parent.childNodes[c];
+        if (child.nodeType === 3) { if (norm(child.nodeValue)) nodes.push(child); }
+        else if (child.nodeName !== 'BR' && child.nodeType !== 8) { simple = false; break; }
+      }
+      if (!simple || nodes.length < 2) continue;
+      var already = true;
+      for (var d = 0; d < nodes.length; d++) if (!(nodes[d].__i18n && nodes[d].__i18n === nodes[d].nodeValue)) already = false;
+      if (already) continue;
+      var joined = nodes.map(function (x) { return norm(x.nodeValue); }).join(' ');
+      var out = translate(joined);
+      if (out === joined) continue;
+      var words = out.split(' ');
+      if (words.length < nodes.length) continue;
+      for (var e = 0; e < nodes.length; e++) {
+        var part = words.slice(Math.round(e * words.length / nodes.length), Math.round((e + 1) * words.length / nodes.length)).join(' ');
+        var raw = nodes[e].nodeValue;
+        var value = raw.match(/^\s*/)[0] + part + raw.match(/\s*$/)[0];
+        nodes[e].__i18n = value;
+        nodes[e].nodeValue = value;
+      }
+    }
+  }
+
   function processTree(root) {
     if (!root) return;
     if (root.nodeType === 3) { processText(root); return; }
     if (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11) return;
+    processBreaks(root);
     if (root.nodeType === 1) {
-      if (skipped(root)) return;
       for (var a = 0; a < ATTRS.length; a++) processAttr(root, ATTRS[a]);
+      if (skipped(root)) return;
     }
     var walker = document.createTreeWalker(root, 1 | 4, null);
     var node;

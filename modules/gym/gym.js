@@ -12,7 +12,7 @@ document.getElementById("app-root-gym").innerHTML = `
       <header class="gym-header">
         <a class="gym-header__back" href="#" onclick="showPage('home'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Home
+          Accueil
         </a>
         <span class="gym-header__title">GYM</span>
         <button class="gym-header__action" aria-label="Options">
@@ -5735,7 +5735,7 @@ function gymRenderDualChart(points, series, selected) {
     $("gym-progression-readout").innerHTML =
       `<span>${gymFormatShortDate(p.date)}</span>` +
       state.metrics
-        .map((k, i) => `<span class="chart-readout__item--${i ? "b" : "a"}">${METRICS[k].label} ${p[k]} ${METRICS[k].unit}</span>`)
+        .map((k, i) => `<span class="chart-readout__item--${i ? "b" : "a"}">${appT(METRICS[k].label)} ${p[k]} ${appT(METRICS[k].unit)}</span>`)
         .join("");
   }
 

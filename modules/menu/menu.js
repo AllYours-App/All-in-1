@@ -1128,7 +1128,7 @@ async function deleteMenuData() {
   }
   const date = new Date(purgeAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   if (typeof appAlert === 'function') {
-    await appAlert('Suppression programmée. Ton compte et tes données seront effacés définitivement le ' + date + '. Pour annuler, reconnectez-vous avant cette date.');
+    await appAlert('Suppression programmée. Ton compte et tes données seront effacés définitivement le ' + date + '. Pour annuler, reconnecte-toi avant cette date.');
   }
   // Déconnexion de cet appareil : copie locale vidée, puis rechargement (remet à zéro la mémoire des modules)
   if (typeof window.authLogout === 'function') { await window.authLogout({ force: true }); return; }

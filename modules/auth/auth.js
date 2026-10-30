@@ -100,7 +100,7 @@
       const date = new Date(purgeAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
       for (;;) {
         const keep = await appConfirm(
-          'La suppression de ton compte est programmée pour le ' + date + '. Vos données sont conservées jusque-là. Voulez-vous annuler la suppression et garder votre compte ?',
+          'La suppression de ton compte est programmée pour le ' + date + '. Tes données sont conservées jusque-là. Veux-tu annuler la suppression et garder ton compte ?',
           { confirmLabel: 'Annuler la suppression', cancelLabel: 'Se déconnecter' }
         );
         if (!keep) { await window.authLogout({ force: true }); return; }
