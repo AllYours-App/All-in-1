@@ -2605,6 +2605,190 @@ body.gym-home-locked {
   }
 }
 
+/* ---- Récap : mode « Modifier » (poids, répétitions, validation par série) ---- */
+
+.recap-edit-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recap-edit-set {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recap-edit-set__index {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--gym-border-strong);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gym-text-secondary);
+}
+
+.recap-edit-set__x {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gym-text-muted);
+}
+
+.recap-edit-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--gym-border-strong);
+  border-radius: var(--gym-radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.recap-edit-field:focus-within {
+  border-color: var(--gym-accent-border);
+}
+
+.recap-edit-field input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--gym-text);
+  cursor: pointer;
+}
+
+.recap-edit-field__unit {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gym-text-muted);
+}
+
+.recap-edit-valid {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--gym-border-strong);
+  color: var(--gym-text-muted);
+  transition: border-color var(--gym-speed-fast) var(--gym-ease), background var(--gym-speed-fast) var(--gym-ease), color var(--gym-speed-fast) var(--gym-ease);
+}
+
+.recap-edit-valid svg {
+  width: 16px;
+  height: 16px;
+}
+
+.recap-edit-valid.is-valid {
+  border-color: var(--gym-accent-border);
+  background: var(--gym-accent-dim);
+  color: var(--gym-accent);
+}
+
+@media (max-width: 360px) {
+  .recap-edit-set {
+    gap: 6px;
+  }
+
+  .recap-edit-field {
+    padding: 8px 8px;
+  }
+
+  .recap-edit-valid {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ==========================================================================
+   GYM — Historique : séances d'un programme en pile (façon notifications iPhone)
+   Même principe que .wg-stack de Wedging : cartes en position absolue, transform et hauteur de la
+   liste posés en JS (gymLayoutHistoryStack). La bannière du programme est la première carte.
+   ========================================================================== */
+
+.gym-hstack {
+  display: flex;
+  flex-direction: column;
+}
+
+.gym-hstack__list {
+  position: relative;
+  cursor: pointer;
+}
+
+.gym-hstack.is-open .gym-hstack__list {
+  cursor: default;
+}
+
+.gym-hstack__item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+.gym-hstack.is-ready .gym-hstack__list {
+  transition: height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gym-hstack.is-ready .gym-hstack__item {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+}
+
+/* Pile repliée : seul le haut de la pile (la bannière) reçoit les appuis, qui la déplient */
+.gym-hstack:not(.is-open) .gym-hstack__item:not(:first-child) {
+  pointer-events: none;
+}
+
+/* Bannière : mêmes cartes que les séances, repérée par sa bordure d'accent */
+.gym-app .gym-hstack__banner {
+  cursor: pointer;
+  border-color: var(--gym-accent-border);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gym-app .gym-hstack__chevron.icon-btn svg {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gym-hstack.is-open .gym-hstack__chevron svg {
+  transform: rotate(180deg);
+}
+
+@media (hover: hover) {
+  .gym-app .gym-hstack__chevron.icon-btn:hover {
+    color: var(--gym-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gym-hstack.is-ready .gym-hstack__list,
+  .gym-hstack.is-ready .gym-hstack__item,
+  .gym-app .gym-hstack__chevron.icon-btn svg {
+    transition: none;
+  }
+}
+
 /* ==========================================================================
    GYM — Graphiques (page Progression)
    ========================================================================== */

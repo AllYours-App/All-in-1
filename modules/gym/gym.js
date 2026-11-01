@@ -198,7 +198,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : DÉTAIL PROGRAMME ============================== -->
     <section class="gym-view" id="gym-view-programme-detail" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('programmes'); return false;">
+        <a class="gym-header__back" href="#" onclick="gymProgramDetailBack(); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -217,7 +217,7 @@ document.getElementById("app-root-gym").innerHTML = `
         <section style="display:flex; flex-direction:column; gap:14px;">
           <div class="gym-section-head">
             <h2 class="gym-section-title">Séances</h2>
-            <a class="gym-link" href="#" onclick="gymNavigate('creer-seance', {programme: gymGetParam('id','prog-force')}); return false;">Ajouter <span id="gym-icon-add-session"></span></a>
+            <a class="gym-link" href="#" id="gym-program-add-session-link" onclick="gymNavigate('creer-seance', {programme: gymGetParam('id','prog-force')}); return false;">Ajouter <span id="gym-icon-add-session"></span></a>
           </div>
           <div class="gym-stagger" id="gym-program-sessions-list" style="display:flex; flex-direction:column; gap:12px;"></div>
         </section>
@@ -677,7 +677,9 @@ document.getElementById("app-root-gym").innerHTML = `
         <section style="display:flex; flex-direction:column; gap:14px;">
           <div class="gym-section-head">
             <h2 class="gym-section-title">Détail par exercice</h2>
+            <a class="gym-link" href="#" id="gym-recap-edit-link">Modifier <span id="gym-icon-recap-edit"></span></a>
           </div>
+          <p class="list-row__meta" id="gym-recap-edit-hint" style="display:none;">Corrige les poids et les répétitions de cette séance.</p>
           <div id="gym-recap-exercises" style="display:flex; flex-direction:column; gap:12px;"></div>
         </section>
 
@@ -688,6 +690,11 @@ document.getElementById("app-root-gym").innerHTML = `
         <div id="gym-recap-actions" style="display:flex; flex-direction:column; gap:10px;">
           <button type="button" class="btn btn-primary" id="gym-btn-recap-primary">Voir le programme</button>
           <button type="button" class="btn btn-secondary" id="gym-btn-recap-home">Retour à l'accueil</button>
+        </div>
+
+        <div id="gym-recap-edit-actions" style="display:none; flex-direction:column; gap:10px;">
+          <button type="button" class="btn btn-primary" id="gym-btn-recap-save">Enregistrer</button>
+          <button type="button" class="btn btn-secondary" id="gym-btn-recap-cancel">Annuler</button>
         </div>
 
       </main>
@@ -3326,6 +3333,40 @@ function gymFindSessionById(sessionId) {
 }
 
 /**
+ * Agrégats d'une séance (séries, répétitions, volume) calculés depuis ses exercices enregistrés.
+ * Utilisé à l'enregistrement d'une séance et quand on corrige ses poids dans l'historique.
+ */
+function gymHistoryAggregates(exercises) {
+  const totalSets = exercises.reduce((sum, e) => sum + e.sets.length, 0);
+  const validSets = exercises.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).length, 0);
+  const totalReps = exercises.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).reduce((a, s) => a + s.reps, 0), 0);
+  const totalVolume = Math.round(
+    exercises.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).reduce((a, s) => a + s.weight * s.reps, 0), 0)
+  );
+  return { totalSets, validSets, totalReps, totalVolume };
+}
+
+/**
+ * Après la correction d'une séance de l'historique : recalcule l'écart de volume de cette séance et
+ * de la suivante (même séance du même programme), les seules dont la « séance précédente » a changé.
+ */
+function gymRefreshDeltasAfterEdit(edited) {
+  if (!edited.programId || !edited.sessionId) return;
+  const same = GYM_DATA.history
+    .filter((h) => h.programId === edited.programId && h.sessionId === edited.sessionId)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const index = same.indexOf(edited);
+  if (index < 0) return;
+  [index, index + 1].forEach((k) => {
+    const current = same[k];
+    if (!current) return;
+    const previous = same[k - 1];
+    current.delta = previous && previous.totalVolume > 0 ? Math.round(((current.totalVolume - previous.totalVolume) / previous.totalVolume) * 100) : 0;
+    current.deltaLabel = previous ? "vs séance précédente" : "Première fois";
+  });
+}
+
+/**
  * Construit un instantané complet d'une séance qui vient d'être terminée
  * (poids/répétitions/validité de chaque série + agrégats) et l'ajoute en
  * tête de l'historique. C'est ce snapshot — indépendant du programme, qui
@@ -3352,12 +3393,7 @@ function gymRecordSessionHistory(program, session, exercisesState, elapsedMs) {
     })),
   }));
 
-  const totalSets = exercisesSnapshot.reduce((sum, e) => sum + e.sets.length, 0);
-  const validSets = exercisesSnapshot.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).length, 0);
-  const totalReps = exercisesSnapshot.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).reduce((a, s) => a + s.reps, 0), 0);
-  const totalVolume = Math.round(
-    exercisesSnapshot.reduce((sum, e) => sum + e.sets.filter((s) => s.valid).reduce((a, s) => a + s.weight * s.reps, 0), 0)
-  );
+  const { totalSets, validSets, totalReps, totalVolume } = gymHistoryAggregates(exercisesSnapshot);
 
   // Comparaison avec la précédente exécution de cette même séance (même
   // programme + même id de séance), pour donner un delta de volume
@@ -3936,6 +3972,35 @@ function gymRenderSessionRow(session, programId) {
 }
 
 /**
+ * Ligne de séance en lecture seule (détail d'un programme ouvert depuis l'historique) : ni lancement,
+ * ni suppression.
+ */
+function gymRenderSessionRowReadonly(session) {
+  const exoCount = (session.exerciseIds || []).length;
+  return `
+    <div class="card list-row">
+      <div class="icon-circle icon-circle--sm" style="background:rgba(255,255,255,0.06); color:var(--gym-text);">
+        <span style="font-weight:800; font-size:13px; color:var(--gym-text);">${session.index}</span>
+      </div>
+      <div class="list-row__body">
+        <span class="list-row__title">Séance ${session.index}</span>
+        <span class="list-row__meta">${gymFormatDate(session.date)}</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="list-row__meta">${gymFormatDuration(session.duration)} · ${exoCount} exercices</span>
+        ${gymBadgeSessionStatus(session.status)}
+      </div>
+    </div>
+  `;
+}
+
+/** Retour du détail d'un programme : vers l'historique s'il a été ouvert depuis l'historique, sinon vers la liste des programmes. */
+function gymProgramDetailBack() {
+  if (currentParams && currentParams.readonly) gymNavigate("historique");
+  else gymNavigate("programmes");
+}
+
+/**
  * Ligne d'exercice dans le formulaire "Créer une séance" (avec suppression).
  * La suppression passe par un data-attribute + délégation d'événement côté
  * page (plutôt qu'un onclick inline) pour rester compatible avec la vue en
@@ -4067,6 +4132,181 @@ function gymRenderHistoryRow(entry) {
       </div>
     </a>
   `;
+}
+
+/* ---- Historique : séances d'un programme regroupées en pile (façon notifications iPhone) --------
+   Même principe que l'historique du Journal de Wedging (wedgeLayoutStack) : la bannière du programme
+   est la carte de devant, les séances sont empilées derrière elle (3 cartes visibles, décalées de 10 px).
+   Un appui sur la pile la déplie : la bannière reste au-dessus, les séances se rangent dessous.
+   Pile dépliée : un appui sur la bannière ouvre le détail du programme (lecture seule), un appui sur
+   une séance ouvre son récapitulatif (corrigeable). Le chevron de la bannière replie la pile.
+   Les séances libres (sans programme) ne sont jamais regroupées, ni une séance seule de son programme
+   dans le mois. Une pile = un programme dans un mois (les mois restent séparés par leur titre). */
+
+const GYM_HSTACK_PEEK = 10, GYM_HSTACK_GAP = 12, GYM_HSTACK_VISIBLE = 3;
+// Piles dépliées, conservées d'un rendu à l'autre (la liste est reconstruite à chaque affichage)
+const gymHistoryOpenStacks = new Set();
+
+/**
+ * Découpe les entrées d'un mois (du plus récent au plus ancien) en blocs : une pile par programme
+ * ayant au moins 2 séances ce mois-ci, une carte simple pour tout le reste.
+ */
+function gymBuildHistoryBlocks(items, monthLabel) {
+  const blocks = [];
+  const byProgram = new Map();
+  items.forEach((entry) => {
+    if (entry.type !== "programme" || !entry.programId) {
+      blocks.push({ kind: "entry", entry });
+      return;
+    }
+    let block = byProgram.get(entry.programId);
+    if (!block) {
+      block = { kind: "stack", key: `${monthLabel}::${entry.programId}`, programId: entry.programId, entries: [] };
+      byProgram.set(entry.programId, block);
+      blocks.push(block);
+    }
+    block.entries.push(entry);
+  });
+  return blocks.map((block) => (block.kind === "stack" && block.entries.length === 1 ? { kind: "entry", entry: block.entries[0] } : block));
+}
+
+function gymRenderHistoryBlock(block) {
+  return block.kind === "stack" ? gymRenderHistoryStack(block) : gymRenderHistoryRow(block.entry);
+}
+
+/**
+ * Carte d'une séance à l'intérieur d'une pile : type de programme, nom de la séance, nombre
+ * d'exercices, date et durée. Un appui ouvre son récapitulatif.
+ */
+function gymRenderHistoryStackItem(entry) {
+  const exoCount = (entry.exercises || []).length;
+  const metaLine = entry.duration
+    ? `${gymIcon("calendar")} ${gymFormatDate(entry.date)} · ${gymFormatDuration(entry.duration)}`
+    : `${gymIcon("calendar")} ${gymFormatDate(entry.date)}`;
+  return `
+    <a class="card card--interactive list-row" href="#" onclick="gymNavigate('seance-recap', {history:'${entry.id}', from:'historique'}); return false;">
+      ${gymThumb(entry.icon, "thumb--sm")}
+      <div class="list-row__body">
+        <span class="badge badge--tag" style="width:fit-content;">${appEscapeHtml(entry.tag || "")}</span>
+        <span class="list-row__title">${appEscapeHtml(entry.sessionTitle || entry.typeLabel || "")}</span>
+        <span class="list-row__meta">${exoCount} exercice${exoCount > 1 ? "s" : ""}</span>
+        <span class="list-row__meta">${metaLine}</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        ${gymDelta(entry.delta || 0)}
+        <span class="list-row__meta" style="font-size:11.5px;">${appEscapeHtml(entry.deltaLabel || "")}</span>
+      </div>
+    </a>
+  `;
+}
+
+/**
+ * Pile d'un programme : la bannière (type, nom, nombre de séances et d'exercices, date de la
+ * dernière séance) est la première carte, suivie des séances du plus récent au plus ancien.
+ */
+function gymRenderHistoryStack(block) {
+  const latest = block.entries[0];
+  const open = gymHistoryOpenStacks.has(block.key);
+  const count = block.entries.length;
+  const exoTotal = block.entries.reduce((sum, e) => sum + (e.exercises || []).length, 0);
+  const programName = latest.programName || latest.typeLabel || "Programme";
+
+  const banner = `
+    <div class="card card--interactive list-row gym-hstack__banner" role="button" tabindex="0"
+         onclick="gymHistoryBannerClick(event, this)"
+         onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }">
+      ${gymThumb(latest.icon, "thumb--sm")}
+      <div class="list-row__body">
+        <span class="badge badge--tag" style="width:fit-content;">${appEscapeHtml(latest.tag || "")}</span>
+        <span class="list-row__title">${appEscapeHtml(programName)}</span>
+        <span class="list-row__meta">${count} séance${count > 1 ? "s" : ""} · ${exoTotal} exercice${exoTotal > 1 ? "s" : ""}</span>
+        <span class="list-row__meta">${gymIcon("calendar")} ${gymFormatDate(latest.date)}</span>
+      </div>
+      <button type="button" class="icon-btn icon-btn--sm gym-hstack__chevron" aria-label="${open ? "Réduire" : "Déplier"}"
+              onclick="event.stopPropagation(); gymHistoryToggleStack(this)">${gymIcon("chevronDown")}</button>
+    </div>
+  `;
+
+  return `
+    <div class="gym-hstack ${open ? "is-open" : ""}" data-stack-key="${appEscapeHtml(block.key)}" data-program-id="${appEscapeHtml(block.programId)}">
+      <div class="gym-hstack__list" onclick="gymHistoryOpenStackFromList(this)">
+        <div class="gym-hstack__item">${banner}</div>
+        ${block.entries.map((entry) => `<div class="gym-hstack__item">${gymRenderHistoryStackItem(entry)}</div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Mise en page d'une pile. Les cartes sont en position absolue (comme dans Wedging) : on pose leur
+ * décalage et la hauteur de la liste d'après leur hauteur réelle. Toutes les cartes d'une pile prennent
+ * la hauteur de la plus haute, pour que les bords des cartes de derrière dépassent régulièrement.
+ * Repliée : 3 cartes visibles, décalées de 10 px. Dépliée : une sous l'autre, la bannière en haut.
+ */
+function gymLayoutHistoryStack(stack) {
+  const list = stack.querySelector(".gym-hstack__list");
+  if (!list) return;
+  const open = stack.classList.contains("is-open");
+  const items = Array.from(list.children);
+  const cards = items.map((el) => el.firstElementChild);
+  cards.forEach((card) => { card.style.minHeight = ""; });
+  const height = Math.max(0, ...cards.map((card) => card.offsetHeight));
+  if (!height) return; // page masquée : rien à mesurer (recalculé à l'affichage, voir le ResizeObserver de la vue)
+  cards.forEach((card) => { card.style.minHeight = `${height}px`; });
+
+  let total = 0;
+  items.forEach((el, i) => {
+    el.style.zIndex = String(items.length - i);
+    if (open) {
+      el.style.transform = `translateY(${total}px) scale(1)`;
+      el.style.opacity = "1";
+      total += height + (i < items.length - 1 ? GYM_HSTACK_GAP : 0);
+    } else {
+      const depth = Math.min(i, GYM_HSTACK_VISIBLE - 1);
+      el.style.transform = `translateY(${depth * GYM_HSTACK_PEEK}px) scale(${1 - depth * 0.05})`;
+      el.style.opacity = i < GYM_HSTACK_VISIBLE ? "1" : "0";
+      total = Math.max(total, height + depth * GYM_HSTACK_PEEK);
+    }
+  });
+  list.style.height = `${total}px`;
+}
+
+function gymLayoutAllHistoryStacks() {
+  document.querySelectorAll("#page-gym .gym-hstack").forEach(gymLayoutHistoryStack);
+}
+
+/** Déplie / replie la pile qui contient l'élément reçu (chevron de la bannière ou liste). */
+function gymHistoryToggleStack(el) {
+  const stack = el.closest(".gym-hstack");
+  if (!stack) return;
+  const open = !stack.classList.contains("is-open");
+  stack.classList.toggle("is-open", open);
+  const key = stack.dataset.stackKey;
+  if (open) gymHistoryOpenStacks.add(key);
+  else gymHistoryOpenStacks.delete(key);
+  const chevron = stack.querySelector(".gym-hstack__chevron");
+  if (chevron) chevron.setAttribute("aria-label", open ? "Réduire" : "Déplier");
+  gymLayoutHistoryStack(stack);
+}
+
+/** Appui sur la pile repliée (bannière ou bords des cartes de derrière) : elle se déplie. */
+function gymHistoryOpenStackFromList(list) {
+  const stack = list.closest(".gym-hstack");
+  if (stack && !stack.classList.contains("is-open")) gymHistoryToggleStack(list);
+}
+
+/**
+ * Appui sur la bannière. Pile repliée : l'appui remonte à la liste, qui déplie la pile. Pile dépliée :
+ * ouvre le détail du programme en lecture seule (rien n'y est modifiable depuis l'historique) ; si le
+ * programme a été supprimé depuis, l'appui replie la pile.
+ */
+function gymHistoryBannerClick(event, banner) {
+  const stack = banner.closest(".gym-hstack");
+  if (!stack || !stack.classList.contains("is-open")) return;
+  event.stopPropagation();
+  const programId = stack.dataset.programId;
+  if (gymGetProgram(programId)) gymNavigate("programme-detail", { id: programId, readonly: true, from: "historique" });
+  else gymHistoryToggleStack(banner);
 }
 
 /**
@@ -4263,16 +4503,21 @@ function gymRenderDualChart(points, series, selected) {
     `;
   }
 
-  function renderSessionsList(program) {
+  function renderSessionsList(program, readonly) {
     document.getElementById("gym-icon-add-session").innerHTML = gymIcon("plus");
     const container = document.getElementById("gym-program-sessions-list");
     container.innerHTML = program.sessions.length
-      ? program.sessions.map((s) => gymRenderSessionRow(s, program.id)).join("")
+      ? program.sessions.map((s) => (readonly ? gymRenderSessionRowReadonly(s) : gymRenderSessionRow(s, program.id))).join("")
       : `<div class="card" style="text-align:center; color:var(--gym-text-secondary); font-size:14px;">Tu n'as pas encore ajouté de séance à ce programme.</div>`;
   }
 
   function render(params) {
+    // readonly : détail ouvert depuis l'historique. On consulte le programme, on ne le modifie pas :
+    // ni créer / enregistrer / modifier / supprimer, ni ajouter, lancer ou supprimer une séance.
+    const readonly = !!(params && params.readonly);
     const program = gymGetProgram(params.id);
+    document.getElementById("gym-program-progress-card").style.display = readonly || !program ? "none" : "flex";
+    document.getElementById("gym-program-add-session-link").style.display = readonly ? "none" : "";
     if (!program) {
       renderEmptyState();
       return;
@@ -4280,8 +4525,8 @@ function gymRenderDualChart(points, series, selected) {
     gymAdvanceProgramCycle(program);
     renderHero(program);
     renderInfoRow(program);
-    renderActions(program);
-    renderSessionsList(program);
+    if (!readonly) renderActions(program);
+    renderSessionsList(program, readonly);
   }
 
   GymViews["programme-detail"] = { render };
@@ -5877,7 +6122,7 @@ function gymRenderDualChart(points, series, selected) {
           <div class="month-group">
             <span class="month-group__label">${group.label}</span>
             <div class="gym-stagger" style="display:flex; flex-direction:column; gap:12px;">
-              ${group.items.map((entry) => gymRenderHistoryRow(entry)).join("")}
+              ${gymBuildHistoryBlocks(group.items, group.label).map(gymRenderHistoryBlock).join("")}
             </div>
           </div>
         `
@@ -5886,6 +6131,10 @@ function gymRenderDualChart(points, series, selected) {
     }
 
     document.getElementById("gym-load-more-btn").style.display = visible.length < all.length ? "flex" : "none";
+
+    // Piles : mise en page sans animation au rendu, puis transitions activées pour les dépliages
+    gymLayoutAllHistoryStacks();
+    requestAnimationFrame(() => document.querySelectorAll("#page-gym .gym-hstack").forEach((el) => el.classList.add("is-ready")));
   }
 
   function loadMore() {
@@ -5911,6 +6160,18 @@ function gymRenderDualChart(points, series, selected) {
   });
   document.getElementById("gym-load-more-btn").addEventListener("click", loadMore);
 
+  // Recalcule les piles quand la page devient visible (display:none : mesures à 0 au rendu) ou change de largeur
+  const groupsEl = document.getElementById("gym-history-groups");
+  if (window.ResizeObserver && groupsEl) {
+    let lastWidth = 0;
+    new ResizeObserver((entries) => {
+      const width = Math.round(entries[0].contentRect.width);
+      if (width === lastWidth) return;
+      lastWidth = width;
+      requestAnimationFrame(gymLayoutAllHistoryStacks);
+    }).observe(groupsEl);
+  }
+
   function render() {
     state.filter = "tous";
     state.visibleCount = state.pageSize;
@@ -5932,6 +6193,12 @@ function gymRenderDualChart(points, series, selected) {
    ========================================================================== */
 
 (function () {
+  // Mode « Modifier » : on travaille sur une copie des séries (poids en kg), appliquée à l'entrée
+  // seulement quand la personne appuie sur « Enregistrer ». « Annuler » ou quitter la vue l'abandonne.
+  let editing = false;
+  let draft = null;
+  let currentEntry = null;
+
   function renderCongrats(show) {
     const box = document.getElementById("gym-recap-congrats");
     box.style.display = show ? "flex" : "none";
@@ -6009,6 +6276,150 @@ function gymRenderDualChart(points, series, selected) {
       .join("");
   }
 
+  /**
+   * Mode « Modifier » : une ligne par série avec le poids, les répétitions (ou la durée pour un
+   * exercice chronométré) et la validation. Les champs s'ouvrent au pavé numérique, comme en séance.
+   */
+  function renderExercisesEdit() {
+    const unit = gymWeightUnit();
+    const box = document.getElementById("gym-recap-exercises");
+    box.innerHTML = draft
+      .map((exo, ei) => {
+        const validCount = exo.sets.filter((s) => s.valid).length;
+        const rows = exo.sets
+          .map((s, si) => {
+            const weightField = `
+              <label class="recap-edit-field">
+                <input type="text" inputmode="none" readonly data-exo="${ei}" data-set="${si}" data-field="weight" placeholder="0" value="${s.weight > 0 ? gymWeightToInput(s.weight) : ""}" aria-label="Poids (${unit})" />
+                <span class="recap-edit-field__unit">${unit}</span>
+              </label>`;
+            const secondField = exo.timed
+              ? `
+              <label class="recap-edit-field">
+                <input type="text" inputmode="none" readonly data-exo="${ei}" data-set="${si}" data-field="duration" placeholder="0" value="${s.duration > 0 ? s.duration : ""}" aria-label="Durée (secondes)" />
+                <span class="recap-edit-field__unit">s</span>
+              </label>`
+              : `
+              <span class="recap-edit-set__x">×</span>
+              <label class="recap-edit-field">
+                <input type="text" inputmode="none" readonly data-exo="${ei}" data-set="${si}" data-field="reps" placeholder="0" value="${s.reps > 0 ? s.reps : ""}" aria-label="Répétitions" />
+              </label>`;
+            return `
+              <div class="recap-edit-set">
+                <span class="recap-edit-set__index">${si + 1}</span>
+                ${weightField}
+                ${secondField}
+                <button type="button" class="recap-edit-valid ${s.valid ? "is-valid" : ""}" data-toggle-valid data-exo="${ei}" data-set="${si}" aria-pressed="${!!s.valid}" aria-label="Valider">${gymIcon(s.valid ? "check" : "cross")}</button>
+              </div>`;
+          })
+          .join("");
+        return `
+          <div class="card recap-exercise">
+            <div class="recap-exercise__head">
+              ${gymThumb("dumbbell", "thumb--sm")}
+              <div class="list-row__body">
+                <span class="list-row__title">${appEscapeHtml(exo.name)}</span>
+                <span class="list-row__meta" data-valid-count="${ei}">${validCount} / ${exo.sets.length} séries validées</span>
+              </div>
+            </div>
+            <div class="recap-edit-sets">${rows}</div>
+          </div>
+        `;
+      })
+      .join("");
+
+    box.querySelectorAll("input[data-field]").forEach((input) => {
+      const ei = Number(input.dataset.exo);
+      const si = Number(input.dataset.set);
+      const field = input.dataset.field;
+      input.addEventListener("input", () => {
+        const set = draft[ei].sets[si];
+        if (field === "weight") set.weight = Math.max(0, Number(gymWeightFromInput(input.value)) || 0); // stocké en kg
+        else if (field === "reps") set.reps = Math.max(0, Math.round(Number(input.value) || 0));
+        else set.duration = Math.max(0, Math.round(Number(input.value) || 0));
+      });
+      input.addEventListener("click", () => {
+        if (field === "weight") gymOpenKeypad({ input, title: `Poids (${gymWeightUnit()})`, decimal: true, min: 0 });
+        else if (field === "reps") gymOpenKeypad({ input, title: "Répétitions", min: 0, max: 999 });
+        else gymOpenKeypad({ input, title: "Durée (secondes)", min: 0, max: 3600 });
+      });
+    });
+
+    box.querySelectorAll("[data-toggle-valid]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const ei = Number(btn.dataset.exo);
+        const set = draft[ei].sets[Number(btn.dataset.set)];
+        set.valid = !set.valid;
+        btn.classList.toggle("is-valid", set.valid);
+        btn.setAttribute("aria-pressed", String(set.valid));
+        btn.innerHTML = gymIcon(set.valid ? "check" : "cross");
+        const count = draft[ei].sets.filter((x) => x.valid).length;
+        const meta = box.querySelector(`[data-valid-count="${ei}"]`);
+        if (meta) meta.textContent = `${count} / ${draft[ei].sets.length} séries validées`;
+      });
+    });
+  }
+
+  /** Affiche le résumé, le détail (lecture ou correction) et les boutons qui vont avec le mode courant. */
+  function paint() {
+    renderSummary(currentEntry);
+    if (editing) renderExercisesEdit();
+    else renderExercises(currentEntry);
+    document.getElementById("gym-recap-edit-link").style.display = editing ? "none" : "";
+    document.getElementById("gym-recap-edit-hint").style.display = editing ? "block" : "none";
+    document.getElementById("gym-recap-actions").style.display = editing ? "none" : "flex";
+    document.getElementById("gym-recap-edit-actions").style.display = editing ? "flex" : "none";
+  }
+
+  function startEdit() {
+    if (!currentEntry) return;
+    editing = true;
+    draft = JSON.parse(JSON.stringify(currentEntry.exercises));
+    paint();
+  }
+
+  function cancelEdit() {
+    editing = false;
+    draft = null;
+    if (currentEntry) paint();
+  }
+
+  /**
+   * Applique la copie de travail à la séance, recalcule ses totaux (volume, séries, répétitions) et
+   * l'écart avec la séance précédente, puis enregistre. Progression et Objectifs lisent l'historique
+   * à chaque affichage : ils reprennent les nouveaux poids sans autre manipulation.
+   */
+  function saveEdit() {
+    const entry = currentEntry;
+    if (!entry || !draft) return;
+    draft.forEach((exo, ei) => {
+      const target = entry.exercises[ei];
+      if (!target) return;
+      exo.sets.forEach((s, si) => {
+        const t = target.sets[si];
+        if (!t) return;
+        t.weight = Number(s.weight) || 0;
+        t.reps = Number(s.reps) || 0;
+        t.duration = Number(s.duration) || 0;
+        t.valid = !!s.valid;
+      });
+    });
+    Object.assign(entry, gymHistoryAggregates(entry.exercises));
+    gymRefreshDeltasAfterEdit(entry);
+    gymPersistHistory();
+    editing = false;
+    draft = null;
+    paint();
+  }
+
+  document.getElementById("gym-icon-recap-edit").innerHTML = gymIcon("edit");
+  document.getElementById("gym-recap-edit-link").addEventListener("click", (e) => {
+    e.preventDefault();
+    startEdit();
+  });
+  document.getElementById("gym-btn-recap-save").addEventListener("click", saveEdit);
+  document.getElementById("gym-btn-recap-cancel").addEventListener("click", cancelEdit);
+
   function findEntry(id) {
     return GYM_DATA.history.find((h) => h.id === id);
   }
@@ -6016,6 +6427,9 @@ function gymRenderDualChart(points, series, selected) {
   function render(params) {
     const entry = params && params.history ? findEntry(params.history) : null;
     const from = (params && params.from) || "historique";
+    editing = false;
+    draft = null;
+    currentEntry = entry || null;
 
     if (!entry) {
       renderCongrats(false);
@@ -6025,6 +6439,9 @@ function gymRenderDualChart(points, series, selected) {
       document.getElementById("gym-recap-summary").innerHTML = "";
       document.getElementById("gym-recap-exercises").innerHTML = "";
       document.getElementById("gym-recap-actions").style.display = "none";
+      document.getElementById("gym-recap-edit-actions").style.display = "none";
+      document.getElementById("gym-recap-edit-link").style.display = "none";
+      document.getElementById("gym-recap-edit-hint").style.display = "none";
       document.getElementById("gym-recap-empty").style.display = "block";
       document.getElementById("gym-recap-back").onclick = (e) => {
         e.preventDefault();
@@ -6034,15 +6451,13 @@ function gymRenderDualChart(points, series, selected) {
     }
 
     document.getElementById("gym-recap-empty").style.display = "none";
-    document.getElementById("gym-recap-actions").style.display = "flex";
     renderCongrats(from === "session");
 
-    document.getElementById("gym-recap-eyebrow").textContent = entry.programName.toUpperCase();
-    document.getElementById("gym-recap-title").textContent = entry.sessionTitle;
+    document.getElementById("gym-recap-eyebrow").textContent = (entry.programName || entry.typeLabel || "").toUpperCase();
+    document.getElementById("gym-recap-title").textContent = entry.sessionTitle || entry.typeLabel || "";
     document.getElementById("gym-recap-meta").textContent = `${gymFormatDate(entry.date)} · ${entry.tag}`;
 
-    renderSummary(entry);
-    renderExercises(entry);
+    paint();
 
     const program = gymGetProgram(entry.programId);
 
@@ -6059,7 +6474,10 @@ function gymRenderDualChart(points, series, selected) {
     if (program) {
       primaryBtn.style.display = "";
       primaryBtn.textContent = "Voir le programme";
-      primaryBtn.onclick = () => gymNavigate("programme-detail", { id: entry.programId });
+      // Depuis l'historique : programme en consultation seulement (voir « Détail d'un programme »)
+      primaryBtn.onclick = () => gymNavigate("programme-detail", from === "historique"
+        ? { id: entry.programId, readonly: true, from }
+        : { id: entry.programId });
     } else {
       primaryBtn.style.display = "none";
     }
