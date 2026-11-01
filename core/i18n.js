@@ -16,7 +16,9 @@
    - un texte coupé par des <br> (« Exercice<br>rapide ») est traduit en un seul bloc ;
    - une entrée « § Texte » (pastille ou icône devant le texte) sert aussi pour « Texte » seul ;
    - une entrée avec « (m) » ou « §m » existe aussi en « yd » et « ft » : l'unité de distance (Menu)
-     ne dépend pas de la langue.
+     ne dépend pas de la langue ;
+   - « 0 séance » (singulier en français) devient « 0 sessions » / « 0 sesiones » : quand la première valeur
+     d'une entrée est 0, un « § » collé à la fin d'un mot (« séance§ ») prend le pluriel.
    En français, rien n'est actif : aucun risque pour l'appli d'origine.
 
    Changer de langue : Menu > Réglages > Apparence > Langue. Le choix est
@@ -224,8 +226,11 @@
       var m = patterns[i].rx.exec(text);
       if (!m || !patternOk(patterns[i], m)) continue;
       var n = 0;
+      // zéro : le français garde le singulier (« 0 séance »), l'anglais et l'espagnol prennent le pluriel
+      var zero = /^0(?:[.,]0+)?$/.test((m[1] || '').trim());
       var out = patterns[i].tr.replace(/§|\{\{\w+\}\}/g, function (ph, offset, whole) {
         var captured = m[++n] || '';
+        if (zero && captured === '' && n > 1 && patterns[i].checks[n - 1].suffix) captured = 's';
         // « s » collé à un mot espagnol : le pluriel dépend de la lettre finale (sesión -> sesiones)
         if (lang === 'es' && captured === 's' && offset > 0 && LETTER_RX.test(whole.charAt(offset - 1))) return '\u0001s';
         // la valeur captée peut elle-même être un texte à traduire (date, libellé...)
