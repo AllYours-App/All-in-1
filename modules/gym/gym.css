@@ -2760,11 +2760,130 @@ body.gym-home-locked {
   pointer-events: none;
 }
 
-/* Bannière : mêmes cartes que les séances, repérée par sa bordure d'accent */
-.gym-app .gym-hstack__banner {
+/* ---- Design « programme » (bannière) ----------------------------------------- */
+
+.gym-app .gym-hprog {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 12px 18px 18px;
   cursor: pointer;
   border-color: var(--gym-accent-border);
+  box-shadow: inset 4px 0 0 var(--gym-accent);
   -webkit-tap-highlight-color: transparent;
+}
+
+.gym-hprog__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--gym-accent-dim);
+  border: 1px solid var(--gym-accent-border);
+  color: var(--gym-accent);
+}
+
+.gym-hprog__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.gym-hprog__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gym-hprog__kicker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gym-accent);
+}
+
+.gym-hprog__title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* ---- Design « séance » (carte compacte) ---------------------------------------- */
+
+.gym-app .gym-hrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.gym-hrow__num {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--gym-border-strong);
+  background: transparent;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--gym-text);
+}
+
+.gym-hrow__num svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gym-hrow__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gym-hrow__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gym-text-muted);
+}
+
+.gym-hrow__title {
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.gym-hrow__meta {
+  font-size: 12.5px;
+  color: var(--gym-text-secondary);
+}
+
+.gym-hrow__meta--small {
+  font-size: 11.5px;
+}
+
+.gym-hrow__side {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
 }
 
 .gym-app .gym-hstack__chevron.icon-btn svg {

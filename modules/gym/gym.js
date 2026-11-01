@@ -4114,24 +4114,7 @@ function gymRenderGoalCard(goal) {
  * Ligne d'historique groupée par mois.
  */
 function gymRenderHistoryRow(entry) {
-  const metaLine = entry.duration
-    ? `${gymIcon("calendar")} ${gymFormatDate(entry.date)} · ${gymFormatDuration(entry.duration)}`
-    : `${gymIcon("calendar")} ${gymFormatDate(entry.date)}`;
-  return `
-    <a class="card card--interactive list-row" href="#" onclick="gymNavigate('seance-recap', {history:'${entry.id}', from:'historique'}); return false;">
-      ${gymThumb(entry.icon, "thumb--sm")}
-      <div class="list-row__body">
-        <span class="list-row__title">${entry.typeLabel}</span>
-        <span class="list-row__meta">${entry.sessionLabel}</span>
-        <span class="badge badge--tag" style="width:fit-content; margin-top:2px;">${entry.tag}</span>
-        <span class="list-row__meta">${metaLine}</span>
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-        ${gymDelta(entry.delta)}
-        <span class="list-row__meta" style="font-size:11.5px;">${entry.deltaLabel}</span>
-      </div>
-    </a>
-  `;
+  return gymRenderHistorySessionCard(entry, false);
 }
 
 /* ---- Historique : séances d'un programme regroupées en pile (façon notifications iPhone) --------
@@ -4179,30 +4162,43 @@ function gymRenderHistoryBlock(block) {
  * d'exercices, date et durée. Un appui ouvre son récapitulatif.
  */
 function gymRenderHistoryStackItem(entry) {
+  return gymRenderHistorySessionCard(entry, true);
+}
+
+/**
+ * Design « séance » : carte compacte, pastille numérotée à gauche, type (Force, Endurance...) en petit
+ * au-dessus du titre, écart de volume à droite. Dans une pile (inStack) le titre est celui de la séance ;
+ * isolée, c'est le nom du programme, suivi de « Séance N · X exercices ». Un appui ouvre le récapitulatif.
+ */
+function gymRenderHistorySessionCard(entry, inStack) {
   const exoCount = (entry.exercises || []).length;
-  const metaLine = entry.duration
-    ? `${gymIcon("calendar")} ${gymFormatDate(entry.date)} · ${gymFormatDuration(entry.duration)}`
-    : `${gymIcon("calendar")} ${gymFormatDate(entry.date)}`;
+  const dateLine = entry.duration
+    ? `${gymFormatDate(entry.date)} · ${gymFormatDuration(entry.duration)}`
+    : `${gymFormatDate(entry.date)}`;
+  const title = inStack ? entry.sessionTitle || entry.typeLabel || "" : entry.typeLabel || entry.programName || entry.sessionTitle || "";
+  const countLine = inStack ? `${exoCount} exercice${exoCount > 1 ? "s" : ""}` : entry.sessionLabel || `${exoCount} exercice${exoCount > 1 ? "s" : ""}`;
+  const num = entry.sessionIndex ? `<span>${entry.sessionIndex}</span>` : gymIcon(entry.icon || "dumbbell");
   return `
-    <a class="card card--interactive list-row" href="#" onclick="gymNavigate('seance-recap', {history:'${entry.id}', from:'historique'}); return false;">
-      ${gymThumb(entry.icon, "thumb--sm")}
-      <div class="list-row__body">
-        <span class="badge badge--tag" style="width:fit-content;">${appEscapeHtml(entry.tag || "")}</span>
-        <span class="list-row__title">${appEscapeHtml(entry.sessionTitle || entry.typeLabel || "")}</span>
-        <span class="list-row__meta">${exoCount} exercice${exoCount > 1 ? "s" : ""}</span>
-        <span class="list-row__meta">${metaLine}</span>
+    <a class="card card--interactive gym-hrow" href="#" onclick="gymNavigate('seance-recap', {history:'${entry.id}', from:'historique'}); return false;">
+      <div class="gym-hrow__num">${num}</div>
+      <div class="gym-hrow__body">
+        <span class="gym-hrow__eyebrow">${appEscapeHtml(entry.tag || "")}</span>
+        <span class="gym-hrow__title">${appEscapeHtml(title)}</span>
+        <span class="gym-hrow__meta">${countLine}</span>
+        <span class="gym-hrow__meta">${dateLine}</span>
       </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <div class="gym-hrow__side">
         ${gymDelta(entry.delta || 0)}
-        <span class="list-row__meta" style="font-size:11.5px;">${appEscapeHtml(entry.deltaLabel || "")}</span>
+        <span class="gym-hrow__meta gym-hrow__meta--small">${appEscapeHtml(entry.deltaLabel || "")}</span>
       </div>
     </a>
   `;
 }
 
 /**
- * Pile d'un programme : la bannière (type, nom, nombre de séances et d'exercices, date de la
- * dernière séance) est la première carte, suivie des séances du plus récent au plus ancien.
+ * Design « programme » : bannière plus grande, bordure et barre d'accent, icône de l'objectif, mot
+ * « Programme » en couleur d'accent avec le type, nom en gras, nombre de séances et d'exercices, date de
+ * la dernière séance. Première carte de la pile ; le chevron déplie / replie.
  */
 function gymRenderHistoryStack(block) {
   const latest = block.entries[0];
@@ -4212,17 +4208,17 @@ function gymRenderHistoryStack(block) {
   const programName = latest.programName || latest.typeLabel || "Programme";
 
   const banner = `
-    <div class="card card--interactive list-row gym-hstack__banner" role="button" tabindex="0"
+    <div class="card card--interactive gym-hprog gym-hstack__banner" role="button" tabindex="0"
          onclick="gymHistoryBannerClick(event, this)"
          onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }">
-      ${gymThumb(latest.icon, "thumb--sm")}
-      <div class="list-row__body">
-        <span class="badge badge--tag" style="width:fit-content;">${appEscapeHtml(latest.tag || "")}</span>
-        <span class="list-row__title">${appEscapeHtml(programName)}</span>
-        <span class="list-row__meta">${count} séance${count > 1 ? "s" : ""} · ${exoTotal} exercice${exoTotal > 1 ? "s" : ""}</span>
-        <span class="list-row__meta">${gymIcon("calendar")} ${gymFormatDate(latest.date)}</span>
+      <div class="gym-hprog__icon">${gymIcon(latest.icon || "dumbbell")}</div>
+      <div class="gym-hprog__body">
+        <div class="gym-hprog__kicker"><span>Programme</span><span class="badge badge--tag">${appEscapeHtml(latest.tag || "")}</span></div>
+        <span class="gym-hprog__title">${appEscapeHtml(programName)}</span>
+        <span class="gym-hrow__meta">${count} séance${count > 1 ? "s" : ""} · ${exoTotal} exercice${exoTotal > 1 ? "s" : ""}</span>
+        <span class="gym-hrow__meta">Dernière séance : ${gymFormatDate(latest.date)}</span>
       </div>
-      <button type="button" class="icon-btn icon-btn--sm gym-hstack__chevron" aria-label="${open ? "Réduire" : "Déplier"}"
+      <button type="button" class="icon-btn gym-hstack__chevron" aria-label="${open ? "Réduire" : "Déplier"}"
               onclick="event.stopPropagation(); gymHistoryToggleStack(this)">${gymIcon("chevronDown")}</button>
     </div>
   `;
@@ -4239,8 +4235,7 @@ function gymRenderHistoryStack(block) {
 
 /**
  * Mise en page d'une pile. Les cartes sont en position absolue (comme dans Wedging) : on pose leur
- * décalage et la hauteur de la liste d'après leur hauteur réelle. Toutes les cartes d'une pile prennent
- * la hauteur de la plus haute, pour que les bords des cartes de derrière dépassent régulièrement.
+ * décalage et la hauteur de la liste d'après leur hauteur réelle.
  * Repliée : 3 cartes visibles, décalées de 10 px. Dépliée : une sous l'autre, la bannière en haut.
  */
 function gymLayoutHistoryStack(stack) {
@@ -4250,9 +4245,16 @@ function gymLayoutHistoryStack(stack) {
   const items = Array.from(list.children);
   const cards = items.map((el) => el.firstElementChild);
   cards.forEach((card) => { card.style.minHeight = ""; });
-  const height = Math.max(0, ...cards.map((card) => card.offsetHeight));
-  if (!height) return; // page masquée : rien à mesurer (recalculé à l'affichage, voir le ResizeObserver de la vue)
-  cards.forEach((card) => { card.style.minHeight = `${height}px`; });
+  const natural = cards.map((card) => card.offsetHeight);
+  const tallest = Math.max(0, ...natural);
+  if (!tallest) return; // page masquée : rien à mesurer (recalculé à l'affichage, voir le ResizeObserver de la vue)
+  // Repliée, la bannière prend la hauteur de la plus haute carte : les bords des cartes de derrière
+  // dépassent alors tous sous elle. Dépliée, chaque carte garde sa hauteur.
+  const heights = natural.slice();
+  if (!open) {
+    cards[0].style.minHeight = `${tallest}px`;
+    heights[0] = tallest;
+  }
 
   let total = 0;
   items.forEach((el, i) => {
@@ -4260,12 +4262,13 @@ function gymLayoutHistoryStack(stack) {
     if (open) {
       el.style.transform = `translateY(${total}px) scale(1)`;
       el.style.opacity = "1";
-      total += height + (i < items.length - 1 ? GYM_HSTACK_GAP : 0);
+      total += heights[i] + (i < items.length - 1 ? GYM_HSTACK_GAP : 0);
     } else {
       const depth = Math.min(i, GYM_HSTACK_VISIBLE - 1);
-      el.style.transform = `translateY(${depth * GYM_HSTACK_PEEK}px) scale(${1 - depth * 0.05})`;
+      // origine en bas : le bord bas de chaque carte de derrière dépasse de PEEK sous la carte de devant
+      el.style.transform = `translateY(${heights[0] - heights[i] + depth * GYM_HSTACK_PEEK}px) scale(${1 - depth * 0.05})`;
       el.style.opacity = i < GYM_HSTACK_VISIBLE ? "1" : "0";
-      total = Math.max(total, height + depth * GYM_HSTACK_PEEK);
+      total = Math.max(total, heights[0] + depth * GYM_HSTACK_PEEK);
     }
   });
   list.style.height = `${total}px`;
