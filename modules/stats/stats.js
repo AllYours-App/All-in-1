@@ -157,6 +157,7 @@
     search: `<svg viewBox="0 0 24 24" ${STROKE}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
     sort: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l3-3M17 20l-3-3"/></svg>`,
     close: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+    edit: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 20v-4L16 4l4 4L8 20H4z"/><path d="M13 7l4 4"/></svg>`,
     trash: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M4 7h16M9 7V4.5h6V7M6.5 7l.9 12.5h9.2L17.5 7M10 11v5M14 11v5"/></svg>`,
     check: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12.5l4.5 4.5L19 7"/></svg>`,
     arrowRight: `<svg viewBox="0 0 24 24" ${STROKE}><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`,
@@ -378,7 +379,7 @@
     }
   }
 
-  function renderRoundTable(container, rounds, onSelect, onDelete) {
+  function renderRoundTable(container, rounds, onSelect, onDelete, onEdit) {
     const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR');
     container.innerHTML = rounds.length ? `
       <div class="round-list">
@@ -391,7 +392,7 @@
             </div>
             <div class="round-row__score"><div class="round-row__score-value">${fmt(r.score)}</div>${scoreDiffHtml(r.vsPar)}</div>
             ${onDelete
-    ? `<button type="button" class="round-row__delete" data-delete-id="${r.id}" aria-label="Supprimer cette partie">${icon('trash')}</button>`
+    ? `<div class="round-row__actions">${onEdit ? `<button type="button" class="round-row__edit" data-edit-id="${r.id}" aria-label="Modifier cette partie">${icon('edit')}</button>` : ''}<button type="button" class="round-row__delete" data-delete-id="${r.id}" aria-label="Supprimer cette partie">${icon('trash')}</button></div>`
     : `<div class="round-row__chevron">${icon('chevronRight')}</div>`}
           </div>
         `).join('')}
@@ -406,6 +407,11 @@
     if (onDelete) {
       container.querySelectorAll('[data-delete-id]').forEach((btn) => {
         btn.addEventListener('click', (e) => { e.stopPropagation(); onDelete(btn.dataset.deleteId); });
+      });
+    }
+    if (onEdit) {
+      container.querySelectorAll('[data-edit-id]').forEach((btn) => {
+        btn.addEventListener('click', (e) => { e.stopPropagation(); onEdit(btn.dataset.editId); });
       });
     }
   }
@@ -1088,6 +1094,7 @@
       courseName: round.courseName || null, city: (round.course && round.course.city) || '',
       tee: round.tee || null, mode: round.mode || null, weather: round.weather || null, wind: round.wind || null,
       startHole: round.startHole || 1, holeCount: round.holeCount || round.holes.length, holes: round.holes,
+      dateISO: round.dateISO || null, editId: round.editId || null, // date choisie ; id de la partie en cours de modification
     };
   }
   const restoreRound = (d) => ({ ...d, course: d.city ? { city: d.city } : null });
@@ -1126,6 +1133,21 @@
     if (scrollLock.count > 0 && --scrollLock.count === 0) document.body.style.overflow = scrollLock.previous;
   }
 
+  /* ---------- Date d'une partie ----------
+     Le champ du popup donne un jour local (AAAA-MM-JJ) ; la partie garde une date ISO.
+     Même jour que la date d'origine : on garde son heure exacte (rien ne bouge à la modification).
+     Autre jour passé : midi local, pour que le jour affiché ne dépende pas du fuseau. */
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const localDay = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const todayDay = () => localDay(new Date());
+  function isoFromDay(day, keepISO) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day || '')) return keepISO || new Date().toISOString();
+    if (keepISO && localDay(new Date(keepISO)) === day) return keepISO;
+    if (day === todayDay()) return new Date().toISOString();
+    const [y, m, d] = day.split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0).toISOString();
+  }
+
   // Partie terminée (round + round.entries, voir finishRound des deux saisies) → enregistrement normalisé
   function buildSavedRound(round) {
     const entries = round.entries || [];
@@ -1145,8 +1167,9 @@
       };
     });
     return {
-      id: `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-      date: new Date().toISOString(),
+      // Modification : même id et date choisie (dateISO) ; sans dateISO (ancien brouillon), date du jour
+      id: round.editId || `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      date: round.dateISO || new Date().toISOString(),
       course: round.courseName || 'Parcours sans nom',
       city: (round.course && round.course.city) || '',
       tee: round.tee || null, mode: round.mode || null, weather: round.weather || null, wind: round.wind || null,
@@ -1209,14 +1232,25 @@
     if (!round || round._saved || !Array.isArray(round.holes)) return;
     round._saved = true;
     const saved = buildSavedRound(round);
-    savedRounds.push(saved);
+    // Modification : la partie d'origine est remplacée à sa place (même id) ; introuvable (supprimée entre-temps) : ajoutée
+    const at = round.editId ? savedRounds.findIndex((r) => r.id === round.editId) : -1;
+    if (at !== -1) savedRounds[at] = saved; else savedRounds.push(saved);
     // Brouillon effacé seulement si la partie est bien écrite (stockage plein : on le garde)
     if (persistRounds()) clearDraft();
     dataVersion++;
     // Un échec de synchro ne doit jamais empêcher l'enregistrement de la partie dans Stats
-    try { syncRoundToModules(saved); } catch (err) { console.warn('Synchro Wedging/Putting impossible :', err); }
+    try {
+      if (at !== -1) removeRoundCopies(saved.id); // les copies de l'ancienne version sont remplacées par celles de la nouvelle
+      syncRoundToModules(saved);
+    } catch (err) { console.warn('Synchro Wedging/Putting impossible :', err); }
   }
   document.addEventListener('stats:round-finished', (e) => saveFinishedRound(e.detail));
+
+  // Copies d'une partie dans Putting (`statsKey` = id) et Wedging (`statsKey` commence par `${id}:`)
+  function removeRoundCopies(id) {
+    if (typeof window.removePuttingRoundFromStats === 'function') window.removePuttingRoundFromStats(id);
+    if (typeof window.removeWedgeShotsFromStats === 'function') window.removeWedgeShotsFromStats(id);
+  }
 
   // Suppression d'une partie enregistrée (point 31) : retire aussi ses copies dans Putting (`statsKey` = id)
   // et dans Wedging (`statsKey` commence par `${id}:`), sinon elles resteraient dans leurs analyses.
@@ -1226,10 +1260,7 @@
     if (savedRounds.length === before) return false;
     persistRounds();
     dataVersion++;
-    try {
-      if (typeof window.removePuttingRoundFromStats === 'function') window.removePuttingRoundFromStats(id);
-      if (typeof window.removeWedgeShotsFromStats === 'function') window.removeWedgeShotsFromStats(id);
-    } catch (err) { console.warn('Nettoyage Wedging/Putting impossible :', err); }
+    try { removeRoundCopies(id); } catch (err) { console.warn('Nettoyage Wedging/Putting impossible :', err); }
     return true;
   }
 
@@ -1995,7 +2026,7 @@
     root.innerHTML = `
       <div class="card resume-card">
         <div class="resume-card__text">
-          <div class="resume-card__title">Partie en cours</div>
+          <div class="resume-card__title">${d.round.editId ? 'Modification en cours' : 'Partie en cours'}</div>
           <div class="resume-card__meta">${meta.map(appEscapeHtml).join(' · ')}</div>
         </div>
         <div class="resume-card__actions">
@@ -2514,7 +2545,7 @@
     function render() {
       const list = getFilteredSorted();
       const visible = list.slice(0, visibleCount);
-      renderRoundTable(document.getElementById('hist-roundTable'), visible, null, confirmDeleteRound);
+      renderRoundTable(document.getElementById('hist-roundTable'), visible, null, confirmDeleteRound, startEditRound);
       document.getElementById('hist-loadMore').style.display = visibleCount >= list.length ? 'none' : 'inline-flex';
     }
 
@@ -2787,17 +2818,19 @@
     const pills = (key) => o[key].map((p) => `
       <button type="button" role="radio" class="new-round_pill" data-${key}="${p.value}" aria-label="${p.aria}" aria-checked="${p.value === newRound[key]}">${p.label}</button>`).join('');
 
+    // Modification : le mode, le départ et les trous restent ceux de la partie (les coups saisis en dépendent)
+    const editing = Boolean(newRound.editId);
     modal.innerHTML = `
       <div class="new-round_header">
         <span class="new-round_icon">${icon('flag')}</span>
         <div class="new-round_heading">
-          <h2 class="new-round_title" id="nr-title">Nouvelle partie</h2>
-          <p class="new-round_subtitle">Règle les paramètres de ta partie</p>
+          <h2 class="new-round_title" id="nr-title">${editing ? 'Modifier la partie' : 'Nouvelle partie'}</h2>
+          <p class="new-round_subtitle">${editing ? 'Corrige les paramètres, puis les coups saisis' : 'Règle les paramètres de ta partie'}</p>
         </div>
         <button type="button" class="new-round_close" data-nr-close aria-label="Fermer">${icon('close')}</button>
       </div>
       <div class="new-round_form">
-        ${newRoundGroup('Mode de saisie', '<div class="segmented" id="nr-mode"></div>')}
+        ${editing ? '' : newRoundGroup('Mode de saisie', '<div class="segmented" id="nr-mode"></div>')}
         ${newRoundGroup('Parcours', `
           <div class="new-round_search">
             <label class="new-round_field is-course">
@@ -2810,25 +2843,34 @@
             </label>
             <ul class="new-round_results" hidden></ul>
           </div>`)}
-        ${newRoundGroup('Départ', `<div class="new-round_tee-list" role="radiogroup" aria-label="Départ">${tees}</div>`)}
+        ${newRoundGroup('Date', `
+          <label class="new-round_field">
+            <span class="new-round_field-icon">${icon('calendar')}</span>
+            <span class="new-round_field-text">
+              <input class="new-round_field-input" name="date" type="date" max="${todayDay()}" value="${newRound.date}" aria-label="Date de la partie">
+            </span>
+          </label>`)}
+        ${editing ? '' : `${newRoundGroup('Départ', `<div class="new-round_tee-list" role="radiogroup" aria-label="Départ">${tees}</div>`)}
         <div class="new-round_grid">
           ${newRoundGroup('Premier trou', `<div class="new-round_pill-list" role="radiogroup" aria-label="Premier trou">${pills('start')}</div>`)}
           ${newRoundGroup('Nombre de trous', `<div class="new-round_pill-list" role="radiogroup" aria-label="Nombre de trous">${pills('count')}</div>`)}
-        </div>
+        </div>`}
         <div class="new-round_grid">
           ${newRoundGroup('Météo', newRoundField('weather', 'weather', 'Météo'))}
           ${newRoundGroup('Vent', newRoundField('wind', 'wind', 'Vent'))}
         </div>
       </div>
-      <button type="button" class="new-round_cta" data-nr-submit>Commencer la partie ${icon('arrowRight')}</button>
+      <button type="button" class="new-round_cta" data-nr-submit>${editing ? 'Modifier la partie' : 'Commencer la partie'} ${icon('arrowRight')}</button>
     `;
 
-    initSegmentedControl(
-      modal.querySelector('#nr-mode'),
-      ['Rapide', 'Détaillée'],
-      newRound.mode === 'saisie-detaillee' ? 1 : 0,
-      (i) => { newRound.mode = i === 0 ? 'saisie-rapide' : 'saisie-detaillee'; }
-    );
+    if (!editing) {
+      initSegmentedControl(
+        modal.querySelector('#nr-mode'),
+        ['Rapide', 'Détaillée'],
+        newRound.mode === 'saisie-detaillee' ? 1 : 0,
+        (i) => { newRound.mode = i === 0 ? 'saisie-rapide' : 'saisie-detaillee'; }
+      );
+    }
     applyCourseTees();
     refreshCourseStatus();
   }
@@ -2890,6 +2932,12 @@
 
     newRoundEl.addEventListener('change', (e) => {
       const field = e.target;
+      if (field.name === 'date') {
+        const day = field.value && field.value <= todayDay() ? field.value : todayDay();
+        newRound.date = day;
+        field.value = day;
+        return;
+      }
       if (field.matches('select')) {
         newRound[field.name] = field.value;
         const [top, bottom] = NEW_ROUND_VIEW[field.name](newRound);
@@ -2903,9 +2951,21 @@
     if (e.key === 'Escape') closeNewRound();
   }
 
-  function openNewRound(trigger) {
+  // saved : partie à modifier (popup prérempli avec ses réglages) ; sans valeur : nouvelle partie du jour
+  function openNewRound(trigger, saved) {
     ensureNewRound();
-    Object.assign(newRound, newRoundOptions.defaults, { course: null, courseQuery: '' });
+    Object.assign(newRound, newRoundOptions.defaults, { course: null, courseQuery: '', courseQueryInitial: '', date: todayDay(), editId: null });
+    if (saved) {
+      const name = saved.course && saved.course !== 'Parcours sans nom' ? saved.course : '';
+      const known = (key) => (newRoundOptions[key].some((o) => o.value === saved[key]) ? saved[key] : newRoundOptions.defaults[key]);
+      Object.assign(newRound, {
+        mode: saved.holes.some((h) => Array.isArray(h.shots)) ? 'saisie-detaillee' : 'saisie-rapide',
+        tee: known('tee'), weather: known('weather'), wind: known('wind'),
+        start: String(saved.startHole || 1), count: String(saved.holes.length),
+        courseQuery: name, courseQueryInitial: name,
+        date: localDay(new Date(saved.date)), editId: saved.id,
+      });
+    }
     courseToken++;
     courseLoading = false;
     courseError = '';
@@ -2926,34 +2986,67 @@
     if (newRoundTrigger) newRoundTrigger.focus();
   }
 
+  // Coups déjà saisis d'une partie enregistrée, au format de reprise d'un brouillon (api.restore)
+  function savedRoundState(saved, screenName) {
+    if (screenName === 'saisie-detaillee') {
+      return { idx: 0, sel: 0, holes: saved.holes.map((h) => (Array.isArray(h.shots) ? h.shots : [])), fairways: saved.holes.map((h) => h.fairway || null) };
+    }
+    return { idx: 0, entries: saved.holes.map((h) => ({ score: h.score, putts: h.putts, fairway: h.fairway || null, green: h.green || null })) };
+  }
+
+  // Modifier une partie (point 31) : même popup et mêmes écrans de saisie que pour une nouvelle partie
+  function startEditRound(id) {
+    const saved = savedRounds.find((r) => r.id === id);
+    if (saved) openNewRound(null, saved);
+  }
+
   async function startNewRound() {
+    const editing = newRound.editId ? savedRounds.find((r) => r.id === newRound.editId) : null;
+    if (newRound.editId && !editing) { closeNewRound(); await appAlert("Cette partie n'existe plus."); return; }
     // Une partie en cours (brouillon) serait remplacée : confirmation d'abord
-    if (loadDraft() && !(await appConfirm('Une partie est déjà en cours. La remplacer par une nouvelle ?', { confirmLabel: 'Remplacer', danger: true }))) return;
+    const replaceMsg = editing ? 'Une partie est déjà en cours. La remplacer par la modification de celle-ci ?' : 'Une partie est déjà en cours. La remplacer par une nouvelle ?';
+    if (loadDraft() && !(await appConfirm(replaceMsg, { confirmLabel: 'Remplacer', danger: true }))) return;
     clearDraft();
     // À brancher : POST /api/rounds avec currentRound pour créer la partie
     const startHole = Number(newRound.start);
-    const holeCount = Number(newRound.count);
+    const holeCount = editing ? editing.holes.length : Number(newRound.count);
     const course = newRound.course;
     // Un trou par entrée : numéro réel sur le parcours (le 18 enchaîne sur le 1), par, handicap, distance du départ choisi
-    const holes = Array.from({ length: holeCount }, (_, i) => {
-      const idx = (startHole - 1 + i) % 18;
-      return {
-        number: idx + 1,
-        par: course ? course.holes[idx].par : null,
-        hcp: course ? course.holes[idx].hcp : null,
-        distance: course && course.tees[newRound.tee] ? course.tees[newRound.tee][idx] : null,
-      };
-    });
+    // Modification : mêmes trous que la partie ; un parcours choisi dans la liste met à jour par, handicap et distances
+    const holes = editing
+      ? editing.holes.map((h) => {
+        const idx = h.number - 1;
+        return course
+          ? { number: h.number, par: course.holes[idx].par, hcp: course.holes[idx].hcp, distance: course.tees[newRound.tee] ? course.tees[newRound.tee][idx] : h.distance }
+          : { number: h.number, par: h.par, hcp: h.hcp, distance: h.distance };
+      })
+      : Array.from({ length: holeCount }, (_, i) => {
+        const idx = (startHole - 1 + i) % 18;
+        return {
+          number: idx + 1,
+          par: course ? course.holes[idx].par : null,
+          hcp: course ? course.holes[idx].hcp : null,
+          distance: course && course.tees[newRound.tee] ? course.tees[newRound.tee][idx] : null,
+        };
+      });
     // Sans parcours choisi dans la liste, on garde le nom saisi à la main
     const courseName = course ? course.name : (newRound.courseQuery.trim() || null);
-    currentRound = { ...newRound, courseName, holeCount, startHole, holes };
+    // Nom inchangé et aucun parcours choisi : la ville enregistrée est gardée
+    const keepCity = editing && !course && editing.city && newRound.courseQuery.trim() === newRound.courseQueryInitial;
+    currentRound = {
+      ...newRound, courseName, holeCount, startHole, holes,
+      course: course || (keepCity ? { city: editing.city } : null),
+      dateISO: isoFromDay(newRound.date, editing ? editing.date : null), // même jour que l'original : date et heure inchangées
+      editId: editing ? editing.id : null,
+    };
     closeNewRound();
     // Ouvre l'écran de saisie du mode choisi (rapide ou détaillé)
     const screenName = newRound.mode === 'saisie-detaillee' ? 'saisie-detaillee' : 'saisie-rapide';
     const firstOpen = !initialized.has(screenName); // 1ʳᵉ ouverture : l'init charge déjà currentRound
     showScreen(screenName);
     const api = screenName === 'saisie-detaillee' ? saisieDetaillee : saisieRapide;
-    if (!firstOpen && api) api.load(); // sinon on repart de la nouvelle partie
+    if (editing) { if (api) api.restore(savedRoundState(editing, screenName)); } // 1ʳᵉ ouverture : l'init charge une partie vierge, restore() la remplace aussitôt
+    else if (!firstOpen && api) api.load(); // sinon on repart de la nouvelle partie
   }
 
   /* ========================================================================
@@ -3271,7 +3364,7 @@
         : { ...round, holeCount: n, holes: round.holes.slice(0, n), entries: entries.slice(0, n) };
       document.dispatchEvent(new CustomEvent('stats:round-finished', { detail }));
       round._saved = true;
-      showScreen('dashboard');
+      showScreen(round.editId ? 'historique' : 'dashboard');
     }
 
     // Terminer la partie ici (point 30) : les trous jusqu'au dernier score saisi sont enregistrés
@@ -3993,7 +4086,7 @@
         : { ...round, holeCount: n, holes: round.holes.slice(0, n), entries: round.entries.slice(0, n) };
       document.dispatchEvent(new CustomEvent('stats:round-finished', { detail }));
       round._saved = true;
-      showScreen('dashboard');
+      showScreen(round.editId ? 'historique' : 'dashboard');
     }
 
     // Terminer la partie ici (point 30) : les trous jusqu'au dernier trou rentré sont enregistrés

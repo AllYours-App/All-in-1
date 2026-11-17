@@ -1159,13 +1159,15 @@ html {
 
 #page-stats .round-row--table {
   display: grid;
-  grid-template-columns: 96px 1fr 64px 44px;
+  grid-template-columns: 96px 1fr 64px auto;
   gap: var(--space-sm);
   align-items: center;
 }
 #page-stats .round-row--table .round-row__date { font-size: var(--fs-sm); color: var(--color-text-secondary); }
 
-/* Supprimer une partie : bouton de 44 px, icône de 18 px */
+/* Modifier / supprimer une partie : boutons de 44 px, icône de 18 px */
+#page-stats .round-row__actions { display: flex; align-items: center; }
+#page-stats .round-row__edit,
 #page-stats .round-row__delete {
   display: flex;
   align-items: center;
@@ -1179,8 +1181,10 @@ html {
   color: var(--color-text-tertiary);
   cursor: pointer;
 }
+#page-stats .round-row__edit svg,
 #page-stats .round-row__delete svg { width: 18px; height: 18px; }
 @media (hover: hover) {
+  #page-stats .round-row__edit:hover { color: var(--color-accent); }
   #page-stats .round-row__delete:hover { color: var(--color-negative); }
 }
 
