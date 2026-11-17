@@ -43,10 +43,48 @@ window.renderHomeGreeting = renderHomeGreeting;
   syncHomeLock();
 })();
 
+// Appui sur « Objectif semaine » : feuille de choix des modules dont les séances comptent dans l'objectif
+function openGoalModulesSheet() {
+  if (typeof appSheet !== "function" || !window.GOLF_GOAL_MODULES) return;
+  const selected = new Set(window.golfGoalModules());
+  const note = { type: "note", text: "" };
+  const items = window.GOLF_GOAL_MODULES.map((m) => ({
+    type: "check",
+    label: m.label,
+    hint: m.hint,
+    value: selected.has(m.id),
+    onChange(next) {
+      // Au moins un module reste coché : sans module, l'objectif ne pourrait jamais avancer
+      if (!next && selected.size === 1) {
+        note.text = "Garde au moins un module coché.";
+        return false;
+      }
+      note.text = "";
+      if (next) selected.add(m.id); else selected.delete(m.id);
+      window.setGolfGoalModules(Array.from(selected));
+      return true;
+    },
+  }));
+  appSheet({
+    title: "Séances comptées",
+    info: "Choisis les modules dont les séances comptent dans « Objectif semaine ». Un module décoché n'ajoute rien à l'objectif. « Dernière séance » continue d'afficher l'activité de tous les modules.",
+    sections: [{ title: "Modules pris en compte", items: items.concat([note]) }],
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   applyBackground();
+  const goalColumn = document.querySelector("#page-home .bottom-panel_column.is-goal");
+  if (goalColumn) {
+    goalColumn.addEventListener("click", openGoalModulesSheet);
+    goalColumn.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGoalModulesSheet(); }
+    });
+  }
   renderHomeGreeting();
-  // Le panneau du bas (objectif + dernière séance) est rempli par renderGolfHome() dans putting.js
+  // Le panneau du bas (objectif + dernière séance) est calculé par renderGolfHome() dans putting.js.
+  // Appel ici : tous les scripts (menu.js compris) sont chargés, donc l'objectif réglé dans le Menu est connu.
+  if (typeof renderGolfHome === "function") renderGolfHome();
 
   // Retour visuel au toucher/clic sur les éléments interactifs
   document.querySelectorAll("#page-home .orbit-button, #page-home .profile_button").forEach((el) => {

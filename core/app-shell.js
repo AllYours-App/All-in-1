@@ -16,5 +16,8 @@ function showPage(id) {
   // gérés ici : chaque module (Parcours, Gym) suit lui-même l'activation de sa page et retire son verrou en la quittant.
 
   window.scrollTo({ top: 0, behavior: "instant" });
+
+  // Accueil : les encadrés (objectif, dernière séance) suivent l'activité de tous les modules, à chaque retour
+  if (id === "home" && typeof window.renderGolfHome === "function") window.renderGolfHome();
 }
 window.showPage = showPage;

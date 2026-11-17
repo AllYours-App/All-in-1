@@ -24,6 +24,7 @@ let settings = {
   theme: "dark", // "dark" ou "light" (voir applyAppTheme dans commun.js)
   language: "fr", // "fr", "en" ou "es" (voir core/i18n.js)
   weeklyGoal: 5, // objectif de séances par semaine affiché sur l'Accueil (1 à 14)
+  weeklyGoalModules: ["putting", "wedging", "gym", "parcours", "stats"], // modules dont les séances comptent dans l'objectif (choix depuis l'Accueil)
 };
 
 let radars = [
@@ -1200,6 +1201,8 @@ window.MenuData = {
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   loadMenuState();
+  // Accueil : l'objectif et les modules comptés viennent des réglages qui viennent d'être chargés
+  if (typeof renderGolfHome === 'function') renderGolfHome();
   applyAppTheme(settings.theme); // met aussi à jour la couleur de la barre du navigateur
   warnMenuLegalPlaceholders();
   menuBackBtn.addEventListener('click', () => backTarget());

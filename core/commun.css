@@ -724,6 +724,73 @@ textarea.app-dialog_input {
   color: var(--accent);
 }
 
+/* Titre + bouton « i » d'aide */
+.app-sheet_title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.app-sheet_info-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.app-sheet_info-btn.is-on { color: var(--accent); }
+.app-sheet_info-btn:focus-visible,
+.app-sheet_close:focus-visible,
+.app-sheet_row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.app-sheet_info {
+  flex: 0 0 auto;
+  margin: 0 var(--app-padding-x) 8px;
+  padding: 10px 14px;
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.app-sheet_info[hidden] { display: none; }
+
+/* Ligne à cocher : rond vide, rond vert avec encoche quand elle est cochée */
+.app-sheet_row--check.is-on { border-color: var(--accent); }
+.app-sheet_box {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  color: transparent;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.app-sheet_box.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #050505;
+}
+.app-sheet_note {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
 .app-sheet_switch {
   flex: 0 0 auto;
   position: relative;

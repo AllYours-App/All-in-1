@@ -253,12 +253,18 @@ function appPrefSet(module, key, value) {
    Tous les textes passent par textContent : un nom saisi par la personne (nom de
    programme, de parcours...) ne peut pas injecter de HTML.
 
-     appSheet({ title, sections: [ { title, items: [ ... ] } ] })  -> fonction close()
+     appSheet({ title, info, sections: [ { title, items: [ ... ] } ] })  -> fonction close()
+     info (optionnel) : texte d'aide. Un bouton « i » à côté du titre l'affiche / le masque.
 
    Types d'entrées (items) :
      { type: 'toggle',  label, hint, value: bool, onChange(valeur) }
      { type: 'segment', label, hint, value, options: [{ value, label }], onChange(valeur) }
      { type: 'action',  label, hint, selected: bool, danger: bool, keepOpen: bool, onClick() }
+     { type: 'check',   label, hint, value: bool, onChange(valeur) }
+        -> ligne à cocher (encoche verte quand elle est cochée). onChange peut renvoyer false pour refuser
+           le changement : la ligne garde alors son état.
+     { type: 'note',    text }
+        -> message affiché dans la feuille (rien si le texte est vide) ; modifiable dans onChange d'une autre ligne
      { type: 'reorder', label, hint, items: [{ key, label, visible }], onChange(items) }
         -> liste dont chaque ligne a un oeil (afficher / masquer) et des flèches haut / bas ;
            onChange reçoit la liste complète dans le nouvel ordre : [{ key, label, visible }]
@@ -294,11 +300,33 @@ function appSheet(config) {
   titleEl.id = 'app-sheet-title';
   var closeBtn = appSheetEl('button', 'app-sheet_close', 'Fermer');
   closeBtn.type = 'button';
-  head.appendChild(titleEl);
+  var titleWrap = appSheetEl('div', 'app-sheet_title-wrap');
+  titleWrap.appendChild(titleEl);
+  var infoPanel = null;
+  if (config && config.info) {
+    var infoBtn = appSheetEl('button', 'app-sheet_info-btn');
+    infoBtn.type = 'button';
+    infoBtn.setAttribute('aria-label', 'À quoi ça sert ?');
+    infoBtn.setAttribute('aria-expanded', 'false');
+    infoBtn.setAttribute('aria-controls', 'app-sheet-info');
+    // Icône « i » dans un cercle (SVG fixe, aucun texte saisi par la personne)
+    infoBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/></svg>';
+    infoPanel = appSheetEl('p', 'app-sheet_info', config.info);
+    infoPanel.id = 'app-sheet-info';
+    infoPanel.hidden = true;
+    infoBtn.addEventListener('click', function () {
+      infoPanel.hidden = !infoPanel.hidden;
+      infoBtn.setAttribute('aria-expanded', infoPanel.hidden ? 'false' : 'true');
+      infoBtn.classList.toggle('is-on', !infoPanel.hidden);
+    });
+    titleWrap.appendChild(infoBtn);
+  }
+  head.appendChild(titleWrap);
   head.appendChild(closeBtn);
   var body = appSheetEl('div', 'app-sheet_body');
   sheet.appendChild(handle);
   sheet.appendChild(head);
+  if (infoPanel) sheet.appendChild(infoPanel);
   sheet.appendChild(body);
   overlay.appendChild(sheet);
 
@@ -341,6 +369,26 @@ function appSheet(config) {
     row.addEventListener('click', function () {
       item.value = !item.value;
       if (item.onChange) item.onChange(item.value);
+      render();
+    });
+    return row;
+  }
+
+  // Ligne à cocher : encoche verte dans un rond quand elle est cochée
+  function buildCheck(item) {
+    var row = appSheetEl('button', 'app-sheet_row app-sheet_row--check' + (item.value ? ' is-on' : ''));
+    row.type = 'button';
+    row.setAttribute('role', 'checkbox');
+    row.setAttribute('aria-checked', item.value ? 'true' : 'false');
+    row.appendChild(rowText(item));
+    var box = appSheetEl('span', 'app-sheet_box' + (item.value ? ' is-on' : ''));
+    box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    row.appendChild(box);
+    row.addEventListener('click', function () {
+      var next = !item.value;
+      var accepted = item.onChange ? item.onChange(next) : true;
+      if (accepted !== false) item.value = next;
       render();
     });
     return row;
@@ -432,6 +480,12 @@ function appSheet(config) {
         else if (item.type === 'segment') block.appendChild(buildSegment(item));
         else if (item.type === 'action') block.appendChild(buildAction(item));
         else if (item.type === 'reorder') block.appendChild(buildReorder(item));
+        else if (item.type === 'check') block.appendChild(buildCheck(item));
+        else if (item.type === 'note' && item.text) {
+          var note = appSheetEl('p', 'app-sheet_note', item.text);
+          note.setAttribute('role', 'status');
+          block.appendChild(note);
+        }
       });
       body.appendChild(block);
     });

@@ -1364,23 +1364,79 @@ function renderExercicesStats() {
 
 /* ============================================================
    ACCUEIL GÉNÉRAL (page-home) : encadrés [data-stat]
-   Alimentés par l'activité putting : parcours + exercices rapides + exercices créés.
-   Distance moyenne et Index ne dépendent pas du putting : non touchés ici.
+   Alimentés par l'activité de tous les modules (Putting, Wedging, Gym, Parcours, Stats).
+   Distance moyenne et Index ne dépendent pas de l'activité : non touchés ici.
    ============================================================ */
 const GOLF_WEEKLY_GOAL_DEFAULT = 5; // séances par semaine, valeur par défaut
 const GOLF_WEEKLY_GOAL_MAX = 14;
 
 // Objectif de la semaine : réglé dans le Menu (settings.weeklyGoal)
 function golfWeeklyGoal() {
-  const n = parseInt(settings.weeklyGoal, 10);
+  // `settings` est déclaré dans menu.js, chargé après ce fichier : valeur par défaut tant qu'il n'existe pas
+  const n = typeof settings !== 'undefined' ? parseInt(settings.weeklyGoal, 10) : NaN;
   return n >= 1 && n <= GOLF_WEEKLY_GOAL_MAX ? n : GOLF_WEEKLY_GOAL_DEFAULT;
 }
 const RING_CIRCUMFERENCE = 2 * Math.PI * 9; // r=9 dans le SVG de l'accueil
 
-function allActivityDates() {
-  return puttingSessions.map(function (s) { return s.dateISO; })
-    .concat(puttingRounds.map(function (r) { return r.dateISO; }))
-    .filter(Boolean);
+// Modules qui peuvent compter dans « Objectif semaine » (ordre d'affichage de la feuille de choix)
+const GOLF_GOAL_MODULES = [
+  { id: 'putting', label: 'Putting', hint: 'Exercices et parcours de putts' },
+  { id: 'wedging', label: 'Wedging', hint: 'Exercices terminés et coups saisis (un jour = une séance)' },
+  { id: 'gym', label: 'Gym', hint: "Séances d'entraînement terminées" },
+  { id: 'parcours', label: 'Parcours', hint: 'Bilans fairway et green enregistrés' },
+  { id: 'stats', label: 'Stats', hint: 'Parties enregistrées, en saisie rapide ou détaillée' },
+];
+
+// Modules cochés : tous par défaut (réglage settings.weeklyGoalModules, enregistré avec le Menu)
+function golfGoalModules() {
+  const all = GOLF_GOAL_MODULES.map(function (m) { return m.id; });
+  if (typeof settings === 'undefined' || !Array.isArray(settings.weeklyGoalModules)) return all;
+  const picked = all.filter(function (id) { return settings.weeklyGoalModules.indexOf(id) !== -1; });
+  return picked.length ? picked : all;
+}
+
+function setGolfGoalModules(ids) {
+  settings.weeklyGoalModules = ids;
+  saveMenuState(); // menu.js : enregistre les réglages (et les envoie au serveur)
+  renderGolfHome();
+}
+
+// Lecture d'une liste enregistrée par un autre module (localStorage) : liste vide si absente ou illisible
+function homeReadList(key) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return []; }
+}
+
+/* Séances de tous les modules : { iso, type }, une entrée = une séance.
+   Les autres modules sont lus à la source (localStorage), sans dépendre de l'ordre de chargement des scripts.
+   Les copies Stats → Putting / Wedging (source: 'stats') sont ignorées : une partie n'est comptée qu'une fois, via Stats. */
+function allActivityEntries() {
+  const entries = [];
+  // Putting : exercices et parcours saisis dans le module
+  puttingSessions.forEach(function (s) { entries.push({ iso: s.dateISO, type: 'Putting', module: 'putting' }); });
+  puttingRounds.forEach(function (r) { if (r.source !== 'stats') entries.push({ iso: r.dateISO, type: 'Putting', module: 'putting' }); });
+  // Wedging : un exercice terminé = une séance ; les coups saisis à la main un même jour = une séance
+  const wedgeDays = {};
+  homeReadList('golfevolution_wedging_shots').forEach(function (w) {
+    if (!w || w.source === 'stats') return;
+    const d = new Date(w.date);
+    if (isNaN(d)) return;
+    const day = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+    if (!wedgeDays[day] || d > new Date(wedgeDays[day])) wedgeDays[day] = w.date; // le coup le plus tardif du jour
+  });
+  Object.keys(wedgeDays).forEach(function (day) { entries.push({ iso: wedgeDays[day], type: 'Wedging', module: 'wedging' }); });
+  homeReadList('golfevolution_wedging_exercises').forEach(function (ex) {
+    ((ex && ex.logs) || []).forEach(function (log) { entries.push({ iso: log && log.date, type: 'Wedging', module: 'wedging' }); });
+  });
+  // Gym : séances d'entraînement terminées
+  homeReadList('golfevolution_gym_history').forEach(function (h) { entries.push({ iso: h && h.date, type: 'Gym', module: 'gym' }); });
+  // Parcours (fairways / greens) : bilans enregistrés
+  homeReadList('golfevolution_parcours_captures').forEach(function (h) { entries.push({ iso: h && h.date, type: 'Parcours', module: 'parcours' }); });
+  // Stats : toutes les parties enregistrées, y compris en saisie rapide
+  homeReadList('golfevolution_stats_rounds').forEach(function (r) { entries.push({ iso: r && r.date, type: 'Parcours', module: 'stats' }); });
+  return entries.filter(function (e) { return e.iso && !isNaN(new Date(e.iso)); });
 }
 
 function relativeDayLabel(iso) {
@@ -1395,10 +1451,12 @@ function relativeDayLabel(iso) {
 
 function renderGolfHome() {
   const q = function (name) { return document.querySelector('#page-home [data-stat="' + name + '"]'); };
-  const dates = allActivityDates();
+  const entries = allActivityEntries();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
   const now = Date.now();
-  const count = dates.filter(function (d) { return (now - new Date(d).getTime()) <= weekMs; }).length;
+  // L'objectif ne compte que les modules choisis (appui sur l'encadré) ; « Dernière séance » garde tous les modules
+  const counted = golfGoalModules();
+  const count = entries.filter(function (e) { return counted.indexOf(e.module) !== -1 && (now - new Date(e.iso).getTime()) <= weekMs; }).length;
   const goal = golfWeeklyGoal();
   const ratio = Math.min(1, count / goal);
 
@@ -1418,9 +1476,6 @@ function renderGolfHome() {
   const lastVal = q('last-session-value');
   const lastSec = q('last-session-secondary');
   // Un seul type d'entraînement : celui de l'activité la plus récente
-  const entries = puttingSessions.map(function (s) { return { iso: s.dateISO, type: 'Putting' }; })
-    .concat(puttingRounds.map(function (r) { return { iso: r.dateISO, type: r.source === 'stats' ? 'Parcours' : 'Putting' }; }))
-    .filter(function (e) { return e.iso; });
   if (entries.length) {
     // Tri par date ; à égalité exacte, l'entrée ajoutée en dernier l'emporte
     const last = entries.reduce(function (best, e) { return new Date(e.iso) >= new Date(best.iso) ? e : best; });
@@ -3952,4 +4007,7 @@ renderGolfHome();
 // Expose renderPuttingTab globalement pour être appelée depuis index.html
 window.renderPuttingTab = renderPuttingTab;
 window.renderGolfHome = renderGolfHome;
+window.GOLF_GOAL_MODULES = GOLF_GOAL_MODULES;
+window.golfGoalModules = golfGoalModules;
+window.setGolfGoalModules = setGolfGoalModules;
 
