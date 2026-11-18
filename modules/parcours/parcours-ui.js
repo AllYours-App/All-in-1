@@ -782,7 +782,7 @@ function distancesCalcHtml() {
         ` : rows.map((r) => `
           <div class="progress-row">
             <div class="progress-labels">
-              <span>${r.name}</span>
+              <span>${appEscapeHtml(r.name)}</span>
               <span>${r.display} ${r.unit}</span>
             </div>
             <div class="progress-track">

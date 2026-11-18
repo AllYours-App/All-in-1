@@ -22,10 +22,12 @@
      locale, serveur.
    - modifié ici seulement          -> la version locale part sur le serveur
    - modifié sur le serveur seulement -> la version du serveur est reprise
-   - modifié des deux côtés         -> la dernière modification gagne : date de la dernière écriture locale
-                                       de la clé (golfevolution_sync_pending) contre updated_at du serveur
-   La date locale est celle de la clé entière, pas de chaque élément : deux appareils qui modifient le
-   MÊME élément, dont un hors ligne, peuvent se départager à tort.
+   - modifié des deux côtés         -> la dernière modification gagne : date de la dernière modification locale
+                                       DE CET ÉLÉMENT (golfevolution_sync_edits) contre updated_at du serveur
+   La date locale est gardée élément par élément : une modification récente d'un autre élément de la même
+   liste n'avantage plus une version plus ancienne de celui-ci. Si la date d'un élément manque (écriture
+   faite juste avant la fermeture de l'appli, ou état laissé par une version précédente), on retombe sur la
+   date de la dernière écriture de la clé entière (golfevolution_sync_pending).
 
    Mise à jour en cours d'utilisation ("late") : si les données du serveur arrivent alors que la personne
    utilise déjà l'appli (retour du réseau après un démarrage hors ligne, ou réponse très lente), la copie
@@ -67,8 +69,10 @@
   // Clés d'état de la synchronisation. Vidées avec le reste des données (wipeApp), sauf si la clé est protégée.
   const BASE_KEY = 'golfevolution_sync_base';        // { v, uid, lists: { clé: { id: [hash, occurred_at] } }, profile: { colonne: hash } }
   const PENDING_KEY = 'golfevolution_sync_pending';  // { clé: date (ms) de la dernière modification locale non envoyée }
+  const EDITS_KEY = 'golfevolution_sync_edits';      // { clé de liste: { id: [date (ms) de la dernière modification locale de l'élément, empreinte | null si retiré] } }
 
   const SEND_DELAY_MS = 200;      // regroupe les écritures rapprochées en un seul envoi
+  const EDITS_DELAY_MS = 150;     // regroupe les écritures rapprochées avant de relever quels éléments ont changé
   const RETRY_MIN_MS = 5000;      // nouvel essai après un échec d'envoi, doublé à chaque échec...
   const RETRY_MAX_MS = 60000;     // ...jusqu'à une minute
   const FLUSH_WAIT_MS = 6000;     // attente maximale de l'envoi avant de recharger la page
@@ -110,6 +114,8 @@
   let pending = {};           // clé -> date (ms) de la dernière modification locale non envoyée (copie de golfevolution_sync_pending)
   const base = {};            // clé de liste -> Map(id -> { h, o }) : hash de l'élément tel que le serveur le contenait, occurred_at
   const profBase = {};        // colonne -> hash de la valeur que le serveur contenait
+  let edits = {};             // clé de liste -> { id: [date (ms), empreinte] } : dernière modification locale de chaque élément non envoyé
+  const editsTimers = {};     // clé de liste -> minuteur du relevé des modifications
   let sendTimer = null;
   let retryTimer = null;
   let retryDelay = RETRY_MIN_MS;
@@ -197,6 +203,48 @@
     } catch (e) { console.warn('Données : file d\'attente non enregistrée', e); }
   }
 
+  function saveEdits() {
+    try {
+      const out = {};
+      Object.keys(edits).forEach((k) => { if (edits[k] && Object.keys(edits[k]).length) out[k] = edits[k]; });
+      if (Object.keys(out).length) localStorage.setItem(EDITS_KEY, JSON.stringify(out));
+      else localStorage.removeItem(EDITS_KEY);
+    } catch (e) { console.warn('Données : dates de modification non enregistrées', e); }
+  }
+
+  // Relève quels éléments d'une liste ont changé depuis le dernier envoi et date leur modification.
+  // Appelée peu après chaque écriture (onWrite). Un élément identique à celui du serveur n'a plus de date ;
+  // un élément retiré ici garde la date du retrait (pour départager avec une modification faite ailleurs).
+  function updateEdits(key) {
+    delete editsTimers[key];
+    if (!LISTS[key] || !pending[key]) return;
+    const items = readArray(key);
+    if (items === null) return;
+    const b = base[key] || new Map();
+    const e = edits[key] || (edits[key] = {});
+    const now = Date.now();
+    const seen = new Set();
+    items.forEach((item) => {
+      if (!item || typeof item !== 'object') return;
+      const id = idOf(item);
+      if (id === null || seen.has(id)) return;
+      seen.add(id);
+      const h = hashOf(item);
+      const B = b.get(id);
+      if (B && B.h === h) { delete e[id]; return; }
+      if (!e[id] || e[id][1] !== h) e[id] = [now, h];
+    });
+    b.forEach((v, id) => { if (!seen.has(id) && (!e[id] || e[id][1] !== null)) e[id] = [now, null]; });
+    Object.keys(e).forEach((id) => { if (!seen.has(id) && !b.has(id)) delete e[id]; });
+    saveEdits();
+  }
+
+  // Date de la dernière modification locale d'un élément (retombe sur celle de la clé si elle n'est pas connue)
+  function editTime(key, id, fallback) {
+    const e = edits[key] && edits[key][id];
+    return e && typeof e[0] === 'number' ? e[0] : fallback;
+  }
+
   function saveBase() {
     if (!userId) return;
     try {
@@ -217,6 +265,19 @@
     const p = parse(localStorage.getItem(PENDING_KEY));
     if (p && typeof p === 'object' && !Array.isArray(p)) {
       Object.keys(p).forEach((k) => { if (isKnownKey(k) && typeof p[k] === 'number') pending[k] = p[k]; });
+    }
+    edits = {};
+    Object.keys(editsTimers).forEach((k) => { clearTimeout(editsTimers[k]); delete editsTimers[k]; });
+    const ed = parse(localStorage.getItem(EDITS_KEY));
+    if (ed && typeof ed === 'object' && !Array.isArray(ed)) {
+      Object.keys(ed).forEach((k) => {
+        if (!LISTS[k] || !ed[k] || typeof ed[k] !== 'object') return;
+        edits[k] = {};
+        Object.keys(ed[k]).forEach((id) => {
+          const v = ed[k][id];
+          if (Array.isArray(v) && typeof v[0] === 'number') edits[k][id] = [v[0], v[1] === undefined ? null : v[1]];
+        });
+      });
     }
     const b = parse(localStorage.getItem(BASE_KEY));
     if (b && b.v === 1 && b.uid === uid) {
@@ -275,6 +336,8 @@
     userId = null; ready = false; startPromise = null; needsReload = false; deletionAt = null;
     clearTimeout(sendTimer); clearTimeout(retryTimer);
     pending = {};
+    edits = {};
+    Object.keys(editsTimers).forEach((k) => { clearTimeout(editsTimers[k]); delete editsTimers[k]; });
     Object.keys(base).forEach((k) => delete base[k]);
     Object.keys(profBase).forEach((c) => delete profBase[c]);
     return had;
@@ -347,7 +410,7 @@
       let localWins;
       if (lChanged && !sChanged) localWins = true;
       else if (!lChanged && sChanged) localWins = false;
-      else localWins = late || !S || !S.u || localTs >= S.u;   // modifié des deux côtés : la dernière modification gagne
+      else localWins = late || !S || !S.u || editTime(key, id, localTs) >= S.u;   // modifié des deux côtés : la dernière modification de CET élément gagne
       if (localWins) { if (L) merged.set(id, L.item); }         // absent en local : suppression locale, envoyée ensuite
       else if (S) merged.set(id, S.data);                       // absent du serveur : supprimé là-bas
     });
@@ -392,6 +455,7 @@
 
       // Aucune modification en attente (ou contenu local illisible) : la version du serveur remplace la copie locale
       if (!pending[key] || localItems === null) {
+        delete edits[key];
         const local = localItems || [];
         const differs = sortedHashes(local.map(hashOf)) !== sortedHashes(rows.map((r) => serverMap.get(String(r.id)).h));
         if (!differs) { base[key] = serverBase(); return; }
@@ -565,7 +629,7 @@
       if (!LISTS[key]) { profileKeys.push([key, ts]); continue; }
       try {
         await pushList(key);
-        if (pending[key] === ts) delete pending[key];   // une écriture arrivée pendant l'envoi garde la clé en attente
+        if (pending[key] === ts) { delete pending[key]; delete edits[key]; }   // une écriture arrivée pendant l'envoi garde la clé en attente
       } catch (e) { failed = true; console.warn('Données : envoi impossible (' + key + ')', e); }
     }
     if (profileKeys.length) {
@@ -576,6 +640,7 @@
     }
     syncing = false;
     savePending();
+    saveEdits();
     saveBase();
     if (failed) {
       scheduleRetry();
@@ -600,6 +665,10 @@
     if (!userId || !isKnownKey(key)) return;
     pending[key] = Date.now();
     savePending();
+    if (LISTS[key]) {   // date de modification par élément, relevée une fois les écritures rapprochées terminées
+      clearTimeout(editsTimers[key]);
+      editsTimers[key] = setTimeout(() => updateEdits(key), EDITS_DELAY_MS);
+    }
     emit(syncing ? 'syncing' : 'pending');
     if (!ready || !isOnline()) return;
     clearTimeout(sendTimer);

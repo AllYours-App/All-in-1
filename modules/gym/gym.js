@@ -10,7 +10,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : ACCUEIL ============================== -->
     <section class="gym-view" id="gym-view-gym-home" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="showPage('home'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           Accueil
         </a>

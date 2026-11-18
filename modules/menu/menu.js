@@ -76,7 +76,7 @@ function toNumberOrNull(raw) {
    Navigation : chaque écran s'enregistre via enterScreen(), ce qui permet
    de le re-render (ex. pavé numérique) sans connaître son nom.
    ========================================================================== */
-const backToHome = () => showPage('home');
+const backToHome = () => appBack('menu');
 const backToMenu = () => { showPage('menu'); renderMenuTab(); };
 const backToHelp = () => renderHelpScreen();
 

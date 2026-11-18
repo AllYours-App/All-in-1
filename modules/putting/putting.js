@@ -2689,15 +2689,15 @@ function renderCombineRecapScreen() {
       <div class="recap-fields">
         <button class="exercise-modal_field" onclick="editSessionField('location','Lieu')">
           <span class="exercise-modal_field-label">Lieu</span>
-          <span class="exercise-modal_field-value">${session.location || 'Non renseigné'}</span>
+          <span class="exercise-modal_field-value">${appEscapeHtml(session.location || 'Non renseigné')}</span>
         </button>
         <button class="exercise-modal_field" onclick="editSessionField('greenSpeed','Vitesse du green')">
           <span class="exercise-modal_field-label">Vitesse du green</span>
-          <span class="exercise-modal_field-value">${session.greenSpeed || 'Non renseigné'}</span>
+          <span class="exercise-modal_field-value">${appEscapeHtml(session.greenSpeed || 'Non renseigné')}</span>
         </button>
         <button class="exercise-modal_field" onclick="editSessionField('notes','Notes')">
           <span class="exercise-modal_field-label">Notes</span>
-          <span class="exercise-modal_field-value">${session.notes || '—'}</span>
+          <span class="exercise-modal_field-value">${appEscapeHtml(session.notes || '—')}</span>
         </button>
       </div>
     </div>
@@ -3317,7 +3317,7 @@ function handleMainHeaderBack(event) {
     return;
   }
   renderGolfHome();
-  showPage('home');
+  appBack('putting');
 }
 
 async function setParcoursHoles(n) {

@@ -32,7 +32,7 @@
    ============================================================ */
 'use strict';
 
-const VERSION = 'golfevolution-v5';
+const VERSION = 'golfevolution-v6';
 const STATIC_REV = 1;
 const CACHE_APP = VERSION + '-app';
 const CACHE_STATIC = 'golfevolution-static-' + STATIC_REV;
@@ -48,7 +48,7 @@ const IMAGES = [
   'images/GreenPuttM.webp', 'images/GreenPuttMDG.webp', 'images/GreenPuttMGD.webp', 'images/GreenPuttP.webp',
   'images/GreenPuttPDG.webp', 'images/GreenPuttPGD.webp', 'images/ProgrammeEndurance.webp',
   'images/ProgrammeForce.webp', 'images/ProgrammeHypertrophie.webp', 'images/ProgrammeVitesse.webp',
-  'images/icon.png',
+  'images/icon.png', 'images/popupareprendre.webp',
 ];
 // Polices citées par les @font-face de core/base.css (index.html ne les cite pas)
 const FONTS = ['fonts/inter-latin-wght-normal.woff2'];
@@ -225,7 +225,7 @@ async function fromNetworkFirst(event) {
     return cached;
   }
   try { return await network; } catch (e) {
-    return new Response('Hors ligne : ouvrez l\'appli une première fois avec du réseau.', {
+    return new Response('Hors ligne : ouvre l\'appli une première fois avec du réseau.', {
       status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   }

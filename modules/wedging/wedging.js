@@ -235,7 +235,7 @@ const WedgeUI = (function () {
 
   function header({ title, backLabel, backHash }) {
     return `<header class="wg-header">
-      <div class="wg-header-side"><button class="wg-back-btn" onclick="${backHash === 'app-home' ? "showPage('home')" : "WedgeRouter.go('" + backHash + "')"}">${ICONS.back} ${backLabel}</button></div>
+      <div class="wg-header-side"><button class="wg-back-btn" onclick="${backHash === 'app-home' ? "appBack('wedging')" : "WedgeRouter.go('" + backHash + "')"}">${ICONS.back} ${backLabel}</button></div>
       <h1 class="wg-title" style="${title === "WEDGING" ? "" : "font-size:16px;letter-spacing:2px;"}">${title}</h1>
       <div class="wg-header-side wg-header-right"></div>
     </header>`;
@@ -1009,6 +1009,7 @@ function restartWedgeExerciseFromPopup() {
 function wedgeResumePopupHtml() {
   const ex = wedgeExercises.find(e => e.id === wedgeResumePopupExerciseId);
   return WedgeUI.modal('Séance en cours', `
+    <div class="wg-resume-banner" role="presentation"></div>
     <p class="wg-text-muted mb-10">Tu as une séance en cours pour « ${ex ? appEscapeHtml(ex.name) : ''} ». Reprendre où tu t'es arrêté, ou recommencer à zéro ?</p>
     <div class="wg-field-row"><button class="wg-btn-secondary" onclick="restartWedgeExerciseFromPopup()">Recommencer</button><button class="wg-btn-primary" onclick="resumeWedgeExerciseFromPopup()">Reprendre</button></div>
   `, 'closeWedgeResumePopup');
