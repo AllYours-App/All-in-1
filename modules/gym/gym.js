@@ -4452,11 +4452,9 @@ function gymRenderDualChart(points, series, selected) {
 (function () {
   function renderHero(program) {
     // Image selon l'objectif : images/ProgrammeEndurance.webp, ProgrammeHypertrophie.webp,
-    // ProgrammeVitesse.webp et ProgrammeForce-1.webp (nom réel du fichier du dépôt).
+    // ProgrammeVitesse.webp et ProgrammeForce.webp.
     const goalId = program.goal || "";
-    const imageName = goalId === "force"
-      ? "ProgrammeForce-1"
-      : `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
+    const imageName = `Programme${goalId.charAt(0).toUpperCase()}${goalId.slice(1)}`;
     document.getElementById("gym-program-hero").innerHTML = `
       <div class="hero-photo">
         <img class="hero-photo__image" src="images/${imageName}.webp" alt="">

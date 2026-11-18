@@ -32,7 +32,7 @@
    ============================================================ */
 'use strict';
 
-const VERSION = 'golfevolution-v3';
+const VERSION = 'golfevolution-v5';
 const STATIC_REV = 1;
 const CACHE_APP = VERSION + '-app';
 const CACHE_STATIC = 'golfevolution-static-' + STATIC_REV;
@@ -42,14 +42,13 @@ const PARALLEL = 6;               // téléchargements simultanés à l'installa
 // Chemins relatifs au dossier du service worker (la racine du site)
 const IMAGES = [
   'images/FondBoutonExercices.webp', 'images/FondBoutonHistorique.webp', 'images/FondBoutonProgrammes.webp',
-  'images/FondBoutonProgression.webp', 'images/FondEcranBoutonDenivele.webp', 'images/FondEcranBoutonDistance.webp',
-  'images/FondEcranBoutonVent.webp', 'images/FondEcranHomePageMatin.webp', 'images/FondEcranHomePageMidi.webp',
+  'images/FondBoutonProgression.webp', 'images/FondEcranHomePageMatin.webp', 'images/FondEcranHomePageMidi.webp',
   'images/FondEcranHomePageNuit.webp', 'images/FondEcranHomePageSoir.webp', 'images/FondFairwaySaisieRapide.webp',
   'images/FondGreenRond.webp', 'images/FondGymHeader.webp', 'images/GreenPuttDG.webp', 'images/GreenPuttGD.webp',
   'images/GreenPuttM.webp', 'images/GreenPuttMDG.webp', 'images/GreenPuttMGD.webp', 'images/GreenPuttP.webp',
   'images/GreenPuttPDG.webp', 'images/GreenPuttPGD.webp', 'images/ProgrammeEndurance.webp',
-  'images/ProgrammeForce-1.webp', 'images/ProgrammeHypertrophie.webp', 'images/ProgrammeVitesse.webp',
-  'images/icon.png', 'images/popupareprendre.webp',
+  'images/ProgrammeForce.webp', 'images/ProgrammeHypertrophie.webp', 'images/ProgrammeVitesse.webp',
+  'images/icon.png',
 ];
 // Polices citées par les @font-face de core/base.css (index.html ne les cite pas)
 const FONTS = ['fonts/inter-latin-wght-normal.woff2'];
