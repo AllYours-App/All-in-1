@@ -1,8 +1,10 @@
 /* ============================================================
    HORS LIGNE — service worker + indications de connexion
-   Chargé après data.js. Deux rôles :
-   1) enregistrer sw.js (copie de l'appli pour l'ouvrir et l'utiliser sans réseau) ;
-   2) prévenir la personne, sans jamais la gêner, quand la connexion tombe ou revient.
+   Chargé après data.js. Trois rôles :
+   1) installer sw.js (copie complète de l'appli pour l'ouvrir et l'utiliser sans réseau) : le téléchargement
+      démarre à la première connexion, avec une barre de chargement ;
+   2) proposer « Redémarrer » quand une nouvelle version de l'appli est téléchargée (sans jamais l'imposer) ;
+   3) prévenir la personne, sans jamais la gêner, quand la connexion tombe ou revient.
 
    Affichage : un message en bas de l'écran apparaît quelques secondes quand la connexion tombe ou
    revient, sur n'importe quelle page. La pastille « Hors ligne » en haut de l'écran, elle, reste affichée
@@ -19,12 +21,93 @@
 (function () {
   'use strict';
 
-  /* ---------- Service worker ---------- */
+  /* ---------- Service worker : installation, progression, mises à jour ---------- */
 
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  const SW_OK = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost');
+  const UPDATE_CHECK_MS = 30 * 60 * 1000;   // au plus une vérification de nouvelle version toutes les 30 min (retour dans l'appli)
+
+  const install = { running: false, done: 0, total: 0 };   // première installation en cours : barre de chargement
+  let swReg = null;
+  let swStarted = false;
+  let updateWorker = null;      // nouvelle version téléchargée, en attente de « Redémarrer »
+  let restarting = false;       // « Redémarrer » choisi : on recharge quand la nouvelle version prend la main
+  let lastUpdateCheck = Date.now();
+
+  // Démarre l'installation (ou la mise à jour) du service worker
+  function startServiceWorker() {
+    if (swStarted) return;
+    swStarted = true;
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      swReg = reg;
+      if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg.waiting);   // une version attendait déjà
+      if (reg.installing) trackWorker(reg.installing);
+      reg.addEventListener('updatefound', function () { if (reg.installing) trackWorker(reg.installing); });
+      if (reg.active) askTopUp();
+    }, function (e) { swStarted = false; console.warn('Hors ligne : service worker non enregistré', e); });
+  }
+
+  // Suit un service worker en cours d'installation
+  function trackWorker(worker) {
+    worker.addEventListener('statechange', function () {
+      // Une version est déjà en service : la nouvelle est téléchargée et attend (aucun mélange de fichiers)
+      if (worker.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(worker);
+      // Installation abandonnée (réseau coupé...) : elle reprendra à la prochaine ouverture avec du réseau
+      if (worker.state === 'redundant' && install.running) installFailed();
+    });
+  }
+
+  // Messages du service worker : progression de la première installation
+  function onSwMessage(e) {
+    const m = e.data || {};
+    if (m.update) return;                    // mise à jour : téléchargement silencieux, « Redémarrer » est proposé à la fin
+    if (m.type === 'sw-progress') {
+      install.running = true;
+      install.done = m.done;
+      install.total = m.total;
+      renderInstall();
+    } else if (m.type === 'sw-done') {
+      install.running = false;
+      renderInstall();
+      showToast('Appli prête : elle s\'ouvre maintenant même sans connexion.', 4500);
+      if (m.failed) askTopUp();
+    }
+  }
+
+  function installFailed() {
+    install.running = false;
+    renderInstall();
+    showToast('Le téléchargement pour le mode hors ligne n\'a pas abouti. Il reprendra à la prochaine ouverture avec du réseau.', 8000);
+  }
+
+  // Demande au service worker de rattraper en silence les fichiers qui manquent encore (réseau présent)
+  function askTopUp() {
+    if (!SW_OK || navigator.onLine === false) return;
+    const sw = navigator.serviceWorker.controller || (swReg && swReg.active);
+    if (sw && sw.postMessage) sw.postMessage({ type: 'top-up' });
+  }
+
+  function checkForUpdate() {
+    if (!swReg || navigator.onLine === false || Date.now() - lastUpdateCheck < UPDATE_CHECK_MS) return;
+    lastUpdateCheck = Date.now();
+    swReg.update().catch(function () { /* réseau instable : on réessaiera plus tard */ });
+  }
+
+  if (SW_OK) {
+    navigator.serviceWorker.addEventListener('message', onSwMessage);
+    if (navigator.serviceWorker.startMessages) navigator.serviceWorker.startMessages();
+    // « Redémarrer » : la page ne se recharge que sur ce choix (jamais à la première installation)
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (restarting) location.reload(); });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') checkForUpdate(); });
+
     // Après "load" : l'installation (copie des fichiers) ne ralentit pas l'affichage de l'appli
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Hors ligne : service worker non enregistré', e); });
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        const sb = window.appSupabase;
+        // Déjà installé (mise à jour) ou service de connexion absent : on démarre tout de suite.
+        // Sinon le téléchargement complet attend la première connexion (après la création du compte).
+        if (reg || !sb || !sb.auth) startServiceWorker();
+        else sb.auth.onAuthStateChange(function (event, session) { if (session) setTimeout(startServiceWorker, 0); });
+      }).catch(function () { startServiceWorker(); });
     });
   }
 
@@ -56,7 +139,17 @@
     'border:1px solid rgba(255,255,255,.16);box-shadow:0 8px 24px rgba(0,0,0,.45)}' +
     '.app-net_toast.is-visible{display:flex}' +
     '.app-net_toast button{pointer-events:auto;flex:none;padding:7px 14px;border-radius:999px;border:0;cursor:pointer;' +
-    'font:600 13px/1 system-ui,-apple-system,sans-serif;color:#10200f;background:#9bd35a}';
+    'font:600 13px/1 system-ui,-apple-system,sans-serif;color:#10200f;background:#9bd35a}' +
+    '.app-net_install{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9999;' +
+    'display:none;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;pointer-events:none;' +
+    'font:500 14px/1.35 system-ui,-apple-system,sans-serif;color:#f3f1e6;background:rgba(28,34,28,.96);' +
+    'border:1px solid rgba(255,255,255,.16);box-shadow:0 8px 24px rgba(0,0,0,.45)}' +
+    '.app-net_install.is-visible{display:flex}' +
+    '.app-net_install-row{display:flex;justify-content:space-between;gap:12px}' +
+    '.app-net_install-pct{font-weight:600;font-variant-numeric:tabular-nums}' +
+    '.app-net_install-track{height:6px;border-radius:999px;background:rgba(255,255,255,.16);overflow:hidden}' +
+    '.app-net_install-fill{height:100%;width:0;border-radius:999px;background:#9bd35a;transition:width .25s ease}' +
+    'html.app-net-installing .app-net_toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}';
   document.head.appendChild(css);
 
   const pill = document.createElement('div');
@@ -69,6 +162,25 @@
   toast.setAttribute('role', 'status');
   toast.setAttribute('aria-live', 'polite');
 
+  // Barre de chargement de la première installation (ne capte aucun appui : l'appli reste utilisable)
+  const installCard = document.createElement('div');
+  installCard.className = 'app-net_install';
+  installCard.setAttribute('role', 'status');
+  installCard.setAttribute('aria-live', 'polite');
+  installCard.innerHTML =
+    '<div class="app-net_install-row"><span>Préparation du mode hors ligne…</span><span class="app-net_install-pct"></span></div>' +
+    '<div class="app-net_install-track"><div class="app-net_install-fill"></div></div>';
+  const installPct = installCard.querySelector('.app-net_install-pct');
+  const installFill = installCard.querySelector('.app-net_install-fill');
+
+  function renderInstall() {
+    const pct = install.total ? Math.min(100, Math.round((install.done / install.total) * 100)) : 0;
+    installPct.textContent = pct + ' %';
+    installFill.style.width = pct + '%';
+    installCard.classList.toggle('is-visible', install.running);
+    document.documentElement.classList.toggle('app-net-installing', install.running);
+  }
+
   const homeActive = function () {
     const home = document.getElementById('page-home');
     return !!home && home.classList.contains('active');
@@ -76,6 +188,7 @@
 
   function mount() {
     document.body.appendChild(pill);
+    document.body.appendChild(installCard);
     document.body.appendChild(toast);
     render();
     // La pastille suit la page affichée (showPage change la classe "active" des pages)
@@ -87,7 +200,7 @@
         if (isHome === wasHome) return;
         wasHome = isHome;
         render();
-        if (isHome) { reloadAwayShown = false; offerReload(); }
+        if (isHome) { reloadAwayShown = false; offerReload(); if (updateWorker) offerUpdate(updateWorker); }
         else if (reloadShown) hideToast();   // on quitte l'accueil : le choix « Actualiser » est retiré, il reviendra au retour
       }).observe(home, { attributes: true, attributeFilter: ['class'] });
     }
@@ -131,8 +244,30 @@
     pill.classList.toggle('is-syncing', syncing);
   }
 
+  // Nouvelle version prête : message au choix de la personne (10 s hors accueil ; il revient en retournant à l'accueil)
+  function offerUpdate(worker) {
+    updateWorker = worker;
+    reloadShown = true;   // choix affiché : les autres messages ne le remplacent pas (voir showToast)
+    showToast('Mise à jour disponible. Tes saisies sont déjà enregistrées.', homeActive() ? 0 : 10000, {
+      label: 'Redémarrer',
+      onClick: restartApp,
+    });
+  }
+
+  function restartApp() {
+    hideToast();
+    restarting = true;
+    // On envoie d'abord ce qui reste à envoyer, puis la nouvelle version prend la main et la page se recharge
+    const done = window.appData ? window.appData.flush() : Promise.resolve();
+    Promise.race([done, new Promise(function (r) { setTimeout(r, 4000); })]).then(function () {
+      if (updateWorker && updateWorker.state === 'installed') updateWorker.postMessage({ type: 'skip-waiting' });
+      else location.reload();
+      setTimeout(function () { location.reload(); }, 3000);   // sécurité : si le changement de version tarde
+    });
+  }
+
   function offerReload() {
-    if (reloadDismissed || !data.reload || reloadShown) return;
+    if (reloadDismissed || !data.reload || reloadShown || updateWorker) return;   // « Redémarrer » recharge aussi les données
     if (!homeActive()) { if (reloadAwayShown) return; reloadAwayShown = true; }
     reloadShown = true;
     // Sur l'accueil le choix reste affiché ; ailleurs il disparaît au bout de quelques secondes (il revient en retournant à l'accueil)
@@ -159,6 +294,7 @@
   window.addEventListener('online', function () {
     online = true;
     render();
+    askTopUp();
     if (hadWork || data.pending) showToast('Connexion rétablie, envoi des données…', 3000);
     else showToast('Connexion rétablie.', 2500);
   });
