@@ -35,12 +35,12 @@
   {
     "id": "APPLI-04",
     "domaine": "Appli",
-    "titre": "README : aligner la structure du dépôt avec la réalité",
+    "titre": "README : vérifier et mettre à jour l'ensemble du document",
     "statut": "à faire",
-    "priorite": "plus tard",
+    "priorite": "cette semaine",
     "compte": "Appli",
-    "brief": "Le README cite supabase/schema.sql, supabase/suppression-compte.sql et docs/Suivi-des-bugs.docx, absents du dépôt. Suivi-des-bugs.docx est à la racine. core/diag.js est déjà supprimé. Les chiffres (lignes d'index.html, gym.js) sont aussi à relire.",
-    "etat": "Écart relevé à la lecture du dépôt ; README non modifié.",
+    "brief": "Le README n'est peut-être pas à jour : relire chaque section en la comparant au code et corriger les écarts. Déjà relevés : supabase/ (schema.sql, suppression-compte.sql) et docs/Suivi-des-bugs.docx cités mais absents du dépôt (le .docx est à la racine) ; core/diag.js déjà supprimé alors que le README le dit à supprimer ; chiffres de lignes (index.html, gym.js), versions ?v= et VERSION de sw.js à revérifier ; points listés comme à faire qui sont déjà réglés (ex. settings is not defined). Ne modifier que le README.",
+    "etat": "À faire : audit complet du README contre le code, non commencé.",
     "date": "2026-11-20"
   },
   {
