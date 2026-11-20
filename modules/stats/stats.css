@@ -1781,6 +1781,8 @@ html {
   transition: fill var(--duration-fast) var(--ease-out);
 }
 #page-stats .saisie-rapide_wheel-center.is-selected { fill: rgba(143, 209, 63, 0.45); }
+/* Zone d'appui invisible autour du trou : plus grande que le trou dessiné (trop petit au doigt) */
+#page-stats .saisie-rapide_wheel-hit { fill: transparent; cursor: pointer; }
 #page-stats .saisie-rapide_wheel-ball { fill: var(--color-accent); stroke: #0B0F14; stroke-width: 1.5; pointer-events: none; }
 
 /* ---------- Choix directionnels (fairway) ---------- */

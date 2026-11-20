@@ -920,3 +920,91 @@ textarea.app-dialog_input {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   GRAPHIQUES COMMUNS (Putting, Wedging) — dessinés par appChartSvg (commun.js).
+   Le dessin est fait à la largeur réelle du conteneur : les tailles ci-dessous sont des px à l'écran.
+   Couleurs : --app-chart-a / -b (courbes, barres), --app-chart-text, --app-chart-grid, --app-chart-surface,
+   redéfinies par page ci-dessous. Bulle : claire sur thème sombre, sombre sur thème clair.
+   ========================================================================== */
+:root {
+  --app-chart-a: #8fd13f;
+  --app-chart-b: #5b9bd5;
+  --app-chart-text: #9aa39a;
+  --app-chart-grid: rgba(255, 255, 255, 0.1);
+  --app-chart-surface: #131916;
+}
+#page-putting {
+  --app-chart-a: var(--accent);
+  --app-chart-text: var(--text-secondary);
+  --app-chart-grid: var(--border-subtle);
+  --app-chart-surface: var(--bg-card);
+}
+#page-wedging {
+  --app-chart-a: var(--wg-accent);
+  --app-chart-text: var(--wg-text-secondary);
+  --app-chart-grid: var(--wg-border);
+  --app-chart-surface: var(--wg-card);
+}
+
+.app-chart-wrap { position: relative; }
+.app-chart-svg { display: block; width: 100%; height: auto; -webkit-tap-highlight-color: transparent; }
+.app-chart-grid { stroke: var(--app-chart-grid); stroke-width: 1; stroke-dasharray: 4 4; }
+.app-chart-axis { stroke: var(--app-chart-grid); stroke-width: 1.5; }
+.app-chart-tick { fill: var(--app-chart-text); font-size: 13px; }
+.app-chart-tick.is-b { fill: var(--app-chart-b); }
+.app-chart-empty { fill: var(--app-chart-text); font-size: 14px; }
+.app-chart-line { fill: none; stroke: var(--app-chart-a); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.app-chart-line.is-b { stroke: var(--app-chart-b); }
+.app-chart-area { fill: var(--app-chart-a); opacity: 0.16; }
+.app-chart-area.is-b { fill: var(--app-chart-b); }
+.app-chart-dot { fill: var(--app-chart-a); stroke: var(--app-chart-surface); stroke-width: 2; }
+.app-chart-dot.is-b { fill: var(--app-chart-b); }
+.app-chart-bar { fill: var(--app-chart-a); opacity: 0.9; }
+.app-chart-bar.is-b { fill: var(--app-chart-b); }
+/* Zone d'appui invisible (colonne du point) ; seule la colonne choisie se teinte légèrement */
+.app-chart-hit { fill: transparent; cursor: pointer; pointer-events: all; }
+.app-chart-hit.is-selected { fill: rgba(255, 255, 255, 0.07); }
+
+/* Légende : sous le graphique, centrée, à la ligne si besoin */
+.app-chart-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 12px; font-size: 13px; color: var(--app-chart-text); }
+.app-chart-legend-item { display: inline-flex; align-items: center; gap: 8px; }
+.app-chart-swatch { display: inline-block; width: 18px; height: 4px; border-radius: 2px; background: var(--app-chart-a); }
+.app-chart-swatch.is-b { background: var(--app-chart-b); }
+
+/* Bulle reliée au point */
+.app-chart-bubble {
+  position: absolute;
+  z-index: 5;
+  transform: translate(-50%, -100%);
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.app-chart-bubble::after {
+  content: "";
+  position: absolute;
+  left: calc(50% + var(--arrow-dx, 0px));
+  bottom: -5px;
+  width: 11px;
+  height: 11px;
+  background: inherit;
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+.app-chart-bubble.is-below { transform: translate(-50%, 0); }
+.app-chart-bubble.is-below::after { bottom: auto; top: -5px; }
+.app-chart-bubble-title { font-size: 12px; opacity: 0.65; margin-bottom: 2px; }
+.app-chart-bubble-row { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 16px; font-weight: 700; }
+.app-chart-bubble-label { font-size: 12px; font-weight: 400; opacity: 0.75; }
+.app-chart-bubble-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--app-chart-a); }
+.app-chart-bubble-dot.is-b { background: var(--app-chart-b); }
+html[data-theme="light"] .app-chart-bubble { background: #1c1c1e; color: #ffffff; }
+html[data-theme="light"] .app-chart-hit.is-selected { fill: rgba(0, 0, 0, 0.06); }

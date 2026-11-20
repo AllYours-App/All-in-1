@@ -661,10 +661,7 @@
 }
 
 #page-putting .line-chart_header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  display: block; /* titre sur toute la largeur ; la légende est sous le graphique */
 }
 
 #page-putting .line-chart_title {
@@ -674,128 +671,19 @@
 }
 
 #page-putting .line-chart_subtitle {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin-top: 2px;
 }
 
-#page-putting .line-chart_legend {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  row-gap: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  white-space: nowrap;
+/* Graphes (dessinés par appChartSvg, core/commun.js) : pleine largeur de la carte, sans les marges intérieures */
+#page-putting .line-chart,
+#page-putting .review-chart .app-chart-wrap {
+  margin-left: -18px;
+  margin-right: -18px;
 }
-
-#page-putting .line-chart_legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-#page-putting .line-chart_legend-item + .line-chart_legend-item {
-  margin-left: 10px;
-}
-
-#page-putting .line-chart_legend-icon {
-  width: 20px;
-  height: 10px;
-  color: var(--accent);
-}
-
-#page-putting .line-chart_legend-item.is-b .line-chart_legend-icon {
-  color: #5b9bd5;
-}
-
-#page-putting .line-chart {
-  width: 100%;
-  height: auto;
-}
-
-#page-putting .line-chart-grid {
-  stroke: var(--border-subtle);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 5;
-}
-
-#page-putting .line-chart-grid-solid {
-  stroke: var(--border-subtle);
-  stroke-width: 1.5;
-}
-
-#page-putting .line-chart-axis-label {
-  fill: var(--text-secondary);
-  font-size: 22px;
-}
-
-#page-putting .line-chart-axis-title {
-  fill: var(--text-tertiary);
-  font-size: 22px;
-}
-
-#page-putting .line-chart-ytick {
-  fill: var(--text-tertiary);
-  font-size: 19px;
-}
-
-#page-putting .line-chart-ytick.is-b {
-  fill: #5b9bd5;
-}
-
-#page-putting .line-chart-xtick {
-  fill: var(--text-tertiary);
-  font-size: 18px;
-}
-
-#page-putting .line-chart-line {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-#page-putting .line-chart-line.is-b {
-  stroke: #5b9bd5;
-}
-
-#page-putting .line-chart-glow {
-  fill: var(--accent);
-  opacity: 0.18;
-}
-
-#page-putting .line-chart-point {
-  fill: var(--accent);
-  stroke: var(--bg-card);
-  stroke-width: 2.5;
-}
-
-#page-putting .line-chart-point.is-b {
-  fill: #5b9bd5;
-}
-
-#page-putting .line-chart-value {
-  fill: var(--text-primary);
-  font-size: 21px;
-  font-weight: 700;
-}
-
-#page-putting .line-chart-value.is-b {
-  fill: #5b9bd5;
-}
-
-#page-putting .line-chart-bar {
-  fill: var(--accent);
-  opacity: 0.85;
-}
-
-#page-putting .line-chart-bar.is-b {
-  fill: #5b9bd5;
-}
+#page-putting .line-chart .app-chart-wrap { margin: 0; }
+#page-putting .chart-card .app-chart-legend { margin-top: -4px; }
 
 /* ---------- Toile d'araignée (Analyse Pente, 8 sommets) ---------- */
 #page-putting .radar-chart_wrap {

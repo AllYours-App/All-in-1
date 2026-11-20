@@ -329,7 +329,6 @@
 .wg-radar-dot{fill:var(--wg-accent);}
 .wg-radar-label-num{fill:#FFFFFF;font-size:11px;font-weight:700;text-anchor:middle;}
 .wg-radar-label-name{fill:var(--wg-text-secondary);font-size:8.5px;text-anchor:middle;}
-.wg-radar-value{fill:var(--wg-accent);font-size:9.5px;font-weight:700;text-anchor:middle;}
 
 canvas.wg-chart{width:100%;height:220px;display:block;}
 
@@ -506,8 +505,9 @@ canvas.wg-chart{width:100%;height:220px;display:block;}
   max-width:var(--wg-max-width);margin:0 auto 16px;padding:16px;
 }
 .wg-insight-card-title{font-size:13px;font-weight:700;margin-bottom:8px;}
-.wg-chart-axis-title{font-size:11px;color:var(--wg-text-secondary);margin-bottom:6px;text-align:center;}
-.wg-chart-axis-text{fill:var(--wg-text-secondary);font-size:9px;}
+.wg-chart-axis-title{font-size:13px;color:var(--wg-text-secondary);margin-bottom:6px;text-align:center;}
+/* Graphes d'évolution (appChartSvg, core/commun.js) : pleine largeur de la carte, sans les marges intérieures */
+.wg-insight-card .app-chart-wrap{margin-left:-16px;margin-right:-16px;}
 .wg-session-list{list-style:none;margin:0;padding:0;max-width:var(--wg-max-width);margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px;}
 .wg-log-row-right{display:flex;align-items:center;gap:8px;}
 .wg-session-list li{

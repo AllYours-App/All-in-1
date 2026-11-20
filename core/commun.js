@@ -508,3 +508,235 @@ function appSheet(config) {
   closeBtn.focus();
   return close;
 }
+
+/* ---------------------------------------------------------------------------
+   GRAPHIQUES COMMUNS (Putting, Wedging) : un seul dessin, un seul fonctionnement.
+   - appChartSvg() dessine un graphique (courbes et/ou barres, un ou deux axes verticaux) avec au plus
+     5 valeurs fixes par axe (appChartNiceScale) et des libellés horizontaux espacés ;
+   - un appui sur un point (ou sur sa colonne) affiche une bulle reliée au point avec la valeur exacte,
+     un deuxième appui ou un appui ailleurs la ferme (gestionnaire unique en bas, rien à brancher) ;
+   - le dessin est fait à la largeur réelle du conteneur : 1 unité du dessin = 1 px à l'écran, donc les tailles
+     de police du CSS (commun.css, classes app-chart-*) sont les tailles vues par le joueur.
+   --------------------------------------------------------------------------- */
+
+// Largeur (px) où dessiner un graphique. Si le conteneur n'est pas encore dans la page (graphe construit en
+// texte puis inséré) ou est masqué, estimation : largeur d'une carte pleine largeur.
+function appChartWidth(el) {
+  const measured = el && el.clientWidth;
+  if (measured > 0) return measured;
+  const cs = getComputedStyle(document.documentElement);
+  const pad = parseFloat(cs.getPropertyValue('--app-padding-x')) || 20;
+  const max = parseFloat(cs.getPropertyValue('--app-max-width')) || 430;
+  return Math.max(260, Math.min(window.innerWidth, max) - 2 * pad);
+}
+
+// Nombre affiché avec 2 décimales au plus, séparateur décimal de la langue
+function appChartNum(v) {
+  const r = Math.round(v * 100) / 100;
+  const sep = typeof appDecimalSep === 'function' ? appDecimalSep() : ',';
+  return String(r).replace('.', sep);
+}
+
+// Échelle de 0 à 100 % : toujours les mêmes 5 valeurs
+function appChartPercentScale() {
+  return { min: 0, max: 100, ticks: [0, 25, 50, 75, 100] };
+}
+
+// Échelle "propre" couvrant lo → hi en `intervals` intervalles égaux (4 par défaut = 5 valeurs).
+// integer : pas entiers seulement (comptes de trous, mètres). Renvoie { min, max, ticks }.
+function appChartNiceScale(lo, hi, intervals, integer) {
+  intervals = intervals || 4;
+  if (!isFinite(lo) || !isFinite(hi)) { lo = 0; hi = 1; }
+  if (hi <= lo) hi = lo + (integer ? 1 : Math.max(Math.abs(lo) * 0.1, 1)); // plage nulle
+  const raw = (hi - lo) / intervals;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const mults = integer ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
+  let step = null, min = lo;
+  for (let m = mag / 10; step === null && m <= mag * 100; m *= 10) {
+    for (let i = 0; i < mults.length; i++) {
+      const s = mults[i] * m;
+      if (integer && s < 1) continue;
+      const mn = Math.floor(lo / s + 1e-9) * s;
+      if (mn + s * intervals >= hi - 1e-9) { step = s; min = mn; break; }
+    }
+  }
+  const ticks = [];
+  for (let k = 0; k <= intervals; k++) ticks.push(Math.round((min + step * k) * 1e6) / 1e6);
+  return { min: ticks[0], max: ticks[intervals], ticks: ticks };
+}
+
+// Légende à placer SOUS le graphique : items = [{ label, cls }] (cls 'b' = 2e couleur)
+function appChartLegend(items) {
+  return '<div class="app-chart-legend">' + items.map(function (it) {
+    return '<span class="app-chart-legend-item"><i class="app-chart-swatch' + (it.cls === 'b' ? ' is-b' : '') + '"></i>' + appEscapeHtml(it.label) + '</span>';
+  }).join('') + '</div>';
+}
+
+/* Dessine un graphique et renvoie son HTML (conteneur + svg).
+   o.width       largeur de dessin en px (appChartWidth)
+   o.height      hauteur en px (230 par défaut)
+   o.labels      libellés sous l'axe horizontal (un par point), au plus ~5 affichés
+   o.tipTitles   titre de la bulle pour chaque point (sinon le libellé)
+   o.zeroLine    trait renforcé à la valeur 0 (graphe centré sur 0)
+   o.emptyText   texte si aucune donnée
+   o.series      [{ values, kind: 'line' | 'bar', cls: 'a' | 'b', label, scale, axis: 'left' | 'right',
+                    fmt (graduations), tipFmt (bulle), area }]
+                 scale = { min, max, ticks } (appChartNiceScale ou appChartPercentScale) ; deux axes : mêmes
+                 nombres d'intervalles pour que les graduations de droite tombent sur les traits de gauche. */
+function appChartSvg(o) {
+  const W = Math.round(o.width) || 360, H = o.height || 230;
+  const series = (o.series || []).filter(function (s) { return s.scale; });
+  const labels = o.labels || [];
+  const isNum = function (v) { return v != null && !isNaN(v); };
+  const n = Math.max.apply(null, [labels.length].concat(series.map(function (s) { return s.values.length; })));
+  const fmtOf = function (s) { return s.fmt || appChartNum; };
+  const leftS = series.filter(function (s) { return s.axis !== 'right'; })[0];
+  const rightS = series.filter(function (s) { return s.axis === 'right'; })[0];
+  const refS = leftS || rightS;
+  const padT = 14, padB = 30;
+  const tickChars = function (s) {
+    return s ? Math.max.apply(null, s.scale.ticks.map(function (t) { return String(fmtOf(s)(t)).length; })) : 0;
+  };
+  const padL = leftS ? Math.max(34, Math.ceil(tickChars(leftS) * 8) + 16) : 12;   // 8 px par caractère (police 13 px) + écart + marge
+  const padR = rightS ? Math.max(34, Math.ceil(tickChars(rightS) * 8) + 18) : 14;
+  const plotW = W - padL - padR, plotH = H - padT - padB, base = padT + plotH;
+  const svgOpen = '<div class="app-chart-wrap"><svg viewBox="0 0 ' + W + ' ' + H + '" class="app-chart-svg" xmlns="http://www.w3.org/2000/svg">';
+  const svgClose = '</svg></div>';
+
+  // Pas de données : cadre vide et message
+  if (!refS || !n || !series.some(function (s) { return s.values.some(isNum); })) {
+    let g = '';
+    for (let k = 0; k <= 4; k++) {
+      const y = padT + (plotH * k) / 4;
+      g += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1) + '" class="' + (k === 4 ? 'app-chart-axis' : 'app-chart-grid') + '"/>';
+    }
+    return svgOpen + g + '<text x="' + (W / 2) + '" y="' + (padT + plotH / 2) + '" text-anchor="middle" class="app-chart-empty">' + appEscapeHtml(o.emptyText || 'Pas encore de données') + '</text>' + svgClose;
+  }
+
+  const hasBars = series.some(function (s) { return s.kind === 'bar'; });
+  const inset = hasBars ? 0 : 10;
+  const slot = hasBars ? plotW / n : (n > 1 ? (plotW - 2 * inset) / (n - 1) : plotW);
+  const xAt = function (i) { return hasBars ? padL + slot * (i + 0.5) : (n > 1 ? padL + inset + slot * i : padL + plotW / 2); };
+  const yAt = function (s, v) { return padT + plotH - ((v - s.scale.min) / (s.scale.max - s.scale.min)) * plotH; };
+
+  // Traits horizontaux et graduations (gauche, et droite si un deuxième axe)
+  let grid = '', ticksTxt = '';
+  refS.scale.ticks.forEach(function (t, k) {
+    const y = yAt(refS, t);
+    grid += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1) + '" class="' + (k === 0 ? 'app-chart-axis' : 'app-chart-grid') + '"/>';
+  });
+  if (o.zeroLine && refS.scale.min < 0 && refS.scale.max > 0) {
+    const zy = yAt(refS, 0);
+    grid += '<line x1="' + padL + '" y1="' + zy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + zy.toFixed(1) + '" class="app-chart-axis"/>';
+  }
+  if (leftS) {
+    leftS.scale.ticks.forEach(function (t) {
+      ticksTxt += '<text x="' + (padL - 8) + '" y="' + (yAt(leftS, t) + 4).toFixed(1) + '" text-anchor="end" class="app-chart-tick' + (leftS.cls === 'b' ? ' is-b' : '') + '">' + appEscapeHtml(fmtOf(leftS)(t)) + '</text>';
+    });
+  }
+  if (rightS) {
+    rightS.scale.ticks.forEach(function (t) {
+      ticksTxt += '<text x="' + (W - padR + 8) + '" y="' + (yAt(rightS, t) + 4).toFixed(1) + '" text-anchor="start" class="app-chart-tick is-b">' + appEscapeHtml(fmtOf(rightS)(t)) + '</text>';
+    });
+  }
+
+  // Libellés horizontaux : au plus un tous les ~64 px, répartis de façon régulière
+  const maxLabels = Math.max(2, Math.floor(plotW / 64));
+  const idx = [];
+  if (n <= maxLabels) { for (let i = 0; i < n; i++) idx.push(i); }
+  else {
+    // de préférence un nombre de libellés qui tombe juste (premier et dernier points inclus), sinon un pas régulier
+    let count = 0;
+    for (let c = maxLabels; c >= 3 && !count; c--) { if ((n - 1) % (c - 1) === 0) count = c; }
+    if (count) { for (let k = 0; k < count; k++) idx.push((k * (n - 1)) / (count - 1)); }
+    else { const step = Math.ceil((n - 1) / (maxLabels - 1)); for (let i = 0; i < n; i += step) idx.push(i); }
+  }
+  const xTxt = idx.map(function (i) {
+    return labels[i] == null ? '' : '<text x="' + xAt(i).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" class="app-chart-tick">' + appEscapeHtml(labels[i]) + '</text>';
+  }).join('');
+
+  // Courbes et barres ; on retient, pour chaque point, le haut du dessin (ancre de la bulle) et les valeurs
+  const tops = [], tips = [];
+  for (let i = 0; i < n; i++) { tops.push(Infinity); tips.push([]); }
+  const barSeries = series.filter(function (s) { return s.kind === 'bar'; });
+  const barW = Math.min(22, (slot * 0.7) / Math.max(barSeries.length, 1)), barGap = 3;
+  const groupW = barSeries.length * barW + (barSeries.length - 1) * barGap;
+  let shapes = '';
+  series.forEach(function (s) {
+    const c = s.cls === 'b' ? ' is-b' : '';
+    const tipFmt = s.tipFmt || s.fmt || appChartNum;
+    const j = barSeries.indexOf(s);
+    const pts = [];
+    s.values.forEach(function (v, i) {
+      if (!isNum(v)) return;
+      const y = yAt(s, v);
+      tops[i] = Math.min(tops[i], y);
+      tips[i].push({ l: s.label || '', v: tipFmt(v), c: s.cls === 'b' ? 'b' : 'a' });
+      if (s.kind === 'bar') {
+        const h = ((v - s.scale.min) / (s.scale.max - s.scale.min)) * plotH;
+        if (h > 0) shapes += '<rect x="' + (xAt(i) - groupW / 2 + j * (barW + barGap)).toFixed(1) + '" y="' + (base - h).toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3" class="app-chart-bar' + c + '"/>';
+        tops[i] = Math.min(tops[i], base - h);
+      } else {
+        pts.push({ x: xAt(i), y: y });
+      }
+    });
+    if (s.kind !== 'bar' && pts.length) {
+      const d = pts.map(function (p, k) { return (k ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
+      if (s.area && pts.length > 1) {
+        shapes += '<path d="M' + pts[0].x.toFixed(1) + ' ' + base + ' ' + pts.map(function (p) { return 'L' + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ') + ' L' + pts[pts.length - 1].x.toFixed(1) + ' ' + base + ' Z" class="app-chart-area' + c + '"/>';
+      }
+      if (pts.length > 1) shapes += '<path d="' + d + '" class="app-chart-line' + c + '"/>';
+      shapes += pts.map(function (p) { return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4.5" class="app-chart-dot' + c + '"/>'; }).join('');
+    }
+  });
+
+  // Zones d'appui invisibles : une colonne par point, d'au moins 36 px de large (le point seul est trop petit au doigt)
+  let hits = '';
+  const hw = Math.max(slot, 36);
+  for (let i = 0; i < n; i++) {
+    if (!tips[i].length) continue;
+    const x0 = Math.max(padL, xAt(i) - hw / 2), x1 = Math.min(W - padR, xAt(i) + hw / 2);
+    const tip = { t: (o.tipTitles && o.tipTitles[i]) || labels[i] || '', v: tips[i] };
+    hits += '<rect x="' + x0.toFixed(1) + '" y="' + (padT - 8) + '" width="' + (x1 - x0).toFixed(1) + '" height="' + (plotH + 8) + '" class="app-chart-hit" data-ax="' + xAt(i).toFixed(1) + '" data-ay="' + tops[i].toFixed(1) + '" data-tip="' + appEscapeHtml(JSON.stringify(tip)) + '"/>';
+  }
+  return svgOpen + grid + ticksTxt + xTxt + shapes + hits + svgClose;
+}
+
+// Bulle au toucher : un seul gestionnaire pour tous les graphiques de l'appli (délégation sur document)
+document.addEventListener('click', function (e) {
+  const hit = e.target && e.target.closest ? e.target.closest('.app-chart-hit') : null;
+  const wasSelected = !!hit && hit.classList.contains('is-selected');
+  document.querySelectorAll('.app-chart-bubble').forEach(function (b) { b.remove(); });
+  document.querySelectorAll('.app-chart-hit.is-selected').forEach(function (h) { h.classList.remove('is-selected'); });
+  if (!hit || wasSelected) return;
+  let tip;
+  try { tip = JSON.parse(hit.getAttribute('data-tip')); } catch (err) { return; }
+  const wrap = hit.closest('.app-chart-wrap'), svg = hit.ownerSVGElement;
+  if (!wrap || !svg) return;
+  hit.classList.add('is-selected');
+
+  const bubble = document.createElement('div');
+  bubble.className = 'app-chart-bubble';
+  bubble.innerHTML =
+    (tip.t ? '<div class="app-chart-bubble-title">' + appEscapeHtml(tip.t) + '</div>' : '') +
+    tip.v.map(function (r) {
+      return '<div class="app-chart-bubble-row"><i class="app-chart-bubble-dot' + (r.c === 'b' ? ' is-b' : '') + '"></i>' +
+        (r.l ? '<span class="app-chart-bubble-label">' + appEscapeHtml(r.l) + '</span>' : '') +
+        '<span>' + appEscapeHtml(r.v) + '</span></div>';
+    }).join('');
+  wrap.appendChild(bubble);
+
+  // Position : au-dessus du point (en dessous s'il n'y a pas la place), bulle gardée dans le cadre,
+  // pointe (flèche) toujours dirigée vers le point.
+  const vb = svg.viewBox.baseVal, sr = svg.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+  const k = sr.width / vb.width;
+  const px = sr.left - wr.left + (parseFloat(hit.getAttribute('data-ax')) - vb.x) * k;
+  const py = sr.top - wr.top + (parseFloat(hit.getAttribute('data-ay')) - vb.y) * k;
+  const bw = bubble.offsetWidth, bh = bubble.offsetHeight, m = 6;
+  const cx = Math.min(Math.max(px, bw / 2 + m), wr.width - bw / 2 - m);
+  const below = py - bh - 16 < 0;
+  bubble.style.left = cx + 'px';
+  bubble.style.top = (below ? py + 12 : py - 12) + 'px';
+  bubble.style.setProperty('--arrow-dx', (px - cx) + 'px');
+  bubble.classList.toggle('is-below', below);
+});
