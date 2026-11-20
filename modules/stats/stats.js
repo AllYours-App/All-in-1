@@ -2621,32 +2621,71 @@
     wind: (s) => ['Vent', optionLabel('wind', s.wind)],
   };
 
-  /* --- Recherche de parcours (API FlyAway Golf, comme dans l'ancienne version) ---
-     GET /golfs n'accepte pas de recherche texte (lat / long / limit / skip seulement) :
-     1) on charge une fois les parcours proches de la position de l'utilisateur,
-     2) on filtre cette liste localement à chaque frappe,
-     3) au choix d'un parcours, on charge son profil (par, handicap, distances par départ). */
+  /* --- Recherche de parcours : deux sources qui se complètent ---
+     1) API FlyAway Golf (par, handicap, distances par départ). GET /golfs n'accepte pas de recherche texte
+        (lat / long / limit / skip seulement) : on charge une fois les parcours proches de la position de
+        l'utilisateur et on les filtre localement à chaque frappe (suggestions instantanées) ;
+     2) Photon (Komoot, données OpenStreetMap) : recherche d'un golf par son nom, partout dans le monde, dès
+        COURSE_SEARCH_MIN caractères. Photon donne un nom et des coordonnées, pas la carte du parcours : au choix,
+        on cherche le golf FlyAway portant le même nom autour de ces coordonnées pour charger son profil.
+        S'il n'y en a pas, le parcours est choisi sans carte (nom et ville seulement : par, handicap et distances
+        restent à saisir à la main).
+     Au choix d'un parcours FlyAway, on charge son profil (par, handicap, distances par départ). */
   const COURSE_API = 'https://api.flyawaygolf.com/v2';
+  const COURSE_SEARCH_API = 'https://photon.komoot.io/api/';
   const COURSE_API_TIMEOUT = 10000; // ms : sans réponse, la recherche passe en erreur et le parcours se saisit à la main
+  const COURSE_SEARCH_MIN = 3;      // caractères tapés avant de lancer la recherche par nom
+  const COURSE_SEARCH_DELAY = 350;  // ms sans frappe avant l'appel (évite un appel par lettre)
+  const COURSE_MATCH_MIN = 0.5;     // ressemblance minimale (0 à 1) entre un nom Photon et un nom FlyAway
 
-  async function fetchCourseJson(url) {
+  // signal : annulation depuis l'extérieur (frappe suivante) ; le délai maximal reste géré ici
+  async function fetchCourseJson(url, signal) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), COURSE_API_TIMEOUT);
+    const onAbort = () => ctrl.abort();
+    if (signal) {
+      if (signal.aborted) ctrl.abort();
+      else signal.addEventListener('abort', onAbort, { once: true });
+    }
     try {
       const res = await fetch(url, { signal: ctrl.signal });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return await res.json();
-    } finally { clearTimeout(timer); }
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', onAbort);
+    }
   }
   let nearbyCourses = [];
-  let nearbyStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
-  let nearbyError = '';
+  let nearbyStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'error' (une erreur de position n'empêche pas la recherche par nom)
+  let searchedCourses = [];  // résultats de la recherche par nom : { name, city, country, lat, lon }
+  let searchStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
+  let searchTimer = null;
+  let searchCtrl = null;     // appel en cours, annulé dès que le texte change
   let courseLoading = false;
   let courseError = '';
   let courseToken = 0; // invalide la réponse d'un chargement devenu obsolète
 
   // Comparaison sans accents ni majuscules ("evian" trouve "Évian")
   const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  // Mots d'un nom de golf sans les mots génériques ("Golf Club de Biarritz Le Phare" → biarritz, phare)
+  const COURSE_STOP_WORDS = new Set(['golf', 'club', 'de', 'du', 'des', 'la', 'le', 'les', 'the', 'of', 'and', 'et', 'country', 'course', 'resort', 'links', 'gc', 'cc', 'a', 'd', 'l']);
+  function courseTokens(name) {
+    const all = fold(name).replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+    const core = all.filter((t) => !COURSE_STOP_WORDS.has(t));
+    return core.length ? core : all;
+  }
+
+  // Ressemblance de deux noms de golf : mots communs / mots au total (1 = mêmes mots)
+  function courseSimilarity(a, b) {
+    const A = new Set(courseTokens(a));
+    const B = new Set(courseTokens(b));
+    if (!A.size || !B.size) return 0;
+    let common = 0;
+    A.forEach((t) => { if (B.has(t)) common++; });
+    return common / (A.size + B.size - common);
+  }
 
   // Libellé de départ renvoyé par l'API → clé de newRoundOptions.tee
   function normalizeTeeKey(raw) {
@@ -2678,12 +2717,7 @@
 
   function loadNearbyCourses() {
     if (nearbyStatus === 'loading' || nearbyStatus === 'ready') return;
-    if (!navigator.geolocation) {
-      nearbyStatus = 'error';
-      nearbyError = 'Géolocalisation indisponible, saisis le parcours manuellement.';
-      refreshCourseStatus();
-      return;
-    }
+    if (!navigator.geolocation) { nearbyStatus = 'error'; return; }
     nearbyStatus = 'loading';
     refreshCourseStatus();
     navigator.geolocation.getCurrentPosition(
@@ -2695,25 +2729,84 @@
           nearbyStatus = 'ready';
         } catch (err) {
           nearbyStatus = 'error';
-          nearbyError = 'Recherche indisponible, saisis le parcours manuellement.';
         }
         renderCourseResults();
-        refreshCourseStatus();
       },
-      () => {
+      () => { // position refusée : les parcours proches manquent, la recherche par nom reste disponible
         nearbyStatus = 'error';
-        nearbyError = 'Position refusée, saisis le parcours manuellement.';
         refreshCourseStatus();
       },
       { timeout: 10000 }
     );
   }
 
-  // Parcours proches correspondant au texte saisi (nom ou ville, 2 caractères minimum)
+  // Golfs dont le nom correspond au texte, partout dans le monde (Photon : OpenStreetMap, golfs uniquement)
+  async function searchCoursesByName(text, signal) {
+    const lang = typeof appLang === 'function' ? appLang() : 'fr';
+    const langParam = lang === 'fr' || lang === 'en' ? `&lang=${lang}` : ''; // Photon ne traduit que fr / en (ni es)
+    const json = await fetchCourseJson(`${COURSE_SEARCH_API}?q=${encodeURIComponent(text)}&osm_tag=leisure:golf_course&limit=10${langParam}`, signal);
+    const out = [];
+    ((json && json.features) || []).forEach((f) => {
+      const p = f.properties || {};
+      const xy = (f.geometry && f.geometry.coordinates) || [];
+      const lon = Number(xy[0]);
+      const lat = Number(xy[1]);
+      if (!p.name || !isFinite(lat) || !isFinite(lon)) return;
+      if (out.some((o) => fold(o.name) === fold(p.name) && Math.abs(o.lat - lat) < 0.02 && Math.abs(o.lon - lon) < 0.02)) return; // doublon OSM
+      out.push({ name: p.name, city: p.city || p.locality || p.district || p.county || '', country: p.country || '', lat, lon });
+    });
+    return out;
+  }
+
+  // Annule la recherche par nom (appel en cours, délai en attente) et vide ses résultats
+  function stopCourseSearch() {
+    clearTimeout(searchTimer);
+    if (searchCtrl) searchCtrl.abort();
+    searchCtrl = null;
+    searchedCourses = [];
+    searchStatus = 'idle';
+  }
+
+  // Appelée à chaque frappe : attend une courte pause, puis lance la recherche par nom
+  function scheduleCourseSearch() {
+    const text = newRound.courseQuery.trim();
+    if (newRound.course || fold(text).length < COURSE_SEARCH_MIN) { stopCourseSearch(); return; }
+    clearTimeout(searchTimer);
+    searchStatus = 'loading'; // les résultats précédents restent affichés jusqu'à la réponse
+    searchTimer = setTimeout(async () => {
+      if (searchCtrl) searchCtrl.abort();
+      const ctrl = searchCtrl = new AbortController();
+      try {
+        const found = await searchCoursesByName(text, ctrl.signal);
+        if (ctrl !== searchCtrl) return; // une frappe plus récente a pris le relais
+        searchedCourses = found;
+        searchStatus = 'ready';
+      } catch (err) {
+        if (ctrl !== searchCtrl) return;
+        searchedCourses = [];
+        searchStatus = 'error';
+      }
+      renderCourseResults();
+    }, COURSE_SEARCH_DELAY);
+  }
+
+  // Suggestions pour le texte saisi (2 caractères minimum) : parcours proches d'abord, puis résultats de la recherche par nom
+  // { name, city, slug } = parcours FlyAway ; { name, city, found } = résultat de recherche (index dans searchedCourses)
   function findCourses() {
     const q = fold(newRound.courseQuery).trim();
-    if (q.length < 2 || nearbyStatus !== 'ready' || newRound.course) return [];
-    return nearbyCourses.filter((c) => fold(c.name).includes(q) || fold(c.city).includes(q)).slice(0, 8);
+    if (q.length < 2 || newRound.course || courseLoading) return [];
+    const list = [];
+    if (nearbyStatus === 'ready') {
+      nearbyCourses.filter((c) => fold(c.name).includes(q) || fold(c.city).includes(q)).slice(0, 8)
+        .forEach((c) => list.push({ name: c.name, city: c.city, slug: c.slug }));
+    }
+    const nearbyCount = list.length;
+    searchedCourses.forEach((c, i) => {
+      // même golf que l'un des parcours proches déjà listés : une seule ligne
+      if (list.slice(0, nearbyCount).some((n) => courseSimilarity(n.name, c.name) >= COURSE_MATCH_MIN)) return;
+      list.push({ name: c.name, city: [c.city, c.country].filter(Boolean).join(', '), found: i });
+    });
+    return list.slice(0, 8);
   }
 
   function renderCourseResults() {
@@ -2721,7 +2814,7 @@
     if (!list) return;
     const matches = findCourses();
     list.innerHTML = matches.map((c) => `
-      <li><button type="button" class="new-round_result" data-course-slug="${appEscapeHtml(c.slug)}">
+      <li><button type="button" class="new-round_result" ${c.slug ? `data-course-slug="${appEscapeHtml(c.slug)}"` : `data-course-found="${c.found}"`}>
         <span class="new-round_result-name">${appEscapeHtml(c.name)}</span>
         ${c.city ? `<span class="new-round_result-city">${appEscapeHtml(c.city)}</span>` : ''}
       </button></li>`).join('');
@@ -2736,11 +2829,14 @@
     const typed = fold(newRound.courseQuery).trim().length >= 2;
     let text = '';
     if (courseLoading) text = 'Chargement du parcours…';
-    else if (newRound.course) text = newRound.course.city;
+    else if (newRound.course) text = newRound.course.noCard ? (newRound.course.city ? `${newRound.course.city} · carte du parcours indisponible` : 'Carte du parcours indisponible') : newRound.course.city;
     else if (courseError) text = courseError;
-    else if (nearbyStatus === 'loading') text = 'Recherche des parcours proches…';
-    else if (nearbyStatus === 'error') text = nearbyError;
-    else if (nearbyStatus === 'ready' && typed && !findCourses().length) text = 'Aucun parcours trouvé près de toi';
+    else if (typed && !findCourses().length) {
+      if (searchStatus === 'loading') text = 'Recherche des parcours…';
+      else if (searchStatus === 'error') text = 'Recherche indisponible, saisis le parcours manuellement.';
+      else if (searchStatus === 'ready') text = 'Aucun parcours trouvé';
+      else if (nearbyStatus === 'loading') text = 'Recherche des parcours proches…';
+    } else if (!typed && nearbyStatus === 'loading') text = 'Recherche des parcours proches…';
     el.textContent = text;
   }
 
@@ -2757,30 +2853,68 @@
     });
   }
 
-  async function pickCourse(slug) {
-    const picked = nearbyCourses.find((c) => c.slug === slug);
-    if (!picked) return;
+  // Golf FlyAway portant le même nom que le résultat de recherche, cherché autour de ses coordonnées (null si aucun)
+  async function findCourseSlug(found) {
+    const near = nearbyCourses.find((c) => courseSimilarity(c.name, found.name) >= COURSE_MATCH_MIN);
+    if (near) return near.slug;
+    const json = await fetchCourseJson(`${COURSE_API}/golfs?lat=${found.lat}&long=${found.lon}&limit=15`);
+    const items = (json.data && json.data.golfs && json.data.golfs.items) || [];
+    let best = null;
+    let bestScore = 0;
+    items.forEach((c) => {
+      const score = courseSimilarity(c.name, found.name);
+      if (score > bestScore) { best = c; bestScore = score; } // à égalité, le plus proche (premier de la liste)
+    });
+    return best && bestScore >= COURSE_MATCH_MIN ? best.slug : null;
+  }
+
+  // Parcours sans carte : 18 trous sans par ni handicap, aucun départ propre (tous restent cliquables)
+  const blankCourse = (found) => ({
+    name: found.name, city: found.city || '', noCard: true,
+    holes: Array.from({ length: 18 }, () => ({ par: null, hcp: null })), tees: {},
+  });
+
+  // target : { name, city, slug } (parcours FlyAway connu) ou { name, city, lat, lon } (résultat de la recherche par nom)
+  async function selectCourse(target) {
     const token = ++courseToken;
     const input = newRoundEl.querySelector('input[name="course"]');
-    input.value = picked.name;
-    newRound.courseQuery = picked.name;
+    input.value = target.name;
+    newRound.courseQuery = target.name;
     newRound.course = null;
     courseError = '';
     courseLoading = true;
+    stopCourseSearch();
     renderCourseResults(); // liste masquée : le parcours choisi n'est plus une suggestion
 
     try {
-      const json = await fetchCourseJson(`${COURSE_API}/golfs/profile/${encodeURIComponent(slug)}`);
+      const slug = target.slug || await findCourseSlug(target);
       if (token !== courseToken) return; // l'utilisateur a modifié le champ entre-temps
-      const mapped = mapCourseProfile(json.data);
-      newRound.course = { ...mapped, name: mapped.name || picked.name, city: picked.city || mapped.city };
+      if (slug) {
+        const json = await fetchCourseJson(`${COURSE_API}/golfs/profile/${encodeURIComponent(slug)}`);
+        if (token !== courseToken) return;
+        const mapped = mapCourseProfile(json.data);
+        newRound.course = { ...mapped, name: mapped.name || target.name, city: target.city || mapped.city };
+      } else {
+        newRound.course = blankCourse(target);
+      }
     } catch (err) {
       if (token !== courseToken) return;
-      courseError = 'Impossible de charger ce parcours, saisis-le manuellement.';
+      if (target.slug) courseError = 'Impossible de charger ce parcours, saisis-le manuellement.';
+      else newRound.course = blankCourse(target); // FlyAway injoignable : le golf est choisi quand même, sans carte
     }
     courseLoading = false;
     applyCourseTees();
     refreshCourseStatus();
+  }
+
+  function pickCourse(slug) {
+    const picked = nearbyCourses.find((c) => c.slug === slug);
+    if (picked) selectCourse({ name: picked.name, city: picked.city, slug });
+  }
+
+  function pickFoundCourse(index) {
+    const found = searchedCourses[index];
+    if (found) selectCourse({ name: found.name, city: found.city, lat: found.lat, lon: found.lon });
   }
 
   function newRoundGroup(label, content) {
@@ -2888,6 +3022,8 @@
 
       const result = e.target.closest('[data-course-slug]');
       if (result) { pickCourse(result.dataset.courseSlug); return; }
+      const found = e.target.closest('[data-course-found]');
+      if (found) { pickFoundCourse(Number(found.dataset.courseFound)); return; }
       if (!e.target.closest('.new-round_search')) newRoundEl.querySelector('.new-round_results').hidden = true;
 
       const tee = e.target.closest('[data-tee]');
@@ -2920,6 +3056,7 @@
       courseError = '';
       newRound.courseQuery = e.target.value;
       if (newRound.course) { newRound.course = null; applyCourseTees(); } // texte modifié : le parcours chargé n'est plus valable
+      scheduleCourseSearch();
       renderCourseResults();
     });
 
@@ -2969,6 +3106,7 @@
     courseToken++;
     courseLoading = false;
     courseError = '';
+    stopCourseSearch();
     if (nearbyStatus === 'error') nearbyStatus = 'idle'; // la réouverture retente la recherche
     renderNewRound();
     newRoundTrigger = trigger || null;
@@ -3017,7 +3155,7 @@
       ? editing.holes.map((h) => {
         const idx = h.number - 1;
         return course
-          ? { number: h.number, par: course.holes[idx].par, hcp: course.holes[idx].hcp, distance: course.tees[newRound.tee] ? course.tees[newRound.tee][idx] : h.distance }
+          ? { number: h.number, par: course.holes[idx].par !== null ? course.holes[idx].par : h.par, hcp: course.holes[idx].hcp !== null ? course.holes[idx].hcp : h.hcp, distance: course.tees[newRound.tee] ? course.tees[newRound.tee][idx] : h.distance }
           : { number: h.number, par: h.par, hcp: h.hcp, distance: h.distance };
       })
       : Array.from({ length: holeCount }, (_, i) => {

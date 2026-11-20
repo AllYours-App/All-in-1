@@ -1,8 +1,8 @@
 /* ============================================================
    SERVICE WORKER — permet d'ouvrir et d'utiliser l'appli sans réseau.
 
-   Il ne garde que les fichiers de l'appli (même origine). Les appels à Supabase et à l'API
-   FlyAway ne passent jamais par lui : la synchronisation des données est faite par core/data.js.
+   Il ne garde que les fichiers de l'appli (même origine). Les appels à Supabase, à l'API
+   FlyAway et à Photon ne passent jamais par lui : la synchronisation des données est faite par core/data.js.
 
    Deux copies gardées sur l'appareil :
    - CACHE_APP (nom lié à VERSION) : la page, les CSS et les JS de l'appli, le manifeste ;
@@ -32,7 +32,7 @@
    ============================================================ */
 'use strict';
 
-const VERSION = 'golfevolution-v6';
+const VERSION = 'golfevolution-v7';
 const STATIC_REV = 1;
 const CACHE_APP = VERSION + '-app';
 const CACHE_STATIC = 'golfevolution-static-' + STATIC_REV;
@@ -191,7 +191,7 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;          // Supabase, FlyAway : jamais interceptés
+  if (url.origin !== self.location.origin) return;          // Supabase, FlyAway, Photon : jamais interceptés
   if (url.pathname === new URL('sw.js', ROOT).pathname) return;
 
   if (req.mode === 'navigate') {

@@ -21,6 +21,7 @@
      d'une entrée est 0, un « § » collé à la fin d'un mot (« séance§ ») prend le pluriel.
    En français, rien n'est actif : aucun risque pour l'appli d'origine.
 
+   Langue par défaut : celle du téléphone (français, anglais ou espagnol), sinon l'anglais.
    Changer de langue : Menu > Réglages > Apparence > Langue. Le choix est
    enregistré dans settings.language (synchronisé avec le compte) et dans
    golfevolution_language (lu avant tout le reste), puis la page est rechargée.
@@ -42,6 +43,20 @@
   var APP_STATE_KEY = 'golfevolution_app_state';
   var SUPPORTED = ['fr', 'en', 'es'];
   var LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES' };
+  /* Anglais et espagnol : si le téléphone est réglé sur une variante de la langue (en-US, es-MX...), ses
+     formats (ordre jour / mois, 12 h ou 24 h, séparateurs) sont repris ; sinon en-GB et es-ES. */
+  function regionalLocale(code, fallback) {
+    try {
+      var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+      for (var i = 0; i < list.length; i++) {
+        var l = String(list[i] || '');
+        if (l.toLowerCase().indexOf(code + '-') === 0 && Intl.DateTimeFormat.supportedLocalesOf(l).length) return l;
+      }
+    } catch (e) { /* variante inconnue : formats par défaut */ }
+    return fallback;
+  }
+  LOCALES.en = regionalLocale('en', 'en-GB');
+  LOCALES.es = regionalLocale('es', 'es-ES');
   var COLUMN = { en: 1, es: 2 }; // colonne du dictionnaire pour chaque langue
 
   /* --- Langue en cours : réglage du compte, sinon choix de l'appareil ---- */
@@ -54,12 +69,34 @@
       var v = localStorage.getItem(STORAGE_KEY);
       if (SUPPORTED.indexOf(v) >= 0) return v;
     } catch (e) { /* idem */ }
-    return 'fr';
+    return deviceLanguage(); // aucun choix fait : langue du téléphone
+  }
+
+  // Langue du téléphone si c'est le français, l'anglais ou l'espagnol ; toute autre langue : anglais
+  function deviceLanguage() {
+    try {
+      var first = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase().split('-')[0];
+      if (SUPPORTED.indexOf(first) >= 0) return first;
+    } catch (e) { /* langue illisible : anglais */ }
+    return 'en';
   }
 
   var lang = readLanguage();
 
   window.appLang = function () { return lang; };
+  /* Unités proposées au premier lancement, selon la langue (la personne peut ensuite les changer dans Menu) :
+     français et espagnol : m, km/h, °C, kg ; anglais : yd, mph (la vitesse du vent suit la distance, voir
+     menuWindSpeedUnit dans menu.js) ; anglais américain (téléphone en en-US) : en plus °F et lb.
+     distance : 'ft' = yards (réglage de Menu). */
+  // Séparateur décimal de la langue : « , » en français et en espagnol d'Espagne, « . » en anglais.
+  // Sert aux pavés numériques de l'appli ; les valeurs enregistrées restent des nombres (point).
+  window.appDecimalSep = function () {
+    try { return new Intl.NumberFormat(LOCALES[lang] || 'fr-FR').format(1.5).charAt(1) || ','; } catch (e) { return ','; }
+  };
+  window.appDefaultUnits = function () {
+    var us = lang === 'en' && /-US$/i.test(LOCALES.en);
+    return { distance: lang === 'en' ? 'ft' : 'm', temperature: us ? 'f' : 'c', weight: us ? 'lb' : 'kg' };
+  };
   window.appLocale = function () { return LOCALES[lang] || LOCALES.fr; };
   window.appT = function (text) { return lang === 'fr' ? text : translate(text); };
   window.appSetLanguage = function (next) {

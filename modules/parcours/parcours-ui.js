@@ -310,14 +310,18 @@ function trackInfoHtml() {
 
 /* --------------------------------------------------------------------------
    Calculateur de vent — mêmes coefficients que course.js
-   (règle TrackMan 1%/mph face, 0.5%/mph dos, 1yd/mph travers)
+   (règle TrackMan : +1 % de distance par mph de vent de face, −0,5 % par mph de vent dans le dos ;
+   travers : 1 yd de déviation par mph pour un coup de 150 yd, proportionnelle à la distance)
    Le calcul se fait toujours en mètres et en km/h : la distance saisie (m ou yd)
    et la vitesse saisie (km/h ou mph) sont converties avant (distanceToMeters,
    speedToKmh), le résultat est reconverti après (convertDistance).
    -------------------------------------------------------------------------- */
 const WIND_HEAD_COEF = 0.006214;
 const WIND_TAIL_COEF = 0.003107;
-const WIND_CROSS_COEF = 0.003789;
+// Travers : 1 yd par mph à 150 yd. Déviation (m) = coef × vitesse (km/h) × distance (m) ; donc
+// coef = 1 yd / (1 mph × 150 yd) = 1 / (150 × KMH_PER_MPH) : les yards s'annulent, quelle que soit l'unité affichée.
+// (L'ancienne valeur 0,003789 donnait 1 yd par mph à 150 m, soit 164 yd.)
+const WIND_CROSS_COEF = 1 / (150 * KMH_PER_MPH);
 
 function computeWindResult(distanceM, speedKmh, angleDeg) {
   if (distanceM === null || isNaN(distanceM)) return { distance: null, deviation: null };
@@ -350,9 +354,9 @@ function windResultDistanceLabel() {
 function windResultDeviationLabel() {
   const r = windCalcResult();
   if (r.deviation === null || isNaN(r.deviation)) return "--";
-  const v = Math.round(convertDistance(r.deviation, parcoursDistanceUnit()));
-  const side = v > 0 ? "droite" : v < 0 ? "gauche" : "";
-  return Math.abs(v) + " " + distanceUnitLabel() + (side ? "<br>" + side : "");
+  const v = Math.round(Math.abs(convertDistance(r.deviation, parcoursDistanceUnit())));
+  const side = v === 0 ? "" : r.deviation > 0 ? "droite" : "gauche";
+  return v + " " + distanceUnitLabel() + (side ? "<br>" + side : "");
 }
 function updateWindCalcOutputs() {
   const distEl = document.getElementById("wind-result-distance");

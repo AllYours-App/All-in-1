@@ -642,7 +642,7 @@ let resumableQuick = null; // exercice rapide √† reprendre, onglet Parcours (cl√
 let puttingNumericKeypadPopup = null; // { title, target, value, decimal, unit }
 
 function openNumericKeypad(title, target, currentValue, decimal, unit) {
-  const start = (currentValue === null || currentValue === undefined || currentValue === '') ? '' : String(currentValue).replace('.', ',');
+  const start = (currentValue === null || currentValue === undefined || currentValue === '') ? '' : String(currentValue).replace('.', appDecimalSep());
   puttingNumericKeypadPopup = { title: title, target: target, value: start, decimal: !!decimal, unit: unit || '' };
   renderNumericKeypad();
 }
@@ -660,8 +660,9 @@ function keypadPress(d) {
 
 function keypadDecimal() {
   if (!puttingNumericKeypadPopup || !puttingNumericKeypadPopup.decimal) return;
-  if (puttingNumericKeypadPopup.value.indexOf(',') !== -1) return;
-  puttingNumericKeypadPopup.value += (puttingNumericKeypadPopup.value === '' ? '0,' : ',');
+  const sep = appDecimalSep(); // virgule ou point selon la langue
+  if (puttingNumericKeypadPopup.value.indexOf(sep) !== -1) return;
+  puttingNumericKeypadPopup.value += (puttingNumericKeypadPopup.value === '' ? '0' + sep : sep);
   renderNumericKeypad();
 }
 
@@ -688,7 +689,7 @@ function applyNumericKeypadValue(target, raw) {
   const sep = target.indexOf(':');
   const kind = sep === -1 ? target : target.slice(0, sep);
   const key = sep === -1 ? null : target.slice(sep + 1);
-  const v = raw.replace(',', '.');
+  const v = raw.replace(/[.,]/, '.');
 
   if (kind === 'creative') {
     const f = puttingCreativeForm;
@@ -724,7 +725,7 @@ function renderNumericKeypad() {
   if (!puttingNumericKeypadPopup) { root.innerHTML = ''; return; }
   const p = puttingNumericKeypadPopup;
   const closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const extraKey = p.decimal ? { fn: 'keypadDecimal', label: ',' } : null;
+  const extraKey = p.decimal ? { fn: 'keypadDecimal', label: appDecimalSep() } : null;
   root.innerHTML = `
     <div class="mini-popup_overlay" onclick="closeNumericKeypad()">
       <div class="mini-popup" onclick="event.stopPropagation()">

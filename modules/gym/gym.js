@@ -886,7 +886,8 @@ document.getElementById("app-root-gym").innerHTML = `
 const GYM_LB_PER_KG = 2.2046226218;
 
 function gymWeightUnit() {
-  return appPrefGet("gym", "weightUnit", "kg") === "lb" ? "lb" : "kg";
+  const defaultUnit = (typeof appDefaultUnits === "function") ? appDefaultUnits().weight : "kg"; // lb sur un téléphone en-US
+  return appPrefGet("gym", "weightUnit", defaultUnit) === "lb" ? "lb" : "kg";
 }
 
 // kg stockés -> nombre à afficher (kg : inchangé ; lb : arrondi au dixième)
@@ -1119,11 +1120,8 @@ function gymAddDays(date, days) {
 
 function gymFormatDate(date) {
   const d = date instanceof Date ? date : new Date(date);
-  const mois = [
-    "janvier", "février", "mars", "avril", "mai", "juin",
-    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
-  ];
-  return `${d.getDate().toString().padStart(2, "0")} ${mois[d.getMonth()]} ${d.getFullYear()}`;
+  // 'fr-FR' suit la langue choisie (core/i18n.js) : 19 novembre 2026, 19 November 2026, 19 de noviembre de 2026
+  return d.toLocaleDateString("fr-FR", { day: appLang() === "fr" ? "2-digit" : "numeric", month: "long", year: "numeric" });
 }
 
 /**
@@ -1132,16 +1130,13 @@ function gymFormatDate(date) {
  */
 function gymFormatShortDate(date) {
   const d = date instanceof Date ? date : new Date(date);
-  return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }); // 19/11 (11/19 sur un téléphone en-US)
 }
 
 function gymFormatMonthYear(date) {
   const d = date instanceof Date ? date : new Date(date);
-  const mois = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-  ];
-  return `${mois[d.getMonth()]} ${d.getFullYear()}`;
+  const label = d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  return label.charAt(0).toUpperCase() + label.slice(1); // « Novembre 2026 »
 }
 
 /* Date du jour calculée à chaque appel (et non une fois au chargement de la page) :
@@ -5209,9 +5204,8 @@ function gymRenderDualChart(points, series, selected) {
      le localStorage à chaque changement, pour qu'un rechargement ou un
      déchargement de l'appli par le téléphone ne fasse pas perdre une séance d'une
      heure. Un seul brouillon à la fois ; il est effacé quand la séance est
-     terminée, et ignoré au-delà de 12 h. */
+     terminée. Aucune limite de durée : c'est la personne qui le termine elle-même. */
   const GYM_DRAFT_KEY = "golfevolution_gym_session_draft";
-  const GYM_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
   function saveDraft() {
     if (!state.session || !state.program || !state.exercises.length) return;
@@ -5250,7 +5244,6 @@ function gymRenderDualChart(points, series, selected) {
     let draft = null;
     try { draft = JSON.parse(localStorage.getItem(GYM_DRAFT_KEY)); } catch (e) { return null; }
     if (!draft || draft.sessionId !== session.id) return null;
-    if (!(Date.now() - Number(draft.savedAt) < GYM_DRAFT_MAX_AGE_MS)) return null;
     if (!Array.isArray(draft.exercises) || draft.exercises.length !== built.length) return null;
     const matches = built.every((exo, i) => {
       const saved = draft.exercises[i];

@@ -230,7 +230,8 @@ const WedgeUI = (function () {
   }
   function formatDate(iso) {
     const d = new Date(iso);
-    return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
+    // 'fr-FR' suit la langue choisie (core/i18n.js) : 19/11/2026 en français, 11/19/2026 sur un téléphone en-US
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   function header({ title, backLabel, backHash }) {

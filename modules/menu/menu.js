@@ -663,7 +663,7 @@ const menuTodo = (label) => `[À COMPLÉTER : ${label}]`;
 const MENU_LEGAL = {
   appName: "GolfEvolution",
   appVersion: "1.0.0",
-  updatedAt: "24 octobre 2026",
+  updatedAt: "19 novembre 2026",
   editorName: "Pierre-Antton Ducoin",
   editorStatus: "éditeur non professionnel",
   contactEmail: "contactgolfevolution@gmail.com",
@@ -944,7 +944,8 @@ const MENU_DOCS = {
       ], ul: [
         "{{backendName}} : base de données et authentification. Il agit comme sous-traitant, pour notre compte.",
         "{{hostName}} : hébergement de l'Application. Il voit les données techniques de connexion, dont l'adresse IP.",
-        "FlyAway Golf (api.flyawaygolf.com) : lorsque vous recherchez un golf proche dans Stats, les coordonnées de votre position sont envoyées à ce service pour retrouver les parcours voisins. Rien n'est envoyé sans cette action de votre part.",
+        "FlyAway Golf (api.flyawaygolf.com) : lorsque vous recherchez un golf dans Stats, les coordonnées de votre position (parcours proches) ou celles du golf choisi sont envoyées à ce service pour retrouver les parcours et leurs informations. Rien n'est envoyé sans cette action de votre part.",
+        "Photon (photon.komoot.io), service de recherche de Komoot fondé sur les données OpenStreetMap : lorsque vous tapez le nom d'un golf dans Stats, le texte saisi est envoyé à ce service pour retrouver le parcours. Rien n'est envoyé sans cette action de votre part.",
         "Google Play, et plus tard l'App Store : distribution de l'Application, selon leurs propres politiques.",
       ] },
       { h: "5. Ce que nous ne faisons pas", p: [
@@ -1154,7 +1155,7 @@ function renderAboutScreen(back = backToHelp, label = "Aide") {
         <ul class="legal_list">
           <li>Graphiques : Chart.js (licence MIT).</li>
           <li>Tables de référence Strokes Gained : d'après le dépôt open source dgtaillie/python_strokes_gained.</li>
-          <li>Recherche de golfs : API FlyAway Golf.</li>
+          <li>Recherche de golfs : API FlyAway Golf, et Photon (Komoot) avec les données d'OpenStreetMap (© contributeurs OpenStreetMap, licence ODbL).</li>
         </ul>
       </section>
     </article>
