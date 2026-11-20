@@ -17,6 +17,6 @@ Bloqué :
 - 17 corrections livrées attendent un test sur vrai téléphone (propriétaire).
 
 Prochaine étape :
-- Attendre le premier message de la mère. Candidats côté Appli : retours internes sur appBack(), nettoyage des images inutilisées, mise à jour du README (supabase/ et docs/ cités mais absents du dépôt).
+- Attendre le premier message de la mère. Candidats côté Appli : retours internes sur appBack(), nettoyage des images inutilisées, audit et mise à jour complète du README (tâche APPLI-04, cette semaine).
 
 Mis à jour le : 2026-11-20
