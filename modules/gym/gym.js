@@ -166,7 +166,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : PROGRAMMES ============================== -->
     <section class="gym-view" id="gym-view-programmes" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'programmes'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -227,7 +227,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : CRÉER UN PROGRAMME ============================== -->
     <section class="gym-view" id="gym-view-creer-programme" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('programmes'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'creer-programme'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -322,7 +322,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : CRÉER UNE SÉANCE ============================== -->
     <section class="gym-view" id="gym-view-creer-seance" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('programme-detail', {id: gymGetParam('programme','prog-force')}); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'creer-seance', {programId: gymGetParam('programme','prog-force')}); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -420,7 +420,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : EXERCICES ============================== -->
     <section class="gym-view" id="gym-view-exercices" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'exercices'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -558,7 +558,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : PROGRESSION ============================== -->
     <section class="gym-view" id="gym-view-progression" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'progression'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -611,7 +611,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : HISTORIQUE ============================== -->
     <section class="gym-view" id="gym-view-historique" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'historique'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -703,7 +703,7 @@ document.getElementById("app-root-gym").innerHTML = `
     <!-- ============================== VUE : OBJECTIFS ============================== -->
     <section class="gym-view" id="gym-view-objectifs" hidden>
       <header class="gym-header">
-        <a class="gym-header__back" href="#" onclick="gymNavigate('gym-home'); return false;">
+        <a class="gym-header__back" href="#" onclick="appBack('gym', 'objectifs'); return false;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           GYM
         </a>
@@ -3772,6 +3772,9 @@ function gymNavigate(view, params) {
   else history.replaceState(state, "", hash);
 }
 
+// Les retours internes de Gym vont au parent défini dans APP_SCREEN_PARENTS (core/app-shell.js)
+if (typeof appRegisterNav === "function") appRegisterNav("gym", gymNavigate);
+
 window.addEventListener("popstate", (e) => {
   // Retour navigateur : Gym ne réagit que s'il est affiché. Sinon (Wedging, Home...), le hash n'est pas le sien
   // et gymActivateView re-rendrait l'accueil Gym, ferait défiler la page et pourrait faire avancer un programme.
@@ -3991,8 +3994,7 @@ function gymRenderSessionRowReadonly(session) {
 
 /** Retour du détail d'un programme : vers l'historique s'il a été ouvert depuis l'historique, sinon vers la liste des programmes. */
 function gymProgramDetailBack() {
-  if (currentParams && currentParams.readonly) gymNavigate("historique");
-  else gymNavigate("programmes");
+  appBack("gym", "programme-detail", { readonly: !!(currentParams && currentParams.readonly) });
 }
 
 /**
@@ -5510,7 +5512,7 @@ function gymRenderDualChart(points, series, selected) {
     const backLink = document.getElementById("gym-seance-active-back");
     backLink.onclick = (e) => {
       e.preventDefault();
-      gymNavigate("programme-detail", { id: state.program.id });
+      appBack("gym", "seance-active", { programId: state.program.id });
     };
   }
 
@@ -5820,7 +5822,7 @@ function gymRenderDualChart(points, series, selected) {
     const backLink = document.getElementById("gym-seance-active-back");
     backLink.onclick = (e) => {
       e.preventDefault();
-      gymNavigate("gym-home");
+      appBack("gym", "seance-active", {});
     };
   }
 
@@ -6439,7 +6441,7 @@ function gymRenderDualChart(points, series, selected) {
       document.getElementById("gym-recap-empty").style.display = "block";
       document.getElementById("gym-recap-back").onclick = (e) => {
         e.preventDefault();
-        gymNavigate("gym-home");
+        appBack("gym", "seance-recap", {});
       };
       return;
     }
@@ -6457,9 +6459,7 @@ function gymRenderDualChart(points, series, selected) {
 
     document.getElementById("gym-recap-back").onclick = (e) => {
       e.preventDefault();
-      if (from === "historique") gymNavigate("historique");
-      else if (program) gymNavigate("programme-detail", { id: entry.programId });
-      else gymNavigate("gym-home");
+      appBack("gym", "seance-recap", { from, programId: program ? entry.programId : null });
     };
 
     document.getElementById("gym-btn-recap-home").onclick = () => gymNavigate("gym-home");
