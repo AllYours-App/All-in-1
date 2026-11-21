@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GolfEvolution</title>
 <script>try{var h=location.hash;if(/^#(access_token|error)=|[#&]error_code=/.test(h)){window.__authHash=h.slice(1);history.replaceState(null,"",location.pathname+location.search)}}catch(e){}</script>
 <script>try{if(localStorage.getItem("golfevolution_auth")||(window.__authHash&&/access_token=/.test(window.__authHash)))document.documentElement.classList.add("has-session")}catch(e){}</script>
@@ -1116,12 +1116,14 @@
 </div>
 
 <script>
-  // Bloque le swipe-retour depuis les bords et le zoom au pincement (iOS)
+  // Bloque le swipe-retour depuis les bords (iOS) et le zoom au pincement sur les cartes Fairway et Green (qui gèrent leur propre pincement)
   document.addEventListener('touchstart', function (e) {
     var x = e.touches[0].clientX;
     if (x < 16 || x > window.innerWidth - 16) e.preventDefault();
   }, { passive: false });
-  document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+  document.addEventListener('gesturestart', function (e) {
+    if (e.target && e.target.closest && e.target.closest('.fw-visual, .gr-visual')) e.preventDefault();
+  });
 
   // Verrouille l'orientation en portrait, uniquement quand l'appli est installée (pas dans l'onglet du navigateur)
   try {
@@ -1132,7 +1134,7 @@
   } catch (e) {}
 </script>
 <script src="core/app-shell.js?v=57"></script>
-<script src="core/i18n-dict.js?v=15"></script>
+<script src="core/i18n-dict.js?v=16"></script>
 <script src="core/i18n.js?v=7"></script>
 <script src="core/supabase-client.js?v=2"></script>
 <script src="core/commun.js?v=61"></script>
@@ -1147,7 +1149,7 @@
 <script src="modules/putting/putting.js?v=66"></script>
 <script src="modules/vitesse/vitesse.js?v=56"></script>
 <script src="modules/stats/stats.js?v=63"></script>
-<script src="modules/menu/menu.js?v=71"></script>
+<script src="modules/menu/menu.js?v=72"></script>
 <script src="modules/auth/auth.js?v=65"></script>
 </body>
 </html>
