@@ -19,16 +19,21 @@
      ├─ wedging           écrans d'analyse (parent : onglet Parcours) ; l'écran d'accueil Wedging
      │                    renvoie à home
      ├─ gym               gym-home (parent : home) ; programmes, exercices, historique, progression,
-     │                    créer une séance (parent : gym-home) ; programme-detail (parent : programmes,
-     │                    ou historique en lecture seule) ; sous-écrans d'un programme (parent : programme-detail)
+     │                    objectifs (parent : gym-home) ; créer un programme (parent : programmes) ;
+     │                    programme-detail (parent : programmes, ou historique en lecture seule) ;
+     │                    créer une séance, séance active (parent : programme-detail ; sans programme : gym-home) ;
+     │                    récap d'une séance (parent : historique s'il vient de l'historique, sinon
+     │                    programme-detail, sinon gym-home)
      ├─ vitesse
      └─ menu              écran principal (parent : home) ; Aide & support, Mes distances… (parent : Menu) ;
                           FAQ, contact, textes légaux, données, à propos (parent : Aide, ou la page
                           d'où l'aide a été ouverte)
    Pages de connexion (login, signup, forgot-password, reset-password) : hors hiérarchie.
 
-   Les retours internes à un module (sous-écran -> écran du module) restent gérés par le module,
-   mais celui qui quitte le module passe par appBack().
+   Les retours internes à un module (sous-écran -> écran du module) lisent leur destination dans
+   APP_SCREEN_PARENTS (ci-dessous) via appBack(module, écran, contexte) ; celui qui quitte le module
+   passe par appBack(module). Branchés sur la carte : Gym (tous les retours). Pas encore branchés :
+   Wedging, Stats, Putting et Menu (leurs retours sont gérés par le module : voir APPLI-01).
    -------------------------------------------------------------------------- */
 const APP_PAGE_PARENTS = {
   parcours: "home",
@@ -40,8 +45,65 @@ const APP_PAGE_PARENTS = {
   menu: "home",
 };
 
-// Retour d'une page vers sa page parente. fromId : la page qu'on quitte (ex. "stats"). Sans parent connu : accueil.
-function appBack(fromId) {
+/* --------------------------------------------------------------------------
+   CARTE DES ÉCRANS D'UN MODULE — parent de chaque écran interne.
+   Une entrée vaut : un nom d'écran ("gym-home"), ou une fonction (contexte) qui renvoie un nom d'écran
+   ou { screen, params } quand le parent dépend du contexte (programme ouvert, provenance...).
+   Le premier écran d'un module (gym-home) n'y figure pas : son retour quitte le module (appBack("gym")).
+   -------------------------------------------------------------------------- */
+const APP_SCREEN_PARENTS = {
+  gym: {
+    "programmes": "gym-home",
+    "exercices": "gym-home",
+    "historique": "gym-home",
+    "progression": "gym-home",
+    "objectifs": "gym-home",
+    "creer-programme": "programmes",
+    // Détail d'un programme : lecture seule depuis l'historique, sinon liste des programmes
+    "programme-detail": (c) => (c.readonly ? "historique" : "programmes"),
+    "creer-seance": (c) => ({ screen: "programme-detail", params: { id: c.programId } }),
+    // Séance active : son programme ; écran « aucune séance » (sans programme) : accueil Gym
+    "seance-active": (c) => (c.programId ? { screen: "programme-detail", params: { id: c.programId } } : "gym-home"),
+    // Récap d'une séance : historique s'il vient de l'historique, sinon son programme (s'il existe encore), sinon l'accueil Gym
+    "seance-recap": (c) => {
+      if (c.from === "historique") return "historique";
+      if (c.programId) return { screen: "programme-detail", params: { id: c.programId } };
+      return "gym-home";
+    },
+  },
+};
+
+// Navigation interne de chaque module : le module s'enregistre (ex. Gym : gymNavigate). appBack s'en sert pour aller au parent.
+const APP_SCREEN_NAV = {};
+function appRegisterNav(moduleId, fn) {
+  APP_SCREEN_NAV[moduleId] = fn;
+}
+window.appRegisterNav = appRegisterNav;
+
+// Parent d'un écran interne : { screen, params } ou null si l'écran n'est pas sur la carte.
+function appScreenParent(moduleId, screen, ctx) {
+  const table = APP_SCREEN_PARENTS[moduleId];
+  if (!table || !Object.prototype.hasOwnProperty.call(table, screen)) return null;
+  let parent = table[screen];
+  if (typeof parent === "function") parent = parent(ctx || {});
+  if (!parent) return null;
+  return typeof parent === "string" ? { screen: parent } : parent;
+}
+window.appScreenParent = appScreenParent;
+
+// Retour. Sans screen : de la page fromId vers sa page parente (sans parent connu : accueil).
+// Avec screen : de cet écran interne vers son parent sur la carte (ctx : contexte pour les parents qui en dépendent).
+// Écran absent de la carte ou module sans navigation enregistrée : repli sur la page parente.
+function appBack(fromId, screen, ctx) {
+  if (screen) {
+    const parent = appScreenParent(fromId, screen, ctx);
+    const nav = APP_SCREEN_NAV[fromId];
+    if (parent && typeof nav === "function") {
+      nav(parent.screen, parent.params);
+      return;
+    }
+    if (window.console) console.warn("appBack : écran hors carte ou module sans navigation :", fromId, screen);
+  }
   showPage(APP_PAGE_PARENTS[fromId] || "home");
 }
 window.appBack = appBack;
