@@ -3,20 +3,20 @@
 Projet : application de golf GolfEvolution (HTML/CSS/JS vanilla, Supabase, Cloudflare, mode hors ligne). Repo : AllYours-App/All-in-1.
 
 Fait :
-- Lecture complète du dépôt (README, arborescence, core/, modules/, sw.js, Suivi-des-bugs.docx) le 2026-11-20.
-- État du dépôt : 9 modules (home, auth, menu, parcours, putting, wedging, gym, stats, vitesse en placeholder), synchro Supabase via core/data.js, service worker sw.js (VERSION golfevolution-v7), i18n fr/en/es.
-- Suivi de bugs : 93 corrections livrées et vérifiées en simulation (section Terminé du .docx).
-- tasks.json rempli : 41 tâches reprises du suivi des bugs et du README.
-- Vérifié : core/diag.js et docs/ supprimés ; plus aucun champ [À COMPLÉTER] dans MENU_LEGAL ; l'erreur « settings is not defined » est déjà gardée par typeof dans golfWeeklyGoal().
+- Lecture complète du dépôt le 2026-11-21 (README, arborescence, core/, modules/, sw.js, Suivi-des-bugs.docx), relue après le commit b270e8f.
+- tasks.json restructuré : 5 tâches Appli, APPLI-TESTS (18 tests) et APPLI-DECISIONS (19 points) pour toi.
+- Vérifié : core/diag.js et docs/ n'existent plus ; plus aucun champ [À COMPLÉTER] dans MENU_LEGAL ; « settings is not defined » déjà gardé par typeof dans golfWeeklyGoal().
 
 En cours :
-- Rien en cours côté code. Aucune tâche n'a encore été donnée par la mère.
+- Rien en cours côté code. Aucune tâche donnée par la mère pour l'instant.
 
 Bloqué :
-- 16 points attendent une décision ou un élément du propriétaire (RLS Supabase, palette thème clair, zoom, langues, parties en cours synchronisées, etc.).
-- 17 corrections livrées attendent un test sur vrai téléphone (propriétaire).
+- Rien côté Appli. Du côté de Moi : APPLI-TESTS et APPLI-DECISIONS.
+- Écart à signaler : data/done.json n'existe pas dans le dépôt Central (seul data/inbox.json y est), donc aucune tâche à Moi n'a pu être marquée faite par ce biais.
 
 Prochaine étape :
-- Attendre le premier message de la mère. Candidats côté Appli : retours internes sur appBack(), nettoyage des images inutilisées, audit et mise à jour complète du README (tâche APPLI-04, cette semaine).
+- APPLI-05 (cette semaine) : remplacer putting.js, stats.js et wedging.js par leurs versions .js.txt après ta confirmation. L'app mélange pour l'instant nouveau CSS et ancien JS.
+- Ensuite : APPLI-04 (README), APPLI-01 (retours internes sur appBack()), APPLI-03 (images inutilisées), APPLI-02 (données d'un autre appareil).
 
-Mis à jour le : 2026-11-20
+Mis à jour le : 2026-11-21
+Rythme : 0 tâche terminée sur la dernière fenêtre de 5 h.
