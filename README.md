@@ -1,6 +1,6 @@
 # GolfEvolution
 
-Application golf mobile-first : parcours, putting, wedging, stats, gym, profil. Tout est en HTML/CSS/JS vanilla, sans framework ni étape de build. Hébergée sur Cloudflare (`all-in-1.ducoin-co.workers.dev`), qui remplace Vercel : le plan gratuit de Vercel excluait l'usage commercial. À revérifier dans les conditions de Cloudflare avant la mise en ligne publique (voir "Mise en ligne et conformité").
+Application golf mobile-first : parcours, putting, wedging, stats, gym, profil. Tout est en HTML/CSS/JS vanilla, sans framework ni étape de build. Hébergée sur Cloudflare (`all-in-1.ducoin-co.workers.dev`), qui remplace Vercel : le plan gratuit de Vercel excluait l'usage commercial, ce que Cloudflare autorise (confirmé par le propriétaire le 21/11/2026).
 
 **Nom de l'appli : GolfEvolution** (anciennement « All-in-1 » puis « Golf App »). Il est défini dans `index.html` (`<title>`, titre de l'appli sur l'écran d'accueil iPhone, logo des quatre écrans de connexion), `manifest.webmanifest` (`name`, `short_name`) et `modules/menu/menu.js` (`MENU_LEGAL.appName`, repris automatiquement dans les CGU, la page « À propos », l'objet du mail de support et le nom du fichier d'export JSON). Toutes les clés de stockage du navigateur portent le préfixe `golfevolution_` (`golfevolution_app_state`, `golfevolution_module_prefs`, `golfevolution_auth`…, liste complète dans « Données persistées »). Ne portent toujours pas le nouveau nom : les tables et colonnes Supabase (`putting_combines`, `app_state`…), le nom du dépôt GitHub (`AllYours-App/All-in-1`) et l'adresse Cloudflare (`all-in-1.ducoin-co.workers.dev`).
 
@@ -181,7 +181,7 @@ modules/menu/menu.js
 modules/auth/auth.js         (dernier : choisit la page de départ)
 ```
 
-Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`, puis `theme-light` en dernier (il doit passer après les autres pour les surcharger). Chaque CSS et JS local porte un paramètre de version dans `index.html` (`?v=NN`), à incrémenter pour chaque fichier modifié à chaque déploiement. Les numéros ne sont plus identiques d'un fichier à l'autre (de `?v=54` à `?v=71` pour la plupart au 21/11/2026 ; `supabase-client`, `i18n`, `i18n-dict`, `data`, `offline` et `vendor/supabase` ont des numéros plus bas, de `?v=1` à `?v=15`) : ne pas faire de remplacement global.
+Les CSS sont chargés dans l'ordre `base`, `commun`, `HomePage`, `parcours-ui`, `wedging`, `gym`, `putting`, `vitesse`, `stats`, `menu`, `auth`, puis `theme-light` en dernier (il doit passer après les autres pour les surcharger). Chaque CSS et JS local porte un paramètre de version dans `index.html` (`?v=NN`), à incrémenter pour chaque fichier modifié à chaque déploiement. Les numéros ne sont plus identiques d'un fichier à l'autre (de `?v=54` à `?v=72` pour la plupart au 21/11/2026 ; `supabase-client`, `i18n`, `i18n-dict`, `data`, `offline` et `vendor/supabase` ont des numéros plus bas, de `?v=1` à `?v=16`) : ne pas faire de remplacement global.
 
 ### Dépendances externes
 
@@ -219,11 +219,17 @@ Tout champ au format `[À COMPLÉTER : ...]` s'affiche tel quel dans l'appli et 
 | `appVersion`, `updatedAt` | Version affichée dans À propos, et date des textes légaux à changer à chaque modification de `MENU_DOCS`. |
 
 ### Hébergement (Cloudflare, ancien Vercel)
-L'appli est déployée sur Cloudflare (Workers, adresse `all-in-1.ducoin-co.workers.dev`), depuis le dépôt GitHub. Les textes légaux (`MENU_LEGAL`) citent Cloudflare, Inc. comme hébergeur. Les comparatifs consultés indiquent que l'offre gratuite de Cloudflare n'interdit pas l'usage commercial, contrairement à Vercel Hobby ; à relire dans les conditions de Cloudflare avant la mise en ligne publique. Reste à faire :
+L'appli est déployée sur Cloudflare (Workers, adresse `all-in-1.ducoin-co.workers.dev`), depuis le dépôt GitHub. Les textes légaux (`MENU_LEGAL`) citent Cloudflare, Inc. comme hébergeur. Le propriétaire a confirmé le 21/11/2026 que Cloudflare autorise la monétisation (contrairement à Vercel Hobby) : plus rien à vérifier de ce côté. Reste à faire :
 - si un nom de domaine propre est ajouté : l'ajouter aussi dans Supabase (Authentication > URL Configuration : Site URL et Redirect URLs), sinon les liens reçus par e-mail renvoient vers l'ancienne adresse ;
 - remplacer l'URL `all-in-1-delta.vercel.app` partout où elle est encore utilisée (fiche Google Play, configuration de l'appli Android) ;
 - si l'appli est publiée sur Google Play en TWA, mettre à jour l'URL de départ et le fichier `/.well-known/assetlinks.json` sur le nouveau domaine ;
 - la politique de confidentialité (rubrique "Transferts hors Union européenne") reste exacte : Cloudflare est établi aux États-Unis.
+
+### Zoom à deux doigts
+Le zoom au pincement est autorisé dans toute l'appli depuis le 21/11/2026 : la balise `viewport` de `index.html` n'a plus `maximum-scale=1` ni `user-scalable=no`, et `gesturestart` n'est bloqué (`preventDefault`) que sur les cartes Fairway et Green (`.fw-visual`, `.gr-visual`), qui ont aussi `touch-action: none`. Le blocage du swipe-retour iOS depuis les bords de l'écran est inchangé. À tester sur téléphone (voir « Suivi des bugs », point 25) : zoom sur les écrans courants, pas de zoom ni de saut de page sur le Fairway et le Green, accueil toujours bien cadré après un zoom puis un retour à la taille normale.
+
+### Suivi des erreurs (Sentry)
+Sentry est déclaré dans la politique de confidentialité depuis le 21/11/2026 (`MENU_DOCS.confidentialite` : rubrique 2 « Rapports d'erreurs », rubrique 4 « Sentry (Functional Software, Inc., États-Unis) », rubrique 6 « détecter et corriger les erreurs », rubrique 7 durées ; textes anglais et espagnols ajoutés à `i18n-dict.js`, 1 403 entrées) et `MENU_LEGAL.updatedAt` est passé au 21 novembre 2026. **Le code n'embarque pas encore Sentry** : aucun SDK ni DSN dans le dépôt. Tant que ce n'est pas fait, la politique annonce un envoi de rapports qui n'a pas lieu. Pour l'intégrer : charger le SDK du navigateur depuis un hôte autorisé, initialiser avec le DSN du projet (clé publique), ne pas envoyer de données de jeu et relire la rubrique 2 si la collecte (adresse IP, identifiant) change. Le suivi d'erreurs ne figure pas dans `sw.js` : la requête vers Sentry ne doit pas être mise en cache.
 
 ### Brancher Supabase
 - **Fait (20/10/2026) : connexion.** `auth.js` utilise Supabase Auth : inscription avec e-mail de confirmation, connexion, déconnexion, mot de passe oublié (pages `forgot-password` et `reset-password`), liens reçus par e-mail. Pas de connexion Apple ni Google (décision du 20/10/2026).
@@ -302,7 +308,7 @@ Trois pièces, qui ne se parlent que par des événements et par le `localStorag
 ## Fichiers partagés
 
 ### `index.html` (1153 lignes)
-Contient le HTML de Home, Parcours, Stats, Menu, Login, Signup, Mot de passe oublié et Nouveau mot de passe, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords et le zoom au pincement) et la liste des scripts. Deux scripts en `<head>` : le premier met de côté le hash d'un lien reçu par e-mail (`window.__authHash`) puis le vide ; le second ajoute la classe `has-session` sur `<html>` si la session Supabase (`golfevolution_auth`) existe ou si un lien e-mail est en cours de traitement, pour éviter le flash de la page de connexion.
+Contient le HTML de Home, Parcours, Stats, Menu, Login, Signup, Mot de passe oublié et Nouveau mot de passe, les conteneurs vides de Wedging, Gym, Putting et Vitesse, un script inline (bloque le swipe-retour iOS depuis les bords, et le zoom au pincement seulement sur les cartes Fairway et Green, `.fw-visual` et `.gr-visual`, qui gèrent leur propre pincement) et la liste des scripts. Deux scripts en `<head>` : le premier met de côté le hash d'un lien reçu par e-mail (`window.__authHash`) puis le vide ; le second ajoute la classe `has-session` sur `<html>` si la session Supabase (`golfevolution_auth`) existe ou si un lien e-mail est en cours de traitement, pour éviter le flash de la page de connexion.
 
 ### `core/app-shell.js`
 `showPage(id)` : active la page demandée et masque les autres, puis remonte en haut de page. Ignore un id inconnu. Ne touche à aucune classe de `body` : chaque module retire lui-même son verrou de défilement en quittant sa page. Expose `window.showPage`.
