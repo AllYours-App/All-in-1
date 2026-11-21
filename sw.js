@@ -32,7 +32,7 @@
    ============================================================ */
 'use strict';
 
-const VERSION = 'golfevolution-v8';
+const VERSION = 'golfevolution-v9';
 const STATIC_REV = 1;
 const CACHE_APP = VERSION + '-app';
 const CACHE_STATIC = 'golfevolution-static-' + STATIC_REV;
