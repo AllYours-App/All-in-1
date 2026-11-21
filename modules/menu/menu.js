@@ -663,7 +663,7 @@ const menuTodo = (label) => `[À COMPLÉTER : ${label}]`;
 const MENU_LEGAL = {
   appName: "GolfEvolution",
   appVersion: "1.0.0",
-  updatedAt: "19 novembre 2026",
+  updatedAt: "21 novembre 2026",
   editorName: "Pierre-Antton Ducoin",
   editorStatus: "éditeur non professionnel",
   contactEmail: "contactgolfevolution@gmail.com",
@@ -934,6 +934,7 @@ const MENU_DOCS = {
         "Jeu et entraînement : parties, coups, putts, wedging, programmes et séances de gym, objectifs et historiques.",
         "Capteurs et position, avec votre autorisation : orientation du téléphone pour le dénivelé, position pour rechercher les golfs proches.",
         "Données techniques : adresse IP, type d'appareil et date de la requête, vues par nos prestataires lors de l'utilisation de l'Application.",
+        "Rapports d'erreurs : en cas d'erreur ou de plantage de l'Application, un rapport technique est envoyé automatiquement (message d'erreur, page concernée, type d'appareil et de navigateur, version de l'Application, adresse IP).",
       ] },
       { h: "3. Où vos données sont stockées", p: [
         "Vos données de compte, de profil, de réglages, de jeu et d'entraînement sont enregistrées sur nos serveurs, hébergés par {{backendName}} (région : {{backendRegion}}). Elles sont ainsi liées à votre compte et retrouvées si vous changez d'appareil.",
@@ -944,6 +945,7 @@ const MENU_DOCS = {
       ], ul: [
         "{{backendName}} : base de données et authentification. Il agit comme sous-traitant, pour notre compte.",
         "{{hostName}} : hébergement de l'Application. Il voit les données techniques de connexion, dont l'adresse IP.",
+        "Sentry (Functional Software, Inc., États-Unis) : suivi des erreurs. En cas d'erreur ou de plantage, il reçoit un rapport technique (voir « Données concernées ») qui nous permet de corriger les défauts. Il agit comme sous-traitant, pour notre compte. Ces rapports ne servent ni à la publicité ni à la mesure d'audience.",
         "FlyAway Golf (api.flyawaygolf.com) : lorsque vous recherchez un golf dans Stats, les coordonnées de votre position (parcours proches) ou celles du golf choisi sont envoyées à ce service pour retrouver les parcours et leurs informations. Rien n'est envoyé sans cette action de votre part.",
         "Photon (photon.komoot.io), service de recherche de Komoot fondé sur les données OpenStreetMap : lorsque vous tapez le nom d'un golf dans Stats, le texte saisi est envoyé à ce service pour retrouver le parcours. Rien n'est envoyé sans cette action de votre part.",
         "Google Play, et plus tard l'App Store : distribution de l'Application, selon leurs propres politiques.",
@@ -953,7 +955,7 @@ const MENU_DOCS = {
       ] },
       { h: "6. Finalités et bases légales", ul: [
         "Créer et gérer votre compte, fournir l'Application, enregistrer et synchroniser vos données : exécution du contrat formé par les CGU.",
-        "Assurer la sécurité et le bon fonctionnement du service, prévenir les abus : intérêt légitime.",
+        "Assurer la sécurité et le bon fonctionnement du service, détecter et corriger les erreurs, prévenir les abus : intérêt légitime.",
         "Utiliser votre position et les capteurs : votre consentement, donné via l'autorisation du système et retirable à tout moment dans les réglages du téléphone.",
         "Répondre à vos messages et demandes : intérêt légitime et exécution du contrat.",
         "Respecter nos obligations légales.",
@@ -961,7 +963,7 @@ const MENU_DOCS = {
       { h: "7. Durées de conservation", ul: [
         "Données du compte, du profil, des réglages et d'entraînement : conservées tant que votre compte existe. Après une demande de suppression du compte, elles sont conservées 30 jours (délai laissé pour annuler), puis effacées de nos serveurs ; d'éventuelles sauvegardes techniques sont purgées à l'issue de leur cycle de rotation.",
         "Messages envoyés au support : conservés le temps nécessaire au traitement de votre demande, puis au maximum 3 ans.",
-        "Données techniques de connexion : conservées par nos prestataires pour une durée limitée, selon leurs politiques.",
+        "Données techniques de connexion et rapports d'erreurs : conservés par nos prestataires pour une durée limitée, selon leurs politiques.",
       ] },
       { h: "8. Transferts hors Union européenne", p: [
         "Vos données de compte sont hébergées dans la région indiquée plus haut. Certains de nos prestataires étant établis hors de l'Union européenne, des transferts peuvent avoir lieu, notamment vers les États-Unis. Ils sont encadrés par les garanties prévues par la réglementation, telles que le cadre de protection des données UE-États-Unis ou les clauses contractuelles types.",
